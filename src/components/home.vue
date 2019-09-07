@@ -48,7 +48,7 @@ export default {
         },
         {
           name: 'Shopping List',
-          url: '#/shoppinglist',
+          url: '#/shopping-list',
           to: 'shoppinglist'
         },
         {
@@ -58,7 +58,7 @@ export default {
         },
         {
           name: 'Shared Calendar',
-          url: '#/cal',
+          url: '#/shared-calendar',
           to: 'cal'
         },
         {
@@ -73,7 +73,7 @@ export default {
         },
         {
           name: 'Highfives',
-          url: '#/highfives',
+          url: '#/high-fives',
           to: 'highfives'
         }
       ]
