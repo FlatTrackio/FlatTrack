@@ -28,11 +28,22 @@ $colors: (
     "danger": ($danger, $danger-invert)
 );
 
-$link: $white;
+$link: hsl(217, 71%, 53%);;
 $link-invert: $black;
 $link-focus-border: $primary;
+$breadcrumb-item-color: $link;
 
 @import "~bulma";
 @import "~buefy/src/scss/buefy";
 
+</style>
+
+<style scoped>
+.container {
+  margin-top: 20px;
+}
+
+.darken a.is-disabled {
+  color: black;
+}
 </style>

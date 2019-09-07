@@ -1,34 +1,38 @@
 <template>
     <div>
-        <div id="topbar" v-if="task && Object.keys(task).length">
-            <h1>Task - {{ task.name }}</h1>
+      <section class="hero is-dark">
+        <div class="hero-body">
+          <p class="title">
+            Task - {{ task.name }}
+          </p>
         </div>
+      </section>
+      <div class="container">
+
+        <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+          <ul>
+            <li><a href="/#/">Home</a></li>
+            <li><a href="/#/tasks">Tasks</a></li>
+            <li class="is-active"><a href="/#" aria-current="page">{{ task.name }}</a></li>
+          </ul>
+        </nav>
         <div id="content">
-            <div id="taskBody" v-if="task && Object.keys(task).length">
-              <div id="meta">
-                <p>
-                  Importance: {{ task.importance }}/5 <br>
-                  Description: {{ task.description }} <br>
-                  Location: {{ task.location }}
-                </p>
+          <div class="card">
+            <div class="card-content">
+              <div class="media">
+                <div class="media-content">
+                  <p class="title is-4">{{ task.name }}</p>
+                  <p class="subtitle is-6">@{{ task.location }}</p>
+                </div>
+              </div>
+              <div class="content">
+                {{ task.description }}
               </div>
             </div>
-            <div id="entryform">
-              <h2>Add an entry</h2>
-              <form @submit.prevent="handleSubmit">
-                <h3>I am</h3>
-                <select name="member" id="iam_selector" v-model="form.names">
-                  <option disabled value="">Please select your name</option>
-                  <option disabled value="">--------</option>
-                  <option v-bind:value="`${member.names}`" v-for="member of members" v-bind:key="member">
-                    {{ member.names }}
-                  </option>
-                </select>
-                <br><br>
-                <input type="hidden" name="taskName" v-model="form.taskName">
-                <input type="submit" value="Add entry">
-              </form>
-            </div>
+            <section>
+                <b-button @click="markAsCompleted">I've completed this task</b-button>
+            </section>
+          </div>
         </div>
         <div id="tasksGETerrors" v-if="tasksGETerrors && tasksGETerrors.length">
             <h3>Uh oh! Something's gone wrong with this page:</h3>
@@ -38,6 +42,7 @@
                 </li>
             </ul>
         </div>
+      </div>
     </div>
 </template>
 
@@ -59,12 +64,13 @@ export default {
     }
   },
   created () {
-    axios.get(`http://localhost:3000/task/${this.$route.query.task}`)
+    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/task/${this.$route.query.task}`)
       .then(response => {
         this.task = response.data
         this.form.taskName = response.data.name
+        console.log(this.task)
 
-        return axios.get(`http://localhost:3000/members`)
+        return axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/members`)
       })
       .then(response => {
         this.members = response.data
@@ -74,8 +80,8 @@ export default {
       })
   },
   methods: {
-    handleSubmit () {
-      axios.post(`http://localhost:3000/entry`, this.form)
+    markAsCompleted () {
+      axios.put(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/entry/${this.task.id}`, {})
         .then(response => {
           console.log(response)
         })

@@ -218,7 +218,7 @@ router.get('/', (req, res) => {
       })
     })
   
-  router.route('/task')
+  router.route('/tasks')
     .get((req, res) => {
       // get a list of all tasks
       functions.getTasks(dbConn).then(resp => {
@@ -309,6 +309,19 @@ router.get('/', (req, res) => {
       // delete a task (requires admin)
       var id = req.params.id
     })
+
+  router.route('/settings')
+    .get((req, res) => {
+
+    })
+
+  router.route('/settings/:id')
+    .get((req, res) => {
+
+    })
+    .put((req, res) => {
+      
+    })
   
   router.get('/health', (req, res) => {
     // get health state
@@ -330,7 +343,6 @@ router.get('/', (req, res) => {
       res.end()
     })
   })
-
 
 if (process.env.NODE_ENV !== "production") router.route('/httptest')
   .all((req, res) => {

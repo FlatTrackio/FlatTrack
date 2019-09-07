@@ -1,34 +1,37 @@
 <template>
   <div>
-    <div id="topbar">
-      <h1>FlatTrack - {{ deploymentName }}</h1>
-    </div>
-    <div id="content">
-      <div id="tasks" v-if="tasks && tasks.length">
-        <h3>Tasks</h3>
-        <div class="taskItem" v-for="task of tasks" v-bind:key="task">
-            <div class="child" v-bind:onclick="`window.location='http://localhost:8080/#/task?task=${task.id}'`">
-              <h4>{{ task.name }} ({{ task.importance }}/5 importance)</h4>
-              <p>
-                Description: {{ task.description }} <br>
-                Location: {{ task.location }}
-              </p>
-            </div>
-        </div>
+    <section class="hero is-dark">
+      <div class="hero-body">
+        <p class="title">
+          FlatTrack - {{ deploymentName }}
+        </p>
       </div>
-      <div id="members" v-if="members && members.length">
-        <h3>Flatmates</h3>
-        <div class="memberItem" v-for="member of members" v-bind:key="member">
-          <h4>{{ member.names }}</h4>
-        </div>
-      </div>
-      <div id="tasksGETerrors" v-if="tasksGETerrors && tasksGETerrors.length">
-        <h3>Uh oh! Something's gone wrong with this page:</h3>
+    </section>
+    <div class="container">
+      <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
         <ul>
-          <li v-for="tasksGETerror of tasksGETerrors" v-bind:key="tasksGETerror">
-            {{tasksGETerror.message}}
-          </li>
+          <li><a href="/#/">Home</a></li>
+          <li class="is-active"><a href="/#/tasks">Tasks</a></li>
         </ul>
+      </nav>
+      <div id="tasks" v-if="tasks && tasks.length">
+        <h1 class="title">Tasks</h1>
+        <div class="card" v-for="task of tasks" v-bind:key="task">
+          <div class="card-content">
+            <div class="media">
+              <div class="media-content">
+                <p class="title is-4">{{ task.name }}</p>
+                <p class="subtitle is-6">@{{ task.location }}</p>
+              </div>
+            </div>
+            <div class="content">
+              {{ task.description }}
+            </div>
+          </div>
+          <footer class="card-footer">
+            <a :href="`${pageLocation}/#/task?task=${task.id}`" class="card-footer-item">View</a>
+          </footer>
+        </div>
       </div>
     </div>
   </div>
@@ -44,11 +47,11 @@ export default {
       deploymentName: '[Deployment name]',
       tasks: [],
       members: [],
-      tasksGETerrors: []
+      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')
     }
   },
   created () {
-    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/task`)
+    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/tasks`)
       .then(response => {
         this.tasks = response.data
 
@@ -58,29 +61,37 @@ export default {
         this.members = response.data
       })
       .catch(err => {
-        this.tasksGETerrors.push(err)
+        this.$buefy.notification.open({
+          duration: 5000,
+          message: `An error has occured: ${err}`,
+          position: 'is-bottom-right',
+          type: 'is-danger',
+          hasIcon: true
+        })
       })
+  },
+  methods: {
   }
 }
 </script>
 
 <style src="../assets/style.css"></style>
 <style scoped>
-  .taskItem .child {
-    background-color: lightblue;
-    padding-top: 10px;
-    padding-left: 10px;
-    padding-bottom: 10px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
+.taskItem .child {
+  background-color: lightblue;
+  padding-top: 10px;
+  padding-left: 10px;
+  padding-bottom: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
 
-  .memberItem {
-    background-color: lightblue;
-    padding-top: 10px;
-    padding-left: 10px;
-    padding-bottom: 10px;
-    margin-top: 5px;
-    margin-bottom: 5px;
-  }
+.memberItem {
+  background-color: lightblue;
+  padding-top: 10px;
+  padding-left: 10px;
+  padding-bottom: 10px;
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
 </style>
