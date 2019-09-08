@@ -1,6 +1,6 @@
 <template>
   <div>
-    <section class="hero is-dark">
+    <section class="hero is-info">
     <div class="hero-body">
         <p class="title">
           FlatTrack
@@ -26,7 +26,7 @@
 <script>
 export default {
   name: 'Shopping List',
-  deploymentName: '',
+  deploymentName: 'Keep track of your flat',
   data () {
     return {
     }

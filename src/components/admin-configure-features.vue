@@ -1,6 +1,6 @@
 <template>
     <div>
-        <section class="hero is-dark">
+        <section class="hero is-warning">
             <div class="hero-body">
                 <p class="title">
                     FlatTrack (admin)
@@ -13,10 +13,10 @@
         <div class="container">
             <section class="section">
                 <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
-                <ul>
-                    <li><a href="/#/admin">Admin Home</a></li>
-                    <li class="is-active"><a href="/#/admin/admin-configure-features">Configure Features</a></li>
-                </ul>
+                    <ul>
+                        <li><a href="/#/admin">Admin Home</a></li>
+                        <li class="is-active"><a href="/#/admin/admin-configure-features">Configure Features</a></li>
+                    </ul>
                 </nav>
                 <h1 class="title">Configure Features</h1>
                 <h2 class="subtitle">Choose the features you'll use</h2>
@@ -35,7 +35,8 @@ export default {
   name: 'Admin home',
   data () {
     return {
-      deploymentName: '',
+      deploymentName: 'Keep track of your flat',
+      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       features: [
           {
             name: 'Tasks'

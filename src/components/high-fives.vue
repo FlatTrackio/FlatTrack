@@ -1,6 +1,6 @@
 <template>
   <div>
-    <section class="hero is-dark">
+    <section class="hero is-info">
     <div class="hero-body">
         <p class="title">
         FlatTrack - {{ deploymentName }}

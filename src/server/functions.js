@@ -6,8 +6,8 @@ function getAdminTokenHash () {
   return hash.sha256().update(`${process.env.FLATTRACKER_ADMIN_PIN}`).digest('hex')
 }
 
-function isAdmin (pin) {
-  return getAdminTokenHash() === pin
+function isAdmin (password) {
+  return getAdminTokenHash() === password
 }
 function verifyAdminHeaderBearer (req) {
 
@@ -23,7 +23,7 @@ function getMember (dbConn, names, returnHashes = false) {
   return new Promise((resolve, reject) => {
     dbConn.query(`SELECT * FROM members WHERE id = '${names}'`).then((resp) => {
       // console.log(resp)
-      if (returnHashes === false) resp[0].pin = '<SENSITIVE VALUE>'
+      if (returnHashes === false) resp[0].password = '<SENSITIVE VALUE>'
       resolve(resp[0])
     }).catch(err => {
       // handle error
@@ -38,7 +38,7 @@ function getMembers (dbConn, returnHashes = false) {
       var membersList = []
       resp.map(i => {
         i.id = i.id.toString('binary', 0, 64)
-        if (returnHashes === false) i.pin = '<SENSITIVE VALUE>'
+        if (returnHashes === false) i.password = '<SENSITIVE VALUE>'
         membersList = [i, ...membersList]
       })
       resolve(resp)
@@ -49,9 +49,9 @@ function getMembers (dbConn, returnHashes = false) {
   })
 }
 
-function updateMember (dbConn, id, newPin) {
+function updateMember (dbConn, id, newPassword) {
   return new Promise((resolve, reject) => {
-    dbConn.query(`UPDATE flattracker.tasks SET name='${newPin}' WHERE id='${id}';`).then(resp => {
+    dbConn.query(`UPDATE flattracker.tasks SET name='${newPassword}' WHERE id='${id}';`).then(resp => {
       resolve(resp)
     }).catch(err => {
       reject(err)

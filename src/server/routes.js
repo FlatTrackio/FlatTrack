@@ -41,7 +41,7 @@ router.get('/', (req, res) => {
     })
     .post((req, res) => {
       // add a new entry
-      // TODO add non-admin user auth via pin
+      // TODO add non-admin user auth via password
       if (!functions.verifyAdminHeaderBearer(req)) {
         res.json({ return: 1, message: 'Whoops! you need to be admin to do that.' })
         res.end()
@@ -69,7 +69,7 @@ router.get('/', (req, res) => {
           res.end()
           return
   
-        case !(typeof form.timeSpent === 'string' || typeof form.body.pin === 'number') || (!regexPin.test(form.timeSpent) && form.timeSpent.length >= 10):
+        case !(typeof form.timeSpent === 'string' || typeof form.body.password === 'number') || (!regexPin.test(form.timeSpent) && form.timeSpent.length >= 10):
           res.json({ status: 1, message: 'Please enter a valid amount of time, containing only numbers' })
           res.end()
           return
@@ -123,19 +123,18 @@ router.get('/', (req, res) => {
       var form = req.body
       form = {
         names: form.names,
-        pin: form.pin
+        password: form.password
       }
       // validate fields
       var regexNames = /([A-Za-z])\w+/
-      var regexPin = /([0-9])/
       switch (form) {
         case typeof form.names !== 'string' || (!regexNames.test(form.names) && form.names.length >= 100):
           res.json({ status: 1, message: 'Please enter a valid name, containing only letters' })
           res.end()
           return
   
-        case !(typeof form.pin === 'string' || typeof form.body.pin === 'number') || (!regexPin.test(form.pin) && form.pin.length >= 10):
-          res.json({ status: 1, message: 'Please enter a valid pin, containing only numbers' })
+        case !(typeof form.password === 'string' || typeof form.body.password === 'number') || (!regexPin.test(form.password) && form.password.length >= 10):
+          res.json({ status: 1, message: 'Please enter a valid password, containing only numbers' })
           res.end()
           return
       }
@@ -149,7 +148,7 @@ router.get('/', (req, res) => {
         return
       })
   
-      dbConn.query(`INSERT INTO flattracker.members (id,names,pin,joinTimestamp) VALUES ('${uuid()}','${form.names}','${form.pin}','${moment().unix()}');`).then((resp) => {
+      dbConn.query(`INSERT INTO flattracker.members (id,names,password,joinTimestamp) VALUES ('${uuid()}','${form.names}','${form.password}','${moment().unix()}');`).then((resp) => {
         console.log(resp)
       }).catch(err => {
         // handle error
@@ -171,24 +170,24 @@ router.get('/', (req, res) => {
       })
     })
     .put((req, res) => {
-      // update a pin for a given flat member (requires admin or previous pin)
+      // update a password for a given flat member (requires admin or previous password)
       var id = req.params.id
       var form = req.body
       form = {
-        pin: form.pin,
-        newPin: form.newPin
+        password: form.password,
+        newPassword: form.newPassword
       }
   
       // get the user's row
       functions.getMember(dbConn, id, returnHashes = true).then(resp => {
         // verify the user
-        if (!(functions.isAdmin(form.pin) || form.pin === resp.pin)) {
-          res.json({ return: 1, message: `${resp.names}'s old pin or the Administrator pin must be provided to do this.` })
+        if (!(functions.isAdmin(form.password) || form.password === resp.password)) {
+          res.json({ return: 1, message: `${resp.names}'s old password or the Administrator password must be provided to do this.` })
           res.end()
         }
   
-        // change the pin
-        return functions.updateMember(dbConn, id, form.newPin)
+        // change the password
+        return functions.updateMember(dbConn, id, form.newPassword)
       }).then(resp => {
         res.json(resp)
         res.end()

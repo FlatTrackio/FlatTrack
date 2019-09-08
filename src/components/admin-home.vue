@@ -1,6 +1,6 @@
 <template>
     <div>
-        <section class="hero is-dark">
+        <section class="hero is-warning">
             <div class="hero-body">
                 <p class="title">
                     FlatTrack (admin)
@@ -42,14 +42,15 @@ export default {
   name: 'Admin home',
   data () {
     return {
-      deploymentName: '',
+      deploymentName: 'Keep track of your flat',
+      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       pages: [
           {
               name: 'Configure Features',
               url: '#/admin/features'
           },
           {
-              name: 'Manage Members',
+              name: 'Manage Flatmates',
               url: '#/admin/members'
           },
           {

@@ -1,6 +1,6 @@
 <template>
   <div>
-    <section class="hero is-dark">
+    <section class="hero is-info">
       <div class="hero-body">
         <p class="title">
           FlatTrack
@@ -85,7 +85,7 @@ export default {
   name: 'tasks',
   data () {
     return {
-      deploymentName: '',
+      deploymentName: 'Keep track of your flat',
       tasks: [],
       members: [],
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),

@@ -1,6 +1,6 @@
 <template>
     <div>
-      <section class="hero is-dark">
+      <section class="hero is-info">
         <div class="hero-body">
           <p class="title">
             Task
@@ -53,6 +53,7 @@ export default {
   data () {
     return {
       id: this.$route.query.task,
+      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       task: {},
       members: [],
       tasksGETerrors: [],

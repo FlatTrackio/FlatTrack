@@ -14,6 +14,8 @@ import sharedCalendar from '@/components/shared-calendar'
 import shoppingList from '@/components/shopping-list'
 import adminHome from '@/components/admin-home'
 import adminConfigureFeatures from '@/components/admin-configure-features'
+import adminManageMembers from '@/components/admin-manage-members'
+import adminManageMember from '@/components/admin-manage-member'
 
 Vue.use(Router)
 
@@ -88,6 +90,16 @@ export default new Router({
       path: '/admin/features',
       name: 'admin-configure-features',
       component: adminConfigureFeatures
+    },
+    {
+      path: '/admin/members',
+      name: 'admin-manage-members',
+      component: adminManageMembers
+    },
+    {
+      path: '/admin/members/u',
+      name: 'admin-manage-member',
+      component: adminManageMember
     }
   ]
 })
