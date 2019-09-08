@@ -38,12 +38,13 @@ $breadcrumb-item-color: $link;
 
 </style>
 
-<style scoped>
-.container {
-  margin-top: 20px;
-}
-
+<style>
 .darken a.is-disabled {
   color: black;
+}
+
+.card-margin {
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 </style>

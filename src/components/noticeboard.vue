@@ -3,7 +3,10 @@
     <section class="hero is-dark">
     <div class="hero-body">
         <p class="title">
-        FlatTrack - {{ deploymentName }}
+          FlatTrack
+        </p>
+        <p class="subtitle">
+          {{ deploymentName }}
         </p>
     </div>
     </section>

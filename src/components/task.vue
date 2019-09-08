@@ -3,45 +3,44 @@
       <section class="hero is-dark">
         <div class="hero-body">
           <p class="title">
-            Task - {{ task.name }}
+            Task
+          </p>
+          <p class="subtitle">
+            Yours to complete
           </p>
         </div>
       </section>
       <div class="container">
-
-        <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
-          <ul>
-            <li><a href="/#/">Home</a></li>
-            <li><a href="/#/tasks">Tasks</a></li>
-            <li class="is-active"><a href="/#" aria-current="page">{{ task.name }}</a></li>
-          </ul>
-        </nav>
-        <div id="content">
-          <div class="card">
-            <div class="card-content">
-              <div class="media">
-                <div class="media-content">
-                  <p class="title is-4">{{ task.name }}</p>
-                  <p class="subtitle is-6">@{{ task.location }}</p>
+        <section class="section">
+          <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+            <ul>
+              <li><a href="/#/">Home</a></li>
+              <li><a href="/#/tasks">Tasks</a></li>
+              <li class="is-active"><a href="/#" aria-current="page">{{ task.name }}</a></li>
+            </ul>
+          </nav>
+        </section>
+        <section class="section">
+          <h1 class="title">{{ task.name }}</h1>
+          <div id="content">
+            <div class="card">
+              <div class="card-content">
+                <div class="media">
+                  <div class="media-content">
+                    <p class="title is-4">{{ task.name }}</p>
+                    <p class="subtitle is-6">@{{ task.location }}</p>
+                  </div>
+                </div>
+                <div class="content">
+                  {{ task.description }}
                 </div>
               </div>
-              <div class="content">
-                {{ task.description }}
-              </div>
-            </div>
-            <section>
+              <footer class="card-footer">
                 <b-button @click="markAsCompleted">I've completed this task</b-button>
-            </section>
+              </footer>
+            </div>
           </div>
-        </div>
-        <div id="tasksGETerrors" v-if="tasksGETerrors && tasksGETerrors.length">
-            <h3>Uh oh! Something's gone wrong with this page:</h3>
-            <ul>
-                <li v-for="tasksGETerror of tasksGETerrors" v-bind:key="tasksGETerror">
-                    {{ tasksGETerror.message }}
-                </li>
-            </ul>
-        </div>
+        </section>
       </div>
     </div>
 </template>
@@ -68,7 +67,6 @@ export default {
       .then(response => {
         this.task = response.data
         this.form.taskName = response.data.name
-        console.log(this.task)
 
         return axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/members`)
       })

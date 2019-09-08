@@ -312,12 +312,25 @@ router.get('/', (req, res) => {
 
   router.route('/settings')
     .get((req, res) => {
-
+      functions.getAllSettings(dbConn).then(resp => {
+        res.json(resp)
+        res.end()
+        return
+      }).catch(err => {
+        res.json({message: err, return: 1})
+        res.end()
+        return
+      })
     })
 
   router.route('/settings/:id')
     .get((req, res) => {
-
+      var id = req.params.id
+      functions.getAllSettings(dbConn).then(resp => {  
+        res.json(resp[0])
+        res.end()
+        return
+      })
     })
     .put((req, res) => {
       

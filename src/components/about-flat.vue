@@ -2,12 +2,16 @@
     <div>
         <section class="hero is-dark">
         <div class="hero-body">
-            <p class="title">
-            FlatTrack - {{ deploymentName }}
-            </p>
+          <p class="title">
+            FlatTrack
+          </p>
+          <p class="subtitle">
+            {{ deploymentName }}
+          </p>
         </div>
         </section>
         <div class="container">
+          <section class="section">
             <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
                 <ul>
                 <li><a href="/#/">Home</a></li>
@@ -15,6 +19,9 @@
                 </ul>
             </nav>
             <h1 class="title">About this flat</h1>
+            <h2 class="subtitle">Here's a few things you should know</h2>
+          </section>
+          <section class="section">
             <ul class="menu-list">
                 <li class="menu-label" v-for="point in points" v-bind:key="point">
                     {{ point.topPoint }}
@@ -27,6 +34,7 @@
                     </div>
                 </li>
             </ul>
+          </section>
         </div>
     </div>
 </template>
@@ -57,8 +65,18 @@ export default {
             'but also this point is relevant, so it should be included'
           ]
         }
-      ]
+      ],
+      deploymentName: ''
     }
+  },
+  created () {
+    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/settings/deploymentName`)
+      .then(response => {
+        this.deploymentName = response.data.value
+      })
+      .catch(err => {
+        this.pageErrors.push(err)
+      })
   }
 }
 </script>

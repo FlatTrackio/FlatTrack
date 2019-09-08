@@ -3,18 +3,25 @@
     <section class="hero is-dark">
       <div class="hero-body">
         <p class="title">
-          FlatTrack - {{ deploymentName }}
+          FlatTrack
+        </p>
+        <p class="subtitle">
+          {{ deploymentName }}
         </p>
       </div>
     </section>
     <div class="container">
-      <div id="menu-bar-items">
-        <b-menu>
-          <b-menu-list>
-            <b-menu-item v-for="item in pages" v-bind:key="item" :href="item.url" class="menu-bar-item" :label="item.name"></b-menu-item>
-          </b-menu-list>
-        </b-menu>
-      </div>
+      <section class="section">
+        <h2 class="title is-2">Hey, {{ login.name }}!</h2>
+        <h4 class="title is-4">Welcome to FlatTrack, where your flat or community house is organized</h4>
+        <div id="menu-bar-items">
+          <b-menu>
+            <b-menu-list>
+              <b-menu-item v-for="item in pages" v-bind:key="item" :href="item.url" class="menu-bar-item" :label="item.name" :disabled="item.disabled"></b-menu-item>
+            </b-menu-list>
+          </b-menu>
+        </div>
+      </section>
     </div>
     <footer class="footer">
       <div class="content has-text-centered">
@@ -23,7 +30,7 @@
             <a href="/#/aboutflat">About this flat</a>
           </div>
           <div class="column">
-            <a href="/#/aboutflattrack">About this FlatTrack</a>
+            <a href="/#/aboutflattrack">About FlatTrack</a>
           </div>
         </div>
       </div>
@@ -44,47 +51,57 @@ export default {
         {
           name: 'Tasks',
           url: '#/tasks',
-          to: 'tasks'
+          to: 'tasks',
+          disabled: false
         },
         {
           name: 'Shopping List',
           url: '#/shopping-list',
-          to: 'shoppinglist'
+          to: 'shoppinglist',
+          disabled: true
         },
         {
           name: 'Noticeboard',
           url: '#/noticeboard',
-          to: 'noticeboard'
+          to: 'noticeboard',
+          disabled: true
         },
         {
           name: 'Shared Calendar',
           url: '#/shared-calendar',
-          to: 'cal'
+          to: 'cal',
+          disabled: true
         },
         {
           name: 'Recipes',
           url: '#/recipes',
-          to: 'recipes'
+          to: 'recipes',
+          disabled: true
         },
         {
           name: 'Flatmates',
           url: '#/members',
-          to: 'members'
+          to: 'members',
+          disabled: true
         },
         {
           name: 'Highfives',
           url: '#/high-fives',
-          to: 'highfives'
+          to: 'highfives',
+          disabled: true
         }
-      ]
+      ],
+      login: {
+        name: "Person"
+      }
     }
   },
   methods () {
   },
   created () {
-    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/settings`)
+    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/settings/deploymentName`)
       .then(response => {
-        this.deploymentName = response.data.deploymentName
+        this.deploymentName = response.data.value
       })
       .catch(err => {
         this.pageErrors.push(err)

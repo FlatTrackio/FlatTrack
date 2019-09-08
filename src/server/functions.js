@@ -123,6 +123,16 @@ function getEntries (dbConn) {
   })
 }
 
+function getAllSettings (dbConn) {
+  return new Promise((resolve, reject) => {
+    dbConn.query('SELECT * FROM flattracker.settings;').then(resp => {
+      resolve(resp)
+    }).catch(err => {
+      reject(err)
+    })
+  })
+}
+
 module.exports = {
   getAdminTokenHash,
   isAdmin,
@@ -134,5 +144,6 @@ module.exports = {
   getTask,
   getTasks,
   getEntry,
-  getEntries
+  getEntries,
+  getAllSettings
 }

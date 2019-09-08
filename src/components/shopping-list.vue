@@ -3,7 +3,10 @@
     <section class="hero is-dark">
     <div class="hero-body">
         <p class="title">
-        FlatTrack - {{ deploymentName }}
+          FlatTrack
+        </p>
+        <p class="subtitle">
+          {{ deploymentName }}
         </p>
     </div>
     </section>
@@ -23,9 +26,19 @@
 <script>
 export default {
   name: 'Shopping List',
+  deploymentName: '',
   data () {
     return {
     }
+  },
+  created () {
+    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/settings/deploymentName`)
+      .then(response => {
+        this.deploymentName = response.data.value
+      })
+      .catch(err => {
+        this.pageErrors.push(err)
+      })
   }
 }
 </script>

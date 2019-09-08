@@ -3,7 +3,10 @@
     <section class="hero is-dark">
     <div class="hero-body">
         <p class="title">
-        FlatTrack - {{ deploymentName }}
+          FlatTrack
+        </p>
+        <p class="subtitle">
+          {{ deploymentName }}
         </p>
     </div>
     </section>
@@ -11,7 +14,7 @@
         <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
             <ul>
             <li><a href="/#/">Home</a></li>
-            <li class="is-active"><a href="/#/recipes">recipes</a></li>
+            <li class="is-active"><a href="/#/recipes">Recipes</a></li>
             </ul>
         </nav>
         <h1 class="title">Recipes</h1>
