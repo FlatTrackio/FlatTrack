@@ -1,15 +1,6 @@
 <template>
   <div>
-    <section class="hero is-info">
-      <div class="hero-body">
-        <p class="title">
-          FlatTrack
-        </p>
-        <p class="subtitle">
-          {{ deploymentName }}
-        </p>
-      </div>
-    </section>
+    <headerDisplay/>
     <div class="container">
       <section class="section">
         <h2 class="title is-2">Hey, {{ login.name }}!</h2>
@@ -20,6 +11,7 @@
               <b-menu-item v-for="item in pages" v-bind:key="item" :href="item.url" class="menu-bar-item" :label="item.name" :disabled="item.disabled"></b-menu-item>
             </b-menu-list>
           </b-menu>
+          <b-button rounded @click="memberSignOut">Sign Out</b-button>
         </div>
       </section>
     </div>
@@ -40,6 +32,7 @@
 
 <script>
 import axios from 'axios'
+import headerDisplay from './header-display'
 
 export default {
   name: 'home',
@@ -93,22 +86,27 @@ export default {
         }
       ],
       login: {
-        name: "Person"
+        name: 'Person'
       }
     }
   },
-  methods () {
+  methods: {
+    memberSignOut: () => {
+      console.log("Signing out")
+    }
   },
   created () {
-    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/settings/deploymentName`)
+    axios.get(`/api/settings/deploymentName`)
       .then(response => {
         this.deploymentName = response.data.value
       })
       .catch(err => {
         this.pageErrors.push(err)
       })
+  },
+  components: {
+    headerDisplay
   }
-
 }
 </script>
 

@@ -22,24 +22,24 @@
             <h2 class="subtitle">Here's a few things you should know</h2>
           </section>
           <section class="section">
-            <ul class="menu-list">
-                <li class="menu-label" v-for="point in points" v-bind:key="point">
-                    {{ point.topPoint }}
-                    <div v-if="point.subPoints && point.subPoints.length">
-                        <ul class="menu-list">
-                            <li class="menu-label" v-for="subPoint in point.subPoints" v-bind:key="subPoint">
-                                {{ subPoint }}
-                            </li>
-                        </ul>
-                    </div>
-                </li>
-            </ul>
+            <div v-if="points && points.length">
+              <h2 class="subtitle is-2 is-spaced" v-for="point in points" v-bind:key="point">
+                - {{ point.topPoint }}
+                <div v-if="point.subPoints && point.subPoints.length">
+                  <h3 class="subtitle is-4" v-for="subPoint in point.subPoints" v-bind:key="subPoint">
+                    &nbsp;&nbsp;&nbsp;- {{ subPoint }}
+                  </h3>
+                </div>
+              </h2>
+            </div>
           </section>
         </div>
     </div>
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
   name: 'About this flat',
   data () {
@@ -67,11 +67,11 @@ export default {
         }
       ],
       deploymentName: 'Keep track of your flat',
-      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
+      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')
     }
   },
   created () {
-    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/settings/deploymentName`)
+    axios.get(`/api/settings/deploymentName`)
       .then(response => {
         this.deploymentName = response.data.value
       })

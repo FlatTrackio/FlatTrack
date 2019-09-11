@@ -83,7 +83,7 @@ export default {
     }
   },
   created () {
-    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/members`)
+    axios.get(`/api/members`)
       .then(response => {
         this.members = response.data
       })
@@ -93,7 +93,7 @@ export default {
   },
   methods: {
     addNewFlatmate: () => {
-      location.href = `${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/#/admin/members/u`
+      location.href = `/#/admin/members/u`
     }
   }
 }

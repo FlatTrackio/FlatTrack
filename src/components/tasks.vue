@@ -1,15 +1,6 @@
 <template>
   <div>
-    <section class="hero is-info">
-      <div class="hero-body">
-        <p class="title">
-          FlatTrack
-        </p>
-        <p class="subtitle">
-          {{ deploymentName }}
-        </p>
-      </div>
-    </section>
+    <headerDisplay/>
     <div class="container">
       <section class="section">
         <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
@@ -80,6 +71,7 @@
 
 <script>
 import axios from 'axios'
+import headerDisplay from './header-display'
 
 export default {
   name: 'tasks',
@@ -93,11 +85,11 @@ export default {
     }
   },
   created () {
-    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/tasks`)
+    axios.get(`/api/tasks`)
       .then(response => {
         this.tasks = response.data
 
-        return axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/settings/deploymentName`)
+        return axios.get(`/api/settings/deploymentName`)
       })
       .then(response => {
         this.deploymentName = response.data.value
@@ -113,6 +105,9 @@ export default {
       })
   },
   methods: {
+  },
+  components: {
+    headerDisplay
   }
 }
 </script>

@@ -2,25 +2,37 @@ const express = require('express')
 const router = express.Router()
 const mariadb = require('mariadb')
 const functions = require('./functions')
+const moment = require('moment')
+const uuid = require('uuid/v4')
+const packageJSON = require('../../package.json')
 const pool = mariadb.createPool({
-    host: process.env.MYSQL_HOST,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DATABASE,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_DATABASE,
     connectionLimit: 5
   })
-  var dbConn
-  pool.getConnection().then(conn => {
-    dbConn = conn
-  }).catch(err => {
-    console.log(err)
-  })
+var dbConn
+pool.getConnection().then(conn => {
+  dbConn = conn
+}).catch(err => {
+  console.log(err)
+})
+
+
+/*const knex = require('knex')({
+  client: 'mysql',
+  connection: '127.0.0.1',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_DATABASE
+})*/
 
 router.get('/', (req, res) => {
     // return list of api endpoints
     res.json({
-      message: 'Hello from FlatTracker API v1.0.0',
-      version: '1.0.0',
+      message: 'Hello from FlatTracker API v1',
+      version: packageJSON.version,
       return: 0
     })
     res.end()
@@ -55,7 +67,6 @@ router.get('/', (req, res) => {
       }
       // validate fields
       var regexNames = /([A-Za-z])\w+/
-      var regexPin = /([0-9])/
       functions.getMember(dbConn, form.member).then(resp => {
         console.log('Found user', resp)
       }).catch(resp => {
@@ -66,11 +77,6 @@ router.get('/', (req, res) => {
       switch (form) {
         case typeof form.taskName !== 'string' || (!regexNames.test(form.taskName) && form.taskName.length >= 100):
           res.json({ status: 1, message: 'Please enter a valid task name, containing only letters' })
-          res.end()
-          return
-  
-        case !(typeof form.timeSpent === 'string' || typeof form.body.password === 'number') || (!regexPin.test(form.timeSpent) && form.timeSpent.length >= 10):
-          res.json({ status: 1, message: 'Please enter a valid amount of time, containing only numbers' })
           res.end()
           return
       }
@@ -116,6 +122,7 @@ router.get('/', (req, res) => {
     .post((req, res) => {
       // add a new flat member (requires admin)
       if (!functions.verifyAdminHeaderBearer(req)) {
+        res.status(201)
         res.json({ return: 1, message: 'Whoops! you need to be admin to do that.' })
         res.end()
         return
@@ -123,8 +130,17 @@ router.get('/', (req, res) => {
       var form = req.body
       form = {
         names: form.names,
-        password: form.password
+        password: form.password,
+        email: form.email,
+        phoneNumber: form.phoneNumber,
+        allergies: form.allergies,
+        contractAgreement: form.contractAgreement,
+        group: form.group
       }
+
+      // TODO implement contract agreements
+      form.contractAgreement = "FALSE"
+
       // validate fields
       var regexNames = /([A-Za-z])\w+/
       switch (form) {
@@ -133,7 +149,7 @@ router.get('/', (req, res) => {
           res.end()
           return
   
-        case !(typeof form.password === 'string' || typeof form.body.password === 'number') || (!regexPin.test(form.password) && form.password.length >= 10):
+        case !(typeof form.password === 'string' || typeof form.body.password === 'number'):
           res.json({ status: 1, message: 'Please enter a valid password, containing only numbers' })
           res.end()
           return
@@ -148,11 +164,16 @@ router.get('/', (req, res) => {
         return
       })
   
-      dbConn.query(`INSERT INTO flattracker.members (id,names,password,joinTimestamp) VALUES ('${uuid()}','${form.names}','${form.password}','${moment().unix()}');`).then((resp) => {
+      console.log("Request to create new member:")
+      console.log(JSON.stringify(form))
+
+      dbConn.query(`INSERT INTO flattracker.members (id,names,email,password,joinTimestamp,phoneNumber,allergies,contractAgreement,group) VALUES ('${uuid()}','${form.names}','${form.email}','${form.password}','${moment().unix()}','${form.phoneNumber}','${form.allergies}',${form.contractAgreement},'${form.group}');`).then((resp) => {
         console.log(resp)
       }).catch(err => {
         // handle error
         console.log(err)
+        res.status(201)
+        res.json({ return: 1, message: 'Failed to create user' })
       })
     })
   router.route('/members/:id')
@@ -247,7 +268,6 @@ router.get('/', (req, res) => {
       }
       // validate fields
       var regexNames = /([A-Za-z])\w+/
-      var regexPin = /([0-9])/
       switch (form) {
         case typeof form.name !== 'string' || (!regexNames.test(form.name) && form.name.length >= 100):
           res.json({ status: 1, message: 'Please enter a valid name, containing only letters' })
@@ -261,11 +281,6 @@ router.get('/', (req, res) => {
   
         case typeof form.location !== 'string' || (!regexNames.test(form.location) && form.location.length >= 100):
           res.json({ status: 1, message: 'Please enter a valid location, containing only letters' })
-          res.end()
-          return
-  
-        case typeof form.importance !== 'string' || (!regexPin.test(form.importance) && form.importance.length !== 1):
-          res.json({ status: 1, message: 'Please enter a valid importance rating, containing only letters' })
           res.end()
           return
       }
@@ -316,7 +331,7 @@ router.get('/', (req, res) => {
         res.end()
         return
       }).catch(err => {
-        res.json({message: err, return: 1})
+        res.json({ message: err, return: 1 })
         res.end()
         return
       })

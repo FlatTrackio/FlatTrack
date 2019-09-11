@@ -34,13 +34,13 @@ import axios from 'axios'
 export default {
   name: 'Unknown page',
   deploymentName: 'Keep track of your flat',
-      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
+  pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
   data () {
     return {
     }
   },
   created () {
-    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/settings/deploymentName`)
+    axios.get(`/api/settings/deploymentName`)
       .then(response => {
         this.deploymentName = response.data.value
       })

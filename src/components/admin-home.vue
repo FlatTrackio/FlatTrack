@@ -45,18 +45,18 @@ export default {
       deploymentName: 'Keep track of your flat',
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       pages: [
-          {
-              name: 'Configure Features',
-              url: '#/admin/features'
-          },
-          {
-              name: 'Manage Flatmates',
-              url: '#/admin/members'
-          },
-          {
-              name: 'Tasks',
-              url: '#/admin/tasks'
-          }
+        {
+          name: 'Configure Features',
+          url: '#/admin/features'
+        },
+        {
+          name: 'Manage Flatmates',
+          url: '#/admin/members'
+        },
+        {
+          name: 'Tasks',
+          url: '#/admin/tasks'
+        }
       ],
       login: {
         name: 'Person'
@@ -64,7 +64,7 @@ export default {
     }
   },
   created () {
-    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/settings/deploymentName`)
+    axios.get(`/api/settings/deploymentName`)
       .then(response => {
         this.deploymentName = response.data.value
       })

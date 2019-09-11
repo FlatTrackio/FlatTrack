@@ -5,8 +5,8 @@
 
 var request = require('request-promise')
 var hash = require('hash.js')
-// development port is 3000
-var port = process.env.APP_PORT || 3000
+// development port is 8080
+var port = process.env.APP_PORT || 8080
 var protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
 var host = 'localhost'
 
@@ -17,7 +17,7 @@ var testInsertData = {
     newPassword: hash.sha256().update(`1234567890`).digest('hex')
 }
 
-var uri = `${protocol}://${host}:${port}/members/${testInsertData.id}`
+var uri = `${protocol}://${host}:${port}/api/members/${testInsertData.id}`
 
 console.log(`Making request to '${uri}'`)
 

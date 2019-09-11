@@ -5,18 +5,20 @@
 
 var request = require('request-promise')
 var hash = require('hash.js')
-// development port is 3000
-var port = process.env.APP_PORT || 3000
+// development port is 8080
+var port = process.env.APP_PORT || 8080
 var protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http'
 var host = 'localhost'
-var uri = `${protocol}://${host}:${port}/members`
+var uri = `${protocol}://${host}:${port}/api/members`
 
 console.log(`Making request to '${uri}'`)
 
 var pinUnhashed = Math.floor(Math.random() * (999999 - 100000 + 1) + 100000) + Math.floor(Math.random() * (999999 - 100000 + 1) + 100000)
 var testInsertData = {
   names: `${['John', 'Mary', 'Phillip', 'Jess', 'Kyle', 'Jack'][Math.floor(Math.random() * 5)]} ${['Doe', 'Taylor', 'Smith', 'Richards', 'Miles', 'Jackson'][Math.floor(Math.random() * 5)]}`,
-  password: hash.sha256().update(`${pinUnhashed}`).digest('hex')
+  password: hash.sha256().update(`${pinUnhashed}`).digest('hex'),
+  group: 'flatmember',
+  email: `user-${pinUnhashed}@example.com`
 }
 
 var adminTokenPin = hash.sha256().update(`${process.env.FLATTRACKER_ADMIN_PIN}`).digest('hex')

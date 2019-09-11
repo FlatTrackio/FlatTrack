@@ -3,8 +3,6 @@
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
-const moment = require('moment')
-const uuid = require('uuid/v4')
 const path = require('path')
 
 // development port is 8080

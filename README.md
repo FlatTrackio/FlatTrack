@@ -2,6 +2,18 @@
 
 > Keep track of your flat or community house
 
+## Features
+- Tasks
+
+
+## Technologies
+- [nodejs]() - server runtime
+- [vuejs]() - frontend
+- [expressjs]() - library for API
+- [Bulma]() / [Buefy]() - CSS framework
+- [axios]() - client-side HTTP request library
+
+
 ## Build Setup
 
 ``` bash

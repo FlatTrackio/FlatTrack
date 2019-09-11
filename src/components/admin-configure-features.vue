@@ -38,33 +38,33 @@ export default {
       deploymentName: 'Keep track of your flat',
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       features: [
-          {
-            name: 'Tasks'
-          },
-          {
-            name: 'Shopping List'
-          },
-          {
-            name: 'Noticeboard'
-          },
-          {
-            name: 'Shared Calendar'
-          },
-          {
-            name: 'Recipes'
-          },
-          {
-            name: 'Flatmates'
-          },
-          {
-            name: 'Highfives'
-          }
+        {
+          name: 'Tasks'
+        },
+        {
+          name: 'Shopping List'
+        },
+        {
+          name: 'Noticeboard'
+        },
+        {
+          name: 'Shared Calendar'
+        },
+        {
+          name: 'Recipes'
+        },
+        {
+          name: 'Flatmates'
+        },
+        {
+          name: 'Highfives'
+        }
       ],
       featuresEnabled: ['Tasks', 'Shopping List', 'Noticeboard', 'Shared Calendar', 'Recipes', 'Flatmates', 'Highfives']
     }
   },
   created () {
-    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/settings/deploymentName`)
+    axios.get(`/api/settings/deploymentName`)
       .then(response => {
         this.deploymentName = response.data.value
       })

@@ -1,25 +1,15 @@
 <template>
   <div>
     <section class="hero is-info">
-    <div class="hero-body">
+      <div class="hero-body">
         <p class="title">
           FlatTrack
         </p>
         <p class="subtitle">
           {{ deploymentName }}
         </p>
-    </div>
+      </div>
     </section>
-    <div class="container">
-      <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
-          <ul>
-          <li><a href="/#/">Home</a></li>
-          <li class="is-active"><a href="/#/shoppinglist">Shopping List</a></li>
-          </ul>
-      </nav>
-      <h1 class="title">Shopping List</h1>
-      <p>Page under construction, coming soon</p>
-    </div>
   </div>
 </template>
 
@@ -27,10 +17,10 @@
 import axios from 'axios'
 
 export default {
-  name: 'Shopping List',
-  deploymentName: 'Keep track of your flat',
+  name: 'header-display',
   data () {
     return {
+      deploymentName: 'Keep track of your flat'
     }
   },
   created () {
@@ -45,6 +35,6 @@ export default {
 }
 </script>
 
-<style scoped>
+<style>
 
 </style>

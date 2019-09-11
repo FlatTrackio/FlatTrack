@@ -64,12 +64,12 @@ export default {
     }
   },
   created () {
-    axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/task/${this.$route.query.task}`)
+    axios.get(`/api/task/${this.$route.query.task}`)
       .then(response => {
         this.task = response.data
         this.form.taskName = response.data.name
 
-        return axios.get(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/members`)
+        return axios.get(`/api/members`)
       })
       .then(response => {
         this.members = response.data
@@ -80,7 +80,7 @@ export default {
   },
   methods: {
     markAsCompleted () {
-      axios.put(`${location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')}/api/entry/${this.task.id}`, {})
+      axios.put(`/api/entry/${this.task.id}`, {})
         .then(response => {
           console.log(response)
         })
