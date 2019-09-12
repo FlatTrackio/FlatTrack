@@ -18,7 +18,9 @@ var testInsertData = {
   names: `${['John', 'Mary', 'Phillip', 'Jess', 'Kyle', 'Jack'][Math.floor(Math.random() * 5)]} ${['Doe', 'Taylor', 'Smith', 'Richards', 'Miles', 'Jackson'][Math.floor(Math.random() * 5)]}`,
   password: hash.sha256().update(`${pinUnhashed}`).digest('hex'),
   group: 'flatmember',
-  email: `user-${pinUnhashed}@example.com`
+  email: `user-${pinUnhashed}@example.com`,
+  allergies: 'a',
+  phoneNumber: '023231238702'
 }
 
 var adminTokenPin = hash.sha256().update(`${process.env.FLATTRACKER_ADMIN_PIN}`).digest('hex')

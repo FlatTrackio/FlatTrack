@@ -76,7 +76,7 @@ export default {
           name: 'Flatmates',
           url: '#/members',
           to: 'members',
-          disabled: true
+          disabled: false
         },
         {
           name: 'Highfives',
@@ -92,7 +92,7 @@ export default {
   },
   methods: {
     memberSignOut: () => {
-      console.log("Signing out")
+      console.log('Signing out')
     }
   },
   created () {

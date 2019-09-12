@@ -19,7 +19,6 @@ pool.getConnection().then(conn => {
   console.log(err)
 })
 
-
 /*const knex = require('knex')({
   client: 'mysql',
   connection: '127.0.0.1',
@@ -132,14 +131,14 @@ router.get('/', (req, res) => {
         names: form.names,
         password: form.password,
         email: form.email,
-        phoneNumber: form.phoneNumber,
-        allergies: form.allergies,
-        contractAgreement: form.contractAgreement,
-        group: form.group
+        group: form.group,
+        phoneNumber: form.phoneNumber || null,
+        allergies: form.allergies || null,
+        contractAgreement: form.contractAgreement || null
       }
 
       // TODO implement contract agreements
-      form.contractAgreement = "FALSE"
+      form.contractAgreement = "NULL"
 
       // validate fields
       var regexNames = /([A-Za-z])\w+/

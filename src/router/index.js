@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import home from '@/components/home'
+import login from '@/components/login'
 import unknownPage from '@/components/unknown-page'
 import tasks from '@/components/tasks'
 import task from '@/components/task'
@@ -25,6 +26,11 @@ export default new Router({
       path: '/',
       name: 'home',
       component: home
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: login
     },
     {
       path: '*',

@@ -6,7 +6,12 @@
           FlatTrack
         </p>
         <p class="subtitle">
-          {{ deploymentName }}
+          <div v-if="genericMessage == 'true'">
+            Keep track of your flat
+          </div>
+          <div v-else>
+            {{ subtitle }}
+          </div>
         </p>
       </div>
     </section>
@@ -18,15 +23,18 @@ import axios from 'axios'
 
 export default {
   name: 'header-display',
+  props: {
+    'genericMessage': Boolean
+  },
   data () {
     return {
-      deploymentName: 'Keep track of your flat'
+      subtitle: 'Keep track of your flat'
     }
   },
   created () {
     axios.get(`/api/settings/deploymentName`)
       .then(response => {
-        this.deploymentName = response.data.value
+        this.subtitle = response.data.value
       })
       .catch(err => {
         this.pageErrors.push(err)

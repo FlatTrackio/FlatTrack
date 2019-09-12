@@ -30,7 +30,7 @@
                       <b-input placeholder="xx xxx xxxx" v-model="member.phoneNumber" maxlength="30" rounded></b-input>
                   </b-field>
                   <b-field label="Email*">
-                      <b-input placeholder="xxxxx@xxxxx.xxx" v-model="member.email" maxlength="30" rounded required></b-input>
+                      <b-input placeholder="xxxxx@xxxxx.xxx" type="email" v-model="member.email" maxlength="30" rounded required></b-input>
                   </b-field>
                   <b-field label="Allergies">
                       <b-input placeholder="xx, xxxx, xx" v-model="member.allergies" maxlength="30" rounded></b-input>
