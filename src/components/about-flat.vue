@@ -1,15 +1,6 @@
 <template>
     <div>
-        <section class="hero is-info">
-        <div class="hero-body">
-          <p class="title">
-            FlatTrack
-          </p>
-          <p class="subtitle">
-            {{ deploymentName }}
-          </p>
-        </div>
-        </section>
+        <headerDisplay/>
         <div class="container">
           <section class="section">
             <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
@@ -39,6 +30,7 @@
 
 <script>
 import axios from 'axios'
+import headerDisplay from './header-display'
 
 export default {
   name: 'About this flat',
@@ -78,6 +70,9 @@ export default {
       .catch(err => {
         this.pageErrors.push(err)
       })
+  },
+  components: {
+    headerDisplay
   }
 }
 </script>

@@ -1,15 +1,6 @@
 <template>
   <div>
-    <section class="hero is-info">
-    <div class="hero-body">
-        <p class="title">
-        FlatTrack
-        </p>
-        <p class="subtitle">
-          {{ deploymentName }}
-        </p>
-    </div>
-    </section>
+    <headerDisplay/>
     <div class="container">
       <section class="section">
         <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
@@ -45,6 +36,8 @@
 </template>
 
 <script>
+import headerDisplay from './header-display'
+
 export default {
   name: 'Shopping List',
   pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
@@ -69,6 +62,9 @@ export default {
         }
       ]
     }
+  },
+  components: {
+    headerDisplay
   }
 }
 </script>

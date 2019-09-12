@@ -1,12 +1,6 @@
 <template>
     <div>
-        <section class="hero is-info">
-            <div class="hero-body">
-                <p class="title">
-                    About FlatTrack
-                </p>
-            </div>
-        </section>
+        <headerDisplay/>
         <div class="container">
             <section class="section">
                 <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
@@ -43,12 +37,17 @@
 </template>
 
 <script>
+import headerDisplay from './header-display'
+
 export default {
   name: 'About FlatTrack',
   data () {
     return {
       flattrackVersion: '0.0.1'
     }
+  },
+  components: {
+    headerDisplay
   }
 }
 </script>

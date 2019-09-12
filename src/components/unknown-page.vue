@@ -1,15 +1,6 @@
 <template>
     <div>
-        <section class="hero is-info">
-            <div class="hero-body">
-                <p class="title">
-                    FlatTrack
-                </p>
-                <p class="subtitle">
-                    {{ deploymentName }}
-                </p>
-            </div>
-        </section>
+        <headerDisplay/>
         <div class="container">
             <section class="section is-large">
                 <h2 class="title is-2">Unknown page!</h2>
@@ -30,6 +21,7 @@
 
 <script>
 import axios from 'axios'
+import headerDisplay from './header-display'
 
 export default {
   name: 'Unknown page',
@@ -47,6 +39,9 @@ export default {
       .catch(err => {
         this.pageErrors.push(err)
       })
+  },
+  components: {
+    headerDisplay
   }
 }
 </script>

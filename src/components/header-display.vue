@@ -6,12 +6,12 @@
           FlatTrack
         </p>
         <p class="subtitle">
-          <div v-if="genericMessage == 'true'">
+          <span v-if="genericMessage == 'true'">
             Keep track of your flat
-          </div>
-          <div v-else>
+          </span>
+          <span v-else>
             {{ subtitle }}
-          </div>
+          </span>
         </p>
       </div>
     </section>

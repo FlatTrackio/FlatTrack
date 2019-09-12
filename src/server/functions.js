@@ -19,22 +19,19 @@ function verifyAdminHeaderBearer (req) {
   return true
 }
 
-function getMember (dbConn, names, returnHashes = false) {
+function getMember (knex, names, returnHashes = false) {
   return new Promise((resolve, reject) => {
-    dbConn.query(`SELECT * FROM members WHERE id = '${names}'`).then((resp) => {
-      // console.log(resp)
-      if (returnHashes === false) resp[0].password = '<SENSITIVE VALUE>'
-      resolve(resp[0])
+    knex('members').select('*').then(resp => {
+      resolve(resp)
     }).catch(err => {
-      // handle error
       reject(err)
     })
   })
 }
 
-function getMembers (dbConn, returnHashes = false) {
+function getMembers (knex, returnHashes = false) {
   return new Promise((resolve, reject) => {
-    dbConn.query('SELECT * FROM members').then((resp) => {
+    knex('members').select('*').then(resp => {
       var membersList = []
       resp.map(i => {
         i.id = i.id.toString('binary', 0, 64)
@@ -42,9 +39,6 @@ function getMembers (dbConn, returnHashes = false) {
         membersList = [i, ...membersList]
       })
       resolve(resp)
-    }).catch(err => {
-      // handle error
-      reject(err)
     })
   })
 }
@@ -59,9 +53,9 @@ function updateMember (dbConn, id, newPassword) {
   })
 }
 
-function deleteMember (dbConn, id) {
+function deleteMember (knex, id) {
   return new Promise((resolve, reject) => {
-    dbConn.query(`DELETE FROM flattracker.tasks WHERE id='${id}';`).then(resp => {
+    knex('members').where('id', id).del().then(resp => {
       resolve(resp)
     }).catch(err => {
       reject(err)
@@ -69,9 +63,9 @@ function deleteMember (dbConn, id) {
   })
 }
 
-function getTask (dbConn, id) {
+function getTask (knex, id) {
   return new Promise((resolve, reject) => {
-    dbConn.query(`SELECT * FROM tasks WHERE id = '${id}'`).then((resp) => {
+    knex('tasks').select('*').where('id', id).then(resp => {
       resolve(resp[0])
     }).catch(err => {
       // handle error
@@ -80,9 +74,9 @@ function getTask (dbConn, id) {
   })
 }
 
-function getTasks (dbConn) {
+function getTasks (knex) {
   return new Promise((resolve, reject) => {
-    dbConn.query('SELECT * FROM tasks').then((resp) => {
+    knex('tasks').select('*').then(resp => {
       var tasksList = []
       resp.map(i => {
         i.id = i.id.toString('binary', 0, 64)
@@ -96,9 +90,9 @@ function getTasks (dbConn) {
   })
 }
 
-function getEntry (dbConn, id) {
+function getEntry (knex, id) {
   return new Promise((resolve, reject) => {
-    dbConn.query(`SELECT * FROM entries WHERE id = '${id}'`).then((resp) => {
+    knex('entries').select('*').where('id', id).then((resp) => {
       resolve(resp[0])
     }).catch(err => {
       // handle error
@@ -109,7 +103,7 @@ function getEntry (dbConn, id) {
 
 function getEntries (dbConn) {
   return new Promise((resolve, reject) => {
-    dbConn.query('SELECT * FROM entries').then((resp) => {
+    knex('entries').select('*').then((resp) => {
       var tasksList = []
       resp.map(i => {
         i.id = i.id.toString('binary', 0, 64)
@@ -123,9 +117,9 @@ function getEntries (dbConn) {
   })
 }
 
-function getAllSettings (dbConn) {
+function getAllSettings (knex) {
   return new Promise((resolve, reject) => {
-    dbConn.query('SELECT * FROM flattracker.settings;').then(resp => {
+    knex('settings').select('*').then(resp => {
       resolve(resp)
     }).catch(err => {
       reject(err)

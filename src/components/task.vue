@@ -1,15 +1,6 @@
 <template>
     <div>
-      <section class="hero is-info">
-        <div class="hero-body">
-          <p class="title">
-            Task
-          </p>
-          <p class="subtitle">
-            Yours to complete
-          </p>
-        </div>
-      </section>
+      <headerDisplay/>
       <div class="container">
         <section class="section">
           <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
@@ -47,6 +38,7 @@
 
 <script>
 import axios from 'axios'
+import headerDisplay from './header-display'
 
 export default {
   name: 'Task',
@@ -88,6 +80,9 @@ export default {
           this.tasksGETerrors.push(err)
         })
     }
+  },
+  components: {
+    headerDisplay
   }
 }
 </script>

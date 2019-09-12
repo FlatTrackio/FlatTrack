@@ -19,13 +19,16 @@ pool.getConnection().then(conn => {
   console.log(err)
 })
 
-/*const knex = require('knex')({
+const knex = require('knex')({
   client: 'mysql',
-  connection: '127.0.0.1',
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_DATABASE
-})*/
+  connection: {
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE
+  },
+  pool: { min: 0, max: 7 }
+})
 
 router.get('/', (req, res) => {
     // return list of api endpoints
@@ -40,7 +43,7 @@ router.get('/', (req, res) => {
   router.route('/entry')
     .get((req, res) => {
       // get all entries
-      functions.getEntries(dbConn).then(resp => {
+      functions.getEntries(knex).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -66,7 +69,7 @@ router.get('/', (req, res) => {
       }
       // validate fields
       var regexNames = /([A-Za-z])\w+/
-      functions.getMember(dbConn, form.member).then(resp => {
+      functions.getMember(knex, form.member).then(resp => {
         console.log('Found user', resp)
       }).catch(resp => {
         res.json({ return: 1, message: 'Unable to find that user.' })
@@ -79,7 +82,13 @@ router.get('/', (req, res) => {
           res.end()
           return
       }
-      dbConn.query(`INSERT INTO flattracker.entries (id,timestamp,member,taskName) VALUES ('${uuid()}','${moment().unix()}','${form.member}','${form.taskName}');`).then((resp) => {
+
+      knex('entries').insert({
+        id: uuid(),
+        timestamp: moment().unix(),
+        member: form.member,
+        taskName: form.taskName
+      }).then(resp => {
         console.log(resp)
         res.json({status: 0, message: "Entry added"})
         res.end()
@@ -95,7 +104,7 @@ router.get('/', (req, res) => {
   router.get('/entry/:id', (req, res) => {
     // get a particular entry
     var id = req.params.id
-    functions.getEntry(dbConn, id).then(resp => {
+    functions.getEntry(knex, id).then(resp => {
       res.json(resp)
       res.end()
     }).catch(err => {
@@ -108,7 +117,7 @@ router.get('/', (req, res) => {
   router.route('/members')
     .get((req, res) => {
       // get a list of all flat members
-      functions.getMembers(dbConn).then(resp => {
+      functions.getMembers(knex).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -128,17 +137,16 @@ router.get('/', (req, res) => {
       }
       var form = req.body
       form = {
+        id: uuid(),
         names: form.names,
         password: form.password,
         email: form.email,
         group: form.group,
         phoneNumber: form.phoneNumber || null,
         allergies: form.allergies || null,
-        contractAgreement: form.contractAgreement || null
+        contractAgreement: form.contractAgreement || 1,
+        joinTimestamp: moment().unix()
       }
-
-      // TODO implement contract agreements
-      form.contractAgreement = "NULL"
 
       // validate fields
       var regexNames = /([A-Za-z])\w+/
@@ -153,7 +161,7 @@ router.get('/', (req, res) => {
           res.end()
           return
       }
-      functions.getMember(dbConn, form.member).then(resp => {
+      functions.getMember(knex, form.member).then(resp => {
         res.json({ return: 1, message: 'User already exists.' })
         res.end()
         return
@@ -166,20 +174,24 @@ router.get('/', (req, res) => {
       console.log("Request to create new member:")
       console.log(JSON.stringify(form))
 
-      dbConn.query(`INSERT INTO flattracker.members (id,names,email,password,joinTimestamp,phoneNumber,allergies,contractAgreement,group) VALUES ('${uuid()}','${form.names}','${form.email}','${form.password}','${moment().unix()}','${form.phoneNumber}','${form.allergies}',${form.contractAgreement},'${form.group}');`).then((resp) => {
-        console.log(resp)
+      knex('members').insert(form).then(resp => {
+        // handle user creating sucessfully
+        res.json({message: 'Added new user successfully'})
+        res.end()
+        return
       }).catch(err => {
         // handle error
         console.log(err)
         res.status(201)
         res.json({ return: 1, message: 'Failed to create user' })
+        return
       })
     })
   router.route('/members/:id')
     .get((req, res) => {
       // get a given flat member
       var id = req.params.id
-      functions.getMember(dbConn, id).then(resp => {
+      functions.getMember(knex, id).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -199,7 +211,7 @@ router.get('/', (req, res) => {
       }
   
       // get the user's row
-      functions.getMember(dbConn, id, returnHashes = true).then(resp => {
+      functions.getMember(knex, id, returnHashes = true).then(resp => {
         // verify the user
         if (!(functions.isAdmin(form.password) || form.password === resp.password)) {
           res.json({ return: 1, message: `${resp.names}'s old password or the Administrator password must be provided to do this.` })
@@ -207,7 +219,7 @@ router.get('/', (req, res) => {
         }
   
         // change the password
-        return functions.updateMember(dbConn, id, form.newPassword)
+        return functions.updateMember(knex, id, form.newPassword)
       }).then(resp => {
         res.json(resp)
         res.end()
@@ -227,7 +239,7 @@ router.get('/', (req, res) => {
       }
   
       var id = req.params.id
-      functions.deleteMember(dbConn, id).then(resp => {
+      functions.deleteMember(knex, id).then(resp => {
         res.json(resp)
         res.end()
       }).catch(err => {
@@ -240,7 +252,7 @@ router.get('/', (req, res) => {
   router.route('/tasks')
     .get((req, res) => {
       // get a list of all tasks
-      functions.getTasks(dbConn).then(resp => {
+      functions.getTasks(knex).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -260,6 +272,7 @@ router.get('/', (req, res) => {
       }
       var form = req.body
       form = {
+        id: uuid(),
         name: form.name,
         description: form.description,
         location: form.location,
@@ -283,7 +296,7 @@ router.get('/', (req, res) => {
           res.end()
           return
       }
-      functions.getTask(dbConn, form.id).then(resp => {
+      functions.getTask(knex, form.id).then(resp => {
         res.json({ return: 1, message: 'Task already exists.' })
         res.end()
         return
@@ -293,18 +306,25 @@ router.get('/', (req, res) => {
         return
       })
   
-      dbConn.query(`INSERT INTO flattracker.tasks (id,name,description,location,importance,shortid) VALUES ('${uuid()}','${form.name}','${form.description}','${form.location}','${form.importance}','${shortid.generate()}');`).then((resp) => {
+      knex('tasks').insert(form).then((resp) => {
         console.log(resp)
+        res.json({message: "Task created"})
+        res.end()
+        return
       }).catch(err => {
         // handle error
         console.log(err)
+        res.json({message: "Task failed to create"})
+        res.status(201)
+        res.end()
+        return
       })
     })
   router.route('/task/:id')
     .get((req, res) => {
       // get a given task
       var id = req.params.id
-      functions.getTask(dbConn, id).then(resp => {
+      functions.getTask(knex, id).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -325,7 +345,7 @@ router.get('/', (req, res) => {
 
   router.route('/settings')
     .get((req, res) => {
-      functions.getAllSettings(dbConn).then(resp => {
+      functions.getAllSettings(knex).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -339,7 +359,7 @@ router.get('/', (req, res) => {
   router.route('/settings/:id')
     .get((req, res) => {
       var id = req.params.id
-      functions.getAllSettings(dbConn).then(resp => {  
+      functions.getAllSettings(knex).then(resp => {  
         res.json(resp[0])
         res.end()
         return

@@ -1,15 +1,6 @@
 <template>
   <div>
-    <section class="hero is-info">
-    <div class="hero-body">
-        <p class="title">
-          FlatTrack
-        </p>
-        <p class="subtitle">
-          {{ deploymentName }}
-        </p>
-    </div>
-    </section>
+    <headerDisplay/>
     <div class="container">
         <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
             <ul>
@@ -24,11 +15,16 @@
 </template>
 
 <script>
+import headerDisplay from './header-display'
+
 export default {
   name: 'Shopping List',
   data () {
     return {
     }
+  },
+  components: {
+    headerDisplay
   }
 }
 </script>
