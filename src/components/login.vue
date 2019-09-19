@@ -20,7 +20,7 @@
                 </b-input>
             </b-field>
             <b-button rounded>Login</b-button>
-            <b-button rounded type="is-warning">Forgot Password</b-button>
+            <b-button tag="a" href="#/forgot-password" rounded type="is-warning">Forgot Password</b-button>
         </section>
     </div>
 </template>

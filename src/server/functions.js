@@ -19,9 +19,9 @@ function verifyAdminHeaderBearer (req) {
   return true
 }
 
-function getMember (knex, names, returnHashes = false) {
+function getMember (knex, id, returnHash = false) {
   return new Promise((resolve, reject) => {
-    knex('members').select('*').then(resp => {
+    knex('members').select('*').where('id', id).then(resp => {
       resolve(resp)
     }).catch(err => {
       reject(err)

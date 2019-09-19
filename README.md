@@ -3,15 +3,20 @@
 > Keep track of your flat or community house
 
 ## Features
-- Tasks
-
+- Tasks (WIP)
+- Shopping List (WIP - heavy construction)
+- Noticeboard (WIP - heavy construction)
+- Shared Calendar (WIP - heavy construction)
+- Recipes (WIP - heavy construction)
+- Flatmates (WIP - heavy construction)
+- Highfives (WIP - heavy construction)
 
 ## Technologies
-- [nodejs]() - server runtime
-- [vuejs]() - frontend
-- [expressjs]() - library for API
-- [Bulma]() / [Buefy]() - CSS framework
-- [axios]() - client-side HTTP request library
+- [nodejs](https://nodejs.org) - server runtime
+- [vuejs](https://vuejs.org) - frontend
+- [expressjs](https://expressjs.com) - library for API
+- [Bulma](https://bulma.io/) / [Buefy](https://buefy.org/) - CSS framework
+- [axios](https://github.com/axios/axios) - client-side HTTP request library
 
 
 ## Build Setup

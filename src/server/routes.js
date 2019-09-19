@@ -136,6 +136,7 @@ router.get('/', (req, res) => {
         return
       }
       var form = req.body
+      console.log(req)
       form = {
         id: uuid(),
         names: form.names,
@@ -145,7 +146,12 @@ router.get('/', (req, res) => {
         phoneNumber: form.phoneNumber || null,
         allergies: form.allergies || null,
         contractAgreement: form.contractAgreement || 1,
-        joinTimestamp: moment().unix()
+        joinTimestamp: moment().unix(),
+        memberSetPassword: form.memberSetPassword
+      }
+
+      if (form.memberSetPassword === "true") {
+        form.password = "__SETME__"
       }
 
       // validate fields
@@ -156,8 +162,8 @@ router.get('/', (req, res) => {
           res.end()
           return
   
-        case !(typeof form.password === 'string' || typeof form.body.password === 'number'):
-          res.json({ status: 1, message: 'Please enter a valid password, containing only numbers' })
+        case (form.memberSetPassword !== true && !(typeof form.password === 'string' && form.password.length > 30)):
+          res.json({ status: 1, message: 'Please enter a valid password, 30 characters max' })
           res.end()
           return
       }
@@ -192,7 +198,7 @@ router.get('/', (req, res) => {
       // get a given flat member
       var id = req.params.id
       functions.getMember(knex, id).then(resp => {
-        res.json(resp)
+        res.json(resp[0])
         res.end()
         return
       }).catch(err => {

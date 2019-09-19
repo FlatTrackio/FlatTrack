@@ -16,60 +16,63 @@
               <ul>
                   <li><a href="/#/admin">Admin Home</a></li>
                   <li><a href="/#/admin/members">Manage flatmates</a></li>
-                  <li class="is-active"><a>{{ names || 'Add a flatmate' }}</a></li>
+                  <li class="is-active"><a>{{ returnNamesforID(id, names) || 'Add a flatmate' }}</a></li>
               </ul>
             </nav>
-            <h1 class="title">{{ names || 'Add a flatmate' }}</h1>
+            <h1 class="title">{{ returnNamesforID(id, names) || 'Add a flatmate' }}</h1>
             <div class="card">
               <div class="card-content">
                 <div class="content">
-                  <b-field label="Fullname*" v-if="!names">
-                      <b-input placeholder="xxxxx xxxxxxxx" v-model="member.names" maxlength="30" rounded required></b-input>
+                  <b-field label="Fullname" v-if="!id">
+                      <b-input placeholder="xxxxx xxxxxxxx" v-model="names" maxlength="30" rounded required></b-input>
                   </b-field>
-                  <b-field label="Phone Number">
-                      <b-input placeholder="xx xxx xxxx" v-model="member.phoneNumber" maxlength="30" rounded></b-input>
+                  <b-field label="Phone Number (optional)">
+                      <b-input placeholder="xx xxx xxxx" v-model="phoneNumber" maxlength="30" rounded></b-input>
                   </b-field>
-                  <b-field label="Email*">
-                      <b-input placeholder="xxxxx@xxxxx.xxx" type="email" v-model="member.email" maxlength="30" rounded required></b-input>
+                  <b-field label="Email">
+                      <b-input placeholder="xxxxx@xxxxx.xxx" type="email" v-model="email" maxlength="30" rounded required></b-input>
                   </b-field>
-                  <b-field label="Allergies">
-                      <b-input placeholder="xx, xxxx, xx" v-model="member.allergies" maxlength="30" rounded></b-input>
+                  <b-field label="Allergies (optional)">
+                      <b-input placeholder="xx, xxxx, xx" v-model="allergies" maxlength="30" rounded></b-input>
                   </b-field>
-                  <b-field label="Password">
-                      <b-input type="password" placeholder="xxxxxxxxxxxxx" v-model="member.password" maxlength="30" rounded :required="names" password-reveal :disabled="member.memberSetPassword"></b-input>
+                  <b-field label="Password (optional)">
+                      <b-input type="password" placeholder="xxxxxxxxxxxxx" v-model="password" maxlength="30" rounded :required="id" password-reveal :disabled="memberSetPassword"></b-input>
                   </b-field>
-                  <b-checkbox v-if="!names" v-model="member.memberSetPassword" native-value="true">Allow the new member to set the password?<br/><br/></b-checkbox>
-                  <label class="label">Group*</label>
-                  <div class="field">
-                    <b-radio v-model="member.group"
-                        native-value="flatmember">
-                        Flatmember - standard user, can use anything enabled
-                    </b-radio>
+                  <b-checkbox v-if="!id" v-model="memberSetPassword" native-value="true">Allow the new member to set the password?<br/><br/></b-checkbox>
+                  <div class="control">
+                    <label class="label">Group</label>
+                    <div class="field">
+                      <b-radio v-model="group"
+                          native-value="flatmember"
+                          name="group">
+                          Flatmember - standard user, can use anything enabled
+                      </b-radio>
+                    </div>
+                    <div class="field">
+                      <b-radio v-model="group"
+                          native-value="admin"
+                          name="group">
+                          Admin - can access the admin pages
+                      </b-radio>
+                    </div>
+                    <div class="field">
+                      <b-radio v-model="group"
+                          native-value="approver"
+                          name="group">
+                          Approver - can view and approve tasks
+                      </b-radio>
+                    </div>
                   </div>
-                  <div class="field">
-                    <b-radio v-model="member.group"
-                        native-value="admin">
-                        Admin - can access the /admin pages
-                    </b-radio>
-                  </div>
-                  <div class="field">
-                    <b-radio v-model="member.group"
-                        native-value="approver">
-                        Approver - can view and approve tasks
-                    </b-radio>
-                  </div>
-                  <div v-if="names">
+                  <br>
+                  <div v-if="returnNamesforID(id, names)">
                     <b-button type="is-success">Update</b-button>
                     <b-button type="is-warning">Disable</b-button>
                     <b-button type="is-danger">Delete</b-button>
                   </div>
-                  <div v-if="!names">
-                    <b-button type="is-success" @click="addNewMember">Add new flatmate</b-button>
+                  <div v-else>
+                    <b-button type="is-success" native-type="submit" @click="addNewMember(names, email, allergies, password, group, memberSetPassword)">Add new flatmate</b-button>
                   </div>
                   <br>
-                  <p>
-                    *Required
-                  </p>
                 </div>
               </div>
             </div>
@@ -88,31 +91,46 @@ export default {
     return {
       deploymentName: 'Keep track of your flat',
       id: this.$route.query.id,
-      names: null,
+      names: '',
+      email: '',
+      allergies: '',
+      password: '',
+      memberSetPassword: true,
+      group: 'flatmember',
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       member: {
-        group: 'flatmember',
-        memberSetPassword: true
-      }
+      },
+      pageErrors: []
     }
   },
   created () {
-    if (this.$route.query.id != null) this.methods.getMembersList()
+    var id = this.$route.query.id
+    axios.get(`/api/members/${id}`)
+      .then(response => {
+        var member = response.data
+        this.names = response.data.names
+        this.email = member.email
+        this.allergies = member.allergies
+        this.memberSetPassword = member.memberSetPassword
+        this.group = member.group
+        this.password = null
+      })
+      .catch(err => {
+        this.pageErrors = [...this.pageErrors, err]
+      })
   },
   methods: {
-    getMembersList: () => {
-      axios.get(`/api/members/${this.$route.query.id}`)
-        .then(response => {
-          this.member = response.data
-          this.names = this.member.names
-          this.member.password = null
-        })
-        .catch(err => {
-          this.pageErrors.push(err)
-        })
-    },
-    addNewMember: () => {
-      axios.post(`/api/members`, this.member)
+    addNewMember: (names, email, allergies, password, group, memberSetPassword) => {
+      var member = {
+        names,
+        email,
+        allergies,
+        password,
+        group,
+        memberSetPassword
+      }
+      console.log(JSON.stringify(member, null, 4))
+      axios({method: 'post', url: `/api/members`, data: member})
         .then(response => {
           console.log('Add successful', response)
           Toast.open({
@@ -121,7 +139,6 @@ export default {
             type: 'is-success'
           })
           location.href = '#/admin/members'
-          this.methods.getMembersList()
         })
         .catch(err => {
           console.log('Add failed', err)
@@ -130,8 +147,17 @@ export default {
             position: 'is-bottom',
             type: 'is-danger'
           })
-          this.pageErrors.push(err)
         })
+    },
+    returnNamesforID: (id, names) => {
+      if (typeof id !== 'undefined') {
+        return names
+      } else {
+        return null
+      }
+    },
+    printGroupSelection: (group) => {
+      console.log(group)
     }
   }
 }

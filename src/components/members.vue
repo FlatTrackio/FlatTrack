@@ -6,11 +6,11 @@
         <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
             <ul>
             <li><a href="/#/">Home</a></li>
-            <li class="is-active"><a href="/#/flatmates">Flatmates</a></li>
+            <li class="is-active"><a href="/#/members">Flatmates</a></li>
             </ul>
         </nav>
         <h1 class="title">Flatmates</h1>
-        <p>These are your flatmates, make sure to get to know them 😃</p>
+        <p>These are your flatmates, make sure to get to know them {{ emojiSmile }}</p>
       </section>
       <section class="section">
         <div v-if="members && members.length">
@@ -35,7 +35,7 @@
                 </div>
               </div>
               <footer class="card-footer">
-                <a :href="`${pageLocation}/#/admin/members/u?id=${member.id}`" class="card-footer-item">View</a>
+                <a :href="`${pageLocation}/#/members/u?id=${member.id}`" class="card-footer-item">View</a>
               </footer>
             </div>
           </div>
@@ -63,6 +63,7 @@
 <script>
 import axios from 'axios'
 import headerDisplay from './header-display'
+import emoji from 'node-emoji'
 
 export default {
   name: 'Shopping List',
@@ -70,7 +71,8 @@ export default {
     return {
       deploymentName: 'Keep track of your flat',
       members: [],
-      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')
+      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
+      emojiSmile: emoji.get('smile')
     }
   },
   created () {

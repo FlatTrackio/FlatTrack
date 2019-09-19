@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import home from '@/components/home'
 import login from '@/components/login'
+import forgotPassword from '@/components/forgot-password'
 import unknownPage from '@/components/unknown-page'
 import tasks from '@/components/tasks'
 import task from '@/components/task'
@@ -9,6 +10,7 @@ import aboutFlatTrack from '@/components/about-flattrack'
 import aboutFlat from '@/components/about-flat'
 import highFives from '@/components/high-fives'
 import members from '@/components/members'
+import member from '@/components/member'
 import noticeboard from '@/components/noticeboard'
 import recipes from '@/components/recipes'
 import sharedCalendar from '@/components/shared-calendar'
@@ -31,6 +33,11 @@ export default new Router({
       path: '/login',
       name: 'login',
       component: login
+    },
+    {
+      path: '/forgot-password',
+      name: 'forgot-password',
+      component: forgotPassword
     },
     {
       path: '*',
@@ -66,6 +73,11 @@ export default new Router({
       path: '/members',
       name: 'members',
       component: members
+    },
+    {
+      path: '/members/u',
+      name: 'member',
+      component: member
     },
     {
       path: '/noticeboard',
