@@ -11,8 +11,6 @@
             </ul>
         </nav>
         <h1 class="title">{{ member.names }}</h1>
-      </section>
-      <section class="section">
         <div class="card-margin">
           <div class="card">
             <div class="card-content">

@@ -9,7 +9,7 @@ function getAdminTokenHash () {
 function isAdmin (password) {
   return getAdminTokenHash() === password
 }
-function verifyAdminHeaderBearer (req) {
+function checkAuthToken (req, res) {
   var bearerToken = req.headers.authorization
   if (bearerToken) {
     bearerToken = bearerToken.split(' ')[1]
@@ -17,6 +17,9 @@ function verifyAdminHeaderBearer (req) {
     return null
   }
   return true
+  res.json({ return: 1, message: 'You are not authorized to do that, please login' })
+  res.redirect('/')
+  res.next()
 }
 
 function getMember (knex, id, returnHash = false) {
@@ -43,8 +46,9 @@ function getMembers (knex, returnHashes = false) {
   })
 }
 
-function updateMember (dbConn, id, newPassword) {
+function updateMember (knex, id, newPassword) {
   return new Promise((resolve, reject) => {
+    knex('tasks').where('id', id).
     dbConn.query(`UPDATE flattracker.tasks SET name='${newPassword}' WHERE id='${id}';`).then(resp => {
       resolve(resp)
     }).catch(err => {
@@ -130,7 +134,7 @@ function getAllSettings (knex) {
 module.exports = {
   getAdminTokenHash,
   isAdmin,
-  verifyAdminHeaderBearer,
+  checkAuthToken,
   getMember,
   getMembers,
   updateMember,

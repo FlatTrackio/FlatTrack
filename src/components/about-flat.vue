@@ -11,13 +11,11 @@
             </nav>
             <h1 class="title">About this flat</h1>
             <h2 class="subtitle">Here's a few things you should know</h2>
-          </section>
-          <section class="section">
             <div v-if="points && points.length">
-              <h2 class="subtitle is-2 is-spaced" v-for="point in points" v-bind:key="point">
+              <h2 class="title is-4" v-for="point in points" v-bind:key="point">
                 - {{ point.topPoint }}
                 <div v-if="point.subPoints && point.subPoints.length">
-                  <h3 class="subtitle is-4" v-for="subPoint in point.subPoints" v-bind:key="subPoint">
+                  <h3 class="subtitle is-5" v-for="subPoint in point.subPoints" v-bind:key="subPoint">
                     &nbsp;&nbsp;&nbsp;- {{ subPoint }}
                   </h3>
                 </div>

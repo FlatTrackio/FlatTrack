@@ -11,8 +11,6 @@
         </nav>
         <h1 class="title">Flatmates</h1>
         <p>These are your flatmates, make sure to get to know them {{ emojiSmile }}</p>
-      </section>
-      <section class="section">
         <div v-if="members && members.length">
           <div class="card-margin" v-for="member of members" v-bind:key="member">
             <div class="card">
