@@ -26,7 +26,10 @@
 npm install
 
 # serve with hot reload at localhost:8080
-npm run dev
+npm run dev-svr
+
+# serve the UI alone with hot reload at localhost:8080
+npm run dev-ui
 
 # build for production with minification
 npm run build

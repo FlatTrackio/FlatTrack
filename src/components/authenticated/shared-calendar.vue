@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import headerDisplay from './header-display'
+import headerDisplay from '../common/header-display'
 
 export default {
   name: 'Shopping List',

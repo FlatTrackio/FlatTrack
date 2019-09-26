@@ -25,7 +25,7 @@
 
 <script>
 import axios from 'axios'
-import headerDisplay from './header-display'
+import headerDisplay from '../common/header-display'
 import { ToastProgrammatic as Toast } from 'buefy'
 
 export default {

@@ -5,17 +5,17 @@
         <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
             <ul>
             <li><a href="/#/">Home</a></li>
-            <li class="is-active"><a href="/#/noticeboard">Noticeboard</a></li>
+            <li class="is-active"><a href="/#/recipes">Recipes</a></li>
             </ul>
         </nav>
-        <h1 class="title">Noticeboard</h1>
+        <h1 class="title">Recipes</h1>
         <p>Page under construction, coming soon</p>
     </div>
   </div>
 </template>
 
 <script>
-import headerDisplay from './header-display'
+import headerDisplay from '../common/header-display'
 
 export default {
   name: 'Shopping List',

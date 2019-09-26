@@ -67,7 +67,7 @@
                   <div v-if="returnNamesforID(id, names)">
                     <b-button type="is-success">Update</b-button>
                     <b-button type="is-warning">Disable</b-button>
-                    <b-button type="is-danger">Delete</b-button>
+                    <b-button type="is-danger" @click="deleteMember(id)">Delete</b-button>
                   </div>
                   <div v-else>
                     <b-button type="is-success" native-type="submit" @click="addNewMember(names, email, allergies, password, group, memberSetPassword)">Add new flatmate</b-button>
@@ -144,6 +144,27 @@ export default {
           console.log('Add failed', err)
           Toast.open({
             message: 'Failed to add flatmate',
+            position: 'is-bottom',
+            type: 'is-danger'
+          })
+        })
+    },
+    deleteMember: (id) => {
+      console.log('Attempting to remove member')
+      axios.delete(`/api/members/${id}`, {data: {id: id}})
+        .then(response => {
+          console.log('Remove successful', response)
+          Toast.open({
+            message: 'Flatmate removed successfully',
+            position: 'is-bottom',
+            type: 'is-success'
+          })
+          location.href = '#/admin/members?reload=1'
+        })
+        .catch(err => {
+          console.log('Remove failed', err)
+          Toast.open({
+            message: 'Failed to remove flatmate',
             position: 'is-bottom',
             type: 'is-danger'
           })

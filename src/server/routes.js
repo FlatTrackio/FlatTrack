@@ -200,14 +200,8 @@ module.exports = function(knex) {
           return
         })
       })
-      .delete((req, res) => {
-        // delete a flat member (requires admin)
-        if (!functions.checkAuthToken(req)) {
-          res.json({ return: 1, message: 'Whoops! you need to be admin to do that.' })
-          res.end()
-          return
-        }
-    
+      .delete(functions.checkAuthToken, (req, res) => {
+        // delete a flat member (requires admin)    
         var id = req.params.id
         functions.deleteMember(knex, id).then(resp => {
           res.json(resp)

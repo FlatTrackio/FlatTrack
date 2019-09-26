@@ -13,23 +13,21 @@
         </section>
         <section class="section">
           <h1 class="title">{{ task.name }}</h1>
-          <div id="content">
-            <div class="card">
-              <div class="card-content">
-                <div class="media">
-                  <div class="media-content">
-                    <p class="title is-4">{{ task.name }}</p>
-                    <p class="subtitle is-6">@{{ task.location }}</p>
-                  </div>
-                </div>
-                <div class="content">
-                  {{ task.description }}
+          <div class="card">
+            <div class="card-content">
+              <div class="media">
+                <div class="media-content">
+                  <p class="title is-4">{{ task.name }}</p>
+                  <p class="subtitle is-6">@{{ task.location }}</p>
                 </div>
               </div>
-              <footer class="card-footer">
-                <b-button @click="markAsCompleted">I've completed this task</b-button>
-              </footer>
+              <div class="content">
+                {{ task.description }}
+              </div>
             </div>
+            <footer class="card-footer">
+              <b-button @click="markAsCompleted">I've completed this task</b-button>
+            </footer>
           </div>
         </section>
       </div>
@@ -38,7 +36,7 @@
 
 <script>
 import axios from 'axios'
-import headerDisplay from './header-display'
+import headerDisplay from '../common/header-display'
 
 export default {
   name: 'Task',
@@ -87,6 +85,6 @@ export default {
 }
 </script>
 
-<style src="../assets/style.css"></style>
+<style src="../../assets/style.css"></style>
 <style scoped>
 </style>

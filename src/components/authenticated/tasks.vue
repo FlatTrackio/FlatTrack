@@ -60,12 +60,14 @@
           </div>
         </section>
       </div>
+      </section>
     </div>
+  </div>
 </template>
 
 <script>
 import axios from 'axios'
-import headerDisplay from './header-display'
+import headerDisplay from '../common/header-display'
 
 export default {
   name: 'tasks',
@@ -106,7 +108,7 @@ export default {
 }
 </script>
 
-<style src="../assets/style.css"></style>
+<style src="../../assets/style.css"></style>
 <style scoped>
 .taskItem .child {
   background-color: lightblue;

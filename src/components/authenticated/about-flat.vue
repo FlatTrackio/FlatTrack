@@ -28,7 +28,7 @@
 
 <script>
 import axios from 'axios'
-import headerDisplay from './header-display'
+import headerDisplay from '../common/header-display'
 
 export default {
   name: 'About this flat',
