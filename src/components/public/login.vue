@@ -1,32 +1,32 @@
 <template>
     <div>
-        <headerDisplay genericMessage="true"/>
-        <div class="container">
-          <section class="section">
-              <h1 class="title">Login</h1>
-              <p class="subtitle">
-                  Welcome to FlatTrack, please login.
-              </p>
-              <b-field label="Email">
-                  <b-input type="email"
-                      :value="form.email"
-                      maxlength="70"
-                      class="is-focused"
-                      required>
-                  </b-input>
-              </b-field>
-              <b-field label="Password">
-                  <b-input type="password"
-                      :value="form.password"
-                      password-reveal
-                      maxlength="70"
-                      required>
-                  </b-input>
-              </b-field>
-              <b-button rounded @click="postLogin()">Login</b-button>
-              <b-button tag="a" href="#/forgot-password" rounded type="is-warning">Forgot Password</b-button>
-          </section>
-        </div>
+      <headerDisplay genericMessage="true"/>
+      <div class="container">
+        <section class="section">
+          <h1 class="title">Login</h1>
+          <p class="subtitle">
+              Welcome to FlatTrack, please login.
+          </p>
+          <b-field label="Email">
+              <b-input type="email"
+                  :value="form.email"
+                  maxlength="70"
+                  class="is-focused"
+                  required>
+              </b-input>
+          </b-field>
+          <b-field label="Password">
+              <b-input type="password"
+                  :value="form.password"
+                  password-reveal
+                  maxlength="70"
+                  required>
+              </b-input>
+          </b-field>
+          <b-button rounded @click="postLogin()">Login</b-button>
+          <b-button tag="a" href="#/forgot-password" rounded type="is-warning">Forgot Password</b-button>
+        </section>
+      </div>
     </div>
 </template>
 

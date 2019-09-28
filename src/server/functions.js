@@ -11,6 +11,7 @@ function verifyAuthToken (req, res, next) {
     jwt.verify(bearerToken, config.system.ACCESS_TOKEN_SECRET, (err, email) => {
       if (err) {
         console.log(err)
+        res.json(err)
         return res.status(403).send()
       }
       req.email = email
@@ -19,10 +20,6 @@ function verifyAuthToken (req, res, next) {
   } else {
     return res.status(401).send()
   }
-  return true
-  res.json({ return: 1, message: 'You are not authorized to do that, please login' })
-  res.redirect('/api/login')
-  res.next()
 }
 
 function generateAccessToken(email) {
@@ -93,8 +90,8 @@ function deleteMember (knex, id) {
 
 function getTask (knex, id) {
   return new Promise((resolve, reject) => {
-    knex('tasks').select('*').where('id', id).then(resp => {
-      resolve(resp[0])
+    knex('tasks').select('*').where('id', id).first().then(resp => {
+      resolve(resp)
     }).catch(err => {
       // handle error
       reject(err)
@@ -120,8 +117,8 @@ function getTasks (knex) {
 
 function getEntry (knex, id) {
   return new Promise((resolve, reject) => {
-    knex('entries').select('*').where('id', id).then((resp) => {
-      resolve(resp[0])
+    knex('entries').select('*').where('id', id).first().then((resp) => {
+      resolve(resp)
     }).catch(err => {
       // handle error
       reject(err)

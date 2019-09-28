@@ -77,12 +77,7 @@ module.exports = (knex) => {
     knex.schema.createTable('flatinfo', (table) => {
         table.string('id', 37)
         table.string('line', 100)
-    })
-
-    knex.schema.createTable('flatinfosubpoints', (table) => {
-        table.string('id', 37)
-        table.foreign('pointID').references('id').inTable('flatinfo')
-        table.string('line', 100)
+        table.string('subPointOf', 37)
     })
 
     knex.schema.createTable('settings', (table) => {
@@ -115,9 +110,9 @@ module.exports = (knex) => {
         table.string('ingredient', 100)
     })
 
-    for (var name in ['flatmember', 'admin', 'approver']) {
+    ['flatmember', 'admin', 'approver'].map(name => {
         if (!knex('groups').where('name', name)) {
             knex('groups').insert({id: uuid(), name: name})
         }
-    }
+    })
 }

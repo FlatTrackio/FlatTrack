@@ -126,16 +126,21 @@ export default {
         memberSetPassword
       }
       console.log(JSON.stringify(member, null, 4))
-      axios({method: 'post', url: `/api/members`, data: member})
-        .then(response => {
-          console.log('Add successful', response)
-          Toast.open({
-            message: 'Flatmate added successfully',
-            position: 'is-bottom',
-            type: 'is-success'
-          })
-          location.href = '#/admin/members'
+      axios({
+        method: 'post',
+        url: `/api/members`,
+        data: member,
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+        }}).then(response => {
+        console.log('Add successful', response)
+        Toast.open({
+          message: 'Flatmate added successfully',
+          position: 'is-bottom',
+          type: 'is-success'
         })
+        location.href = '#/admin/members'
+      })
         .catch(err => {
           console.log('Add failed', err)
           Toast.open({

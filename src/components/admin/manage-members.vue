@@ -62,6 +62,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 import headerDisplay from '../common/header-display'
 
 export default {
@@ -71,6 +72,19 @@ export default {
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       members: []
     }
+  },
+  created () {
+    axios.get(`/api/members`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+        }
+      }).then(response => {
+      this.members = response.data
+    })
+      .catch(err => {
+        this.pageErrors.push(err)
+      })
   },
   methods: {
     addNewFlatmate: () => {

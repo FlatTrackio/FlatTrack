@@ -8,7 +8,7 @@ const passport = require('passport')
 const hash = require('hash.js')
 const packageJSON = require('../../package.json')
 
-module.exports = function(knex) {
+module.exports = (knex) => {
   router.get('/', (req, res) => {
       // return list of api endpoints
       res.json({
@@ -198,7 +198,7 @@ module.exports = function(knex) {
       // get a given flat member
       var id = req.params.id
       functions.getMember(knex, id).then(resp => {
-        res.json(resp[0])
+        res.json(resp)
         res.end()
         return
       }).catch(err => {
@@ -364,6 +364,22 @@ module.exports = function(knex) {
       
     })
   
+  router.route('/profile', functions.verifyAuthToken, (req, res, next) => {
+    if (typeof req.email === 'undefined' || req.email === '') {
+      res.status(403).send()
+      res.end()
+      return
+    } else {
+      knex('members').select('*').where('email', req.email).first().then(resp => {
+        res.redirect(`/api/members/${resp.id}`)
+      }).catch(err => {
+        res.status(403).send()
+        res.end()
+        return
+      })
+    }
+  })
+
   router.get('/health', functions.verifyAuthToken, (req, res) => {
     // get health state
   
@@ -371,7 +387,7 @@ module.exports = function(knex) {
       return: 0,
       healthy: undefined
     }
-    pool.getConnection().then(conn => {
+    knex('settings').select('*').then(conn => {
       if (conn) {
         health.healthy = true
       }

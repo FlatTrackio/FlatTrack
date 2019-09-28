@@ -11,8 +11,15 @@
           </nav>
           <h1 class="title">Configure Features</h1>
           <h2 class="subtitle">Choose the features you'll use</h2>
-          <div class="field" v-for="feature in features" v-bind:key="feature">
-              <b-checkbox v-model="featuresEnabled" :native-value="feature.name">{{ feature.name }}</b-checkbox>
+          <div v-for="feature in features" v-bind:key="feature">
+            <div class="field">
+                <b-checkbox v-model="featuresEnabled" :native-value="feature.name" size="is-medium">
+                  {{ feature.name }}
+                </b-checkbox>
+                <b-tooltip :label="feature.description" position="is-right">
+                [?]
+                </b-tooltip>
+            </div>
           </div>
         </section>
       </div>
@@ -29,25 +36,32 @@ export default {
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       features: [
         {
-          name: 'Tasks'
+          name: 'Tasks',
+          description: 'Self management of tasks'
         },
         {
-          name: 'Shopping List'
+          name: 'Shopping List',
+          description: 'A list of items for your flat\'s weekly shop'
         },
         {
-          name: 'Noticeboard'
+          name: 'Noticeboard',
+          description: 'Post to your flatmates'
         },
         {
-          name: 'Shared Calendar'
+          name: 'Shared Calendar',
+          description: 'Keep track of events'
         },
         {
-          name: 'Recipes'
+          name: 'Recipes',
+          description: 'Create and share recipes'
         },
         {
-          name: 'Flatmates'
+          name: 'Flatmates',
+          description: 'Basic information'
         },
         {
-          name: 'Highfives'
+          name: 'Highfives',
+          description: 'Celebrate your flatmates'
         }
       ],
       featuresEnabled: ['Tasks', 'Shopping List', 'Noticeboard', 'Shared Calendar', 'Recipes', 'Flatmates', 'Highfives']
