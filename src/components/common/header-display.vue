@@ -6,12 +6,7 @@
           FlatTrack {{ admin !== 'true' ? '' : '(Admin)' }}
         </p>
         <p class="subtitle">
-          <span v-if="genericMessage === 'true' || admin === 'true'">
-            Keep track of your flat
-          </span>
-          <span v-else>
-            {{ subtitle }}
-          </span>
+          {{ subtitle }}
         </p>
       </div>
     </section>

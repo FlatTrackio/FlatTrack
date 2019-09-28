@@ -84,9 +84,9 @@ export default {
           position: 'is-bottom'
         })
         setTimeout(() => {
+          loadingComponent.close()
           console.log('Found auth token')
           location.href = '/'
-          loadingComponent.close()
         }, 2000)
       }
     }

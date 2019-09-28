@@ -1,25 +1,45 @@
 #!/usr/bin/node
 
 const hash = require('hash.js')
+const jwt = require('jsonwebtoken')
 
-function getAdminTokenHash () {
-  return hash.sha256().update(`${process.env.FLATTRACKER_ADMIN_PIN}`).digest('hex')
-}
-
-function isAdmin (password) {
-  return getAdminTokenHash() === password
-}
-function checkAuthToken (req, res) {
+function verifyAuthToken (req, res) {
+  const config = require('../../deployment/config.json')
   var bearerToken = req.headers.authorization
   if (bearerToken) {
     bearerToken = bearerToken.split(' ')[1]
-    return true
-    return null
+    jwt.verify(token, config.system.ACCESS_TOKEN_SECRET, (err, email) => {
+      console.log(err)
+      if (err) return res.sendStatus(403)
+      req.email = email
+      next()
+    })
   }
   return true
   res.json({ return: 1, message: 'You are not authorized to do that, please login' })
-  res.redirect('/')
+  res.redirect('/api/login')
   res.next()
+}
+
+function generateAccessToken(email) {
+  const config = require('../../deployment/config.json')
+  return jwt.sign(email, config.system.REFRESH_TOKEN_SECRET, { expiresIn: '2h' })
+}
+
+function generateToken (req, res) {
+    // Authenticate flatmember
+    const config = require('../../deployment/config.json')
+    const email = req.body.email
+    const flatmember = {
+      email
+    }
+    const accessToken = generateAccessToken(flatmember)
+    const refreshToken = jwt.sign(flatmember, config.system.ACCESS_TOKEN_SECRET)
+    res.json({ accessToken: accessToken, refreshToken: refreshToken })
+}
+
+function generateSecret () {
+  return require('crypto').randomBytes(64).toString('hex')
 }
 
 function getMember (knex, id, returnHash = false) {
@@ -132,9 +152,9 @@ function getAllSettings (knex) {
 }
 
 module.exports = {
-  getAdminTokenHash,
-  isAdmin,
-  checkAuthToken,
+  verifyAuthToken,
+  generateToken,
+  generateSecret,
   getMember,
   getMembers,
   updateMember,

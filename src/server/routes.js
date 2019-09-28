@@ -5,6 +5,7 @@ const moment = require('moment')
 const uuid = require('uuid/v4')
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
+const hash = require('hash.js')
 const packageJSON = require('../../package.json')
 
 module.exports = function(knex) {
@@ -20,18 +21,19 @@ module.exports = function(knex) {
     
   router.route('/login')
     .post((req, res) => {
-      console.log(`req: ${JSON.stringify(req.body)}`)
       knex.select('id', 'email', 'names', 'password').from('members').where('email', req.body.email).first().then(resp => {
         // hash sent password, check it against saved password from database
-        if (req.body.password) {
-          
+        var hashedSentPassword = hash.sha256().update(req.body.password).digest('hex')
+        if (hashedSentPassword === resp.password) {
+          functions.generateToken(req, res)
+          res.status(200).send()
+        } else {
+          res.status(401).send()
         }
-        console.log(resp)
-        return resp
+        res.end()
       }).catch(err => {
         res.status(401).send()
         console.log(err)
-        return err
       })
     })
 
@@ -46,7 +48,7 @@ module.exports = function(knex) {
     })
     
   router.route('/entry')
-    .get((req, res) => {
+    .get(functions.verifyAuthToken, (req, res) => {
       // get all entries
       functions.getEntries(knex).then(resp => {
         res.json(resp)
@@ -58,7 +60,7 @@ module.exports = function(knex) {
         return
       })
     })
-    .post(functions.checkAuthToken, (req, res) => {
+    .post(functions.verifyAuthToken, (req, res) => {
       // add a new entry
       var form = req.body
       form = {
@@ -114,7 +116,7 @@ module.exports = function(knex) {
   })
   
   router.route('/members')
-    .get((req, res) => {
+    .get(functions.verifyAuthToken, (req, res) => {
       // get a list of all flat members
       functions.getMembers(knex).then(resp => {
         res.json(resp)
@@ -126,7 +128,7 @@ module.exports = function(knex) {
         return
       })
     })
-    .post(functions.checkAuthToken, (req, res) => {
+    .post(functions.verifyAuthToken, (req, res) => {
       // add a new flat member (requires admin)
       var form = req.body
       console.log(req)
@@ -187,7 +189,7 @@ module.exports = function(knex) {
       })
     })
   router.route('/members/:id')
-    .get((req, res) => {
+    .get(functions.verifyAuthToken, (req, res) => {
       // get a given flat member
       var id = req.params.id
       functions.getMember(knex, id).then(resp => {
@@ -200,7 +202,7 @@ module.exports = function(knex) {
         return
       })
     })
-    .put((req, res) => {
+    .put(functions.verifyAuthToken, (req, res) => {
       // update a password for a given flat member (requires admin or previous password)
       var id = req.params.id
       var form = req.body
@@ -229,7 +231,7 @@ module.exports = function(knex) {
         return
       })
     })
-    .delete(functions.checkAuthToken, (req, res) => {
+    .delete(functions.verifyAuthToken, (req, res) => {
       // delete a flat member (requires admin)    
       var id = req.params.id
       functions.deleteMember(knex, id).then(resp => {
@@ -243,7 +245,7 @@ module.exports = function(knex) {
     })
   
   router.route('/tasks')
-    .get((req, res) => {
+    .get(functions.verifyAuthToken, (req, res) => {
       // get a list of all tasks
       functions.getTasks(knex).then(resp => {
         res.json(resp)
@@ -255,7 +257,7 @@ module.exports = function(knex) {
         return
       })
     })
-    .post(functions.checkAuthToken, (req, res) => {
+    .post(functions.verifyAuthToken, (req, res) => {
       // add a new task (requires admin)
       var id = req.params.id
       var form = req.body
@@ -309,7 +311,7 @@ module.exports = function(knex) {
       })
     })
   router.route('/task/:id')
-    .get((req, res) => {
+    .get(functions.verifyAuthToken, (req, res) => {
       // get a given task
       var id = req.params.id
       functions.getTask(knex, id).then(resp => {
@@ -322,11 +324,11 @@ module.exports = function(knex) {
         return
       })
     })
-    .put((req, res) => {
+    .put(functions.verifyAuthToken, (req, res) => {
       // update a given task
       var id = req.params.id
     })
-    .delete((req, res) => {
+    .delete(functions.verifyAuthToken, (req, res) => {
       // delete a task (requires admin)
       var id = req.params.id
     })
@@ -345,7 +347,7 @@ module.exports = function(knex) {
     })
 
   router.route('/settings/:id')
-    .get((req, res) => {
+    .get(functions.verifyAuthToken, (req, res) => {
       var id = req.params.id
       functions.getAllSettings(knex).then(resp => {  
         res.json(resp[0])
@@ -357,7 +359,7 @@ module.exports = function(knex) {
       
     })
   
-  router.get('/health', (req, res) => {
+  router.get('/health', functions.verifyAuthToken, (req, res) => {
     // get health state
   
     var health = {
