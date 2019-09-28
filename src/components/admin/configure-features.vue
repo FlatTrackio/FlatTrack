@@ -1,41 +1,31 @@
 <template>
     <div>
-        <section class="hero is-warning">
-            <div class="hero-body">
-                <p class="title">
-                    FlatTrack (admin)
-                </p>
-                <p class="subtitle">
-                    {{ deploymentName }}
-                </p>
-            </div>
+      <headerDisplay admin="true"/>
+      <div class="container">
+        <section class="section">
+          <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+              <ul>
+                  <li><a href="/#/admin">Admin Home</a></li>
+                  <li class="is-active"><a href="/#/admin/admin-configure-features">Configure Features</a></li>
+              </ul>
+          </nav>
+          <h1 class="title">Configure Features</h1>
+          <h2 class="subtitle">Choose the features you'll use</h2>
+          <div class="field" v-for="feature in features" v-bind:key="feature">
+              <b-checkbox v-model="featuresEnabled" :native-value="feature.name">{{ feature.name }}</b-checkbox>
+          </div>
         </section>
-        <div class="container">
-            <section class="section">
-                <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
-                    <ul>
-                        <li><a href="/#/admin">Admin Home</a></li>
-                        <li class="is-active"><a href="/#/admin/admin-configure-features">Configure Features</a></li>
-                    </ul>
-                </nav>
-                <h1 class="title">Configure Features</h1>
-                <h2 class="subtitle">Choose the features you'll use</h2>
-                <div class="field" v-for="feature in features" v-bind:key="feature">
-                    <b-checkbox v-model="featuresEnabled" :native-value="feature.name">{{ feature.name }}</b-checkbox>
-                </div>
-            </section>
-        </div>
+      </div>
     </div>
 </template>
 
 <script>
-import axios from 'axios'
+import headerDisplay from '../common/header-display'
 
 export default {
   name: 'Admin home',
   data () {
     return {
-      deploymentName: 'Keep track of your flat',
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       features: [
         {
@@ -63,14 +53,8 @@ export default {
       featuresEnabled: ['Tasks', 'Shopping List', 'Noticeboard', 'Shared Calendar', 'Recipes', 'Flatmates', 'Highfives']
     }
   },
-  created () {
-    axios.get(`/api/settings/deploymentName`)
-      .then(response => {
-        this.deploymentName = response.data.value
-      })
-      .catch(err => {
-        this.pageErrors.push(err)
-      })
+  components: {
+    headerDisplay
   }
 }
 </script>

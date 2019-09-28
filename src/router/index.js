@@ -19,16 +19,38 @@ import adminHome from '@/components/admin/home'
 import adminConfigureFeatures from '@/components/admin/configure-features'
 import adminManageMembers from '@/components/admin/manage-members'
 import adminManageMember from '@/components/admin/manage-member'
+// import axios from 'axios'
 
 Vue.use(Router)
 Vue.component('home', () => import('../components/home.vue'))
+
+const authenticatedRoute = async (to, before, next) => {
+  var authToken
+  try {
+    authToken = sessionStorage.getItem('authToken')
+    /*
+    var isValid = await axios({
+      url: '/api/auth/validate',
+      method: 'post',
+      headers: {
+        'authorization': `Bearer ${authToken}`
+      }
+    })
+    console.log(isValid)
+    */
+  } catch (err) {
+    return next({ path: '/login' })
+  }
+  return authToken ? next() : next({ path: '/login' })
+}
 
 export default new Router({
   routes: [
     {
       path: '/',
       name: 'home',
-      component: home
+      component: home,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '*',
@@ -38,64 +60,76 @@ export default new Router({
     {
       path: '/tasks',
       name: 'tasks',
-      component: tasks
+      component: tasks,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/tasks/view',
       name: 'task-view',
-      component: task
+      component: task,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/about/flattrack',
       name: 'aboutflattrack',
       component: aboutFlatTrack,
-      alias: '/aboutflattrack'
+      alias: '/aboutflattrack',
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/about/flat',
       name: 'aboutflat',
       component: aboutFlat,
-      alias: '/aboutflat'
+      alias: '/aboutflat',
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/high-fives',
       name: 'highfives',
-      component: highFives
+      component: highFives,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/members',
       name: 'members',
-      component: members
+      component: members,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/members/u',
       name: 'member',
-      component: member
+      component: member,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/tasks/view',
       name: 'task-view',
-      component: task
+      component: task,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/noticeboard',
       name: 'noticeboard',
-      component: noticeboard
+      component: noticeboard,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/recipes',
       name: 'recipes',
-      component: recipes
+      component: recipes,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/shared-calendar',
       name: 'shared-calendar',
-      component: sharedCalendar
+      component: sharedCalendar,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/shopping-list',
       name: 'shopping-list',
-      component: shoppingList
+      component: shoppingList,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/login',
@@ -110,22 +144,26 @@ export default new Router({
     {
       path: '/admin',
       name: 'admin',
-      component: adminHome
+      component: adminHome,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/admin/features',
       name: 'admin-configure-features',
-      component: adminConfigureFeatures
+      component: adminConfigureFeatures,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/admin/members',
       name: 'admin-manage-members',
-      component: adminManageMembers
+      component: adminManageMembers,
+      beforeEnter: authenticatedRoute
     },
     {
       path: '/admin/members/u',
       name: 'admin-manage-member',
-      component: adminManageMember
+      component: adminManageMember,
+      beforeEnter: authenticatedRoute
     }
   ]
 })

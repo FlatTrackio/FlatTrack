@@ -27,7 +27,6 @@
 </template>
 
 <script>
-import axios from 'axios'
 import headerDisplay from '../common/header-display'
 
 export default {
@@ -56,18 +55,8 @@ export default {
           ]
         }
       ],
-      deploymentName: 'Keep track of your flat',
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')
     }
-  },
-  created () {
-    axios.get(`/api/settings/deploymentName`)
-      .then(response => {
-        this.deploymentName = response.data.value
-      })
-      .catch(err => {
-        this.pageErrors.push(err)
-      })
   },
   components: {
     headerDisplay

@@ -16,10 +16,10 @@
             <div class="card-content">
               <div class="content">
                 <div v-if="member.phoneNumber">
-                  Phone: {{ member.phoneNumber }}<br/>
+                  Phone: <a :href="`tel:${member.phoneNumber}`">{{ member.phoneNumber }}</a><br/>
                 </div>
                 <div v-if="member.email">
-                  Email: {{ member.email }}<br/>
+                  Email: <a :href="`mailto:${member.email}`">{{ member.email }}</a><br/>
                 </div>
                 <div v-if="member.allergies">
                   Allergies: {{ member.allergies }}<br/>
@@ -56,7 +56,6 @@ export default {
   data () {
     return {
       id: this.$route.query.id,
-      deploymentName: 'Keep track of your flat',
       member: {
       },
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')

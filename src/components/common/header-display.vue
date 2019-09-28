@@ -1,12 +1,12 @@
 <template>
   <div>
-    <section class="hero is-info">
+    <section :class="`${admin !== 'true' ? 'hero is-info' : 'hero is-warning'}`">
       <div class="hero-body">
         <p class="title">
-          FlatTrack
+          FlatTrack {{ admin !== 'true' ? '' : '(Admin)' }}
         </p>
         <p class="subtitle">
-          <span v-if="genericMessage == 'true'">
+          <span v-if="genericMessage === 'true' || admin === 'true'">
             Keep track of your flat
           </span>
           <span v-else>
@@ -24,7 +24,8 @@ import axios from 'axios'
 export default {
   name: 'header-display',
   props: {
-    'genericMessage': Boolean
+    'genericMessage': Boolean,
+    'admin': Boolean
   },
   data () {
     return {
@@ -32,17 +33,19 @@ export default {
     }
   },
   created () {
-    axios.get(`/api/settings/deploymentName`)
-      .then(response => {
-        this.subtitle = response.data.value
-      })
-      .catch(err => {
-        this.pageErrors.push(err)
-      })
+    if (this.genericMessage !== 'true') {
+      axios.get(`/api/settings/deploymentName`)
+        .then(response => {
+          this.subtitle = response.data.value
+        })
+        .catch(err => {
+          this.pageErrors.push(err)
+        })
+    }
   }
 }
 </script>
 
-<style>
+<style scoped>
 
 </style>

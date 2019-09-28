@@ -1,95 +1,86 @@
 <template>
     <div>
-        <section class="hero is-warning">
-            <div class="hero-body">
-                <p class="title">
-                    FlatTrack (admin)
-                </p>
-                <p class="subtitle">
-                    {{ deploymentName }}
-                </p>
-            </div>
-        </section>
-        <div class="container">
-          <section class="section">
-            <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
-              <ul>
-                  <li><a href="/#/admin">Admin Home</a></li>
-                  <li><a href="/#/admin/members">Manage flatmates</a></li>
-                  <li class="is-active"><a>{{ returnNamesforID(id, names) || 'Add a flatmate' }}</a></li>
-              </ul>
-            </nav>
-            <h1 class="title">{{ returnNamesforID(id, names) || 'Add a flatmate' }}</h1>
-            <div class="card">
-              <div class="card-content">
-                <div class="content">
-                  <b-field label="Fullname" v-if="!id">
-                      <b-input placeholder="xxxxx xxxxxxxx" v-model="names" maxlength="30" rounded required></b-input>
-                  </b-field>
-                  <b-field label="Phone Number (optional)">
-                      <b-input placeholder="xx xxx xxxx" v-model="phoneNumber" maxlength="30" rounded></b-input>
-                  </b-field>
-                  <b-field label="Email">
-                      <b-input placeholder="xxxxx@xxxxx.xxx" type="email" v-model="email" maxlength="30" rounded required></b-input>
-                  </b-field>
-                  <b-field label="Allergies (optional)">
-                      <b-input placeholder="xx, xxxx, xx" v-model="allergies" maxlength="30" rounded></b-input>
-                  </b-field>
-                  <b-field label="Password (optional)">
-                      <b-input type="password" placeholder="xxxxxxxxxxxxx" v-model="password" maxlength="30" rounded :required="id" password-reveal :disabled="memberSetPassword"></b-input>
-                  </b-field>
-                  <b-checkbox v-if="!id" v-model="memberSetPassword" native-value="true">Allow the new member to set the password?<br/><br/></b-checkbox>
-                  <div class="control">
-                    <label class="label">Group</label>
-                    <div class="field">
-                      <b-radio v-model="group"
-                          native-value="flatmember"
-                          name="group">
-                          Flatmember - standard user, can use anything enabled
-                      </b-radio>
-                    </div>
-                    <div class="field">
-                      <b-radio v-model="group"
-                          native-value="admin"
-                          name="group">
-                          Admin - can access the admin pages
-                      </b-radio>
-                    </div>
-                    <div class="field">
-                      <b-radio v-model="group"
-                          native-value="approver"
-                          name="group">
-                          Approver - can view and approve tasks
-                      </b-radio>
-                    </div>
+      <headerDisplay admin="true"/>
+      <div class="container">
+        <section class="section">
+          <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+            <ul>
+                <li><a href="/#/admin">Admin Home</a></li>
+                <li><a href="/#/admin/members">Manage flatmates</a></li>
+                <li class="is-active"><a>{{ returnNamesforID(id, names) || 'Add a flatmate' }}</a></li>
+            </ul>
+          </nav>
+          <h1 class="title">{{ returnNamesforID(id, names) || 'Add a flatmate' }}</h1>
+          <div class="card">
+            <div class="card-content">
+              <div class="content">
+                <b-field label="Fullname" v-if="!id">
+                    <b-input placeholder="xxxxx xxxxxxxx" v-model="names" maxlength="30" rounded required></b-input>
+                </b-field>
+                <b-field label="Phone Number (optional)">
+                    <b-input placeholder="xx xxx xxxx" v-model="phoneNumber" maxlength="30" rounded></b-input>
+                </b-field>
+                <b-field label="Email">
+                    <b-input placeholder="xxxxx@xxxxx.xxx" type="email" v-model="email" maxlength="30" rounded required></b-input>
+                </b-field>
+                <b-field label="Allergies (optional)">
+                    <b-input placeholder="xx, xxxx, xx" v-model="allergies" maxlength="30" rounded></b-input>
+                </b-field>
+                <b-field label="Password (optional)">
+                    <b-input type="password" placeholder="xxxxxxxxxxxxx" v-model="password" maxlength="30" rounded :required="id" password-reveal :disabled="memberSetPassword"></b-input>
+                </b-field>
+                <b-checkbox v-if="!id" v-model="memberSetPassword" native-value="true">Allow the new member to set the password?<br/><br/></b-checkbox>
+                <div class="control">
+                  <label class="label">Group</label>
+                  <div class="field">
+                    <b-radio v-model="group"
+                        native-value="flatmember"
+                        name="group">
+                        Flatmember - standard user, can use anything enabled
+                    </b-radio>
                   </div>
-                  <br>
-                  <div v-if="returnNamesforID(id, names)">
-                    <b-button type="is-success">Update</b-button>
-                    <b-button type="is-warning">Disable</b-button>
-                    <b-button type="is-danger" @click="deleteMember(id)">Delete</b-button>
+                  <div class="field">
+                    <b-radio v-model="group"
+                        native-value="admin"
+                        name="group">
+                        Admin - can access the admin pages
+                    </b-radio>
                   </div>
-                  <div v-else>
-                    <b-button type="is-success" native-type="submit" @click="addNewMember(names, email, allergies, password, group, memberSetPassword)">Add new flatmate</b-button>
+                  <div class="field">
+                    <b-radio v-model="group"
+                        native-value="approver"
+                        name="group">
+                        Approver - can view and approve tasks
+                    </b-radio>
                   </div>
-                  <br>
                 </div>
+                <br>
+                <div v-if="returnNamesforID(id, names)">
+                  <b-button type="is-success">Update</b-button>
+                  <b-button type="is-warning">Disable</b-button>
+                  <b-button type="is-danger" @click="deleteMember(id)">Delete</b-button>
+                </div>
+                <div v-else>
+                  <b-button type="is-success" native-type="submit" @click="addNewMember(names, email, allergies, password, group, memberSetPassword)">Add new flatmate</b-button>
+                </div>
+                <br>
               </div>
             </div>
-          </section>
-        </div>
+          </div>
+        </section>
+      </div>
     </div>
 </template>
 
 <script>
 import axios from 'axios'
 import { ToastProgrammatic as Toast } from 'buefy'
+import headerDisplay from '../common/header-display'
 
 export default {
   name: 'Admin home',
   data () {
     return {
-      deploymentName: 'Keep track of your flat',
       id: this.$route.query.id,
       names: '',
       email: '',
@@ -180,6 +171,9 @@ export default {
     printGroupSelection: (group) => {
       console.log(group)
     }
+  },
+  components: {
+    headerDisplay
   }
 }
 </script>

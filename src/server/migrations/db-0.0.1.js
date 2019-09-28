@@ -115,18 +115,9 @@ module.exports = (knex) => {
         table.string('ingredient', 100)
     })
 
-    knex('groups').insert([
-        {
-            id: uuid(),
-            name: 'flatmember'
-        },
-        {
-            id: uuid(),
-            name: 'admin'
-        },
-        {
-            id: uuid(),
-            name: 'approver'
+    for (var name in ['flatmember', 'admin', 'approver']) {
+        if (!knex('groups').where('name', name)) {
+            knex('groups').insert({id: uuid(), name: name})
         }
-    ])
+    }
 }

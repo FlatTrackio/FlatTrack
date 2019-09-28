@@ -8,7 +8,9 @@
         <div id="menu-bar-items">
           <b-menu>
             <b-menu-list>
-              <b-menu-item v-for="item in pages" v-bind:key="item" :href="item.url" class="menu-bar-item" :label="item.name" :disabled="item.disabled"></b-menu-item>
+              <div v-for="item in pages" v-bind:key="item">
+                <b-menu-item :href="item.url" class="menu-bar-item" :label="item.name" :disabled="item.disabled" v-if="determineItemDisplay(item, login)"></b-menu-item>
+              </div>
             </b-menu-list>
           </b-menu>
           <b-button rounded @click="memberSignOut">Sign Out</b-button>
@@ -31,14 +33,13 @@
 </template>
 
 <script>
-import axios from 'axios'
 import headerDisplay from '../common/header-display'
+import { LoadingProgrammatic as Loading, DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
   name: 'home',
   data () {
     return {
-      deploymentName: 'Keep track of your flat',
       pageErrors: [],
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       pages: [
@@ -83,26 +84,49 @@ export default {
           url: '#/high-fives',
           to: 'highfives',
           disabled: true
+        },
+        {
+          name: 'Account Settings',
+          url: '#/account-settings',
+          to: 'account-settings',
+          disabled: true
+        },
+        {
+          name: 'Admin',
+          url: '#/admin',
+          to: 'admin',
+          groupRequires: ['admin']
         }
       ],
       login: {
-        name: 'Person'
+        name: 'Person',
+        group: 'flatmember'
       }
     }
   },
   methods: {
     memberSignOut: () => {
-      console.log('Signing out')
+      Dialog.confirm({
+        message: 'Are you sure you want to sign out?',
+        confirmText: 'Sign out',
+        type: 'is-warning',
+        onConfirm: () => {
+          const loadingComponent = Loading.open({
+            container: null
+          })
+          setTimeout(() => {
+            sessionStorage.clear()
+            loadingComponent.close()
+            location.href = '#/login'
+            console.log('Signing out')
+          }, 1.2 * 1000)
+        }
+      })
+    },
+    determineItemDisplay: (item, login) => {
+      if (!item.groupRequires) return true
+      return item.groupRequires.includes(login.group)
     }
-  },
-  created () {
-    axios.get(`/api/settings/deploymentName`)
-      .then(response => {
-        this.deploymentName = response.data.value
-      })
-      .catch(err => {
-        this.pageErrors.push(err)
-      })
   },
   components: {
     headerDisplay
@@ -117,7 +141,7 @@ export default {
   color: black;
 }
 
-.menu-bar-item {
+#menu-bar-items .menu-bar-item {
   border-top: 1px solid rgba(111, 111, 111, 0.4);
 }
 </style>

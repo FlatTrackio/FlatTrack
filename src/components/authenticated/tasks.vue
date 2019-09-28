@@ -73,7 +73,6 @@ export default {
   name: 'tasks',
   data () {
     return {
-      deploymentName: 'Keep track of your flat',
       tasks: [],
       members: [],
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
@@ -84,11 +83,6 @@ export default {
     axios.get(`/api/tasks`)
       .then(response => {
         this.tasks = response.data
-
-        return axios.get(`/api/settings/deploymentName`)
-      })
-      .then(response => {
-        this.deploymentName = response.data.value
       })
       .catch(err => {
         this.$buefy.notification.open({

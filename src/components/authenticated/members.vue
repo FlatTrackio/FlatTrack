@@ -22,10 +22,10 @@
                 </div>
                 <div class="content">
                   <div v-if="member.phoneNumber">
-                    Phone: {{ member.phoneNumber }}<br/>
+                    Phone: <a :href="`tel:${member.phoneNumber}`">{{ member.phoneNumber }}</a><br/>
                   </div>
                   <div v-if="member.email">
-                    Email: {{ member.email }}<br/>
+                    Email: <a :href="`mailto:${member.email}`">{{ member.email }}</a><br/>
                   </div>
                   <div v-if="member.allergies">
                     Allergies: {{ member.allergies }}<br/>
@@ -67,7 +67,6 @@ export default {
   name: 'Shopping List',
   data () {
     return {
-      deploymentName: 'Keep track of your flat',
       members: [],
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       emojiSmile: emoji.get('smile')
@@ -77,11 +76,6 @@ export default {
     axios.get(`/api/members`)
       .then(response => {
         this.members = response.data
-
-        return axios.get(`/api/settings/deploymentName`)
-      })
-      .then(response => {
-        this.deploymentName = response.data.value
       })
       .catch(err => {
         this.$buefy.notification.open({
