@@ -80,7 +80,12 @@ export default {
     }
   },
   created () {
-    axios.get(`/api/tasks`)
+    axios.get(`/api/tasks`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+        }
+      })
       .then(response => {
         this.tasks = response.data
       })

@@ -29,13 +29,16 @@ export default {
   },
   created () {
     if (this.genericMessage !== 'true') {
-      axios.get(`/api/settings/deploymentName`)
-        .then(response => {
-          this.subtitle = response.data.value
-        })
-        .catch(err => {
-          this.pageErrors.push(err)
-        })
+      axios.get(`/api/settings/deploymentName`,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+          }
+        }).then(response => {
+        this.subtitle = response.data.value
+      }).catch(err => {
+        this.pageErrors.push(err)
+      })
     }
   }
 }

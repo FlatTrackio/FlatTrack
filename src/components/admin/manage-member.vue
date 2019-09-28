@@ -96,7 +96,12 @@ export default {
   },
   created () {
     var id = this.$route.query.id
-    axios.get(`/api/members/${id}`)
+    axios.get(`/api/members/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+        }
+      })
       .then(response => {
         var member = response.data
         this.names = response.data.names
@@ -142,7 +147,12 @@ export default {
     },
     deleteMember: (id) => {
       console.log('Attempting to remove member')
-      axios.delete(`/api/members/${id}`, {data: {id: id}})
+      axios.delete(`/api/members/${id}`, {data: {id: id}},
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+          }
+        })
         .then(response => {
           console.log('Remove successful', response)
           Toast.open({

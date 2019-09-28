@@ -63,7 +63,12 @@ export default {
   },
   created () {
     var id = this.$route.query.id
-    axios.get(`/api/members/${id}`)
+    axios.get(`/api/members/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+        }
+      })
       .then(response => {
         this.member = response.data
         this.member.password = null

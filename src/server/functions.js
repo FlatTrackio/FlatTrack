@@ -3,17 +3,21 @@
 const hash = require('hash.js')
 const jwt = require('jsonwebtoken')
 
-function verifyAuthToken (req, res) {
+function verifyAuthToken (req, res, next) {
   const config = require('../../deployment/config.json')
   var bearerToken = req.headers.authorization
   if (bearerToken) {
     bearerToken = bearerToken.split(' ')[1]
-    jwt.verify(token, config.system.ACCESS_TOKEN_SECRET, (err, email) => {
-      console.log(err)
-      if (err) return res.sendStatus(403)
+    jwt.verify(bearerToken, config.system.ACCESS_TOKEN_SECRET, (err, email) => {
+      if (err) {
+        console.log(err)
+        return res.status(403).send()
+      }
       req.email = email
       next()
     })
+  } else {
+    return res.status(401).send()
   }
   return true
   res.json({ return: 1, message: 'You are not authorized to do that, please login' })

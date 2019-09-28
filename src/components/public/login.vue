@@ -23,7 +23,7 @@
                       required>
                   </b-input>
               </b-field>
-              <b-button rounded @click="postLogin(form)">Login</b-button>
+              <b-button rounded @click="postLogin()">Login</b-button>
               <b-button tag="a" href="#/forgot-password" rounded type="is-warning">Forgot Password</b-button>
           </section>
         </div>
@@ -49,24 +49,30 @@ export default {
     headerDisplay
   },
   methods: {
-    postLogin: (form) => {
+    postLogin: () => {
       const loadingComponent = Loading.open({
         container: null
       })
-      setTimeout(() => loadingComponent.close(), 50 * 1000)
-      form = {
-        email: form.email,
-        password: form.password
+      setTimeout(() => loadingComponent.close(), 20 * 1000)
+      console.log(this.form)
+      var form = {
+        email: this.form.email,
+        password: this.form.password
       }
       console.log(JSON.stringify(form))
-      axios.post('/api/login', form).then(resp => {
+      axios.post('/api/login', form,
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+          }
+        }).then(resp => {
         console.log(resp)
       }).catch(err => {
         console.log(err)
         loadingComponent.close()
         Toast.open({
           duration: 10000,
-          message: 'Hmmm, something went wrong with the login. Email or password is incorrect. Please type again',
+          message: 'Hmmm, something went wrong with the login. Email or password is incorrect. Please try again.',
           position: 'is-bottom',
           type: 'is-danger'
         })

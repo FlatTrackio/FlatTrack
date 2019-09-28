@@ -54,12 +54,22 @@ export default {
     }
   },
   created () {
-    axios.get(`/api/task/${this.$route.query.task}`)
+    axios.get(`/api/task/${this.$route.query.task}`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+        }
+      })
       .then(response => {
         this.task = response.data
         this.form.taskName = response.data.name
 
-        return axios.get(`/api/members`)
+        return axios.get(`/api/members`,
+          {
+            headers: {
+              Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+            }
+          })
       })
       .then(response => {
         this.members = response.data
@@ -70,7 +80,12 @@ export default {
   },
   methods: {
     markAsCompleted () {
-      axios.put(`/api/entry/${this.task.id}`, {})
+      axios.put(`/api/entry/${this.task.id}`, {},
+        {
+          headers: {
+            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+          }
+        })
         .then(response => {
           console.log(response)
         })

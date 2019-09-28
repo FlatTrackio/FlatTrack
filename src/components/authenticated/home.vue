@@ -13,6 +13,7 @@
               </div>
             </b-menu-list>
           </b-menu>
+          <br>
           <b-button rounded @click="memberSignOut">Sign Out</b-button>
         </div>
       </section>

@@ -21,6 +21,11 @@ module.exports = function(knex) {
     
   router.route('/login')
     .post((req, res) => {
+      if (req.body.email === '' || req.body.password === '') {
+        res.status(401).send()
+        res.end()
+        return
+      }
       knex.select('id', 'email', 'names', 'password').from('members').where('email', req.body.email).first().then(resp => {
         // hash sent password, check it against saved password from database
         var hashedSentPassword = hash.sha256().update(req.body.password).digest('hex')
