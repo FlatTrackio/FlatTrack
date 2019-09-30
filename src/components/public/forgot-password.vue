@@ -13,7 +13,7 @@
           <h2 class="subtitle">Enter you email to reset your password</h2>
           <b-field label="Email">
               <b-input type="email"
-                  :value="email"
+                  v-model="email"
                   maxlength="70"
                   required>
               </b-input>

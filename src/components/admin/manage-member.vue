@@ -110,6 +110,7 @@ export default {
         this.memberSetPassword = member.memberSetPassword
         this.group = member.group
         this.password = null
+        this.member = member
       })
       .catch(err => {
         this.pageErrors = [...this.pageErrors, err]

@@ -9,7 +9,7 @@
           </p>
           <b-field label="Email">
               <b-input type="email"
-                  :value="form.email"
+                  v-model="email"
                   maxlength="70"
                   class="is-focused"
                   required>
@@ -17,13 +17,13 @@
           </b-field>
           <b-field label="Password">
               <b-input type="password"
-                  :value="form.password"
+                  v-model="password"
                   password-reveal
                   maxlength="70"
                   required>
               </b-input>
           </b-field>
-          <b-button rounded @click="postLogin()">Login</b-button>
+          <b-button rounded native-type="submit" @click="postLogin(email, password)">Login</b-button>
           <b-button tag="a" href="#/forgot-password" rounded type="is-warning">Forgot Password</b-button>
         </section>
       </div>
@@ -39,34 +39,34 @@ export default {
   name: 'login',
   data () {
     return {
-      form: {
-        email: '',
-        password: ''
-      }
+      email: '',
+      password: ''
     }
   },
   components: {
     headerDisplay
   },
   methods: {
-    postLogin: () => {
+    postLogin: (email, password) => {
       const loadingComponent = Loading.open({
         container: null
       })
       setTimeout(() => loadingComponent.close(), 20 * 1000)
-      console.log(this.form)
       var form = {
-        email: this.form.email,
-        password: this.form.password
+        email: email,
+        password: password
       }
-      console.log(JSON.stringify(form))
       axios.post('/api/login', form,
         {
           headers: {
             Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
           }
         }).then(resp => {
-        console.log(resp)
+        sessionStorage.setItem('authToken', resp.data.refreshToken)
+        setTimeout(() => {
+          loadingComponent.close()
+          location.href = '/'
+        }, 2000)
       }).catch(err => {
         console.log(err)
         loadingComponent.close()

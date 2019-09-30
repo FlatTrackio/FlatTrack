@@ -11,6 +11,8 @@
         </nav>
         <h1 class="title">Flatmates</h1>
         <p>These are your flatmates, make sure to get to know them {{ emojiSmile }}</p>
+      </section>
+      <section class="section">
         <div v-if="members && members.length">
           <div class="card-margin" v-for="member of members" v-bind:key="member">
             <div class="card">
@@ -48,7 +50,7 @@
               </div>
               <div class="content">
                 Hmm, it appears that you don't have an flatmates added.<br/>
-                Press the add button to start.
+                Please contact the administrator(s) to add your flatmates.
               </div>
             </div>
           </div>
@@ -99,6 +101,8 @@ export default {
   }
 }
 </script>
+
+<style src="../../assets/style.css"></style>
 
 <style scoped>
 
