@@ -362,15 +362,20 @@ module.exports = (knex) => {
       
     })
   
-  router.route('/profile', functions.verifyAuthToken, (req, res, next) => {
-    if (typeof req.email === 'undefined' || req.email === '') {
+  router.route('/profile')
+    .get(functions.verifyAuthToken, (req, res, next) => {
+    if (!typeof req.flatmember === 'object' || req.flatmember === '') {
       res.status(403).send()
       res.end()
       return
     } else {
-      knex('members').select('*').where('email', req.email).first().then(resp => {
-        res.redirect(`/api/members/${resp.id}`)
+      // select('id').select('names').select('email').select('phoneNumber').select('allergies')
+      knex('members').select('*').where('email', req.flatmember.email).first().then(resp => {
+        res.json(resp)
+        res.end()
+        return
       }).catch(err => {
+        console.log(err)
         res.status(403).send()
         res.end()
         return

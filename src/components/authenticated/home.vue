@@ -3,7 +3,7 @@
     <headerDisplay/>
     <div class="container">
       <section class="section">
-        <h2 class="title is-2">Hey, {{ login.name }}!</h2>
+        <h2 class="title is-2">Hey, {{ login.names }}!</h2>
         <h4 class="title is-4">Welcome to FlatTrack, where your flat or community house is organized</h4>
         <div id="menu-bar-items">
           <b-menu>
@@ -34,6 +34,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 import headerDisplay from '../common/header-display'
 import { LoadingProgrammatic as Loading, DialogProgrammatic as Dialog } from 'buefy'
 
@@ -100,7 +101,7 @@ export default {
         }
       ],
       login: {
-        name: 'Person',
+        names: 'Person',
         group: 'flatmember'
       }
     }
@@ -128,6 +129,26 @@ export default {
       if (!item.groupRequires) return true
       return item.groupRequires.includes(login.group)
     }
+  },
+  created () {
+    axios.get(`/api/profile`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+        }
+      })
+      .then(response => {
+        this.login = response.data
+      })
+      .catch(err => {
+        this.$buefy.notification.open({
+          duration: 5000,
+          message: `An error has occured: ${err}`,
+          position: 'is-bottom-right',
+          type: 'is-danger',
+          hasIcon: true
+        })
+      })
   },
   components: {
     headerDisplay

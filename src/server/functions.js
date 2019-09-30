@@ -8,13 +8,13 @@ function verifyAuthToken (req, res, next) {
   var bearerToken = req.headers.authorization
   if (bearerToken) {
     bearerToken = bearerToken.split(' ')[1]
-    jwt.verify(bearerToken, config.system.ACCESS_TOKEN_SECRET, (err, email) => {
+    jwt.verify(bearerToken, config.system.ACCESS_TOKEN_SECRET, (err, flatmember) => {
       if (err) {
         console.log(err)
         res.json(err)
         return res.status(403).send()
       }
-      req.email = email
+      req.flatmember = flatmember.flatmember
       next()
     })
   } else {
