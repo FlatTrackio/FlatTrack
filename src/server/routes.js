@@ -26,30 +26,28 @@ module.exports = (knex) => {
         res.end()
         return
       }
-      knex.select('id', 'email', 'names', 'password').from('members').where('email', req.body.email).first().then(resp => {
+      knex.select('id', 'email', 'password').from('members').where('email', req.body.email).first().then(resp => {
         // hash sent password, check it against saved password from database
         var hashedSentPassword = hash.sha256().update(req.body.password).digest('hex')
         if (hashedSentPassword === resp.password) {
-          functions.generateToken(req, res)
-          res.status(200).send()
+          functions.generateToken(req.body.email, knex).then(resp => {
+            res.json(resp).status(200).end()
+            return
+          }).catch(err => {
+            console.log(err)
+            res.json({message: 'Failed generating a token'})
+            res.status(403).send().end()
+            return
+          })
         } else {
-          res.status(401).send()
+          res.status(401).send().end()
+          return
         }
-        res.end()
       }).catch(err => {
-        res.status(401).send()
+        res.status(401).send().end()
         console.log(err)
+        return
       })
-    })
-
-  router.route('/auth')
-    .post((req, res) => {
-
-    })
-
-  router.route('/auth/validate')
-    .post((req, res) => {
-      // check token for validitiy
     })
     
   router.route('/entry')

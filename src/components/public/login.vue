@@ -62,12 +62,14 @@ export default {
             Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
           }
         }).then(resp => {
+        console.log('Signing in')
         sessionStorage.setItem('authToken', resp.data.refreshToken)
         setTimeout(() => {
           loadingComponent.close()
           location.href = '/'
         }, 2000)
       }).catch(err => {
+        console.log('Failed to sign in')
         console.log(err)
         loadingComponent.close()
         Toast.open({

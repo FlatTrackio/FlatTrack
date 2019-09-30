@@ -22,21 +22,19 @@ function verifyAuthToken (req, res, next) {
   }
 }
 
-function generateAccessToken(email) {
-  const config = require('../../deployment/config.json')
-  return jwt.sign(email, config.system.REFRESH_TOKEN_SECRET, { expiresIn: '2h' })
-}
-
-function generateToken (req, res) {
-    // Authenticate flatmember
-    const config = require('../../deployment/config.json')
-    const email = req.body.email
-    const flatmember = {
-      email
-    }
-    const accessToken = generateAccessToken(flatmember)
-    const refreshToken = jwt.sign(flatmember, config.system.ACCESS_TOKEN_SECRET)
-    res.json({ accessToken: accessToken, refreshToken: refreshToken })
+function generateToken (email, knex) {
+  // create tokens for user authentication
+  return new Promise((resolve, reject) => {
+    getMemberProfileByEmail(knex, email).then(resp => {
+      const config = require('../../deployment/config.json')
+      const flatmember = resp
+      const accessToken = jwt.sign({flatmember}, config.system.REFRESH_TOKEN_SECRET, { expiresIn: '2h' })
+      const refreshToken = jwt.sign({flatmember}, config.system.ACCESS_TOKEN_SECRET)
+      resolve({accessToken, refreshToken})
+    }).catch(err => {
+      reject(err)
+    })
+  })
 }
 
 function generateSecret () {
@@ -45,7 +43,17 @@ function generateSecret () {
 
 function getMember (knex, id, returnHash = false) {
   return new Promise((resolve, reject) => {
-    knex('members').select('*').where('id', id).then(resp => {
+    knex('members').select('*').where('id', id).first().then(resp => {
+      resolve(resp)
+    }).catch(err => {
+      reject(err)
+    })
+  })
+}
+
+function getMemberProfileByEmail (knex, email) {
+  return new Promise((resolve, reject) => {
+    knex('members').select('id', 'email', 'names', 'joinTimestamp', 'phoneNumber', 'allergies').where('email', email).first().then(resp => {
       resolve(resp)
     }).catch(err => {
       reject(err)
@@ -157,6 +165,7 @@ module.exports = {
   generateToken,
   generateSecret,
   getMember,
+  getMemberProfileByEmail,
   getMembers,
   updateMember,
   deleteMember,
