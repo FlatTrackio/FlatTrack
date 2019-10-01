@@ -121,7 +121,7 @@ module.exports = (knex) => {
   router.route('/members')
     .get(functions.verifyAuthToken, (req, res) => {
       // get a list of all flat members
-      functions.getMembers(knex).then(resp => {
+      functions.getMembers(knex, returnHashes = false, req.flatmember.id).then(resp => {
         res.json(resp)
         res.end()
         return

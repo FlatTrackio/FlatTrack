@@ -38,6 +38,9 @@ function generateToken (email, knex) {
 }
 
 function checkGroupForAdmin (req, res, next) {
+  // middleware to only allow admin users to access certain areas of the API
+
+  // TODO untie checking from token, instead fetch using ID 
   if (req.flatmember.group === 'admin') {
     next()
     return
@@ -71,9 +74,9 @@ function getMemberProfileByEmail (knex, email) {
   })
 }
 
-function getMembers (knex, returnHashes = false) {
+function getMembers (knex, returnHashes = false, userID) {
   return new Promise((resolve, reject) => {
-    knex('members').select('*').then(resp => {
+    knex('members').select('*').whereNot('id', userID).then(resp => {
       var membersList = []
       resp.map(i => {
         i.id = i.id.toString('binary', 0, 64)
