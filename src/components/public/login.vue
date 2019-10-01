@@ -11,7 +11,7 @@
               <b-input type="email"
                   v-model="email"
                   maxlength="70"
-                  class="is-focused"
+                  autofocus
                   required>
               </b-input>
           </b-field>
@@ -20,6 +20,7 @@
                   v-model="password"
                   password-reveal
                   maxlength="70"
+                  @keyup.enter.native="postLogin(email, password)"
                   required>
               </b-input>
           </b-field>

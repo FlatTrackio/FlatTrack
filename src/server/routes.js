@@ -250,7 +250,7 @@ module.exports = (knex) => {
   router.route('/tasks')
     .get(functions.verifyAuthToken, (req, res) => {
       // get a list of all tasks
-      functions.getTasks(knex).then(resp => {
+      functions.getTasks(req, knex).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -260,7 +260,7 @@ module.exports = (knex) => {
         return
       })
     })
-    .post(functions.verifyAuthToken, (req, res) => {
+    .post([functions.verifyAuthToken, functions.checkGroupForAdmin], (req, res) => {
       // add a new task (requires admin)
       var id = req.params.id
       var form = req.body
@@ -327,11 +327,11 @@ module.exports = (knex) => {
         return
       })
     })
-    .put(functions.verifyAuthToken, (req, res) => {
+    .put([functions.verifyAuthToken, functions.checkGroupForAdmin], (req, res) => {
       // update a given task
       var id = req.params.id
     })
-    .delete(functions.verifyAuthToken, (req, res) => {
+    .delete([functions.verifyAuthToken, functions.checkGroupForAdmin], (req, res) => {
       // delete a task (requires admin)
       var id = req.params.id
     })
@@ -358,7 +358,7 @@ module.exports = (knex) => {
         return
       })
     })
-    .put((req, res) => {
+    .put([functions.verifyAuthToken, functions.checkGroupForAdmin], (req, res) => {
       
     })
   
@@ -383,14 +383,14 @@ module.exports = (knex) => {
     }
   })
 
-  router.get('/health', functions.verifyAuthToken, (req, res) => {
+  router.get('/health', (req, res) => {
     // get health state
   
     var health = {
       return: 0,
       healthy: undefined
     }
-    knex('settings').select('*').then(conn => {
+    knex.raw('SELECT 0;').then(conn => {
       if (conn) {
         health.healthy = true
       }

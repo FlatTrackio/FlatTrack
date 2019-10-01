@@ -11,19 +11,19 @@
         </nav>
         <h1 class="title">Tasks</h1>
         <h2 class="subtitle">Get caught up with your tasks</h2>
+        <b-field label="How often would you like to be notified about tasks?">
+          <b-select
+              placeholder="Medium"
+              expanded
+              rounded
+              v-model="alertFrequency">
+              <option value="3">Three a week</option>
+              <option value="2">Twice a week</option>
+              <option value="1">Once a week</option>
+              <option value="0">Never</option>
+          </b-select>
+        </b-field>
         <div id="tasks" v-if="tasks && tasks.length">
-          <b-field label="How often would you like to be notified about tasks?">
-            <b-select
-                placeholder="Medium"
-                expanded
-                rounded
-                v-model="alertFrequency">
-                <option value="3">Three a week</option>
-                <option value="2">Twice a week</option>
-                <option value="1">Once a week</option>
-                <option value="0">Never</option>
-            </b-select>
-          </b-field>
           <h2 class="subtitle">Here are your assigned tasks</h2>
           <div class="card-margin" v-for="task of tasks" v-bind:key="task">
             <div class="card">
@@ -44,7 +44,7 @@
             </div>
           </div>
       </div>
-      <div id="tasks" v-if="!tasks && !tasks.length">
+      <div id="tasks" v-if="!tasks.length">
         <section class="section">
           <div class="card">
             <div class="card-content">

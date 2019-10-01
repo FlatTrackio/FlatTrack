@@ -37,6 +37,16 @@ function generateToken (email, knex) {
   })
 }
 
+function checkGroupForAdmin (req, res, next) {
+  if (req.flatmember.group === 'admin') {
+    next()
+    return
+  } else {
+    res.json({message: 'An admin account is required for this action'}).status(401).send().end()
+    return
+  }
+}
+
 function generateSecret () {
   return require('crypto').randomBytes(64).toString('hex')
 }
@@ -107,14 +117,10 @@ function getTask (knex, id) {
   })
 }
 
-function getTasks (knex) {
+function getTasks (req, knex) {
   return new Promise((resolve, reject) => {
-    knex('tasks').select('*').then(resp => {
+    knex('tasks').select('*').where('assignee', req.flatmember.id).then(resp => {
       var tasksList = []
-      resp.map(i => {
-        i.id = i.id.toString('binary', 0, 64)
-        tasksList = [i, ...tasksList]
-      })
       resolve(resp)
     }).catch(err => {
       // handle error
@@ -169,6 +175,7 @@ module.exports = {
   getMembers,
   updateMember,
   deleteMember,
+  checkGroupForAdmin,
   getTask,
   getTasks,
   getEntry,
