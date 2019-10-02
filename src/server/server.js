@@ -20,6 +20,11 @@ const knex = require('knex')({
   pool: { min: 0, max: 7 }
 })
 
+knex.raw('select 0;').catch(err => {
+  console.log("No database connection found.")
+  process.exit(1)
+})
+
 require('./init.js')(knex)
 const config = require('../../deployment/config.json')
 

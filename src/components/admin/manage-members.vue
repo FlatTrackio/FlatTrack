@@ -77,7 +77,7 @@ export default {
     axios.get(`/api/members`,
       {
         headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       }).then(response => {
       this.members = response.data

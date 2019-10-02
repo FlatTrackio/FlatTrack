@@ -74,7 +74,7 @@ module.exports = (knex) => {
         table.boolean('enabled')
     })
 
-    knex.schema.createTable('flatinfo', (table) => {
+    knex.schema.createTable('flatInfo', (table) => {
         table.string('id', 37)
         table.string('line', 100)
         table.string('subPointOf', 37)

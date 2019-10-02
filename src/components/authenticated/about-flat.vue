@@ -10,10 +10,10 @@
                 </ul>
             </nav>
             <h1 class="title">About this flat</h1>
-            <h2 class="subtitle">Here's a few things you should know</h2>
             <div v-if="points && points.length">
+              <h2 class="subtitle">Here's a few things you should know</h2>
               <h2 class="title is-4" v-for="point in points" v-bind:key="point">
-                - {{ point.topPoint }}
+                - {{ point.line }}
                 <div v-if="point.subPoints && point.subPoints.length">
                   <h3 class="subtitle is-5" v-for="subPoint in point.subPoints" v-bind:key="subPoint">
                     &nbsp;&nbsp;&nbsp;- {{ subPoint }}
@@ -21,12 +21,16 @@
                 </div>
               </h2>
             </div>
+            <div v-else>
+              <h2 class="subtitle">Hmmm, it appears no information about your flat has been added yet. Check back later.</h2>
+            </div>
           </section>
         </div>
     </div>
 </template>
 
 <script>
+import axios from 'axios'
 import headerDisplay from '../common/header-display'
 
 export default {
@@ -34,32 +38,49 @@ export default {
   data () {
     return {
       points: [
-        {
-          topPoint: 'This is the first point'
-        },
-        {
-          topPoint: 'Here\'s the second point'
-        },
-        {
-          topPoint: 'Ah yes... the third point, how lovely -- something to admire'
-        },
-        {
-          topPoint: 'fourth point, we can skip this one'
-        },
-        {
-          topPoint: 'the fifth and final point',
-          subPoints:
-          [
-            'this is a subpoint of the toppoint, to highlight a thing about it',
-            'but also this point is relevant, so it should be included'
-          ]
-        }
       ],
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : '')
     }
   },
   components: {
     headerDisplay
+  },
+  created () {
+    axios.get('/api/flatinfo',
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }
+      }).then(resp => {
+      console.log(resp)
+
+      // remap to add subpoints
+      var transformRespData = {}
+      resp.data.map(item => {
+        if (typeof transformRespData[item.subpointOf] === 'undefined') {
+          transformRespData[item.id] = {
+            line: item.line,
+            subPoints: []
+          }
+        } else {
+          transformRespData[item.subpointOf].subPoints = [...transformRespData[item.subpointOf].subPoints, item.line]
+        }
+      })
+
+      console.log(transformRespData)
+
+      // remap back into an array
+      transformRespData = Array.from(
+        Object.keys(transformRespData),
+        key => transformRespData[key]
+      )
+
+      console.log(transformRespData)
+
+      this.points = transformRespData
+    }).catch(err => {
+      console.error(err)
+    })
   }
 }
 </script>

@@ -99,7 +99,7 @@ export default {
     axios.get(`/api/members/${id}`,
       {
         headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       })
       .then(response => {
@@ -132,7 +132,7 @@ export default {
         url: `/api/members`,
         data: member,
         headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }}).then(response => {
         console.log('Add successful', response)
         Toast.open({
@@ -156,7 +156,7 @@ export default {
       axios.delete(`/api/members/${id}`, {data: {id: id}},
         {
           headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`
           }
         })
         .then(response => {

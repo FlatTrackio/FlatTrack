@@ -27,7 +27,7 @@ Vue.component('home', () => import('../components/home.vue'))
 const authenticatedRoute = async (to, before, next) => {
   var authToken
   try {
-    authToken = sessionStorage.getItem('authToken')
+    authToken = localStorage.getItem('authToken')
     /*
     var isValid = await axios({
       url: '/api/auth/validate',

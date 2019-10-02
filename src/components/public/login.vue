@@ -60,11 +60,11 @@ export default {
       axios.post('/api/login', form,
         {
           headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`
           }
         }).then(resp => {
         console.log('Signing in')
-        sessionStorage.setItem('authToken', resp.data.refreshToken)
+        localStorage.setItem('authToken', resp.data.refreshToken)
         setTimeout(() => {
           loadingComponent.close()
           location.href = '/'
@@ -82,7 +82,7 @@ export default {
       })
     },
     checkForLoginToken: () => {
-      if (sessionStorage.getItem('authToken')) {
+      if (localStorage.getItem('authToken')) {
         // verify token via request or something
         const loadingComponent = Loading.open({
           container: null

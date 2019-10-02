@@ -143,7 +143,7 @@ function getEntry (knex, id) {
   })
 }
 
-function getEntries (dbConn) {
+function getEntries (knex) {
   return new Promise((resolve, reject) => {
     knex('entries').select('*').then((resp) => {
       var tasksList = []
@@ -169,6 +169,16 @@ function getAllSettings (knex) {
   })
 }
 
+function getAllPoints (knex) {
+  return new Promise((resolve, reject) => {
+    knex('flatInfo').select('*').then(resp => {
+      resolve(resp)
+    }).catch(err => {
+      reject(err)
+    })
+  })
+}
+
 module.exports = {
   verifyAuthToken,
   generateToken,
@@ -183,5 +193,6 @@ module.exports = {
   getTasks,
   getEntry,
   getEntries,
-  getAllSettings
+  getAllSettings,
+  getAllPoints
 }

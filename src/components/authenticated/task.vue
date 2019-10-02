@@ -57,7 +57,7 @@ export default {
     axios.get(`/api/task/${this.$route.query.task}`,
       {
         headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       })
       .then(response => {
@@ -67,7 +67,7 @@ export default {
         return axios.get(`/api/members`,
           {
             headers: {
-              Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+              Authorization: `Bearer ${localStorage.getItem('authToken')}`
             }
           })
       })
@@ -83,7 +83,7 @@ export default {
       axios.put(`/api/entry/${this.task.id}`, {},
         {
           headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`
           }
         })
         .then(response => {

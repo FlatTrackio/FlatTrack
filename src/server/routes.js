@@ -369,6 +369,7 @@ module.exports = (knex) => {
       res.end()
       return
     } else {
+      // TODO fetch by id, instead of email
       // select('id').select('names').select('email').select('phoneNumber').select('allergies')
       knex('members').select('*').where('email', req.flatmember.email).first().then(resp => {
         res.json(resp)
@@ -382,6 +383,18 @@ module.exports = (knex) => {
       })
     }
   })
+
+  router.route('/flatinfo')
+    .get(functions.verifyAuthToken, (req, res, next) => {
+      functions.getAllPoints(knex).then(resp => {
+        res.json(resp)
+        res.status(400).send().end()
+        return
+      }).catch(err => {
+        res.status(403).send().end()
+        return
+      })
+    })
 
   router.get('/health', (req, res) => {
     // get health state

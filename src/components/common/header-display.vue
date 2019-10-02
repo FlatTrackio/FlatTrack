@@ -32,7 +32,7 @@ export default {
       axios.get(`/api/settings/deploymentName`,
         {
           headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`
           }
         }).then(response => {
         this.subtitle = response.data.value

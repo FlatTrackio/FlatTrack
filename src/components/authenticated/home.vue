@@ -117,7 +117,7 @@ export default {
             container: null
           })
           setTimeout(() => {
-            sessionStorage.clear()
+            localStorage.clear()
             loadingComponent.close()
             location.href = '#/login'
             console.log('Signing out')
@@ -134,7 +134,7 @@ export default {
     axios.get(`/api/profile`,
       {
         headers: {
-          Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       })
       .then(response => {

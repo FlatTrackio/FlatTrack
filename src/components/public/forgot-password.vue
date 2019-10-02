@@ -48,7 +48,7 @@ export default {
       axios.post('/api/',
         {
           headers: {
-            Authorization: `Bearer ${sessionStorage.getItem('authToken')}`
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`
           }
         })
     }
