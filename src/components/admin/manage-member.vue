@@ -56,7 +56,7 @@
                 </div>
                 <br>
                 <div v-if="returnNamesforID(id, names)">
-                  <b-button type="is-success">Update</b-button>
+                  <b-button type="is-success" @click="updateMember(id)">Update</b-button>
                   <b-button type="is-warning">Disable</b-button>
                   <b-button type="is-danger" @click="deleteMember(id)">Delete</b-button>
                 </div>
@@ -126,7 +126,6 @@ export default {
         group,
         memberSetPassword
       }
-      console.log(JSON.stringify(member, null, 4))
       axios({
         method: 'post',
         url: `/api/members`,
@@ -151,9 +150,43 @@ export default {
           })
         })
     },
+    updateMember: (id, names, email, allergies, password, group, memberSetPassword) => {
+      var member = {
+        id,
+        names,
+        email,
+        allergies,
+        password,
+        group,
+        memberSetPassword
+      }
+      axios({
+        method: 'put',
+        url: `/api/members`,
+        data: member,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }}).then(response => {
+        console.log('Add successful', response)
+        Toast.open({
+          message: 'Flatmate added successfully',
+          position: 'is-bottom',
+          type: 'is-success'
+        })
+        location.href = '#/admin/members'
+      })
+        .catch(err => {
+          console.log('Add failed', err)
+          Toast.open({
+            message: 'Failed to add flatmate',
+            position: 'is-bottom',
+            type: 'is-danger'
+          })
+        })
+    },
     deleteMember: (id) => {
       console.log('Attempting to remove member')
-      axios.delete(`/api/members/${id}`, {data: {id: id}},
+      axios.delete(`/api/members/${id}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`

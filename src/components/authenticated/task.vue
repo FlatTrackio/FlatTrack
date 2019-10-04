@@ -80,7 +80,7 @@ export default {
   },
   methods: {
     markAsCompleted () {
-      axios.put(`/api/entry/${this.task.id}`, {},
+      axios.post(`/api/entry/${this.task.id}`, {},
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`

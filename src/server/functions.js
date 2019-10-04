@@ -123,7 +123,6 @@ function getTask (knex, id) {
 function getTasks (req, knex) {
   return new Promise((resolve, reject) => {
     knex('tasks').select('*').where('assignee', req.flatmember.id).then(resp => {
-      var tasksList = []
       resolve(resp)
     }).catch(err => {
       // handle error

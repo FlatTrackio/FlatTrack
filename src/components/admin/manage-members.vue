@@ -70,21 +70,24 @@ export default {
   data () {
     return {
       pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
-      members: []
+      members: [],
+      pageErrors: []
     }
   },
   created () {
-    axios.get(`/api/members`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
-      }).then(response => {
+    axios({
+      method: 'get',
+      url: `/api/members`,
+      params: {
+        allMembers: true
+      },
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('authToken')}`
+      }}).then(response => {
       this.members = response.data
+    }).catch(err => {
+      this.pageErrors.push(err)
     })
-      .catch(err => {
-        this.pageErrors.push(err)
-      })
   },
   methods: {
     addNewFlatmate: () => {

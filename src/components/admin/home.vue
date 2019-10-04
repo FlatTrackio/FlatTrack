@@ -3,7 +3,7 @@
       <headerDisplay admin="true"/>
       <div class="container">
           <section class="section">
-              <h2 class="title is-2">Hey, {{ login.name }}!</h2>
+              <greeting/>
               <h4 class="title is-4">This is the admin page, you can configure FlatTrack from here</h4>
               <div id="menu-bar-items">
                   <b-menu>
@@ -28,6 +28,7 @@
 
 <script>
 import headerDisplay from '../common/header-display'
+import greeting from '../common/greeting'
 
 export default {
   name: 'Admin home',
@@ -49,12 +50,13 @@ export default {
         }
       ],
       login: {
-        name: 'Person'
+        names: 'Person'
       }
     }
   },
   components: {
-    headerDisplay
+    headerDisplay,
+    greeting
   }
 }
 </script>

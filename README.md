@@ -7,6 +7,9 @@
 <a href="https://gitlab.com/flattrack/flattrack/releases">
     <img src="https://img.shields.io/badge/build-1-orange.svg" />
 </a>
+<a href='https://ind.ie/ethical-design'>
+    <img style='margin-left: auto; margin-right: auto;' alt='We practice Ethical Design' src='https://img.shields.io/badge/Ethical_Design-_▲_❤_-blue.svg'>
+</a>
 <br>
 <img alt="FlatTrackLogo" src="" width=100>
 
@@ -33,7 +36,8 @@
 - [expressjs](https://expressjs.com) - library for API
 - [bulma](https://bulma.io/) / [buefy](https://buefy.org/) - CSS framework
 - [axios](https://github.com/axios/axios) - client-side HTTP request library
-- [express-jwt](https://www.npmjs.com/package/express-jwt)
+- [express-jwt](https://www.npmjs.com/package/express-jwt) - auth tokens
+- [nodemailer](https://www.npmjs.com/package/nodemailer) - mail client (out-going)
 
 ## Build Setup
 

@@ -3,7 +3,7 @@
     <headerDisplay/>
     <div class="container">
       <section class="section">
-        <h2 class="title is-2">Hey, {{ login.names }}!</h2>
+        <greeting/>
         <h4 class="title is-4">Welcome to FlatTrack, where your flat or community house is organized</h4>
         <div id="menu-bar-items">
           <b-menu>
@@ -35,7 +35,8 @@
 
 <script>
 import axios from 'axios'
-import headerDisplay from '../common/header-display'
+import headerDisplay from '@/components/common/header-display'
+import greeting from '@/components/common/greeting'
 import { LoadingProgrammatic as Loading, DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
@@ -151,7 +152,8 @@ export default {
       })
   },
   components: {
-    headerDisplay
+    headerDisplay,
+    greeting
   }
 }
 </script>

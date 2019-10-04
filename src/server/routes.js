@@ -17,6 +17,7 @@ module.exports = (knex) => {
         return: 0
       })
       res.end()
+      return
     })
     
   router.route('/login')
@@ -121,7 +122,12 @@ module.exports = (knex) => {
   router.route('/members')
     .get(functions.verifyAuthToken, (req, res) => {
       // get a list of all flat members
-      functions.getMembers(knex, returnHashes = false, req.flatmember.id).then(resp => {
+      var memberSearch = '*'
+      if (!req.query.allMembers) {
+        memberSearch = req.flatmember.id
+      }
+
+      functions.getMembers(knex, returnHashes = false, memberSearch).then(resp => {
         res.json(resp)
         res.end()
         return
