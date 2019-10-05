@@ -178,6 +178,16 @@ function getAllPoints (knex) {
   })
 }
 
+function updateTaskNotificationFrequency (knex, id, frequency) {
+  return new Promise((resolve, reject) => {
+    knex('members').where('id', id).update({ taskNotificationFrequency: frequency }).then(resp => {
+      resolve(resp)
+    }).catch(err => {
+      reject(err)
+    })
+  })
+}
+
 module.exports = {
   verifyAuthToken,
   generateToken,
@@ -193,5 +203,6 @@ module.exports = {
   getEntry,
   getEntries,
   getAllSettings,
-  getAllPoints
+  getAllPoints,
+  updateTaskNotificationFrequency
 }

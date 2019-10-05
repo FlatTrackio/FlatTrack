@@ -12,14 +12,26 @@
             <h1 class="title">About this flat</h1>
             <div v-if="points && points.length">
               <h2 class="subtitle">Here's a few things you should know</h2>
-              <h2 class="title is-4" v-for="point in points" v-bind:key="point">
-                - {{ point.line }}
-                <div v-if="point.subPoints && point.subPoints.length">
-                  <h3 class="subtitle is-5" v-for="subPoint in point.subPoints" v-bind:key="subPoint">
-                    &nbsp;&nbsp;&nbsp;- {{ subPoint }}
-                  </h3>
+              <section class="section">
+                <div class="card-margin" v-for="point of points" v-bind:key="point">
+                  <div class="card">
+                    <div class="card-content">
+                      <div class="content">
+                        {{ point.line }}
+                      </div>
+                      <div v-if="point.subPoints && point.subPoints.length">
+                        <div class="card" v-for="subPoint in point.subPoints" v-bind:key="subPoint">
+                          <div class="card-content">
+                            <div class="content">
+                              {{ subPoint }}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </h2>
+              </section>
             </div>
             <div v-else>
               <h2 class="subtitle">Hmmm, it appears no information about your flat has been added yet. Check back later.</h2>

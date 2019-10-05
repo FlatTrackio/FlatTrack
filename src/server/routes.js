@@ -69,8 +69,7 @@ module.exports = (knex) => {
       var form = req.body
       form = {
         member: form.member,
-        taskName: form.taskName,
-        timeSpent: form.timeSpent
+        taskID: form.taskID
       }
       // validate fields
       var regexNames = /([A-Za-z])\w+/
@@ -370,25 +369,39 @@ module.exports = (knex) => {
   
   router.route('/profile')
     .get(functions.verifyAuthToken, (req, res, next) => {
-    if (!typeof req.flatmember === 'object' || req.flatmember === '') {
-      res.status(403).send()
-      res.end()
-      return
-    } else {
-      // TODO fetch by id, instead of email
-      // select('id').select('names').select('email').select('phoneNumber').select('allergies')
-      knex('members').select('*').where('email', req.flatmember.email).first().then(resp => {
-        res.json(resp)
-        res.end()
-        return
-      }).catch(err => {
-        console.log(err)
+      if (!typeof req.flatmember === 'object' || req.flatmember === '') {
         res.status(403).send()
         res.end()
         return
-      })
-    }
-  })
+      } else {
+        // TODO fetch by id, instead of email
+        // select('id').select('names').select('email').select('phoneNumber').select('allergies')
+        knex('members').select('*').where('email', req.flatmember.email).first().then(resp => {
+          res.json(resp)
+          res.end()
+          return
+        }).catch(err => {
+          console.log(err)
+          res.status(403).send()
+          res.end()
+          return
+        })
+      }
+    })
+    .post(functions.verifyAuthToken, (req, res, next) => {
+      if (req.body.frequency) {
+        functions.updateTaskNotificationFrequency(knex, req.flatmember.id, req.body.frequency).then(resp => {
+          res.status(200).send().end()
+          return
+        }).catch(err => {
+          res.status(403).send().end()
+          return
+        })
+      } else {
+        res.status(403).send().end()
+        return
+      }
+    })
 
   router.route('/flatinfo')
     .get(functions.verifyAuthToken, (req, res, next) => {
@@ -401,6 +414,12 @@ module.exports = (knex) => {
         return
       })
     })
+
+  router.get('/meta', functions.verifyAuthToken, (req, res) => {
+    res.json({ version: packageJSON.version })
+    res.end()
+    return
+  })
 
   router.get('/health', (req, res) => {
     // get health state

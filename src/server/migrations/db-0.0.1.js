@@ -24,6 +24,7 @@ module.exports = (knex) => {
         table.boolean('contractAgreement')
         table.boolean('disabled')
         table.string('group', 100)
+        table.string('taskNotificationFrequency', 10)
     })
 
     knex.schema.createTable('task', (table) => {

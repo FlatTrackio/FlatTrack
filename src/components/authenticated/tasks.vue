@@ -16,7 +16,8 @@
               placeholder="Medium"
               expanded
               rounded
-              v-model="alertFrequency">
+              v-model="alertFrequency"
+              @input="updateFrequency(alertFrequency)">
               <option value="3">Three a week</option>
               <option value="2">Twice a week</option>
               <option value="1">Once a week</option>
@@ -39,7 +40,7 @@
                 </div>
               </div>
               <footer class="card-footer">
-                <a :href="`${pageLocation}/#/tasks/view?task=${task.id}`" class="card-footer-item">View</a>
+                <a :href="`/#/tasks/view?task=${task.id}`" class="card-footer-item">View</a>
               </footer>
             </div>
           </div>
@@ -74,8 +75,6 @@ export default {
   data () {
     return {
       tasks: [],
-      members: [],
-      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       alertFrequency: 2
     }
   },
@@ -98,8 +97,42 @@ export default {
           hasIcon: true
         })
       })
+
+    axios.get(`/api/profile`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+      .then(response => {
+        this.alertFrequency = response.data.taskNotificationFrequency
+      })
+      .catch(err => {
+        this.$buefy.notification.open({
+          duration: 5000,
+          message: `An error has occured: ${err}`,
+          position: 'is-bottom-right',
+          type: 'is-danger',
+          hasIcon: true
+        })
+      })
   },
   methods: {
+    updateFrequency: (value) => {
+      axios({
+        method: 'post',
+        url: `/api/profile`,
+        data: {
+          frequency: value
+        },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }}).then(resp => {
+        console.log(resp)
+      }).catch(err => {
+        console.log(err)
+      })
+    }
   },
   components: {
     headerDisplay
