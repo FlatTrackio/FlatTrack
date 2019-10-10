@@ -4,11 +4,6 @@ stages:
   - build
 
 test:
-  variables:
-    MYSQL_DATABASE: flattrack
-    MYSQL_ROOT_PASSWORD: flattrack
-    MYSQL_USER: flattrack
-    MYSQL_PASSWORD: flattrack
   services:
     - mariadb:10.4
   image: node:12.10.0-alpine
