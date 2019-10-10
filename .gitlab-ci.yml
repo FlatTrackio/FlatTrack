@@ -1,12 +1,30 @@
 stages:
+  - test
   - versionFind
   - build
+
+test:
+  variables:
+    MYSQL_DATABASE: flattrack
+    MYSQL_ROOT_PASSWORD: flattrack
+    MYSQL_USER: flattrack
+    MYSQL_PASSWORD: flattrack
+  services:
+    - mariadb:10.4
+  image: node:12.10.0-alpine
+  stage: test
+  before_script:
+    - npm i
+  script:
+    - npm test
 
 versionFind:
   image: node:12.10.0-alpine
   stage: versionFind
   script:
     - node -e "console.log(require('./package.json').version)" > .VERSION
+  dependencies:
+    - test
   artifacts:
     paths:
       - .VERSION
@@ -16,12 +34,13 @@ versionFind:
 build:
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:debug
+    name: gcr.io/kaniko-project/executor:v0.13.0
     entrypoint: [""]
   script:
+    - if [ ! -z "$CI_COMMIT_TAG" ]; then KANIKO_EXTA_DESTINATION="--destination $CI_REGISTRY_IMAGE:$(cat .VERSION)"; fi
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:$(cat .VERSION)
-  only:
-    - tags
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest $KANIKO_EXTA_DESTINATION
+  dependencies:
+    - test
   dependencies:
     - versionFind

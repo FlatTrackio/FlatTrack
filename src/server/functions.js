@@ -2,6 +2,10 @@
 
 const hash = require('hash.js')
 const jwt = require('jsonwebtoken')
+const fs = require('fs')
+const path = require('path')
+const packageJSON = require('../../package.json')
+const configPath = path.resolve(path.join('.', 'deployment', 'config.json'))
 
 function verifyAuthToken (req, res, next) {
   const config = require('../../deployment/config.json')
@@ -11,8 +15,9 @@ function verifyAuthToken (req, res, next) {
     jwt.verify(bearerToken, config.system.ACCESS_TOKEN_SECRET, (err, flatmember) => {
       if (err) {
         console.log(err)
-        res.json(err)
-        return res.status(403).send()
+        res.status(403)
+        res.json(err).send().end()
+        return
       }
       req.flatmember = flatmember.flatmember
       next()
@@ -188,6 +193,63 @@ function updateTaskNotificationFrequency (knex, id, frequency) {
   })
 }
 
+const configJSONTemplate = {
+  "system": {
+    "installedVersion": packageJSON.version,
+    "maintenence": false,
+    "hasInitialised": false,
+    "dbInstalled": false,
+    "DB_ROOT_PASSWORD": process.env.DB_ROOT_PASSWORD || "",
+    "DB_PASSWORD": process.env.DB_PASSWORD || "",
+    "DB_DATABASE": process.env.DB_DATABASE || "",
+    "DB_USER": process.env.DB_USER || "",
+    "DB_HOST": process.env.DB_HOST || "",
+    "DB_FLAVOR": process.env.DB_FLAVOR || "",
+    "ACCESS_TOKEN_SECRET": generateSecret() || "",
+    "REFRESH_TOKEN_SECRET": generateSecret() || "",
+    "MAIL_SMTP_USER": process.env.MAIL_SMTP_USER || "",
+    "MAIL_SMTP_PASSWORD": process.env.MAIL_SMTP_PASSWORD || "",
+    "MAIL_SMTP_MODE": process.env.MAIL_SMTP_MODE || "",
+    "MAIL_FROM_ADDRESS": process.env.MAIL_FROM_ADDRESS || "",
+    "MAIL_DOMAIN": process.env.MAIL_DOMAIN || "",
+    "MAIL_SMTP_AUTH": process.env.MAIL_SMTP_AUTH || "",
+    "MAIL_SMTP_SERVER": process.env.MAIL_SMTP_SERVER || "",
+    "MAIL_SMTP_PORT": process.env.MAIL_SMTP_PORT || "",
+    "MAIL_SMTP_NAME": process.env.MAIL_SMTP_NAME || ""
+  },
+  "apps": {}
+}
+
+function doesExistConfigJSON () {
+  return fs.existsSync(configPath)
+}
+
+function initConfigJSON () {
+  if (! doesExistConfigJSON()) {
+    if (fs.mkdirSync(path.resolve(path.join('.', 'deployment')), { recursive: true })) {
+      return writeConfigJSON(configJSONTemplate)
+    } else if (! doesExistConfigJSON()) {
+      return writeConfigJSON(configJSONTemplate)
+    } else  return false
+  } else return true
+}
+
+function deinitConfigJSON () {
+  if (fs.unlinkSync(configPath)) {
+    return true
+  } else {
+    return false
+  }
+}
+
+function readConfigJSON () {
+  return require(configPath)
+}
+
+function writeConfigJSON (content) {
+  return fs.writeFileSync(configPath, JSON.stringify(content, null, 2))
+}
+
 module.exports = {
   verifyAuthToken,
   generateToken,
@@ -204,5 +266,12 @@ module.exports = {
   getEntries,
   getAllSettings,
   getAllPoints,
-  updateTaskNotificationFrequency
+  updateTaskNotificationFrequency,
+  config: {
+    exists: doesExistConfigJSON,
+    init: initConfigJSON,
+    deinit: deinitConfigJSON,
+    read: readConfigJSON,
+    write: writeConfigJSON
+  }
 }

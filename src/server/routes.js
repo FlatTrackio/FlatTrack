@@ -390,6 +390,15 @@ module.exports = (knex) => {
     })
     .post(functions.verifyAuthToken, (req, res, next) => {
       if (req.body.frequency) {
+        switch (req.body.frequency) {
+          case '0': case '1': case '2': case '3':
+            break
+
+          default:
+            res.status(403).send().end()
+            return
+            break
+        }
         functions.updateTaskNotificationFrequency(knex, req.flatmember.id, req.body.frequency).then(resp => {
           res.status(200).send().end()
           return

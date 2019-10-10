@@ -6,9 +6,8 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const path = require('path')
-const fs = require('fs')
+const os = require('os')
 const morgan = require('morgan')
-const packageJSON = require('../../package.json')
 const knex = require('knex')({
   client: 'mysql',
   connection: {
@@ -20,13 +19,17 @@ const knex = require('knex')({
   pool: { min: 0, max: 7 }
 })
 
+if (os.userInfo().uid < 1000) {
+  console.log('[error] ftctl must not be run as a system user')
+  process.exit(1)
+}
+
 knex.raw('select 0;').catch(err => {
   console.log("No database connection found.")
   process.exit(1)
 })
 
 require('./init.js')(knex)
-const config = require('../../deployment/config.json')
 
 // development port is 8080
 var port = process.env.APP_PORT || 8080
@@ -50,11 +53,27 @@ app.use('/api', routes)
 // Sends static files from the public path directory
 app.use(express.static(path.join(__dirname, '..', '..', 'dist')))
 
-app.get(/(.*)/, (req, res) => {
-  res.redirect('/#/unknown-page')
+app.get('/#', (req, res) => {
+    res.redirect('/')
 })
 
-// start service
-app.listen(port, () => {
-  console.log(`Running on ${port}`)
+app.get(/(.*)/, (req, res) => {
+    res.redirect('/#/unknown-page')
 })
+
+function start () {
+  return app.listen(port, () => {
+      console.log(`Running on port ${port}`)
+  })
+}
+
+if (require.main !== module) {
+  module.exports = {
+      start: () => {
+          serverObject = start()
+      },
+      stop: () => {
+          serverObject.close()
+      }
+  }
+} else start()

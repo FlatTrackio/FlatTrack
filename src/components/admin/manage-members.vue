@@ -12,6 +12,7 @@
           <h1 class="title">Manage Flatmates</h1>
           <h2 class="subtitle">Add, remove, and update Flatmates</h2>
           <b-button type="is-light" @click="addNewFlatmate" rounded>Add new flatmate</b-button>
+          <br><br>
           <div v-if="members && members.length">
             <div class="card-margin" v-for="member of members" v-bind:key="member">
               <div class="card">
@@ -23,10 +24,10 @@
                   </div>
                   <div class="content">
                     <div v-if="member.phoneNumber">
-                      Phone: {{ member.phoneNumber }}<br/>
+                      Phone: <a :href="`tel:${member.phoneNumber}`">{{ member.phoneNumber }}</a><br/>
                     </div>
                     <div v-if="member.email">
-                      Email: {{ member.email }}<br/>
+                      Email: <a :href="`mailto:${member.email}`">{{ member.email }}</a><br/>
                     </div>
                     <div v-if="member.allergies">
                       Allergies: {{ member.allergies }}<br/>
@@ -34,7 +35,7 @@
                   </div>
                 </div>
                 <footer class="card-footer">
-                  <a :href="`${pageLocation}/#/admin/members/u?id=${member.id}`" class="card-footer-item">View</a>
+                  <a :href="`/#/admin/members/u?id=${member.id}`" class="card-footer-item">View</a>
                 </footer>
               </div>
             </div>
@@ -63,13 +64,24 @@
 
 <script>
 import axios from 'axios'
+import { Service } from 'axios-middleware'
 import headerDisplay from '../common/header-display'
+
+const service = new Service(axios)
+service.register({
+  onResponse (response) {
+    if (response.status === 403) {
+      localStorage.removeItem('authToken')
+      location.href = '/'
+    }
+    return response
+  }
+})
 
 export default {
   name: 'Admin home',
   data () {
     return {
-      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       members: [],
       pageErrors: []
     }
@@ -83,8 +95,8 @@ export default {
       },
       headers: {
         Authorization: `Bearer ${localStorage.getItem('authToken')}`
-      }}).then(response => {
-      this.members = response.data
+      }}).then(resp => {
+      this.members = resp.data
     }).catch(err => {
       this.pageErrors.push(err)
     })

@@ -33,7 +33,6 @@ export default {
   name: 'Admin home',
   data () {
     return {
-      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       features: [
         {
           name: 'Tasks',

@@ -26,7 +26,7 @@
               </div>
             </div>
             <footer class="card-footer">
-              <a :href="`${pageLocation}/#/calendar/${link.address}`" class="card-footer-item">Add</a>
+              <a :href="`/#/calendar/${link.address}`" class="card-footer-item">Add</a>
             </footer>
           </div>
         </div>
@@ -40,7 +40,6 @@ import headerDisplay from '../common/header-display'
 
 export default {
   name: 'Shopping List',
-  pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
   data () {
     return {
       calendarLinks: [

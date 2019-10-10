@@ -29,7 +29,13 @@
                 <b-field label="Password (optional)">
                     <b-input type="password" placeholder="xxxxxxxxxxxxx" v-model="password" maxlength="30" rounded :required="id" password-reveal :disabled="memberSetPassword"></b-input>
                 </b-field>
-                <b-checkbox v-if="!id" v-model="memberSetPassword" native-value="true">Allow the new member to set the password?<br/><br/></b-checkbox>
+                <div v-if="!id">
+                  <b-checkbox v-model="memberSetPassword">
+                    Allow the new member to set the password?
+                    {{ memberSetPassword }}
+                  </b-checkbox>
+                  <br/><br/>
+                </div>
                 <div class="control">
                   <label class="label">Group</label>
                   <div class="field">
@@ -42,14 +48,16 @@
                   <div class="field">
                     <b-radio v-model="group"
                         native-value="admin"
-                        name="group">
+                        name="group"
+                        type="is-danger">
                         Admin - can access the admin pages
                     </b-radio>
                   </div>
                   <div class="field">
                     <b-radio v-model="group"
                         native-value="approver"
-                        name="group">
+                        name="group"
+                        type="is-danger">
                         Approver - can view and approve tasks
                     </b-radio>
                   </div>
@@ -74,9 +82,20 @@
 
 <script>
 import axios from 'axios'
+import { Service } from 'axios-middleware'
 import { ToastProgrammatic as Toast } from 'buefy'
 import headerDisplay from '../common/header-display'
 
+const service = new Service(axios)
+service.register({
+  onResponse (response) {
+    if (response.status === 403) {
+      localStorage.removeItem('authToken')
+      location.href = '/'
+    }
+    return response
+  }
+})
 export default {
   name: 'Admin home',
   data () {
@@ -88,7 +107,6 @@ export default {
       password: '',
       memberSetPassword: true,
       group: 'flatmember',
-      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       member: {
       },
       pageErrors: []
@@ -96,15 +114,18 @@ export default {
   },
   created () {
     var id = this.$route.query.id
+    if (!id) {
+      return
+    }
     axios.get(`/api/members/${id}`,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       })
-      .then(response => {
-        var member = response.data
-        this.names = response.data.names
+      .then(resp => {
+        var member = resp.data
+        this.names = resp.data.names
         this.email = member.email
         this.allergies = member.allergies
         this.memberSetPassword = member.memberSetPassword
@@ -132,8 +153,8 @@ export default {
         data: member,
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }}).then(response => {
-        console.log('Add successful', response)
+        }}).then(resp => {
+        console.log('Add successful', resp)
         Toast.open({
           message: 'Flatmate added successfully',
           position: 'is-bottom',
@@ -166,8 +187,8 @@ export default {
         data: member,
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }}).then(response => {
-        console.log('Add successful', response)
+        }}).then(resp => {
+        console.log('Add successful', resp)
         Toast.open({
           message: 'Flatmate added successfully',
           position: 'is-bottom',
@@ -192,8 +213,8 @@ export default {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`
           }
         })
-        .then(response => {
-          console.log('Remove successful', response)
+        .then(resp => {
+          console.log('Remove successful', resp)
           Toast.open({
             message: 'Flatmate removed successfully',
             position: 'is-bottom',

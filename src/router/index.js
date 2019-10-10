@@ -10,7 +10,6 @@ import aboutFlatTrack from '@/components/authenticated/about-flattrack'
 import aboutFlat from '@/components/authenticated/about-flat'
 import highFives from '@/components/authenticated/high-fives'
 import members from '@/components/authenticated/members'
-import member from '@/components/authenticated/member'
 import noticeboard from '@/components/authenticated/noticeboard'
 import recipes from '@/components/authenticated/recipes'
 import sharedCalendar from '@/components/authenticated/shared-calendar'
@@ -93,12 +92,6 @@ export default new Router({
       path: '/members',
       name: 'members',
       component: members,
-      beforeEnter: authenticatedRoute
-    },
-    {
-      path: '/members/u',
-      name: 'member',
-      component: member,
       beforeEnter: authenticatedRoute
     },
     {

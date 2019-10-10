@@ -6,6 +6,18 @@
 
 <script>
 import axios from 'axios'
+import { Service } from 'axios-middleware'
+
+const service = new Service(axios)
+service.register({
+  onResponse (response) {
+    if (response.status === 403) {
+      localStorage.removeItem('authToken')
+      location.href = '/'
+    }
+    return response
+  }
+})
 
 export default {
   name: 'greeting',
@@ -23,8 +35,8 @@ export default {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       })
-      .then(response => {
-        this.login = response.data
+      .then(resp => {
+        this.login = resp.data
       })
       .catch(err => {
         this.$buefy.notification.open({

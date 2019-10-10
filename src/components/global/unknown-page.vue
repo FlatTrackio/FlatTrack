@@ -25,7 +25,6 @@ import headerDisplay from '../common/header-display'
 
 export default {
   name: 'Unknown page',
-  pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
   data () {
     return {
     }

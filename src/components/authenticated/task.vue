@@ -17,7 +17,9 @@
             <div class="card-content">
               <div class="media">
                 <div class="media-content">
-                  <p class="title is-4">{{ task.name }}</p>
+                  <p class="title is-4">
+                    {{ task.name }} <span class="tag is-info">rotates {{ task.rotation }}</span>
+                  </p>
                   <p class="subtitle is-6">@{{ task.location }}</p>
                 </div>
               </div>
@@ -25,10 +27,9 @@
                 {{ task.description }}
               </div>
             </div>
-            <footer class="card-footer">
-              <b-button @click="markAsCompleted">I've completed this task</b-button>
-            </footer>
           </div>
+          <br>
+          <b-button @click="markAsCompleted" rounded outlined type="is-success">I've completed this task</b-button>
         </section>
       </div>
     </div>
@@ -36,14 +37,25 @@
 
 <script>
 import axios from 'axios'
+import { Service } from 'axios-middleware'
 import headerDisplay from '../common/header-display'
+
+const service = new Service(axios)
+service.register({
+  onResponse (response) {
+    if (response.status === 403) {
+      localStorage.removeItem('authToken')
+      location.href = '/'
+    }
+    return response
+  }
+})
 
 export default {
   name: 'Task',
   data () {
     return {
       id: this.$route.query.task,
-      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       task: {},
       members: [],
       tasksGETerrors: [],
@@ -60,9 +72,9 @@ export default {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       })
-      .then(response => {
-        this.task = response.data
-        this.form.taskName = response.data.name
+      .then(resp => {
+        this.task = resp.data
+        this.form.taskName = resp.data.name
 
         return axios.get(`/api/members`,
           {
@@ -71,8 +83,8 @@ export default {
             }
           })
       })
-      .then(response => {
-        this.members = response.data
+      .then(resp => {
+        this.members = resp.data
       })
       .catch(err => {
         this.tasksGETerrors.push(err)
@@ -86,8 +98,8 @@ export default {
             Authorization: `Bearer ${localStorage.getItem('authToken')}`
           }
         })
-        .then(response => {
-          console.log(response)
+        .then(resp => {
+          console.log(resp)
         })
         .catch(err => {
           this.tasksGETerrors.push(err)

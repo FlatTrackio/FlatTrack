@@ -35,16 +35,27 @@
 
 <script>
 import axios from 'axios'
+import { Service } from 'axios-middleware'
 import headerDisplay from '@/components/common/header-display'
 import greeting from '@/components/common/greeting'
 import { LoadingProgrammatic as Loading, DialogProgrammatic as Dialog } from 'buefy'
+
+const service = new Service(axios)
+service.register({
+  onResponse (response) {
+    if (response.status === 403) {
+      localStorage.removeItem('authToken')
+      location.href = '/'
+    }
+    return response
+  }
+})
 
 export default {
   name: 'home',
   data () {
     return {
       pageErrors: [],
-      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       pages: [
         {
           name: 'Tasks',
@@ -138,8 +149,8 @@ export default {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       })
-      .then(response => {
-        this.login = response.data
+      .then(resp => {
+        this.login = resp.data
       })
       .catch(err => {
         this.$buefy.notification.open({

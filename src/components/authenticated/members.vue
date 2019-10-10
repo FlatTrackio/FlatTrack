@@ -11,8 +11,7 @@
         </nav>
         <h1 class="title">Flatmates</h1>
         <p>These are your flatmates, make sure to get to know them {{ emojiSmile }}</p>
-      </section>
-      <section class="section">
+        <br>
         <div v-if="members && members.length">
           <div class="card-margin" v-for="member of members" v-bind:key="member">
             <div class="card">
@@ -34,10 +33,10 @@
                   </div>
                 </div>
               </div>
-              <footer class="card-footer">
-                <a :href="`${pageLocation}/#/members/u?id=${member.id}`" class="card-footer-item">View</a>
-              </footer>
             </div>
+          </div>
+          <div class="section">
+            <p>{{ members.length }} flatmembers</p>
           </div>
         </div>
         <div v-if="!members && !members.length">
@@ -62,15 +61,26 @@
 
 <script>
 import axios from 'axios'
+import { Service } from 'axios-middleware'
 import headerDisplay from '../common/header-display'
 import emoji from 'node-emoji'
+
+const service = new Service(axios)
+service.register({
+  onResponse (response) {
+    if (response.status === 403) {
+      localStorage.removeItem('authToken')
+      location.href = '/'
+    }
+    return response
+  }
+})
 
 export default {
   name: 'Shopping List',
   data () {
     return {
       members: [],
-      pageLocation: location.protocol + '//' + location.hostname + (location.port ? ':' + location.port : ''),
       emojiSmile: emoji.get('smile')
     }
   },
@@ -81,8 +91,8 @@ export default {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       })
-      .then(response => {
-        this.members = response.data
+      .then(resp => {
+        this.members = resp.data
       })
       .catch(err => {
         this.$buefy.notification.open({

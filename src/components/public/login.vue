@@ -33,8 +33,20 @@
 
 <script>
 import axios from 'axios'
+import { Service } from 'axios-middleware'
 import headerDisplay from '../common/header-display'
 import { ToastProgrammatic as Toast, LoadingProgrammatic as Loading } from 'buefy'
+
+const service = new Service(axios)
+service.register({
+  onResponse (response) {
+    if (response.status === 403) {
+      localStorage.removeItem('authToken')
+      location.href = '/'
+    }
+    return response
+  }
+})
 
 export default {
   name: 'login',

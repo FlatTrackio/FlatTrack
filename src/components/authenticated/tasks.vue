@@ -1,27 +1,32 @@
 <template>
   <div>
-    <headerDisplay/>
+    <headerDisplay />
     <div class="container">
       <section class="section">
         <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
           <ul>
-            <li><a href="/#/">Home</a></li>
-            <li class="is-active"><a href="/#/tasks">Tasks</a></li>
+            <li>
+              <a href="/#/">Home</a>
+            </li>
+            <li class="is-active">
+              <a href="/#/tasks">Tasks</a>
+            </li>
           </ul>
         </nav>
         <h1 class="title">Tasks</h1>
         <h2 class="subtitle">Get caught up with your tasks</h2>
         <b-field label="How often would you like to be notified about tasks?">
           <b-select
-              placeholder="Medium"
-              expanded
-              rounded
-              v-model="alertFrequency"
-              @input="updateFrequency(alertFrequency)">
-              <option value="3">Three a week</option>
-              <option value="2">Twice a week</option>
-              <option value="1">Once a week</option>
-              <option value="0">Never</option>
+            placeholder="Medium"
+            expanded
+            rounded
+            v-model="alertFrequency"
+            @input="updateFrequency(alertFrequency)"
+          >
+            <option value="3">Three a week</option>
+            <option value="2">Twice a week</option>
+            <option value="1">Once a week</option>
+            <option value="0">Never</option>
           </b-select>
         </b-field>
         <div id="tasks" v-if="tasks && tasks.length">
@@ -31,36 +36,38 @@
               <div class="card-content">
                 <div class="media">
                   <div class="media-content">
-                    <p class="title is-4">{{ task.name }}</p>
+                    <p class="title is-4">
+                      {{ task.name }}
+                      <span class="tag is-info">rotates {{ task.rotation }}</span>
+                    </p>
                     <p class="subtitle is-6">@{{ task.location }}</p>
                   </div>
                 </div>
-                <div class="content">
-                  {{ task.description }}
-                </div>
+                <div class="content">{{ task.description }}</div>
               </div>
               <footer class="card-footer">
                 <a :href="`/#/tasks/view?task=${task.id}`" class="card-footer-item">View</a>
               </footer>
             </div>
           </div>
-      </div>
-      <div id="tasks" v-if="!tasks.length">
-        <section class="section">
-          <div class="card">
-            <div class="card-content">
-              <div class="media">
-                <div class="media-content">
-                  <p class="title is-4">No tasks here</p>
+        </div>
+        <div id="tasks" v-if="!tasks.length">
+          <section class="section">
+            <div class="card">
+              <div class="card-content">
+                <div class="media">
+                  <div class="media-content">
+                    <p class="title is-4">No tasks here</p>
+                  </div>
+                </div>
+                <div class="content">
+                  Nice! You're either all caught up, or no tasks have been assigned to you.
+                  <br />
                 </div>
               </div>
-              <div class="content">
-                Nice! You're either all caught up, or no tasks have been assigned to you.<br/>
-              </div>
             </div>
-          </div>
-        </section>
-      </div>
+          </section>
+        </div>
       </section>
     </div>
   </div>
@@ -68,25 +75,38 @@
 
 <script>
 import axios from 'axios'
+import { Service } from 'axios-middleware'
 import headerDisplay from '../common/header-display'
+
+const service = new Service(axios)
+service.register({
+  onResponse (response) {
+    if (response.status === 403) {
+      localStorage.removeItem('authToken')
+      location.href = '/'
+    }
+    return response
+  }
+})
 
 export default {
   name: 'tasks',
   data () {
     return {
       tasks: [],
+      entries: [],
       alertFrequency: 2
     }
   },
   created () {
-    axios.get(`/api/tasks`,
-      {
+    axios
+      .get(`/api/tasks`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       })
-      .then(response => {
-        this.tasks = response.data
+      .then(resp => {
+        this.tasks = resp.data
       })
       .catch(err => {
         this.$buefy.notification.open({
@@ -98,14 +118,33 @@ export default {
         })
       })
 
-    axios.get(`/api/profile`,
-      {
+    axios
+      .get(`/api/entries`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }
       })
-      .then(response => {
-        this.alertFrequency = response.data.taskNotificationFrequency
+      .then(resp => {
+        this.entries = resp.data
+      })
+      .catch(err => {
+        this.$buefy.notification.open({
+          duration: 5000,
+          message: `An error has occured: ${err}`,
+          position: 'is-bottom-right',
+          type: 'is-danger',
+          hasIcon: true
+        })
+      })
+
+    axios
+      .get(`/api/profile`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }
+      })
+      .then(resp => {
+        this.alertFrequency = resp.data.taskNotificationFrequency
       })
       .catch(err => {
         this.$buefy.notification.open({
@@ -127,11 +166,14 @@ export default {
         },
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }}).then(resp => {
-        console.log(resp)
-      }).catch(err => {
-        console.log(err)
+        }
       })
+        .then(resp => {
+          console.log(resp)
+        })
+        .catch(err => {
+          console.log(err)
+        })
     }
   },
   components: {
@@ -140,7 +182,7 @@ export default {
 }
 </script>
 
-<style src="../../assets/style.css"></style>
+<style src='../../assets/style.css'></style>
 <style scoped>
 .taskItem .child {
   background-color: lightblue;
