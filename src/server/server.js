@@ -20,8 +20,8 @@ const knex = require('knex')({
 })
 
 if (os.userInfo().uid < 1000) {
-  console.log('[error] ftctl must not be run as a system user')
-  process.exit(1)
+  console.log(`[error] flattrack was run as '${os.userInfo().username}' must not be run as a system user`)
+  if (process.env.NODE_ENV === 'production') process.exit(1)
 }
 
 knex.raw('select 0;').catch(err => {
@@ -47,8 +47,11 @@ app.use(bodyParser.urlencoded({
 app.use(express.json())
 app.use(morgan('combined'))
 
-var routes = require('./routes')(knex)
-app.use('/api', routes)
+var routesFlatmember = require('./routes/general')(knex)
+app.use('/api', routesFlatmember)
+
+var routesAdmin = require('./routes/admin')(knex)
+app.use('/api/admin', routesAdmin)
 
 // Sends static files from the public path directory
 app.use(express.static(path.join(__dirname, '..', '..', 'dist')))

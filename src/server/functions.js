@@ -114,7 +114,7 @@ function deleteMember (knex, id) {
   })
 }
 
-function getTask (knex, id) {
+function getTaskOfMember (knex, id) {
   return new Promise((resolve, reject) => {
     knex('tasks').select('*').where('id', id).first().then(resp => {
       resolve(resp)
@@ -125,12 +125,22 @@ function getTask (knex, id) {
   })
 }
 
-function getTasks (req, knex) {
+function getTasksOfMember (req, knex) {
   return new Promise((resolve, reject) => {
     knex('tasks').select('*').where('assignee', req.flatmember.id).then(resp => {
       resolve(resp)
     }).catch(err => {
       // handle error
+      reject(err)
+    })
+  })
+}
+
+function getTasks (knex) {
+  return new Promise((resolve, reject) => {
+    knex('tasks').select('*').then(resp => {
+      resolve(resp)
+    }).catch(err => {
       reject(err)
     })
   })
@@ -251,27 +261,32 @@ function writeConfigJSON (content) {
 }
 
 module.exports = {
-  verifyAuthToken,
-  generateToken,
-  generateSecret,
-  getMember,
-  getMemberProfileByEmail,
-  getMembers,
-  updateMember,
-  deleteMember,
-  checkGroupForAdmin,
-  getTask,
-  getTasks,
-  getEntry,
-  getEntries,
-  getAllSettings,
-  getAllPoints,
-  updateTaskNotificationFrequency,
-  config: {
-    exists: doesExistConfigJSON,
-    init: initConfigJSON,
-    deinit: deinitConfigJSON,
-    read: readConfigJSON,
-    write: writeConfigJSON
+  general: {
+    verifyAuthToken,
+    generateToken,
+    generateSecret,
+    getMember,
+    getMemberProfileByEmail,
+    getMembers,
+    updateMember,
+    deleteMember,
+    checkGroupForAdmin,
+    getTaskOfMember,
+    getTasksOfMember,
+    getEntry,
+    getEntries,
+    getAllSettings,
+    getAllPoints,
+    updateTaskNotificationFrequency,
+  },
+  admin: {
+    getTasks,
+    config: {
+      exists: doesExistConfigJSON,
+      init: initConfigJSON,
+      deinit: deinitConfigJSON,
+      read: readConfigJSON,
+      write: writeConfigJSON
+    }
   }
 }

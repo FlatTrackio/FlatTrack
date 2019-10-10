@@ -6,7 +6,7 @@
           <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/#/admin">Admin Home</a></li>
-                <li><a href="/#/admin/members">Manage flatmates</a></li>
+                <li><a href="/#/admin/members">Manage Flatmates</a></li>
                 <li class="is-active"><a>{{ returnNamesforID(id, names) || 'Add a flatmate' }}</a></li>
             </ul>
           </nav>
@@ -32,7 +32,6 @@
                 <div v-if="!id">
                   <b-checkbox v-model="memberSetPassword">
                     Allow the new member to set the password?
-                    {{ memberSetPassword }}
                   </b-checkbox>
                   <br/><br/>
                 </div>
@@ -83,7 +82,7 @@
 <script>
 import axios from 'axios'
 import { Service } from 'axios-middleware'
-import { ToastProgrammatic as Toast } from 'buefy'
+import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog } from 'buefy'
 import headerDisplay from '../common/header-display'
 
 const service = new Service(axios)
@@ -207,29 +206,38 @@ export default {
     },
     deleteMember: (id) => {
       console.log('Attempting to remove member')
-      axios.delete(`/api/members/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`
-          }
-        })
-        .then(resp => {
-          console.log('Remove successful', resp)
-          Toast.open({
-            message: 'Flatmate removed successfully',
-            position: 'is-bottom',
-            type: 'is-success'
-          })
-          location.href = '#/admin/members?reload=1'
-        })
-        .catch(err => {
-          console.log('Remove failed', err)
-          Toast.open({
-            message: 'Failed to remove flatmate',
-            position: 'is-bottom',
-            type: 'is-danger'
-          })
-        })
+      Dialog.confirm({
+        message: 'Are you sure you want to remove this flatmember? (this cannot be undone)',
+        confirmText: 'Remove Flatmember',
+        type: 'is-danger',
+        onConfirm: () => {
+          axios.delete(`/api/members/${id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${localStorage.getItem('authToken')}`
+              }
+            })
+            .then(resp => {
+              console.log('Remove successful', resp)
+              Toast.open({
+                message: 'Flatmate removed successfully',
+                position: 'is-bottom',
+                type: 'is-success'
+              })
+              setTimeout(() => {
+                location.href = '#/admin/members'
+              }, 1.2 * 1000)
+            })
+            .catch(err => {
+              console.log('Remove failed', err)
+              Toast.open({
+                message: 'Failed to remove flatmate',
+                position: 'is-bottom',
+                type: 'is-danger'
+              })
+            })
+        }
+      })
     },
     returnNamesforID: (id, names) => {
       if (typeof id !== 'undefined') {

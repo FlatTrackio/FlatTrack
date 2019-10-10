@@ -3,8 +3,7 @@
     <headerDisplay/>
     <div class="container">
       <section class="section">
-        <greeting/>
-        <h4 class="title is-4">Welcome to FlatTrack, where your flat or community house is organized</h4>
+        <greeting subtitle="Welcome to FlatTrack, where your flat or community house is organized"/>
         <div id="menu-bar-items">
           <b-menu>
             <b-menu-list>

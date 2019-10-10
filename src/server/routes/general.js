@@ -1,12 +1,12 @@
 const express = require('express')
 const router = express.Router()
-const functions = require('./functions')
+const functions = require('../functions')
 const moment = require('moment')
 const uuid = require('uuid/v4')
 const jwt = require('jsonwebtoken')
 const passport = require('passport')
 const hash = require('hash.js')
-const packageJSON = require('../../package.json')
+const packageJSON = require('../../../package.json')
 
 module.exports = (knex) => {
   router.get('/', (req, res) => {
@@ -31,7 +31,7 @@ module.exports = (knex) => {
         // hash sent password, check it against saved password from database
         var hashedSentPassword = hash.sha256().update(req.body.password).digest('hex')
         if (hashedSentPassword === resp.password) {
-          functions.generateToken(req.body.email, knex).then(resp => {
+          functions.general.generateToken(req.body.email, knex).then(resp => {
             res.json(resp).status(200).end()
             return
           }).catch(err => {
@@ -52,9 +52,9 @@ module.exports = (knex) => {
     })
     
   router.route('/entry')
-    .get(functions.verifyAuthToken, (req, res) => {
+    .get(functions.general.verifyAuthToken, (req, res) => {
       // get all entries
-      functions.getEntries(knex).then(resp => {
+      functions.general.getEntries(knex).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -64,7 +64,7 @@ module.exports = (knex) => {
         return
       })
     })
-    .post(functions.verifyAuthToken, (req, res) => {
+    .post(functions.general.verifyAuthToken, (req, res) => {
       // add a new entry
       var form = req.body
       form = {
@@ -73,7 +73,7 @@ module.exports = (knex) => {
       }
       // validate fields
       var regexNames = /([A-Za-z])\w+/
-      functions.getMember(knex, form.member).then(resp => {
+      functions.general.getMember(knex, form.member).then(resp => {
         console.log('Found user', resp)
       }).catch(resp => {
         res.json({ return: 1, message: 'Unable to find that user.' })
@@ -108,7 +108,7 @@ module.exports = (knex) => {
   router.get('/entry/:id', (req, res) => {
     // get a particular entry
     var id = req.params.id
-    functions.getEntry(knex, id).then(resp => {
+    functions.general.getEntry(knex, id).then(resp => {
       res.json(resp)
       res.end()
     }).catch(err => {
@@ -119,14 +119,14 @@ module.exports = (knex) => {
   })
   
   router.route('/members')
-    .get(functions.verifyAuthToken, (req, res) => {
+    .get(functions.general.verifyAuthToken, (req, res) => {
       // get a list of all flat members
       var memberSearch = '*'
       if (!req.query.allMembers) {
         memberSearch = req.flatmember.id
       }
 
-      functions.getMembers(knex, returnHashes = false, memberSearch).then(resp => {
+      functions.general.getMembers(knex, returnHashes = false, memberSearch).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -136,7 +136,7 @@ module.exports = (knex) => {
         return
       })
     })
-    .post(functions.verifyAuthToken, (req, res) => {
+    .post([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
       // add a new flat member (requires admin)
       var form = req.body
       console.log(req)
@@ -170,7 +170,7 @@ module.exports = (knex) => {
           res.end()
           return
       }
-      functions.getMember(knex, form.member).then(resp => {
+      functions.general.getMember(knex, form.member).then(resp => {
         res.json({ return: 1, message: 'User already exists.' })
         res.end()
         return
@@ -179,13 +179,16 @@ module.exports = (knex) => {
         res.end()
         return
       })
+
+      // hash the password
+      form.password = hash.sha256().update(form.password).digest('hex')
   
       console.log("Request to create new member:")
       console.log(JSON.stringify(form))
 
       knex('members').insert(form).then(resp => {
         // handle user creating sucessfully
-        res.json({message: 'Added new user successfully'})
+        res.json({ message: 'Added new user successfully' })
         res.end()
         return
       }).catch(err => {
@@ -197,10 +200,10 @@ module.exports = (knex) => {
       })
     })
   router.route('/members/:id')
-    .get(functions.verifyAuthToken, (req, res) => {
+    .get(functions.general.verifyAuthToken, (req, res) => {
       // get a given flat member
       var id = req.params.id
-      functions.getMember(knex, id).then(resp => {
+      functions.general.getMember(knex, id).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -210,7 +213,7 @@ module.exports = (knex) => {
         return
       })
     })
-    .put(functions.verifyAuthToken, (req, res) => {
+    .put([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
       // update a password for a given flat member (requires admin or previous password)
       var id = req.params.id
       var form = req.body
@@ -220,7 +223,7 @@ module.exports = (knex) => {
       }
   
       // get the user's row
-      functions.getMember(knex, id, returnHashes = true).then(resp => {
+      functions.general.getMember(knex, id, returnHashes = true).then(resp => {
         // verify the user
         if (!(functions.isAdmin(form.password) || form.password === resp.password)) {
           res.json({ return: 1, message: `${resp.names}'s old password or the Administrator password must be provided to do this.` })
@@ -228,7 +231,7 @@ module.exports = (knex) => {
         }
   
         // change the password
-        return functions.updateMember(knex, id, form.newPassword)
+        return functions.general.updateMember(knex, id, form.newPassword)
       }).then(resp => {
         res.json(resp)
         res.end()
@@ -239,10 +242,10 @@ module.exports = (knex) => {
         return
       })
     })
-    .delete(functions.verifyAuthToken, (req, res) => {
+    .delete([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
       // delete a flat member (requires admin)    
       var id = req.params.id
-      functions.deleteMember(knex, id).then(resp => {
+      functions.general.deleteMember(knex, id).then(resp => {
         res.json(resp)
         res.end()
       }).catch(err => {
@@ -253,9 +256,9 @@ module.exports = (knex) => {
     })
   
   router.route('/tasks')
-    .get(functions.verifyAuthToken, (req, res) => {
+    .get(functions.general.verifyAuthToken, (req, res) => {
       // get a list of all tasks
-      functions.getTasks(req, knex).then(resp => {
+      functions.general.getTaskOfMembers(req, knex).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -265,7 +268,7 @@ module.exports = (knex) => {
         return
       })
     })
-    .post([functions.verifyAuthToken, functions.checkGroupForAdmin], (req, res) => {
+    .post([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
       // add a new task (requires admin)
       var id = req.params.id
       var form = req.body
@@ -294,7 +297,7 @@ module.exports = (knex) => {
           res.end()
           return
       }
-      functions.getTask(knex, form.id).then(resp => {
+      functions.general.getTaskOfMember(knex, form.id).then(resp => {
         res.json({ return: 1, message: 'Task already exists.' })
         res.end()
         return
@@ -319,10 +322,10 @@ module.exports = (knex) => {
       })
     })
   router.route('/task/:id')
-    .get(functions.verifyAuthToken, (req, res) => {
+    .get(functions.general.verifyAuthToken, (req, res) => {
       // get a given task
       var id = req.params.id
-      functions.getTask(knex, id).then(resp => {
+      functions.general.getTaskOfMember(knex, id).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -332,18 +335,18 @@ module.exports = (knex) => {
         return
       })
     })
-    .put([functions.verifyAuthToken, functions.checkGroupForAdmin], (req, res) => {
+    .put([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
       // update a given task
       var id = req.params.id
     })
-    .delete([functions.verifyAuthToken, functions.checkGroupForAdmin], (req, res) => {
+    .delete([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
       // delete a task (requires admin)
       var id = req.params.id
     })
 
   router.route('/settings')
     .get((req, res) => {
-      functions.getAllSettings(knex).then(resp => {
+      functions.general.getAllSettings(knex).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -355,20 +358,20 @@ module.exports = (knex) => {
     })
 
   router.route('/settings/:id')
-    .get(functions.verifyAuthToken, (req, res) => {
+    .get(functions.general.verifyAuthToken, (req, res) => {
       var id = req.params.id
-      functions.getAllSettings(knex).then(resp => {  
+      functions.general.getAllSettings(knex).then(resp => {  
         res.json(resp[0])
         res.end()
         return
       })
     })
-    .put([functions.verifyAuthToken, functions.checkGroupForAdmin], (req, res) => {
+    .put([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
       
     })
   
   router.route('/profile')
-    .get(functions.verifyAuthToken, (req, res, next) => {
+    .get(functions.general.verifyAuthToken, (req, res, next) => {
       if (!typeof req.flatmember === 'object' || req.flatmember === '') {
         res.status(403).send()
         res.end()
@@ -388,7 +391,7 @@ module.exports = (knex) => {
         })
       }
     })
-    .post(functions.verifyAuthToken, (req, res, next) => {
+    .post(functions.general.verifyAuthToken, (req, res, next) => {
       if (req.body.frequency) {
         switch (req.body.frequency) {
           case '0': case '1': case '2': case '3':
@@ -399,7 +402,7 @@ module.exports = (knex) => {
             return
             break
         }
-        functions.updateTaskNotificationFrequency(knex, req.flatmember.id, req.body.frequency).then(resp => {
+        functions.general.updateTaskNotificationFrequency(knex, req.flatmember.id, req.body.frequency).then(resp => {
           res.status(200).send().end()
           return
         }).catch(err => {
@@ -413,8 +416,8 @@ module.exports = (knex) => {
     })
 
   router.route('/flatinfo')
-    .get(functions.verifyAuthToken, (req, res, next) => {
-      functions.getAllPoints(knex).then(resp => {
+    .get(functions.general.verifyAuthToken, (req, res, next) => {
+      functions.general.getAllPoints(knex).then(resp => {
         res.json(resp)
         res.status(400).send().end()
         return
@@ -424,7 +427,7 @@ module.exports = (knex) => {
       })
     })
 
-  router.get('/meta', functions.verifyAuthToken, (req, res) => {
+  router.get('/meta', functions.general.verifyAuthToken, (req, res) => {
     res.json({ version: packageJSON.version })
     res.end()
     return

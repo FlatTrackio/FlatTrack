@@ -5,16 +5,16 @@ const functions = require('../src/server/functions.js')
 const packageJSON = require('../package.json')
 
 beforeEach('initialise site\'s config file', function() {
-  if (functions.config.exists()) {
-    functions.config.deinit()
-    functions.config.init()
+  if (functions.admin.config.exists()) {
+    functions.admin.config.deinit()
+    functions.admin.config.init()
   }
   flattrack.start()
 })
 
 afterEach('deinitialise site\'s config file', function () {
-  if (functions.config.exists()) {
-    functions.config.deinit() 
+  if (functions.admin.config.exists()) {
+    functions.admin.config.deinit() 
   }
   flattrack.stop()
 })

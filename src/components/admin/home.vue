@@ -3,8 +3,7 @@
       <headerDisplay admin="true"/>
       <div class="container">
           <section class="section">
-              <greeting/>
-              <h4 class="title is-4">This is the admin page, you can configure FlatTrack from here</h4>
+              <greeting subtitle="This is the admin page, you can configure FlatTrack from here"/>
               <div id="menu-bar-items">
                   <b-menu>
                       <b-menu-list>

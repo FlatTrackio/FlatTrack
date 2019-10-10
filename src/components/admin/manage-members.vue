@@ -9,8 +9,8 @@
                 <li class="is-active"><a href="/#/admin/admin-manage-members">Manage flatmates</a></li>
             </ul>
           </nav>
-          <h1 class="title">Manage Flatmates</h1>
-          <h2 class="subtitle">Add, remove, and update Flatmates</h2>
+          <h1 class="title is-2">Manage Flatmates</h1>
+          <p class="subtitle is-4">Add, remove, and update Flatmates</p>
           <b-button type="is-light" @click="addNewFlatmate" rounded>Add new flatmate</b-button>
           <br><br>
           <div v-if="members && members.length">

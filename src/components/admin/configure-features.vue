@@ -9,8 +9,8 @@
                   <li class="is-active"><a href="/#/admin/admin-configure-features">Configure Features</a></li>
               </ul>
           </nav>
-          <h1 class="title">Configure Features</h1>
-          <h2 class="subtitle">Choose the features you'll use</h2>
+          <h1 class="title is-2">Configure Features</h1>
+          <h2 class="subtitle is-4">Choose the features you'll use</h2>
           <div v-for="feature in features" v-bind:key="feature">
             <div class="field">
                 <b-checkbox v-model="featuresEnabled" :native-value="feature.name" size="is-medium">

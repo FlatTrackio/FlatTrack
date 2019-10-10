@@ -13,7 +13,7 @@
 <br>
 <img alt="FlatTrackLogo" src="" width=100>
 
-# FlatTrack - Frontend
+# FlatTrack
 
 > Keep track of your flat or community house
 

@@ -5,7 +5,7 @@ const packageJSON = require('../../package.json')
 function initialisedConfigJSON () {
     const functions = require('./functions')
     console.log("- configurations")
-    functions.config.init()
+    functions.admin.config.init()
 }
 
 function triggerDBInitialisation (knex) {

@@ -1,6 +1,8 @@
 <template>
     <div>
         <h2 class="title is-2">Hey, {{ login.names }}!</h2>
+        <p class="subtitle is-4">{{ subtitle }}</p>
+        <br>
     </div>
 </template>
 
@@ -21,6 +23,9 @@ service.register({
 
 export default {
   name: 'greeting',
+  props: {
+    'subtitle': String
+  },
   data () {
     return {
       login: {
