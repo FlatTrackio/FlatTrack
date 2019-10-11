@@ -3,12 +3,13 @@ stages:
   - versionFind
   - build
 
+variables:
+  MYSQL_DATABASE: flattracker
+  MYSQL_ROOT_PASSWORD: flattracker
+  MYSQL_USER: flattracker
+  MYSQL_PASSWORD: flattracker
+
 test:
-  variables:
-    MYSQL_DATABASE: flattracker
-    MYSQL_ROOT_PASSWORD: flattracker
-    MYSQL_USER: flattracker
-    MYSQL_PASSWORD: flattracker
   services:
     - mariadb:10.4
   image: node:12.10.0-alpine
