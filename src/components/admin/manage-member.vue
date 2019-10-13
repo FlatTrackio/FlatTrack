@@ -63,12 +63,12 @@
                 </div>
                 <br>
                 <div v-if="returnNamesforID(id, names)">
-                  <b-button type="is-success" @click="updateMember(id)">Update</b-button>
+                  <b-button type="is-success" @click="updateMember(id, names, email, phoneNumber, allergies, password, group, memberSetPassword)">Update</b-button>
                   <b-button type="is-warning">Disable</b-button>
                   <b-button type="is-danger" @click="deleteMember(id)">Delete</b-button>
                 </div>
                 <div v-else>
-                  <b-button type="is-success" native-type="submit" @click="addNewMember(names, email, allergies, password, group, memberSetPassword)">Add new flatmate</b-button>
+                  <b-button type="is-success" native-type="submit" @click="addNewMember(names, email, phoneNumber, allergies, password, group, memberSetPassword)">Add new flatmate</b-button>
                 </div>
                 <br>
               </div>
@@ -102,6 +102,7 @@ export default {
       id: this.$route.query.id,
       names: '',
       email: '',
+      phoneNumber: '',
       allergies: '',
       password: '',
       memberSetPassword: true,
@@ -126,6 +127,7 @@ export default {
         var member = resp.data
         this.names = resp.data.names
         this.email = member.email
+        this.phoneNumber = member.phoneNumber
         this.allergies = member.allergies
         this.memberSetPassword = member.memberSetPassword
         this.group = member.group
@@ -137,10 +139,11 @@ export default {
       })
   },
   methods: {
-    addNewMember: (names, email, allergies, password, group, memberSetPassword) => {
+    addNewMember: (names, email, phoneNumber, allergies, password, group, memberSetPassword) => {
       var member = {
         names,
         email,
+        phoneNumber,
         allergies,
         password,
         group,
@@ -170,11 +173,12 @@ export default {
           })
         })
     },
-    updateMember: (id, names, email, allergies, password, group, memberSetPassword) => {
+    updateMember: (id, names, email, phoneNumber, allergies, password, group, memberSetPassword) => {
       var member = {
         id,
         names,
         email,
+        phoneNumber,
         allergies,
         password,
         group,
@@ -182,23 +186,28 @@ export default {
       }
       axios({
         method: 'put',
-        url: `/api/members`,
+        url: `/api/members/${id}`,
         data: member,
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }}).then(resp => {
-        console.log('Add successful', resp)
-        Toast.open({
-          message: 'Flatmate added successfully',
-          position: 'is-bottom',
-          type: 'is-success'
+        }})
+        .then(resp => {
+          console.log('Add successful', resp)
+          Toast.open({
+            message: 'Flatmate updated successfully',
+            position: 'is-bottom',
+            type: 'is-success'
+          })
+          /*
+          setTimeout(() => {
+            location.reload()
+          }, 1000)
+          */
         })
-        location.href = '#/admin/members'
-      })
         .catch(err => {
           console.log('Add failed', err)
           Toast.open({
-            message: 'Failed to add flatmate',
+            message: 'Failed to update flatmate',
             position: 'is-bottom',
             type: 'is-danger'
           })

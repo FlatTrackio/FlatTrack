@@ -36,16 +36,14 @@ function generateToken (email, knex) {
       const accessToken = jwt.sign({flatmember}, config.system.REFRESH_TOKEN_SECRET, { expiresIn: '2h' })
       const refreshToken = jwt.sign({flatmember}, config.system.ACCESS_TOKEN_SECRET)
       resolve({accessToken, refreshToken})
-    }).catch(err => {
-      reject(err)
-    })
+    }).catch(err => reject(err))
   })
 }
 
 function checkGroupForAdmin (req, res, next) {
   // middleware to only allow admin users to access certain areas of the API
 
-  // TODO untie checking from token, instead fetch using ID 
+  // TODO untie checking from token, instead fetch using ID
   if (req.flatmember.group === 'admin') {
     next()
     return
@@ -61,21 +59,17 @@ function generateSecret () {
 
 function getMember (knex, id, returnHash = false) {
   return new Promise((resolve, reject) => {
-    knex('members').select('*').where('id', id).first().then(resp => {
-      resolve(resp)
-    }).catch(err => {
-      reject(err)
-    })
+    knex('members').select('*').where('id', id).first()
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
 function getMemberProfileByEmail (knex, email) {
   return new Promise((resolve, reject) => {
-    knex('members').select('id', 'email', 'names', 'joinTimestamp', 'phoneNumber', 'allergies').where('email', email).first().then(resp => {
-      resolve(resp)
-    }).catch(err => {
-      reject(err)
-    })
+    knex('members').select('id', 'email', 'names', 'joinTimestamp', 'phoneNumber', 'allergies', 'group').where('email', email).first()
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
@@ -89,71 +83,62 @@ function getMembers (knex, returnHashes = false, userID) {
         membersList = [i, ...membersList]
       })
       resolve(resp)
-    })
+    }).catch(err => reject(err))
   })
 }
 
-function updateMember (knex, id, newPassword) {
+function updateMember (knex, id, props) {
+  props = {
+    email: props.email,
+    phoneNumber: props.phoneNumber || null,
+    password: props.password,
+    allergies: props.allergies || null,
+    group: props.group,
+  }
   return new Promise((resolve, reject) => {
-    knex('tasks').where('id', id).
-    dbConn.query(`UPDATE flattracker.tasks SET name='${newPassword}' WHERE id='${id}';`).then(resp => {
-      resolve(resp)
-    }).catch(err => {
-      reject(err)
-    })
+    knex('tasks').where('id', id).update(props)
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
 function deleteMember (knex, id) {
   return new Promise((resolve, reject) => {
-    knex('members').where('id', id).del().then(resp => {
-      resolve(resp)
-    }).catch(err => {
-      reject(err)
-    })
+    knex('members').where('id', id).del()
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
 function getTaskOfMember (knex, id) {
   return new Promise((resolve, reject) => {
-    knex('tasks').select('*').where('id', id).first().then(resp => {
-      resolve(resp)
-    }).catch(err => {
-      // handle error
-      reject(err)
-    })
+    knex('tasks').select('*').where('id', id).first()
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
 function getTasksOfMember (req, knex) {
   return new Promise((resolve, reject) => {
-    knex('tasks').select('*').where('assignee', req.flatmember.id).then(resp => {
-      resolve(resp)
-    }).catch(err => {
-      // handle error
-      reject(err)
-    })
+    knex('tasks').select('*').where('assignee', req.flatmember.id)    
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
 function getTasks (knex) {
   return new Promise((resolve, reject) => {
-    knex('tasks').select('*').then(resp => {
-      resolve(resp)
-    }).catch(err => {
-      reject(err)
-    })
+    knex('tasks').select('*')
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
 function getEntry (knex, id) {
   return new Promise((resolve, reject) => {
-    knex('entries').select('*').where('id', id).first().then((resp) => {
-      resolve(resp)
-    }).catch(err => {
-      // handle error
-      reject(err)
-    })
+    knex('entries').select('*').where('id', id).first()
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
@@ -166,40 +151,45 @@ function getEntries (knex) {
         tasksList = [i, ...tasksList]
       })
       resolve(resp)
-    }).catch(err => {
-      // handle error
-      reject(err)
-    })
+    }).catch(err => reject(err))
+  })
+}
+
+function updateEntry (knex, id, props) {
+  props = {
+    timestamp: props.timestamp,
+    status: props.status,
+    approvedBy: props.approvedBy,
+    amendStatus: props.amendStatus
+  }
+  return new Promise((resolve, reject) => {
+    knex('entries').where('id', id).update(props)
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
 function getAllSettings (knex) {
   return new Promise((resolve, reject) => {
-    knex('settings').select('*').then(resp => {
-      resolve(resp)
-    }).catch(err => {
-      reject(err)
-    })
+    knex('settings').select('*')
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
 function getAllPoints (knex) {
   return new Promise((resolve, reject) => {
-    knex('flatInfo').select('*').then(resp => {
-      resolve(resp)
-    }).catch(err => {
-      reject(err)
-    })
+    knex('flatInfo').select('*')
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
 function updateTaskNotificationFrequency (knex, id, frequency) {
   return new Promise((resolve, reject) => {
-    knex('members').where('id', id).update({ taskNotificationFrequency: frequency }).then(resp => {
-      resolve(resp)
-    }).catch(err => {
-      reject(err)
-    })
+    knex('members').where('id', id).update({ taskNotificationFrequency: frequency })
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
@@ -262,6 +252,22 @@ function writeConfigJSON (content) {
 
 module.exports = {
   general: {
+    entry: {
+      get: getEntry,
+      update: updateEntry,
+      all: {
+        get: getEntries
+      }
+    },
+    member: {
+      get: getMember,
+      getByEmail: getMemberProfileByEmail,
+      update: updateMember,
+      delete: deleteMember,
+      all: {
+        get: getMembers
+      }
+    },
     verifyAuthToken,
     generateToken,
     generateSecret,

@@ -39,7 +39,7 @@
             <p>{{ members.length }} flatmembers</p>
           </div>
         </div>
-        <div v-if="!members && !members.length">
+        <div v-if="members && !members.length">
           <div class="card">
             <div class="card-content">
               <div class="media">

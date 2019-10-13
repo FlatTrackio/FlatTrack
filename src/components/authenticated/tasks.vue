@@ -29,29 +29,42 @@
             <option value="0">Never</option>
           </b-select>
         </b-field>
-        <div id="tasks" v-if="tasks && tasks.length">
+        <div id="tasks" v-if="entries && entries.length && tasks">
           <h2 class="subtitle">Here are your assigned tasks</h2>
-          <div class="card-margin" v-for="task of tasks" v-bind:key="task">
+          <div class="card-margin" v-for="entry of entries" v-bind:key="entry">
             <div class="card">
               <div class="card-content">
                 <div class="media">
                   <div class="media-content">
                     <p class="title is-4">
-                      {{ task.name }}
-                      <span class="tag is-info">rotates {{ task.rotation }}</span>
+                      {{ tasks[entry.taskID].name }}
                     </p>
-                    <p class="subtitle is-6">@{{ task.location }}</p>
+                    <p class="subtitle is-6">@{{ tasks[entry.taskID].location }}</p>
                   </div>
                 </div>
-                <div class="content">{{ task.description }}</div>
+                <div class="content">{{ tasks[entry.taskID].description }}</div>
+                <div class="field is-grouped is-grouped-multiline">
+                  <div class="control">
+                    <div class="tags has-addons">
+                      <span class="tag">rotates</span>
+                      <span class="tag is-info">{{ tasks[entry.taskID].rotation }}</span>
+                    </div>
+                  </div>
+                  <div class="control">
+                    <div class="tags has-addons">
+                      <span class="tag">is</span>
+                      <span :class="entry.status == 'completed' ? `tag is-success`: `tag is-danger`">{{ entry.status }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
               <footer class="card-footer">
-                <a :href="`/#/tasks/view?task=${task.id}`" class="card-footer-item">View</a>
+                <a :href="`/#/tasks/view?task=${entry.id}`" class="card-footer-item">View</a>
               </footer>
             </div>
           </div>
         </div>
-        <div id="tasks" v-if="!tasks.length">
+        <div id="tasks" v-if="!entries.length">
           <section class="section">
             <div class="card">
               <div class="card-content">
@@ -99,6 +112,7 @@ export default {
     }
   },
   created () {
+    // get list of assigned tasks
     axios
       .get(`/api/tasks`, {
         headers: {
@@ -106,45 +120,31 @@ export default {
         }
       })
       .then(resp => {
-        this.tasks = resp.data
-      })
-      .catch(err => {
-        this.$buefy.notification.open({
-          duration: 5000,
-          message: `An error has occured: ${err}`,
-          position: 'is-bottom-right',
-          type: 'is-danger',
-          hasIcon: true
+        var transformRespData = {}
+        resp.data.map(item => {
+          transformRespData[item.id] = item
+          delete transformRespData[item.id].id
         })
-      })
+        this.tasks = transformRespData
 
-    axios
-      .get(`/api/entries`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
+        // get a list of the entries for this week
+        return axios
+          .get(`/api/entry`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('authToken')}`
+            }
+          })
       })
       .then(resp => {
         this.entries = resp.data
-      })
-      .catch(err => {
-        this.$buefy.notification.open({
-          duration: 5000,
-          message: `An error has occured: ${err}`,
-          position: 'is-bottom-right',
-          type: 'is-danger',
-          hasIcon: true
-        })
-      })
 
-    axios
-      .get(`/api/profile`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
-      })
-      .then(resp => {
-        this.alertFrequency = resp.data.taskNotificationFrequency
+        // get profile information
+        return axios
+          .get(`/api/profile`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('authToken')}`
+            }
+          })
       })
       .catch(err => {
         this.$buefy.notification.open({

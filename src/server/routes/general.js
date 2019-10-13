@@ -64,59 +64,55 @@ module.exports = (knex) => {
         return
       })
     })
-    .post(functions.general.verifyAuthToken, (req, res) => {
-      // add a new entry
-      var form = req.body
-      form = {
-        member: form.member,
-        taskID: form.taskID
-      }
-      // validate fields
-      var regexNames = /([A-Za-z])\w+/
-      functions.general.getMember(knex, form.member).then(resp => {
-        console.log('Found user', resp)
-      }).catch(resp => {
-        res.json({ return: 1, message: 'Unable to find that user.' })
-        res.end()
-        return
-      })
-      switch (form) {
-        case typeof form.taskName !== 'string' || (!regexNames.test(form.taskName) && form.taskName.length >= 100):
-          res.json({ status: 1, message: 'Please enter a valid task name, containing only letters' })
-          res.end()
-          return
-      }
-
-      knex('entries').insert({
-        id: uuid(),
-        timestamp: moment().unix(),
-        member: form.member,
-        taskName: form.taskName
-      }).then(resp => {
-        console.log(resp)
-        res.json({status: 0, message: "Entry added"})
+  router.route('/entry/:id')
+    .get(functions.general.verifyAuthToken, (req, res) => {
+      // get a particular entry
+      var id = req.params.id
+      functions.general.entry.get(knex, id).then(resp => {
+        res.json(resp)
         res.end()
         return
       }).catch(err => {
-        // handle error
-        console.log(err)
-        res.json({status: 1, message: "Failed to add entry :("})
+        res.json(err)
         res.end()
         return
       })
     })
-  router.get('/entry/:id', (req, res) => {
-    // get a particular entry
-    var id = req.params.id
-    functions.general.getEntry(knex, id).then(resp => {
-      res.json(resp)
-      res.end()
-    }).catch(err => {
-      res.json(err)
-      res.end()
-      return
+    .put(functions.general.verifyAuthToken, (req, res) => {
+      var id = req.params.id
+      functions.general.entry.get(knex, id).then(resp => {
+        if (resp.member == req.flatmember.id) {
+          res.json(resp)
+          res.end()
+          return
+        } else {
+          res.status(403)
+          res.end()
+          return
+        }
+      }).catch(err => {
+        res.status(400)
+        res.json(err)
+        res.end()
+        return
+      })
+      var props = {
+        status: req.body.status || null,
+        timestamp: moment().unix() || null,
+        approvedBy: req.body.approvedBy || null,
+        amendStatus: req.body.amendStatus || null
+      }
+      functions.general.entry.update(knex, id, props).then(resp => {
+        res.json(resp)
+        res.end()
+        return
+      }).catch(err => {
+        res.status(400)
+        res.json(err)
+        res.end()
+        return
+      })
     })
-  })
   
   router.route('/members')
     .get(functions.general.verifyAuthToken, (req, res) => {
@@ -218,26 +214,21 @@ module.exports = (knex) => {
       var id = req.params.id
       var form = req.body
       form = {
+        email: form.email,
+        phoneNumber: form.phoneNumber || null,
         password: form.password,
-        newPassword: form.newPassword
+        allergies: form.allergies || null,
+        group: form.group,
       }
   
-      // get the user's row
-      functions.general.getMember(knex, id, returnHashes = true).then(resp => {
-        // verify the user
-        if (!(functions.isAdmin(form.password) || form.password === resp.password)) {
-          res.json({ return: 1, message: `${resp.names}'s old password or the Administrator password must be provided to do this.` })
-          res.end()
-        }
-  
-        // change the password
-        return functions.general.updateMember(knex, id, form.newPassword)
-      }).then(resp => {
+      functions.general.updateMember(knex, id, form).then(resp => {
         res.json(resp)
         res.end()
         return
       }).catch(err => {
-        res.json({return: 1, message: err})
+        console.error(err)
+        res.status(400)
+        res.json({return: 1, message: 'An error occurred'})
         res.end()
         return
       })
@@ -258,7 +249,7 @@ module.exports = (knex) => {
   router.route('/tasks')
     .get(functions.general.verifyAuthToken, (req, res) => {
       // get a list of all tasks
-      functions.general.getTaskOfMembers(req, knex).then(resp => {
+      functions.general.getTasksOfMember(req, knex).then(resp => {
         res.json(resp)
         res.end()
         return
