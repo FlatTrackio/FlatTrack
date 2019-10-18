@@ -3,7 +3,7 @@
     <headerDisplay/>
     <div class="container">
       <section class="section">
-        <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
             <li><a href="/#/">Home</a></li>
             <li class="is-active"><a href="/#/members">Flatmates</a></li>

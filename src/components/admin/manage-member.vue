@@ -3,7 +3,7 @@
       <headerDisplay admin="true"/>
       <div class="container">
         <section class="section">
-          <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+          <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
                 <li><a href="/#/admin">Admin Home</a></li>
                 <li><a href="/#/admin/members">Manage Flatmates</a></li>
@@ -62,7 +62,7 @@
                   </div>
                 </div>
                 <br>
-                <div v-if="returnNamesforID(id, names)">
+                <div v-if="returnNamesforID(id, names) !== 'undefined'">
                   <b-button type="is-success" @click="updateMember(id, names, email, phoneNumber, allergies, password, group, memberSetPassword)">Update</b-button>
                   <b-button type="is-warning">Disable</b-button>
                   <b-button type="is-danger" @click="deleteMember(id)">Delete</b-button>
@@ -249,11 +249,10 @@ export default {
       })
     },
     returnNamesforID: (id, names) => {
-      if (typeof id !== 'undefined') {
-        return names
-      } else {
+      if (typeof id === 'undefined') {
         return null
       }
+      return names
     },
     printGroupSelection: (group) => {
       console.log(group)

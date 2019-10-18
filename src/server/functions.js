@@ -134,6 +134,14 @@ function getTasks (knex) {
   })
 }
 
+function getTask (knex, id) {
+  return new Promise((resolve, reject) => {
+    knex('tasks').select('*').where('id', id).first()
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
 function getEntry (knex, id) {
   return new Promise((resolve, reject) => {
     knex('entries').select('*').where('id', id).first()
@@ -283,10 +291,15 @@ module.exports = {
     getEntries,
     getAllSettings,
     getAllPoints,
-    updateTaskNotificationFrequency,
+    updateTaskNotificationFrequency
   },
   admin: {
-    getTasks,
+    task: {
+      get: getTask,
+      all: {
+        get: getTasks
+      }
+    },
     config: {
       exists: doesExistConfigJSON,
       init: initConfigJSON,

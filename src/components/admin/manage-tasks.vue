@@ -3,7 +3,7 @@
         <headerDisplay admin="true"/>
         <div class="container">
             <section class="section">
-                <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+                <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
                     <ul>
                         <li><a href="/#/admin">Admin Home</a></li>
                         <li class="is-active"><a href="/#/admin/tasks">Manage Tasks</a></li>
@@ -11,7 +11,8 @@
                 </nav>
                 <h1 class="title is-2">Manage Tasks</h1>
                 <p class="subtitle is-4">Set up the tasks which need to be done</p>
-                <b-button type="is-light" @click="addNewTask" rounded>Add a new task</b-button>
+                <b-button type="is-light" tag="a" href="/#/admin/tasks/t" rounded>Add a new task</b-button>
+                <br><br>
                 <div id="tasks" v-if="tasks && tasks.length">
                     <div class="card-margin" v-for="task of tasks" v-bind:key="task">
                         <div class="card">
@@ -28,7 +29,7 @@
                             <div class="content">{{ task.description }}</div>
                         </div>
                         <footer class="card-footer">
-                            <a :href="`/#/tasks/view?task=${task.id}`" class="card-footer-item">View</a>
+                            <a :href="`/#/admin/tasks/t?id=${task.id}`" class="card-footer-item">Edit</a>
                         </footer>
                         </div>
                     </div>

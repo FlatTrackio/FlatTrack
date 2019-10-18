@@ -19,6 +19,7 @@ import adminConfigureFeatures from '@/components/admin/configure-features'
 import adminManageMembers from '@/components/admin/manage-members'
 import adminManageMember from '@/components/admin/manage-member'
 import adminManageTasks from '@/components/admin/manage-tasks'
+import adminManageTask from '@/components/admin/manage-task'
 // import axios from 'axios'
 
 Vue.use(Router)
@@ -163,6 +164,12 @@ export default new Router({
       path: '/admin/tasks',
       name: 'admin-manage-tasks',
       component: adminManageTasks,
+      beforeEnter: authenticatedRoute
+    },
+    {
+      path: '/admin/tasks/t',
+      name: 'admin-manage-task-edit',
+      component: adminManageTask,
       beforeEnter: authenticatedRoute
     }
   ]

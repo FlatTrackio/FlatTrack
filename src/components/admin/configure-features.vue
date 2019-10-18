@@ -3,7 +3,7 @@
       <headerDisplay admin="true"/>
       <div class="container">
         <section class="section">
-          <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+          <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
               <ul>
                   <li><a href="/#/admin">Admin Home</a></li>
                   <li class="is-active"><a href="/#/admin/admin-configure-features">Configure Features</a></li>

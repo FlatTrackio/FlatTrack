@@ -3,7 +3,7 @@
     <headerDisplay />
     <div class="container">
       <section class="section">
-        <nav class="breadcrumb has-arrow-separator" aria-label="breadcrumbs">
+        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
             <li>
               <a href="/#/">Home</a>
@@ -17,7 +17,7 @@
         <h2 class="subtitle">Get caught up with your tasks</h2>
         <b-field label="How often would you like to be notified about tasks?">
           <b-select
-            placeholder="Medium"
+            placeholder="Twice a week"
             expanded
             rounded
             v-model="alertFrequency"
@@ -57,6 +57,9 @@
                     </div>
                   </div>
                 </div>
+                <div v-if="entry.status == 'completed'">
+                  Marked completed at {{ formatTimestamp(entry.timestamp) }}
+                </div>
               </div>
               <footer class="card-footer">
                 <a :href="`/#/tasks/view?task=${entry.id}`" class="card-footer-item">View</a>
@@ -90,6 +93,7 @@
 import axios from 'axios'
 import { Service } from 'axios-middleware'
 import headerDisplay from '../common/header-display'
+import moment from 'moment'
 
 const service = new Service(axios)
 service.register({
@@ -108,6 +112,7 @@ export default {
     return {
       tasks: [],
       entries: [],
+      entryCompletedTimestamp: '',
       alertFrequency: 2
     }
   },
@@ -145,6 +150,8 @@ export default {
               Authorization: `Bearer ${localStorage.getItem('authToken')}`
             }
           })
+      }).then(resp => {
+        this.alertFrequency = resp.data.taskNotificationFrequency
       })
       .catch(err => {
         this.$buefy.notification.open({
@@ -169,11 +176,15 @@ export default {
         }
       })
         .then(resp => {
-          console.log(resp)
+          // console.log(resp)
         })
         .catch(err => {
           console.log(err)
+          // TODO display UI error
         })
+    },
+    formatTimestamp: (timestamp) => {
+      return moment.unix(timestamp).format('DD/MM/YYYY HH:mm')
     }
   },
   components: {

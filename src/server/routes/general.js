@@ -397,6 +397,7 @@ module.exports = (knex) => {
           res.status(200).send().end()
           return
         }).catch(err => {
+          console.error(err)
           res.status(403).send().end()
           return
         })
