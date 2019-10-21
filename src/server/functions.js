@@ -142,6 +142,43 @@ function getTask (knex, id) {
   })
 }
 
+function createTask (knex, form) {
+  form = {
+    id: form.id,
+    name: form.name,
+    description: form.description,
+    location: form.location,
+    rotation: form.rotation
+  }
+  return new Promise((resolve, reject) => {
+    knex('tasks').insert(form)
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
+function updateTask (knex, id, props) {
+  props = {
+    name: props.name,
+    description: props.description,
+    location: props.location,
+    rotation: props.rotation
+  }
+  return new Promise((resolve, reject) => {
+    knex('tasks').where('id', id).update()
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
+function deleteTask (knex, id) {
+  return new Promise((resolve, reject) => {
+    knex('tasks').where('id', id).first().del()
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
 function getEntry (knex, id) {
   return new Promise((resolve, reject) => {
     knex('entries').select('*').where('id', id).first()
@@ -296,6 +333,9 @@ module.exports = {
   admin: {
     task: {
       get: getTask,
+      create: createTask,
+      update: updateTask,
+      delete: deleteTask,
       all: {
         get: getTasks
       }

@@ -38,8 +38,8 @@
                   </b-select>
                 </b-field>
                </div>
-              <div v-if="returnNameforID(id, names)">
-                <b-button type="is-success" @click="updateTask(id, names, email, phoneNumber, allergies, password, group, memberSetPassword)">Update</b-button>
+              <div v-if="returnNameforID(id, name)">
+                <b-button type="is-success" @click="updateTask(id, name, description, location, disabled, assignee, rotation)">Update</b-button>
                 <b-button type="is-warning">Disable</b-button>
                 <b-button type="is-danger" @click="deleteTask(id)">Delete</b-button>
               </div>
@@ -64,7 +64,7 @@ service.register({
   onResponse (response) {
     if (response.status === 403) {
       localStorage.removeItem('authToken')
-      location.href = '/'
+      window.location.href = '/'
     }
     return response
   }
@@ -86,6 +86,9 @@ export default {
   },
   created () {
     var id = this.$route.query.id
+    if (!id) {
+      return
+    }
     axios({
       method: 'get',
       url: `/api/members`,
@@ -96,7 +99,6 @@ export default {
         Authorization: `Bearer ${localStorage.getItem('authToken')}`
       }})
       .then(resp => {
-        console.log(resp.data)
         this.members = resp.data
 
         if (!id) {
@@ -110,7 +112,6 @@ export default {
           })
       })
       .then(resp => {
-        console.log(resp.data)
         this.name = resp.data.name
         this.description = resp.data.description
         this.location = resp.data.location
@@ -139,24 +140,24 @@ export default {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }}).then(resp => {
-        console.log('Add successful', resp)
         Toast.open({
           message: 'Task added successfully',
           position: 'is-bottom',
           type: 'is-success'
         })
-        location.href = '#/admin/tasks'
+        setTimeout(() => {
+          window.window.location.href = '#/admin/tasks'
+        }, 1000)
       })
         .catch(err => {
-          console.log('Add failed', err)
           Toast.open({
-            message: 'Failed to add task',
+            message: `Failed to add task: ${err}`,
             position: 'is-bottom',
             type: 'is-danger'
           })
         })
     },
-    updateTask: (name, description, location, disabled, assignee, rotation) => {
+    updateTask: (id, name, description, location, disabled, assignee, rotation) => {
       var task = {
         name,
         description,
@@ -173,29 +174,24 @@ export default {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }})
         .then(resp => {
-          console.log('Add successful', resp)
           Toast.open({
             message: 'Task updated successfully',
             position: 'is-bottom',
             type: 'is-success'
           })
-          /*
           setTimeout(() => {
             location.reload()
           }, 1000)
-          */
         })
         .catch(err => {
-          console.log('Add failed', err)
           Toast.open({
-            message: 'Failed to update task',
+            message: `Failed to update task: ${err}`,
             position: 'is-bottom',
             type: 'is-danger'
           })
         })
     },
     deleteTask: (id) => {
-      console.log('Attempting to remove task')
       Dialog.confirm({
         message: 'Are you sure you want to remove this task? (this cannot be undone)',
         confirmText: 'Remove task',
@@ -208,20 +204,18 @@ export default {
               }
             })
             .then(resp => {
-              console.log('Remove successful', resp)
               Toast.open({
                 message: 'Task removed successfully',
                 position: 'is-bottom',
                 type: 'is-success'
               })
               setTimeout(() => {
-                location.href = '#/admin/tasks'
+                window.window.location.href = '#/admin/tasks'
               }, 1.2 * 1000)
             })
             .catch(err => {
-              console.log('Remove failed', err)
               Toast.open({
-                message: 'Failed to remove task',
+                message: `Failed to remove task: ${err}`,
                 position: 'is-bottom',
                 type: 'is-danger'
               })
