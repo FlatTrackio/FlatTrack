@@ -32,6 +32,14 @@
                   </b-select>
                 </b-field>
                 <br>
+                <b-field label="Frequency" v-if="rotation == 'never'">
+                  <b-select placeholder="How often this task is done?" expanded rounded v-model="frequency">
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="daily">Daily</option>
+                  </b-select>
+                </b-field>
+                <br>
                 <b-field label="Assignee" v-if="rotation == 'never'">
                   <b-select placeholder="Who should be assigned to this task?" expanded rounded v-model="assignee">
                     <option v-for="member of members" v-bind:key="member" :value="member.id">{{ member.names }}</option>
@@ -39,12 +47,12 @@
                 </b-field>
                </div>
               <div v-if="returnNameforID(id, name)">
-                <b-button type="is-success" @click="updateTask(id, name, description, location, disabled, assignee, rotation)">Update</b-button>
+                <b-button type="is-success" @click="updateTask(id, name, description, location, disabled, assignee, rotation, frequency)">Update</b-button>
                 <b-button type="is-warning">Disable</b-button>
                 <b-button type="is-danger" @click="deleteTask(id)">Delete</b-button>
               </div>
               <div v-else>
-                <b-button type="is-success" native-type="submit" @click="addNewTask(name, description, location, disabled, assignee, rotation)">Add new task</b-button>
+                <b-button type="is-success" native-type="submit" @click="addNewTask(name, description, location, disabled, assignee, rotation, frequency)">Add new task</b-button>
               </div>
             </div>
           </div>
@@ -80,21 +88,16 @@ export default {
       disabled: false,
       assignee: null,
       rotation: null,
+      frequency: null,
       members: [],
       pageErrors: []
     }
   },
   created () {
     var id = this.$route.query.id
-    if (!id) {
-      return
-    }
     axios({
       method: 'get',
-      url: `/api/members`,
-      params: {
-        allMembers: true
-      },
+      url: `/api/admin/members`,
       headers: {
         Authorization: `Bearer ${localStorage.getItem('authToken')}`
       }})
@@ -112,26 +115,29 @@ export default {
           })
       })
       .then(resp => {
+        console.log(resp.data)
         this.name = resp.data.name
         this.description = resp.data.description
         this.location = resp.data.location
         this.disabled = resp.data.disabled
         this.assignee = resp.data.assignee
         this.rotation = resp.data.rotation
+        this.frequency = resp.data.frequency
       })
       .catch(err => {
         this.pageErrors = [...this.pageErrors, err]
       })
   },
   methods: {
-    addNewTask: (name, description, location, disabled, assignee, rotation) => {
+    addNewTask: (name, description, location, disabled, assignee, rotation, frequency) => {
       var task = {
         name,
         description,
         location,
         disabled,
         assignee,
-        rotation
+        rotation,
+        frequency
       }
       axios({
         method: 'post',

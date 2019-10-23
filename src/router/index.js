@@ -20,6 +20,7 @@ import adminManageMembers from '@/components/admin/manage-members'
 import adminManageMember from '@/components/admin/manage-member'
 import adminManageTasks from '@/components/admin/manage-tasks'
 import adminManageTask from '@/components/admin/manage-task'
+import setup from '@/components/public/setup'
 // import axios from 'axios'
 
 Vue.use(Router)
@@ -43,6 +44,16 @@ const authenticatedRoute = async (to, before, next) => {
     return next({ path: '/login' })
   }
   return authToken ? next() : next({ path: '/login' })
+}
+
+const unauthenticatedRouteUninitialised = async (to, before, next) => {
+  var authToken
+  try {
+    authToken = localStorage.getItem('authToken')
+  } catch (err) {
+    console.error(err)
+  }
+  return authToken ? next({ path: '/' }) : next()
 }
 
 export default new Router({
@@ -171,6 +182,12 @@ export default new Router({
       name: 'admin-manage-task-edit',
       component: adminManageTask,
       beforeEnter: authenticatedRoute
+    },
+    {
+      path: '/setup',
+      name: 'setup',
+      component: setup,
+      beforeEnter: unauthenticatedRouteUninitialised
     }
   ]
 })

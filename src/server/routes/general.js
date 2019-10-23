@@ -117,81 +117,14 @@ module.exports = (knex) => {
   router.route('/members')
     .get(functions.general.verifyAuthToken, (req, res) => {
       // get a list of all flat members
-      var memberSearch = '*'
-      if (!req.query.allMembers) {
-        memberSearch = req.flatmember.id
-      }
-
-      functions.general.getMembers(knex, returnHashes = false, memberSearch).then(resp => {
+      var notID = req.flatmember.id
+      functions.admin.member.all.get(knex, notID).then(resp => {
         res.json(resp)
         res.end()
         return
       }).catch(err => {
         res.json(err)
         res.end()
-        return
-      })
-    })
-    .post([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
-      // add a new flat member (requires admin)
-      var form = req.body
-      console.log(req)
-      form = {
-        id: uuid(),
-        names: form.names,
-        password: form.password,
-        email: form.email,
-        group: form.group,
-        phoneNumber: form.phoneNumber || null,
-        allergies: form.allergies || null,
-        contractAgreement: form.contractAgreement || 1,
-        joinTimestamp: moment().unix(),
-        memberSetPassword: form.memberSetPassword
-      }
-
-      if (form.memberSetPassword === "true") {
-        form.password = "__SETME__"
-      }
-
-      // validate fields
-      var regexNames = /([A-Za-z])\w+/
-      switch (form) {
-        case typeof form.names !== 'string' || (!regexNames.test(form.names) && form.names.length >= 100):
-          res.json({ status: 1, message: 'Please enter a valid name, containing only letters' })
-          res.end()
-          return
-  
-        case (form.memberSetPassword !== true && !(typeof form.password === 'string' && form.password.length > 30)):
-          res.json({ status: 1, message: 'Please enter a valid password, 30 characters max' })
-          res.end()
-          return
-      }
-      functions.general.getMember(knex, form.member).then(resp => {
-        res.json({ return: 1, message: 'User already exists.' })
-        res.end()
-        return
-      }).catch(err => {
-        res.json(err)
-        res.end()
-        return
-      })
-
-      // hash the password
-      form.password = hash.sha256().update(form.password).digest('hex')
-  
-      console.log("Request to create new member:")
-      console.log(JSON.stringify(form))
-
-      knex('members').insert(form).then(resp => {
-        // handle user creating sucessfully
-        res.json({ message: 'Added new user successfully' })
-        res.end()
-        return
-      }).catch(err => {
-        // handle error
-        console.log(err)
-        res.status(201)
-        res.json({ return: 1, message: 'Failed to create user' })
         return
       })
     })
@@ -199,47 +132,12 @@ module.exports = (knex) => {
     .get(functions.general.verifyAuthToken, (req, res) => {
       // get a given flat member
       var id = req.params.id
-      functions.general.getMember(knex, id).then(resp => {
+      functions.admin.member.get(knex, id).then(resp => {
         res.json(resp)
         res.end()
         return
       }).catch(err => {
-        res.json(err)
-        res.end()
-        return
-      })
-    })
-    .put([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
-      // update a password for a given flat member (requires admin or previous password)
-      var id = req.params.id
-      var form = req.body
-      form = {
-        email: form.email,
-        phoneNumber: form.phoneNumber || null,
-        password: form.password,
-        allergies: form.allergies || null,
-        group: form.group,
-      }
-  
-      functions.general.updateMember(knex, id, form).then(resp => {
-        res.json(resp)
-        res.end()
-        return
-      }).catch(err => {
-        console.error(err)
         res.status(400)
-        res.json({return: 1, message: 'An error occurred'})
-        res.end()
-        return
-      })
-    })
-    .delete([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
-      // delete a flat member (requires admin)    
-      var id = req.params.id
-      functions.general.deleteMember(knex, id).then(resp => {
-        res.json(resp)
-        res.end()
-      }).catch(err => {
         res.json(err)
         res.end()
         return
@@ -249,12 +147,13 @@ module.exports = (knex) => {
   router.route('/tasks')
     .get(functions.general.verifyAuthToken, (req, res) => {
       // get a list of all tasks
-      functions.general.getTasksOfMember(req, knex).then(resp => {
+      functions.general.getTasksOfMember(knex, req).then(resp => {
         res.json(resp)
         res.end()
         return
       }).catch(err => {
-        res.json({status: 1, message: err})
+        res.status(400)
+        res.json({message: err})
         res.end()
         return
       })
@@ -263,7 +162,7 @@ module.exports = (knex) => {
     .get(functions.general.verifyAuthToken, (req, res) => {
       // get a given task
       var id = req.params.id
-      functions.general.getTaskOfMember(knex, id).then(resp => {
+      functions.general.getTaskOfMember(knex, req, id).then(resp => {
         res.json(resp)
         res.end()
         return

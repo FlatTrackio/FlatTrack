@@ -62,7 +62,7 @@
                   </div>
                 </div>
                 <br>
-                <div v-if="returnNamesforID(id, names) !== 'undefined'">
+                <div v-if="returnNamesforID(id, names)">
                   <b-button type="is-success" @click="updateMember(id, names, email, phoneNumber, allergies, password, group, memberSetPassword)">Update</b-button>
                   <b-button type="is-warning">Disable</b-button>
                   <b-button type="is-danger" @click="deleteMember(id)">Delete</b-button>
@@ -117,7 +117,7 @@ export default {
     if (!id) {
       return
     }
-    axios.get(`/api/members/${id}`,
+    axios.get(`/api/admin/members/${id}`,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
@@ -151,7 +151,7 @@ export default {
       }
       axios({
         method: 'post',
-        url: `/api/members`,
+        url: `/api/admin/members`,
         data: member,
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
@@ -186,7 +186,7 @@ export default {
       }
       axios({
         method: 'put',
-        url: `/api/members/${id}`,
+        url: `/api/admin/members/${id}`,
         data: member,
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
@@ -198,11 +198,9 @@ export default {
             position: 'is-bottom',
             type: 'is-success'
           })
-          /*
           setTimeout(() => {
-            location.reload()
+            window.location.href = '/#/admin/members'
           }, 1000)
-          */
         })
         .catch(err => {
           console.log('Add failed', err)
@@ -220,7 +218,7 @@ export default {
         confirmText: 'Remove Flatmember',
         type: 'is-danger',
         onConfirm: () => {
-          axios.delete(`/api/members/${id}`,
+          axios.delete(`/api/admin/members/${id}`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem('authToken')}`

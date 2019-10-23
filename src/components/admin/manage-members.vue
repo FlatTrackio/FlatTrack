@@ -89,13 +89,11 @@ export default {
   created () {
     axios({
       method: 'get',
-      url: `/api/members`,
-      params: {
-        allMembers: true
-      },
+      url: `/api/admin/members`,
       headers: {
         Authorization: `Bearer ${localStorage.getItem('authToken')}`
       }}).then(resp => {
+      console.log(resp.data)
       this.members = resp.data
     }).catch(err => {
       this.pageErrors.push(err)

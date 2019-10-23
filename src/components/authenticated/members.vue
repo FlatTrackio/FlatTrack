@@ -19,6 +19,10 @@
                 <div class="media">
                   <div class="media-content">
                     <p class="title is-4">{{ member.names }}</p>
+                    <div class="tags has-addons">
+                      <span class="tag">is</span>
+                      <span class="tag is-info">{{ member.group }}</span>
+                    </div>
                   </div>
                 </div>
                 <div class="content">

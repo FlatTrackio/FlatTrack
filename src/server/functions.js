@@ -57,7 +57,7 @@ function generateSecret () {
   return require('crypto').randomBytes(64).toString('hex')
 }
 
-function getMember (knex, id, returnHash = false) {
+function getMember (knex, id) {
   return new Promise((resolve, reject) => {
     knex('members').select('*').where('id', id).first()
       .then(resp => resolve(resp))
@@ -73,30 +73,33 @@ function getMemberProfileByEmail (knex, email) {
   })
 }
 
-function getMembers (knex, returnHashes = false, userID) {
+function getMembers (knex, notID) {
   return new Promise((resolve, reject) => {
-    knex('members').select('*').whereNot('id', userID).then(resp => {
-      var membersList = []
-      resp.map(i => {
-        i.id = i.id.toString('binary', 0, 64)
-        if (returnHashes === false) i.password = '<SENSITIVE VALUE>'
-        membersList = [i, ...membersList]
-      })
-      resolve(resp)
-    }).catch(err => reject(err))
+    knex('members').select('id', 'email', 'names', 'joinTimestamp', 'phoneNumber', 'allergies', 'group').whereNot('id', notID)
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
+function getAllMembers (knex) {
+  return new Promise((resolve, reject) => {
+    knex('members').select('id', 'email', 'names', 'joinTimestamp', 'phoneNumber', 'allergies', 'group')
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
   })
 }
 
 function updateMember (knex, id, props) {
+  // TODO hash and set password (make a standard function?)
   props = {
     email: props.email,
     phoneNumber: props.phoneNumber || null,
-    password: props.password,
+    password: props.password || undefined,
     allergies: props.allergies || null,
-    group: props.group,
+    group: props.group || 'flatmember'
   }
   return new Promise((resolve, reject) => {
-    knex('tasks').where('id', id).update(props)
+    knex('members').where('id', id).update(props)
       .then(resp => resolve(resp))
       .catch(err => reject(err))
   })
@@ -110,17 +113,17 @@ function deleteMember (knex, id) {
   })
 }
 
-function getTaskOfMember (knex, id) {
+function getTaskOfMember (knex, req, id) {
   return new Promise((resolve, reject) => {
-    knex('tasks').select('*').where('id', id).first()
+    knex('tasks').select('*').where('id', id).where('assignee', req.flatmember.id).first()
       .then(resp => resolve(resp))
       .catch(err => reject(err))
   })
 }
 
-function getTasksOfMember (req, knex) {
+function getTasksOfMember (knex, req) {
   return new Promise((resolve, reject) => {
-    knex('tasks').select('*').where('assignee', req.flatmember.id)    
+    knex('tasks').select('*').where('assignee', req.flatmember.id)
       .then(resp => resolve(resp))
       .catch(err => reject(err))
   })
@@ -148,7 +151,8 @@ function createTask (knex, form) {
     name: form.name,
     description: form.description,
     location: form.location,
-    rotation: form.rotation
+    rotation: form.rotation,
+    frequency: form.frequency
   }
   return new Promise((resolve, reject) => {
     knex('tasks').insert(form)
@@ -162,10 +166,17 @@ function updateTask (knex, id, props) {
     name: props.name,
     description: props.description,
     location: props.location,
-    rotation: props.rotation
+    rotation: props.rotation,
+    assignee: props.assignee,
+    frequency: props.frequency
   }
+
+  if (props.rotation !== 'never') {
+    props.assignee = null
+  }
+
   return new Promise((resolve, reject) => {
-    knex('tasks').where('id', id).update()
+    knex('tasks').where('id', id).update(props)
       .then(resp => resolve(resp))
       .catch(err => reject(err))
   })
@@ -305,10 +316,6 @@ module.exports = {
       }
     },
     member: {
-      get: getMember,
-      getByEmail: getMemberProfileByEmail,
-      update: updateMember,
-      delete: deleteMember,
       all: {
         get: getMembers
       }
@@ -316,11 +323,6 @@ module.exports = {
     verifyAuthToken,
     generateToken,
     generateSecret,
-    getMember,
-    getMemberProfileByEmail,
-    getMembers,
-    updateMember,
-    deleteMember,
     checkGroupForAdmin,
     getTaskOfMember,
     getTasksOfMember,
@@ -338,6 +340,15 @@ module.exports = {
       delete: deleteTask,
       all: {
         get: getTasks
+      }
+    },
+    member: {
+      get: getMember,
+      getByEmail: getMemberProfileByEmail,
+      update: updateMember,
+      delete: deleteMember,
+      all: {
+        get: getAllMembers
       }
     },
     config: {
