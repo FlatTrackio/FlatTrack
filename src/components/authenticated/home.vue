@@ -66,7 +66,7 @@ export default {
           name: 'Shopping List',
           url: '#/shopping-list',
           to: 'shoppinglist',
-          disabled: true
+          disabled: false
         },
         {
           name: 'Noticeboard',

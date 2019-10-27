@@ -1,6 +1,8 @@
 #!/usr/bin/node
 
 const hash = require('hash.js')
+const uuid = require('uuid/v4')
+const moment = require('moment')
 const jwt = require('jsonwebtoken')
 const fs = require('fs')
 const path = require('path')
@@ -145,6 +147,24 @@ function getTask (knex, id) {
   })
 }
 
+function createEntryOfTask (knex, taskID, memberID) {
+  var entry = {
+    id: uuid(),
+    member: memberID,
+    timestampAssign: moment().unix(),
+    taskID: taskID,
+    status: 'uncompleted'
+  }
+
+  // TODO add completeBy
+
+  return new Promise((resolve, reject) => {
+    knex('entries').insert(entry)
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
 function createTask (knex, form) {
   form = {
     id: form.id,
@@ -198,16 +218,20 @@ function getEntry (knex, id) {
   })
 }
 
-function getEntries (knex) {
+function getEntries (knex, req) {
   return new Promise((resolve, reject) => {
-    knex('entries').select('*').then((resp) => {
-      var tasksList = []
-      resp.map(i => {
-        i.id = i.id.toString('binary', 0, 64)
-        tasksList = [i, ...tasksList]
+    knex('entries').select('*')
+      .then(resp => {
+        var items = resp.filter(item => {
+          var currentTime = moment().unix()
+          console.log(currentTime, item.completeBy, currentTime <= item.completeBy)
+          if (currentTime <= item.completeBy) {
+            return item
+          }
+        })
+        resolve(items)
       })
-      resolve(resp)
-    }).catch(err => reject(err))
+      .catch(err => reject(err))
   })
 }
 
@@ -233,6 +257,14 @@ function getAllSettings (knex) {
   })
 }
 
+function getSetting (knex, property) {
+  return new Promise((resolve, reject) => {
+    knex('settings').select('*').where('name', property).first()
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
 function getAllPoints (knex) {
   return new Promise((resolve, reject) => {
     knex('flatInfo').select('*')
@@ -250,30 +282,30 @@ function updateTaskNotificationFrequency (knex, id, frequency) {
 }
 
 const configJSONTemplate = {
-  "system": {
-    "installedVersion": packageJSON.version,
-    "maintenence": false,
-    "hasInitialised": false,
-    "dbInstalled": false,
-    "DB_ROOT_PASSWORD": process.env.DB_ROOT_PASSWORD || "",
-    "DB_PASSWORD": process.env.DB_PASSWORD || "",
-    "DB_DATABASE": process.env.DB_DATABASE || "",
-    "DB_USER": process.env.DB_USER || "",
-    "DB_HOST": process.env.DB_HOST || "",
-    "DB_FLAVOR": process.env.DB_FLAVOR || "",
-    "ACCESS_TOKEN_SECRET": generateSecret() || "",
-    "REFRESH_TOKEN_SECRET": generateSecret() || "",
-    "MAIL_SMTP_USER": process.env.MAIL_SMTP_USER || "",
-    "MAIL_SMTP_PASSWORD": process.env.MAIL_SMTP_PASSWORD || "",
-    "MAIL_SMTP_MODE": process.env.MAIL_SMTP_MODE || "",
-    "MAIL_FROM_ADDRESS": process.env.MAIL_FROM_ADDRESS || "",
-    "MAIL_DOMAIN": process.env.MAIL_DOMAIN || "",
-    "MAIL_SMTP_AUTH": process.env.MAIL_SMTP_AUTH || "",
-    "MAIL_SMTP_SERVER": process.env.MAIL_SMTP_SERVER || "",
-    "MAIL_SMTP_PORT": process.env.MAIL_SMTP_PORT || "",
-    "MAIL_SMTP_NAME": process.env.MAIL_SMTP_NAME || ""
+  'system': {
+    'installedVersion': packageJSON.version,
+    'maintenence': false,
+    'hasInitialised': false,
+    'dbInstalled': false,
+    'DB_ROOT_PASSWORD': process.env.DB_ROOT_PASSWORD || '',
+    'DB_PASSWORD': process.env.DB_PASSWORD || '',
+    'DB_DATABASE': process.env.DB_DATABASE || '',
+    'DB_USER': process.env.DB_USER || '',
+    'DB_HOST': process.env.DB_HOST || '',
+    'DB_FLAVOR': process.env.DB_FLAVOR || '',
+    'ACCESS_TOKEN_SECRET': generateSecret() || '',
+    'REFRESH_TOKEN_SECRET': generateSecret() || '',
+    'MAIL_SMTP_USER': process.env.MAIL_SMTP_USER || '',
+    'MAIL_SMTP_PASSWORD': process.env.MAIL_SMTP_PASSWORD || '',
+    'MAIL_SMTP_MODE': process.env.MAIL_SMTP_MODE || '',
+    'MAIL_FROM_ADDRESS': process.env.MAIL_FROM_ADDRESS || '',
+    'MAIL_DOMAIN': process.env.MAIL_DOMAIN || '',
+    'MAIL_SMTP_AUTH': process.env.MAIL_SMTP_AUTH || '',
+    'MAIL_SMTP_SERVER': process.env.MAIL_SMTP_SERVER || '',
+    'MAIL_SMTP_PORT': process.env.MAIL_SMTP_PORT || '',
+    'MAIL_SMTP_NAME': process.env.MAIL_SMTP_NAME || ''
   },
-  "apps": {}
+  'apps': {}
 }
 
 function doesExistConfigJSON () {
@@ -281,12 +313,12 @@ function doesExistConfigJSON () {
 }
 
 function initConfigJSON () {
-  if (! doesExistConfigJSON()) {
+  if (!doesExistConfigJSON()) {
     if (fs.mkdirSync(path.resolve(path.join('.', 'deployment')), { recursive: true })) {
       return writeConfigJSON(configJSONTemplate)
-    } else if (! doesExistConfigJSON()) {
+    } else if (!doesExistConfigJSON()) {
       return writeConfigJSON(configJSONTemplate)
-    } else  return false
+    } else return false
   } else return true
 }
 
@@ -326,8 +358,6 @@ module.exports = {
     checkGroupForAdmin,
     getTaskOfMember,
     getTasksOfMember,
-    getEntry,
-    getEntries,
     getAllSettings,
     getAllPoints,
     updateTaskNotificationFrequency
@@ -342,6 +372,9 @@ module.exports = {
         get: getTasks
       }
     },
+    entry: {
+      create: createEntryOfTask
+    },
     member: {
       get: getMember,
       getByEmail: getMemberProfileByEmail,
@@ -349,6 +382,12 @@ module.exports = {
       delete: deleteMember,
       all: {
         get: getAllMembers
+      }
+    },
+    setting: {
+      get: getSetting,
+      all: {
+        get: getAllSettings
       }
     },
     config: {

@@ -35,6 +35,10 @@
                   </div>
               </div>
             </div>
+            <div v-if="entry.status == 'uncompleted'">
+              This task must be completed by {{ entryCompleteBy }}
+              <br/>
+            </div>
             <footer class="card-footer" v-if="entry.status == 'uncompleted'">
               <b-button @click="markAsCompleted(entry.id)" outlined tag="a" type="is-success" class="card-footer-item">I've completed this task</b-button>
             </footer>
@@ -73,6 +77,7 @@ export default {
       task: {},
       entry: {},
       entryCompletedTimestamp: '',
+      entryCompleteBy: '',
       tasksGETerrors: [],
       form: {
         names: '',
@@ -89,6 +94,7 @@ export default {
       })
       .then(resp => {
         this.entry = resp.data
+        this.entryCompleteBy = moment.unix(this.entry.completeBy).format('DD/MM/YYYY')
         if (this.entry.timestamp) {
           this.entryCompletedTimestamp = moment.unix(this.entry.timestamp).format('DD/MM/YYYY HH:mm')
         }

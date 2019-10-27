@@ -2,24 +2,21 @@ const express = require('express')
 const router = express.Router()
 const functions = require('../functions')
 const moment = require('moment')
-const uuid = require('uuid/v4')
-const jwt = require('jsonwebtoken')
-const passport = require('passport')
 const hash = require('hash.js')
 const packageJSON = require('../../../package.json')
 
 module.exports = (knex) => {
   router.get('/', (req, res) => {
-      // return list of api endpoints
-      res.json({
-        message: 'Hello from FlatTracker API v1',
-        version: packageJSON.version,
-        return: 0
-      })
-      res.end()
-      return
+    // return list of api endpoints
+    res.json({
+      message: 'Hello from FlatTracker API v1',
+      version: packageJSON.version,
+      return: 0
     })
-    
+    res.end()
+    return
+  })
+
   router.route('/login')
     .post((req, res) => {
       if (req.body.email === '' || req.body.password === '') {
@@ -50,15 +47,16 @@ module.exports = (knex) => {
         return
       })
     })
-    
+
   router.route('/entry')
     .get(functions.general.verifyAuthToken, (req, res) => {
       // get all entries
-      functions.general.getEntries(knex).then(resp => {
+      functions.general.entry.all.get(knex, req).then(resp => {
         res.json(resp)
         res.end()
         return
       }).catch(err => {
+        res.status(400)
         res.json(err)
         res.end()
         return
@@ -81,7 +79,7 @@ module.exports = (knex) => {
     .put(functions.general.verifyAuthToken, (req, res) => {
       var id = req.params.id
       functions.general.entry.get(knex, id).then(resp => {
-        if (resp.member == req.flatmember.id) {
+        if (resp.member === req.flatmember.id) {
           res.json(resp)
           res.end()
           return
@@ -113,12 +111,12 @@ module.exports = (knex) => {
         return
       })
     })
-  
+
   router.route('/members')
     .get(functions.general.verifyAuthToken, (req, res) => {
       // get a list of all flat members
       var notID = req.flatmember.id
-      functions.admin.member.all.get(knex, notID).then(resp => {
+      functions.general.member.all.get(knex, notID).then(resp => {
         res.json(resp)
         res.end()
         return
@@ -143,7 +141,7 @@ module.exports = (knex) => {
         return
       })
     })
-  
+
   router.route('/tasks')
     .get(functions.general.verifyAuthToken, (req, res) => {
       // get a list of all tasks
@@ -180,7 +178,8 @@ module.exports = (knex) => {
         res.end()
         return
       }).catch(err => {
-        res.json({ message: err, return: 1 })
+        res.status(400)
+        res.json(err)
         res.end()
         return
       })
@@ -189,16 +188,19 @@ module.exports = (knex) => {
   router.route('/settings/:id')
     .get(functions.general.verifyAuthToken, (req, res) => {
       var id = req.params.id
-      functions.general.getAllSettings(knex).then(resp => {  
-        res.json(resp[0])
+
+      // TODO whitelist settings to fetch from non-admin
+      functions.admin.setting.get(knex, id).then(resp => {
+        res.json(resp)
+        res.end()
+        return
+      }).catch(err => {
+        res.json(err)
         res.end()
         return
       })
     })
-    .put([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
-      
-    })
-  
+
   router.route('/profile')
     .get(functions.general.verifyAuthToken, (req, res, next) => {
       if (!typeof req.flatmember === 'object' || req.flatmember === '') {

@@ -34,20 +34,20 @@
                 <div class="card">
                     <div class="card-content">
                         <p class="subtitle">
-                            Free and Open Source
+                            Collaborate
                         </p>
                         <p class="title">
-                            FlatTrack is a <a href="https://simple.wikipedia.org/wiki/Free_and_open-source_software">FOSS</a> project which gives your flat some flow with things like tasks and shopping
+                            You can collaborate on this project by visiting <a href="https://gitlab.com/flattrack">FlatTrack's GitLab page</a>.
                         </p>
                     </div>
                 </div>
                 <div class="card">
                     <div class="card-content">
                         <p class="subtitle">
-                            Collaborate
+                            Free and Open Source
                         </p>
                         <p class="title">
-                            You can collaborate on this project by visiting <a href="https://gitlab.com/flattrack">FlatTrack's GitLab page</a>.
+                            FlatTrack is a <a href="https://simple.wikipedia.org/wiki/Free_and_open-source_software">FOSS</a> project which means that you can freely study it, modify it, and share the changes.
                         </p>
                     </div>
                 </div>

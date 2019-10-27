@@ -33,6 +33,9 @@
                         </footer>
                         </div>
                     </div>
+                    <div class="section">
+                      <p>{{ tasks.length }} tasks</p>
+                    </div>
                 </div>
                 <div id="tasks" v-if="!tasks.length">
                 <section class="section">

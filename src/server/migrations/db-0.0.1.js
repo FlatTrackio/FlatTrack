@@ -5,8 +5,7 @@ const uuid = require('uuid/v4')
 module.exports.up = (knex) => {
   // create tables
   return knex.schema
-    .createTable('entries', function(table) {
-      console.log("ENTRIES")
+    .createTable('entries', function (table) {
       table.charset('utf8mb4')
       table.string('id', 37).notNullable()
       table.string('timestamp', 100).notNullable()
@@ -16,6 +15,7 @@ module.exports.up = (knex) => {
       table.string('status', 100)
       table.foreign('approvedBy').references('id').inTable('members')
       table.string('amendStatus', 100)
+      table.integer('completeBy')
       table.collate('latin1_general_cs')
     })
 
@@ -83,6 +83,7 @@ module.exports.up = (knex) => {
       table.foreign('addedBy').references('id').inTable('members').notNullable()
       table.string('standard', 10)
       table.boolean('obtained')
+      table.integer('amount')
       table.collate('latin1_general_cs')
     })
 

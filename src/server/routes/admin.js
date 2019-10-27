@@ -3,10 +3,7 @@ const router = express.Router()
 const functions = require('../functions')
 const moment = require('moment')
 const uuid = require('uuid/v4')
-const jwt = require('jsonwebtoken')
-const passport = require('passport')
 const hash = require('hash.js')
-const packageJSON = require('../../../package.json')
 
 module.exports = (knex) => {
   router.route('/tasks')
@@ -140,8 +137,8 @@ module.exports = (knex) => {
       })
     })
 
-    router.route('/members')
-    .get(functions.general.verifyAuthToken, (req, res) => {
+  router.route('/members')
+    .get([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
       // get a list of all flat members
       functions.admin.member.all.get(knex).then(resp => {
         res.json(resp)
@@ -181,7 +178,7 @@ module.exports = (knex) => {
           res.json({ status: 1, message: 'Please enter a valid name, containing only letters' })
           res.end()
           return
-  
+
         case (form.memberSetPassword !== true && !(typeof form.password === 'string' && form.password.length > 30)):
           res.json({ status: 1, message: 'Please enter a valid password, 30 characters max' })
           res.end()
@@ -217,7 +214,7 @@ module.exports = (knex) => {
       })
     })
   router.route('/members/:id')
-    .get(functions.general.verifyAuthToken, (req, res) => {
+    .get([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
       // get a given flat member
       var id = req.params.id
       functions.admin.member.get(knex, id).then(resp => {
@@ -241,7 +238,7 @@ module.exports = (knex) => {
         allergies: form.allergies || null,
         group: form.group
       }
-  
+
       functions.admin.member.update(knex, id, form).then(resp => {
         res.json(resp)
         res.end()
@@ -266,6 +263,23 @@ module.exports = (knex) => {
         return
       })
     })
-  
+
+  router.route('/settings/:id')
+    .get(functions.general.verifyAuthToken, (req, res) => {
+      var id = req.params.id
+      functions.admin.setting.all.get(knex, id).then(resp => {
+        res.json(resp)
+        res.end()
+        return
+      }).catch(err => {
+        res.json(err)
+        res.end()
+        return
+      })
+    })
+    .put([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
+      // update a setting
+    })
+
   return router
 }

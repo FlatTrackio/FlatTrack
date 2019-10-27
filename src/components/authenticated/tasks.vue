@@ -58,13 +58,19 @@
                   </div>
                 </div>
                 <div v-if="entry.status == 'completed'">
-                  Marked completed at {{ formatTimestamp(entry.timestamp) }}
+                  Marked completed at {{ formatTimestampWithTime(entry.timestamp) }}
+                </div>
+                <div v-else>
+                  This task must be completed by {{ formatTimestamp(entry.completeBy) }}
                 </div>
               </div>
               <footer class="card-footer">
                 <a :href="`/#/tasks/view?task=${entry.id}`" class="card-footer-item">View</a>
               </footer>
             </div>
+          </div>
+          <div class="section">
+            <p>{{ entries.length }} tasks</p>
           </div>
         </div>
         <div id="tasks" v-if="!entries.length">
@@ -183,8 +189,11 @@ export default {
           // TODO display UI error
         })
     },
-    formatTimestamp: (timestamp) => {
+    formatTimestampWithTime: (timestamp) => {
       return moment.unix(timestamp).format('DD/MM/YYYY HH:mm')
+    },
+    formatTimestamp: (timestamp) => {
+      return moment.unix(timestamp).format('DD/MM/YYYY')
     }
   },
   components: {

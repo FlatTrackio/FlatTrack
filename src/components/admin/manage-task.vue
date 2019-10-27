@@ -18,13 +18,13 @@
                   <b-input placeholder="What should this task be called?" v-model="name" maxlength="30" rounded required></b-input>
                 </b-field>
                 <b-field label="Description">
-                  <b-input placeholder="Describe this task. i.e: Examples" v-model="description" maxlength="100" rounded></b-input>
+                  <b-input placeholder="Describe this task. i.e: Examples" v-model="description" maxlength="100" rounded required></b-input>
                 </b-field>
                 <b-field label="Location">
                   <b-input placeholder="Where is this to be found?" v-model="location" maxlength="100" rounded required></b-input>
                 </b-field>
                 <b-field label="Rotation">
-                  <b-select placeholder="How often this task is rotated?" expanded rounded v-model="rotation">
+                  <b-select placeholder="How often this task is rotated?" expanded rounded v-model="rotation" required>
                     <option value="monthly">Monthly</option>
                     <option value="weekly">Weekly</option>
                     <option value="daily">Daily</option>
@@ -33,7 +33,7 @@
                 </b-field>
                 <br>
                 <b-field label="Frequency" v-if="rotation == 'never'">
-                  <b-select placeholder="How often this task is done?" expanded rounded v-model="frequency">
+                  <b-select placeholder="How often this task is done?" expanded rounded v-model="frequency" :required="rotation == 'never'">
                     <option value="monthly">Monthly</option>
                     <option value="weekly">Weekly</option>
                     <option value="daily">Daily</option>
@@ -41,13 +41,13 @@
                 </b-field>
                 <br>
                 <b-field label="Assignee" v-if="rotation == 'never'">
-                  <b-select placeholder="Who should be assigned to this task?" expanded rounded v-model="assignee">
+                  <b-select placeholder="Who should be assigned to this task?" expanded rounded v-model="assignee" :required="rotation == 'never'">
                     <option v-for="member of members" v-bind:key="member" :value="member.id">{{ member.names }}</option>
                   </b-select>
                 </b-field>
                </div>
               <div v-if="returnNameforID(id, name)">
-                <b-button type="is-success" @click="updateTask(id, name, description, location, disabled, assignee, rotation, frequency)">Update</b-button>
+                <b-button type="is-success" native-type="submit" @click="updateTask(id, name, description, location, disabled, assignee, rotation, frequency)">Update</b-button>
                 <b-button type="is-warning">Disable</b-button>
                 <b-button type="is-danger" @click="deleteTask(id)">Delete</b-button>
               </div>
@@ -186,7 +186,7 @@ export default {
             type: 'is-success'
           })
           setTimeout(() => {
-            location.reload()
+            window.location.reload()
           }, 1000)
         })
         .catch(err => {

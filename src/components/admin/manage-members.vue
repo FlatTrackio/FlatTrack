@@ -39,6 +39,9 @@
                 </footer>
               </div>
             </div>
+            <div class="section">
+              <p>{{ members.length }} flatmembers</p>
+            </div>
           </div>
           <div v-if="!members && !members.length">
             <section class="section">
