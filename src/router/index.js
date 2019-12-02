@@ -1,26 +1,5 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import home from '@/components/authenticated/home'
-import login from '@/components/public/login'
-import forgotPassword from '@/components/public/forgot-password'
-import unknownPage from '@/components/global/unknown-page'
-import tasks from '@/components/authenticated/tasks'
-import task from '@/components/authenticated/task'
-import aboutFlatTrack from '@/components/authenticated/about-flattrack'
-import aboutFlat from '@/components/authenticated/about-flat'
-import highFives from '@/components/authenticated/high-fives'
-import members from '@/components/authenticated/members'
-import noticeboard from '@/components/authenticated/noticeboard'
-import recipes from '@/components/authenticated/recipes'
-import sharedCalendar from '@/components/authenticated/shared-calendar'
-import shoppingList from '@/components/authenticated/shopping-list'
-import adminHome from '@/components/admin/home'
-import adminConfigureFeatures from '@/components/admin/configure-features'
-import adminManageMembers from '@/components/admin/manage-members'
-import adminManageMember from '@/components/admin/manage-member'
-import adminManageTasks from '@/components/admin/manage-tasks'
-import adminManageTask from '@/components/admin/manage-task'
-import setup from '@/components/public/setup'
 // import axios from 'axios'
 
 Vue.use(Router)
@@ -61,132 +40,138 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: home,
+      component: () => import('@/components/authenticated/home'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '*',
       name: 'unknown-page',
-      component: unknownPage
+      component: () => import('@/components/global/unknown-page')
     },
     {
       path: '/tasks',
       name: 'tasks',
-      component: tasks,
+      component: () => import(/* webpackChunkName: "tasks" */ '@/components/authenticated/tasks'),
       beforeEnter: authenticatedRoute
     },
     {
-      path: '/tasks/view',
+      path: '/tasks/t',
       name: 'task-view',
-      component: task,
+      component: () => import(/* webpackChunkName: "tasks" */ '@/components/authenticated/task'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/about/flattrack',
       name: 'aboutflattrack',
-      component: aboutFlatTrack,
+      component: () => import('@/components/authenticated/about-flattrack'),
       alias: '/aboutflattrack',
       beforeEnter: authenticatedRoute
     },
     {
       path: '/about/flat',
       name: 'aboutflat',
-      component: aboutFlat,
+      component: () => import('@/components/authenticated/about-flat'),
       alias: '/aboutflat',
       beforeEnter: authenticatedRoute
     },
     {
       path: '/high-fives',
       name: 'highfives',
-      component: highFives,
+      component: () => import('@/components/authenticated/high-fives'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/members',
       name: 'members',
-      component: members,
-      beforeEnter: authenticatedRoute
-    },
-    {
-      path: '/tasks/view',
-      name: 'task-view',
-      component: task,
+      component: () => import('@/components/authenticated/members'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/noticeboard',
       name: 'noticeboard',
-      component: noticeboard,
+      component: () => import('@/components/authenticated/noticeboard'),
+      beforeEnter: authenticatedRoute
+    },
+    {
+      path: '/noticeboard/p',
+      name: 'noticeboard posts',
+      component: () => import('@/components/authenticated/noticeboard-post'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/recipes',
       name: 'recipes',
-      component: recipes,
+      component: () => import('@/components/authenticated/recipes'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/shared-calendar',
       name: 'shared-calendar',
-      component: sharedCalendar,
+      component: () => import('@/components/authenticated/shared-calendar'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/shopping-list',
       name: 'shopping-list',
-      component: shoppingList,
+      component: () => import('@/components/authenticated/shopping-list'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/login',
       name: 'login',
-      component: login
+      component: () => import('@/components/public/login')
     },
     {
       path: '/forgot-password',
       name: 'forgot-password',
-      component: forgotPassword
+      component: () => import('@/components/public/forgot-password')
     },
     {
       path: '/admin',
       name: 'admin',
-      component: adminHome,
+      component: () => import('@/components/admin/home'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/admin/features',
       name: 'admin-configure-features',
-      component: adminConfigureFeatures,
+      component: () => import('@/components/admin/configure-features'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/admin/members',
       name: 'admin-manage-members',
-      component: adminManageMembers,
+      component: () => import(/* webpackChunkName: "admin-members" */ '@/components/admin/manage-members'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/admin/members/u',
       name: 'admin-manage-member',
-      component: adminManageMember,
+      component: () => import(/* webpackChunkName: "admin-members" */ '@/components/admin/manage-member'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/admin/tasks',
       name: 'admin-manage-tasks',
-      component: adminManageTasks,
+      component: () => import(/* webpackChunkName: "admin-tasks" */ '@/components/admin/manage-tasks'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/admin/tasks/t',
       name: 'admin-manage-task-edit',
-      component: adminManageTask,
+      component: () => import(/* webpackChunkName: "admin-tasks" */ '@/components/admin/manage-task'),
+      beforeEnter: authenticatedRoute
+    },
+    {
+      path: '/admin/entries',
+      name: 'admin-manage-entries',
+      component: () => import('@/components/admin/manage-entries'),
       beforeEnter: authenticatedRoute
     },
     {
       path: '/setup',
       name: 'setup',
-      component: setup,
+      component: () => import('@/components/public/setup'),
       beforeEnter: unauthenticatedRouteUninitialised
     }
   ]

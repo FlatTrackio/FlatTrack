@@ -2,26 +2,21 @@
     <div>
       <headerDisplay admin="true"/>
       <div class="container">
-          <section class="section">
-              <greeting subtitle="This is the admin page, you can configure FlatTrack from here"/>
-              <div id="menu-bar-items">
-                  <b-menu>
-                      <b-menu-list>
-                      <b-menu-item v-for="item in pages" v-bind:key="item" :href="item.url" class="menu-bar-item" :label="item.name"></b-menu-item>
-                      </b-menu-list>
-                  </b-menu>
-              </div>
-          </section>
-        </div>
-        <footer class="footer">
-        <div class="content has-text-centered">
-            <div class="columns is-variable is-1-mobile is-0-tablet is-3-desktop is-8-widescreen is-2-fullhd">
-            <div class="column">
-                <a href="/#/">Go to general home</a>
+        <section class="section">
+          <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
+            <ul>
+              <li><a href="/#/">Home</a></li>
+              <li class="is-active"><a href="/#/admin/tasks">Admin</a></li>
+            </ul>
+          </nav>
+          <greeting subtitle="This is the admin page, you can configure FlatTrack from here"/>
+          <div>
+            <div v-for="item in pages" v-bind:key="item">
+              <b-button type="is-white" tag="a" :href="item.url" size="is-large" expanded>{{ item.name }}</b-button>
             </div>
-            </div>
-        </div>
-      </footer>
+          </div>
+        </section>
+      </div>
     </div>
 </template>
 
@@ -43,8 +38,12 @@ export default {
           url: '#/admin/members'
         },
         {
-          name: 'Tasks',
+          name: 'Manage Tasks',
           url: '#/admin/tasks'
+        },
+        {
+          name: 'Assigned tasks and entries',
+          url: '#/admin/entries'
         }
       ],
       login: {

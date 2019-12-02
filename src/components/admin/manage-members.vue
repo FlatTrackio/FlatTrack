@@ -96,7 +96,6 @@ export default {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('authToken')}`
       }}).then(resp => {
-      console.log(resp.data)
       this.members = resp.data
     }).catch(err => {
       this.pageErrors.push(err)

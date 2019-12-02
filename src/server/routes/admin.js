@@ -1,3 +1,9 @@
+/*
+  routes/admin.js
+
+  API routes which requires Admin group access
+*/
+
 const express = require('express')
 const router = express.Router()
 const functions = require('../functions')
@@ -9,7 +15,13 @@ module.exports = (knex) => {
   router.route('/tasks')
     .get([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res, next) => {
       functions.admin.task.all.get(knex).then(resp => {
-        res.json(resp).end()
+        res.json(resp)
+        return res.end()
+      }).catch(err => {
+        console.log(err)
+        res.status(400)
+        res.json({ message: 'Failed to fetch tasks' })
+        return res.end()
       })
     })
     .post([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
@@ -35,34 +47,29 @@ module.exports = (knex) => {
         case typeof form.name !== 'string' || (!regexNames.test(form.name) && form.name.length >= 100):
           res.status(400)
           res.json({ message: 'Please enter a valid name, containing only letters' })
-          res.end()
-          return
+          return res.end()
 
         case typeof form.description !== 'string' || (!regexNames.test(form.description) && form.description.length >= 100):
           res.status(400)
           res.json({ message: 'Please enter a valid description, containing only letters' })
-          res.end()
-          return
+          return res.end()
 
         case typeof form.location !== 'string' || (!regexNames.test(form.location) && form.location.length >= 100):
           res.status(400)
           res.json({ message: 'Please enter a valid location, containing only letters' })
-          res.end()
-          return
+          return res.end()
       }
 
       functions.admin.task.create(knex, form).then((resp) => {
         console.log(resp)
         res.json({ message: 'Task created' })
-        res.end()
-        return
+        return res.end()
       }).catch(err => {
         // handle error
         console.log(err)
         res.json({ message: 'Task failed to create' })
         res.status(201)
-        res.end()
-        return
+        return res.end()
       })
     })
   router.route('/task/:id')
@@ -72,12 +79,10 @@ module.exports = (knex) => {
 
       functions.admin.task.get(knex, id).then(resp => {
         res.json(resp)
-        res.end()
-        return
+        return res.end()
       }).catch(err => {
         res.json(err)
-        res.end()
-        return
+        return res.end()
       })
     })
     .put([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
@@ -107,15 +112,13 @@ module.exports = (knex) => {
       functions.admin.task.update(knex, id, form).then((resp) => {
         console.log(resp)
         res.json({ message: 'Task updated' })
-        res.end()
-        return
+        return res.end()
       }).catch(err => {
         // handle error
         console.log(err)
         res.status(201)
         res.json({ message: 'Failed to update task' })
-        res.end()
-        return
+        return res.end()
       })
     })
     .delete([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
@@ -125,15 +128,13 @@ module.exports = (knex) => {
       functions.admin.task.delete(knex, id).then((resp) => {
         console.log(resp)
         res.json({ message: 'Task deleted' })
-        res.end()
-        return
+        return res.end()
       }).catch(err => {
         // handle error
         console.log(err)
         res.json({ message: 'Failed to delete task' })
         res.status(201)
-        res.end()
-        return
+        return res.end()
       })
     })
 
@@ -142,12 +143,10 @@ module.exports = (knex) => {
       // get a list of all flat members
       functions.admin.member.all.get(knex).then(resp => {
         res.json(resp)
-        res.end()
-        return
+        return res.end()
       }).catch(err => {
         res.json(err)
-        res.end()
-        return
+        return res.end()
       })
     })
     .post([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
@@ -186,31 +185,28 @@ module.exports = (knex) => {
       }
       functions.admin.member.get(knex, form.member).then(resp => {
         res.json({ return: 1, message: 'User already exists.' })
-        res.end()
-        return
+        return res.end()
       }).catch(err => {
         res.json(err)
-        res.end()
-        return
+        return res.end()
       })
 
       // hash the password
       form.password = hash.sha256().update(form.password).digest('hex')
-  
+
       console.log('Request to create new member:')
       console.log(JSON.stringify(form))
 
       knex('members').insert(form).then(resp => {
         // handle user creating sucessfully
         res.json({ message: 'Added new user successfully' })
-        res.end()
-        return
+        return res.end()
       }).catch(err => {
         // handle error
         console.log(err)
         res.status(201)
         res.json({ return: 1, message: 'Failed to create user' })
-        return
+        return res.end()
       })
     })
   router.route('/members/:id')
@@ -219,12 +215,10 @@ module.exports = (knex) => {
       var id = req.params.id
       functions.admin.member.get(knex, id).then(resp => {
         res.json(resp)
-        res.end()
-        return
+        return res.end()
       }).catch(err => {
         res.json(err)
-        res.end()
-        return
+        return res.end()
       })
     })
     .put([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
@@ -241,14 +235,12 @@ module.exports = (knex) => {
 
       functions.admin.member.update(knex, id, form).then(resp => {
         res.json(resp)
-        res.end()
-        return
+        return res.end()
       }).catch(err => {
         console.error(err)
         res.status(400)
         res.json({return: 1, message: 'An error occurred'})
-        res.end()
-        return
+        return res.end()
       })
     })
     .delete([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
@@ -256,11 +248,10 @@ module.exports = (knex) => {
       var id = req.params.id
       functions.admin.member.delete(knex, id).then(resp => {
         res.json(resp)
-        res.end()
+        return res.end()
       }).catch(err => {
         res.json(err)
-        res.end()
-        return
+        return res.end()
       })
     })
 
@@ -269,17 +260,35 @@ module.exports = (knex) => {
       var id = req.params.id
       functions.admin.setting.all.get(knex, id).then(resp => {
         res.json(resp)
-        res.end()
-        return
+        return res.end()
       }).catch(err => {
+        res.status(400)
         res.json(err)
-        res.end()
-        return
+        return res.end()
       })
     })
     .put([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
       // update a setting
     })
+
+  router.route('/entry')
+    .get([functions.general.verifyAuthToken, functions.general.checkGroupForAdmin], (req, res) => {
+      // get all entries
+      functions.admin.entry.all.get(knex, req).then(resp => {
+        res.json(resp)
+        return res.end()
+      }).catch(err => {
+        res.status(400)
+        res.json(err)
+        return res.end()
+      })
+    })
+
+  router.get(/(.*)/, (req, res) => {
+    res.status(404)
+    res.json({ message: 'Unknown route' })
+    return res.end()
+  })
 
   return router
 }

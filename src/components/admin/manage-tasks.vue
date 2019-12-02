@@ -34,7 +34,7 @@
                         </div>
                     </div>
                     <div class="section">
-                      <p>{{ tasks.length }} tasks</p>
+                      <p>{{ tasks.length }} {{ tasks.length === 1 ? 'task' : 'tasks' }}</p>
                     </div>
                 </div>
                 <div id="tasks" v-if="!tasks.length">

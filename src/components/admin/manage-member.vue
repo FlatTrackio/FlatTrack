@@ -63,12 +63,12 @@
                 </div>
                 <br>
                 <div v-if="returnNamesforID(id, names)">
-                  <b-button type="is-success" @click="updateMember(id, names, email, phoneNumber, allergies, password, group, memberSetPassword)">Update</b-button>
-                  <b-button type="is-warning">Disable</b-button>
-                  <b-button type="is-danger" @click="deleteMember(id)">Delete</b-button>
+                  <b-button type="is-success" @click="updateMember(id, names, email, phoneNumber, allergies, password, group, memberSetPassword)" :loading="hasAction" :disabled="hasAction">Update</b-button>
+                  <b-button type="is-warning" :loading="hasAction">Disable</b-button>
+                  <b-button type="is-danger" @click="deleteMember(id)" :loading="hasAction" :disabled="hasAction">Delete</b-button>
                 </div>
                 <div v-else>
-                  <b-button type="is-success" native-type="submit" @click="addNewMember(names, email, phoneNumber, allergies, password, group, memberSetPassword)">Add new flatmate</b-button>
+                  <b-button type="is-success" native-type="submit" @click="addNewMember(names, email, phoneNumber, allergies, password, group, memberSetPassword)" :disabled="hasAction">Add new flatmate</b-button>
                 </div>
                 <br>
               </div>
@@ -109,12 +109,15 @@ export default {
       group: 'flatmember',
       member: {
       },
-      pageErrors: []
+      pageErrors: [],
+      hasAction: false
     }
   },
   created () {
+    this.hasAction = true
     var id = this.$route.query.id
     if (!id) {
+      this.hasAction = false
       return
     }
     axios.get(`/api/admin/members/${id}`,
@@ -133,8 +136,10 @@ export default {
         this.group = member.group
         this.password = null
         this.member = member
+        this.hasAction = false
       })
       .catch(err => {
+        this.hasAction = false
         this.pageErrors = [...this.pageErrors, err]
       })
   },
@@ -156,7 +161,6 @@ export default {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }}).then(resp => {
-        console.log('Add successful', resp)
         Toast.open({
           message: 'Flatmate added successfully',
           position: 'is-bottom',
@@ -165,15 +169,15 @@ export default {
         location.href = '#/admin/members'
       })
         .catch(err => {
-          console.log('Add failed', err)
           Toast.open({
-            message: 'Failed to add flatmate',
+            message: `Failed to add flatmate; ${err}`,
             position: 'is-bottom',
             type: 'is-danger'
           })
         })
     },
     updateMember: (id, names, email, phoneNumber, allergies, password, group, memberSetPassword) => {
+      this.hasAction = true
       var member = {
         id,
         names,
@@ -192,7 +196,7 @@ export default {
           Authorization: `Bearer ${localStorage.getItem('authToken')}`
         }})
         .then(resp => {
-          console.log('Add successful', resp)
+          this.hasAction = false
           Toast.open({
             message: 'Flatmate updated successfully',
             position: 'is-bottom',
@@ -203,16 +207,16 @@ export default {
           }, 1000)
         })
         .catch(err => {
-          console.log('Add failed', err)
+          this.hasAction = false
           Toast.open({
-            message: 'Failed to update flatmate',
+            message: `Failed to update flatmate; ${err}`,
             position: 'is-bottom',
             type: 'is-danger'
           })
         })
     },
     deleteMember: (id) => {
-      console.log('Attempting to remove member')
+      this.hasAction = true
       Dialog.confirm({
         message: 'Are you sure you want to remove this flatmember? (this cannot be undone)',
         confirmText: 'Remove Flatmember',
@@ -225,7 +229,7 @@ export default {
               }
             })
             .then(resp => {
-              console.log('Remove successful', resp)
+              this.hasAction = false
               Toast.open({
                 message: 'Flatmate removed successfully',
                 position: 'is-bottom',
@@ -236,9 +240,9 @@ export default {
               }, 1.2 * 1000)
             })
             .catch(err => {
-              console.log('Remove failed', err)
+              this.hasAction = false
               Toast.open({
-                message: 'Failed to remove flatmate',
+                message: `Failed to remove flatmate; ${err}`,
                 position: 'is-bottom',
                 type: 'is-danger'
               })
@@ -251,9 +255,6 @@ export default {
         return null
       }
       return names
-    },
-    printGroupSelection: (group) => {
-      console.log(group)
     }
   },
   components: {

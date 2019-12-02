@@ -1,6 +1,12 @@
 #!/usr/bin/node
 
-const hash = require('hash.js')
+/*
+  functions.js
+
+  a bunch of useful functions used in many areas of FlatTrack
+*/
+
+// const hash = require('hash.js')
 const uuid = require('uuid/v4')
 const moment = require('moment')
 const jwt = require('jsonwebtoken')
@@ -8,6 +14,20 @@ const fs = require('fs')
 const path = require('path')
 const packageJSON = require('../../package.json')
 const configPath = path.resolve(path.join('.', 'deployment', 'config.json'))
+
+function arrayToObjectByID (obj) {
+  if (!(typeof obj === 'object' && typeof obj.id === 'undefined')) {
+    console.error('Input must be a valid object')
+    return null
+  }
+
+  var transform = {}
+  obj.map(item => {
+    transform[item.id] = item
+    delete transform[item.id].id
+  })
+  return transform
+}
 
 function verifyAuthToken (req, res, next) {
   const config = require('../../deployment/config.json')
@@ -18,14 +38,16 @@ function verifyAuthToken (req, res, next) {
       if (err) {
         console.log(err)
         res.status(403)
-        res.json(err).send().end()
-        return
+        res.json({ message: 'Invalid auth token' })
+        return res.end()
       }
       req.flatmember = flatmember.flatmember
       next()
     })
   } else {
-    return res.status(401).send()
+    res.status(401)
+    res.json({ message: 'Authorisation token not found' })
+    return res.end()
   }
 }
 
@@ -47,11 +69,9 @@ function checkGroupForAdmin (req, res, next) {
 
   // TODO untie checking from token, instead fetch using ID
   if (req.flatmember.group === 'admin') {
-    next()
-    return
+    return next()
   } else {
-    res.json({message: 'An admin account is required for this action'}).status(401).send().end()
-    return
+    return res.json({message: 'An admin account is required for this action'}).status(401).send().end()
   }
 }
 
@@ -156,11 +176,28 @@ function createEntryOfTask (knex, taskID, memberID) {
     status: 'uncompleted'
   }
 
-  // TODO add completeBy
-
   return new Promise((resolve, reject) => {
-    knex('entries').insert(entry)
-      .then(resp => resolve(resp))
+    getTask(knex, taskID).then(resp => {
+      switch (resp.rotation !== 'never' ? resp.rotation : resp.frequency) {
+        case 'daily':
+          entry.completeBy = moment.unix(entry.timestampAssign).add('1', 'day').unix()
+          break
+
+        case 'weekly':
+          entry.completeBy = moment.unix(entry.timestampAssign).add('7', 'days').unix()
+          break
+
+        case 'monthly':
+          entry.completeBy = moment.unix(entry.timestampAssign).add('1', 'month').unix()
+          break
+
+        default:
+          reject(new Error('Unknown time period for entry to be completed by'))
+          break
+      }
+
+      return knex('entries').insert(entry)
+    }).then((resp) => resolve(resp))
       .catch(err => reject(err))
   })
 }
@@ -183,12 +220,12 @@ function createTask (knex, form) {
 
 function updateTask (knex, id, props) {
   props = {
-    name: props.name,
-    description: props.description,
-    location: props.location,
-    rotation: props.rotation,
-    assignee: props.assignee,
-    frequency: props.frequency
+    name: props.name || undefined,
+    description: props.description || undefined,
+    location: props.location || undefined,
+    rotation: props.rotation || undefined,
+    assignee: props.assignee || undefined,
+    frequency: props.frequency || undefined
   }
 
   if (props.rotation !== 'never') {
@@ -220,11 +257,26 @@ function getEntry (knex, id) {
 
 function getEntries (knex, req) {
   return new Promise((resolve, reject) => {
+    knex('entries').select('*').where('member', req.flatmember.id)
+      .then(resp => {
+        var items = resp.filter(item => {
+          var currentTime = moment().unix()
+          if (currentTime <= item.completeBy) {
+            return item
+          }
+        })
+        resolve(items)
+      })
+      .catch(err => reject(err))
+  })
+}
+
+function getAllEntries (knex) {
+  return new Promise((resolve, reject) => {
     knex('entries').select('*')
       .then(resp => {
         var items = resp.filter(item => {
           var currentTime = moment().unix()
-          console.log(currentTime, item.completeBy, currentTime <= item.completeBy)
           if (currentTime <= item.completeBy) {
             return item
           }
@@ -244,6 +296,37 @@ function updateEntry (knex, id, props) {
   }
   return new Promise((resolve, reject) => {
     knex('entries').where('id', id).update(props)
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
+function getNoticeboardPost (knex, id) {
+  return new Promise((resolve, reject) => {
+    knex('noticeboard').select('*').where('id', id)
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
+function getNoticeboardPosts (knex) {
+  return new Promise((resolve, reject) => {
+    knex('noticeboard').select('*').orderBy('timestamp', 'desc')
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
+function addNoticeboardPost (knex, req, form) {
+  form = {
+    id: uuid(),
+    title: form.title,
+    message: form.message,
+    author: req.flatmember.id,
+    timestamp: moment().unix()
+  }
+  return new Promise((resolve, reject) => {
+    knex('noticeboard').insert(form)
       .then(resp => resolve(resp))
       .catch(err => reject(err))
   })
@@ -352,6 +435,13 @@ module.exports = {
         get: getMembers
       }
     },
+    noticeboard: {
+      get: getNoticeboardPost,
+      create: addNoticeboardPost,
+      all: {
+        get: getNoticeboardPosts
+      }
+    },
     verifyAuthToken,
     generateToken,
     generateSecret,
@@ -360,7 +450,8 @@ module.exports = {
     getTasksOfMember,
     getAllSettings,
     getAllPoints,
-    updateTaskNotificationFrequency
+    updateTaskNotificationFrequency,
+    arrayToObjectByID
   },
   admin: {
     task: {
@@ -373,7 +464,13 @@ module.exports = {
       }
     },
     entry: {
-      create: createEntryOfTask
+      create: createEntryOfTask,
+      all: {
+        get: getAllEntries
+      }
+    },
+    noticeboard: {
+
     },
     member: {
       get: getMember,

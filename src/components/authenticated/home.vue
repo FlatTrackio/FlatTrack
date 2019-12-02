@@ -4,17 +4,13 @@
     <div class="container">
       <section class="section">
         <greeting subtitle="Welcome to FlatTrack, where your flat or community house is organized"/>
-        <div id="menu-bar-items">
-          <b-menu>
-            <b-menu-list>
-              <div v-for="item in pages" v-bind:key="item">
-                <b-menu-item :href="item.url" class="menu-bar-item" :label="item.name" :disabled="item.disabled" v-if="determineItemDisplay(item, login)"></b-menu-item>
-              </div>
-            </b-menu-list>
-          </b-menu>
-          <br>
-          <b-button rounded @click="memberSignOut">Sign Out</b-button>
+        <div>
+          <div v-for="item in pages" v-bind:key="item">
+            <b-button type="is-white" tag="a" :href="item.disabled === false ? `${item.url}` : ``" :disabled="item.disabled" v-if="determineItemDisplay(item, login)" size="is-large" expanded>{{ item.name }}</b-button>
+          </div>
         </div>
+        <br>
+        <b-button rounded @click="memberSignOut" size="is-large" expanded>Sign Out</b-button>
       </section>
     </div>
     <footer class="footer">
@@ -72,7 +68,7 @@ export default {
           name: 'Noticeboard',
           url: '#/noticeboard',
           to: 'noticeboard',
-          disabled: true
+          disabled: false
         },
         {
           name: 'Shared Calendar',
@@ -108,6 +104,7 @@ export default {
           name: 'Admin',
           url: '#/admin',
           to: 'admin',
+          disabled: false,
           groupRequires: ['admin']
         }
       ],

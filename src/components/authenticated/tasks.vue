@@ -65,12 +65,12 @@
                 </div>
               </div>
               <footer class="card-footer">
-                <a :href="`/#/tasks/view?task=${entry.id}`" class="card-footer-item">View</a>
+                <a :href="`/#/tasks/t?task=${entry.id}`" class="card-footer-item">View</a>
               </footer>
             </div>
           </div>
           <div class="section">
-            <p>{{ entries.length }} tasks</p>
+            <p>{{ entries.length }} {{ entries.length === 1 ? 'task' : 'tasks' }}</p>
           </div>
         </div>
         <div id="tasks" v-if="!entries.length">
