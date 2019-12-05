@@ -5,8 +5,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-            <li><a href="/#/">Home</a></li>
-            <li class="is-active"><a href="/#/members">Flatmates</a></li>
+            <li><a href="/">Home</a></li>
+            <li class="is-active"><a href="/members">Flatmates</a></li>
             </ul>
         </nav>
         <h1 class="title">Flatmates</h1>

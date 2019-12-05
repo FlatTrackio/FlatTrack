@@ -5,8 +5,8 @@
         <section class="section">
           <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><a href="/#/admin">Admin Home</a></li>
-              <li><a href="/#/admin/tasks">Manage Tasks</a></li>
+              <li><a href="/admin">Admin Home</a></li>
+              <li><a href="/admin/tasks">Manage Tasks</a></li>
               <li class="is-active"><a>{{ returnNameforID(id, name) || 'Add a task' }}</a></li>
             </ul>
           </nav>
@@ -152,7 +152,7 @@ export default {
           type: 'is-success'
         })
         setTimeout(() => {
-          window.window.location.href = '#/admin/tasks'
+          window.window.location.href = 'admin/tasks'
         }, 1000)
       })
         .catch(err => {
@@ -216,7 +216,7 @@ export default {
                 type: 'is-success'
               })
               setTimeout(() => {
-                window.window.location.href = '#/admin/tasks'
+                window.window.location.href = 'admin/tasks'
               }, 1.2 * 1000)
             })
             .catch(err => {

@@ -5,8 +5,8 @@
         <section class="section">
           <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-                <li><a href="/#/admin">Admin Home</a></li>
-                <li><a href="/#/admin/members">Manage Flatmates</a></li>
+                <li><a href="/admin">Admin Home</a></li>
+                <li><a href="/admin/members">Manage Flatmates</a></li>
                 <li class="is-active"><a>{{ returnNamesforID(id, names) || 'Add a flatmate' }}</a></li>
             </ul>
           </nav>
@@ -166,7 +166,7 @@ export default {
           position: 'is-bottom',
           type: 'is-success'
         })
-        location.href = '#/admin/members'
+        location.href = 'admin/members'
       })
         .catch(err => {
           Toast.open({
@@ -203,7 +203,7 @@ export default {
             type: 'is-success'
           })
           setTimeout(() => {
-            window.location.href = '/#/admin/members'
+            window.location.href = '/admin/members'
           }, 1000)
         })
         .catch(err => {
@@ -236,7 +236,7 @@ export default {
                 type: 'is-success'
               })
               setTimeout(() => {
-                location.href = '#/admin/members'
+                location.href = 'admin/members'
               }, 1.2 * 1000)
             })
             .catch(err => {

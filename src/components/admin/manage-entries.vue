@@ -5,8 +5,8 @@
             <section class="section">
                 <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
                     <ul>
-                        <li><a href="/#/admin">Admin Home</a></li>
-                        <li class="is-active"><a href="/#/admin/entries">Manage Assigned Tasks and Entries</a></li>
+                        <li><a href="/admin">Admin Home</a></li>
+                        <li class="is-active"><a href="/admin/entries">Manage Assigned Tasks and Entries</a></li>
                     </ul>
                 </nav>
                 <h1 class="title is-2">Assigned Tasks and Entries</h1>

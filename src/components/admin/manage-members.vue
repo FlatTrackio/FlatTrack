@@ -5,13 +5,13 @@
         <section class="section">
           <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-                <li><a href="/#/admin">Admin Home</a></li>
-                <li class="is-active"><a href="/#/admin/admin-manage-members">Manage flatmates</a></li>
+                <li><a href="/admin">Admin Home</a></li>
+                <li class="is-active"><a href="/admin/admin-manage-members">Manage flatmates</a></li>
             </ul>
           </nav>
           <h1 class="title is-2">Manage Flatmates</h1>
           <p class="subtitle is-4">Add, remove, and update Flatmates</p>
-          <b-button type="is-light" tag="a" href="/#/admin/members/u" rounded>Add new flatmate</b-button>
+          <b-button type="is-light" tag="a" href="/admin/members/u" rounded>Add new flatmate</b-button>
           <br><br>
           <div v-if="members && members.length">
             <div class="card-margin" v-for="member of members" v-bind:key="member">
@@ -35,7 +35,7 @@
                   </div>
                 </div>
                 <footer class="card-footer">
-                  <a :href="`/#/admin/members/u?id=${member.id}`" class="card-footer-item">View</a>
+                  <a :href="`/admin/members/u?id=${member.id}`" class="card-footer-item">View</a>
                 </footer>
               </div>
             </div>

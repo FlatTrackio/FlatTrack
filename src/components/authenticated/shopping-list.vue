@@ -6,10 +6,10 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
             <li>
-              <a href="/#/">Home</a>
+              <a href="/">Home</a>
             </li>
             <li class="is-active">
-              <a href="/#/shopping-list">Shopping list</a>
+              <a href="/shopping-list">Shopping list</a>
             </li>
           </ul>
         </nav>

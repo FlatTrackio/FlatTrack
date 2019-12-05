@@ -17,10 +17,10 @@
       <div class="content has-text-centered">
         <div class="columns is-variable is-1-mobile is-0-tablet is-3-desktop is-8-widescreen is-2-fullhd">
           <div class="column">
-            <a href="/#/aboutflat">About this flat</a>
+            <a href="/aboutflat">About this flat</a>
           </div>
           <div class="column">
-            <a href="/#/aboutflattrack">About FlatTrack</a>
+            <a href="/aboutflattrack">About FlatTrack</a>
           </div>
         </div>
       </div>
@@ -54,55 +54,55 @@ export default {
       pages: [
         {
           name: 'Tasks',
-          url: '#/tasks',
+          url: 'tasks',
           to: 'tasks',
           disabled: false
         },
         {
           name: 'Shopping List',
-          url: '#/shopping-list',
+          url: 'shopping-list',
           to: 'shoppinglist',
           disabled: false
         },
         {
           name: 'Noticeboard',
-          url: '#/noticeboard',
+          url: 'noticeboard',
           to: 'noticeboard',
           disabled: false
         },
         {
           name: 'Shared Calendar',
-          url: '#/shared-calendar',
+          url: 'shared-calendar',
           to: 'cal',
           disabled: true
         },
         {
           name: 'Recipes',
-          url: '#/recipes',
+          url: 'recipes',
           to: 'recipes',
           disabled: true
         },
         {
           name: 'Flatmates',
-          url: '#/members',
+          url: 'members',
           to: 'members',
           disabled: false
         },
         {
           name: 'Highfives',
-          url: '#/high-fives',
+          url: 'high-fives',
           to: 'highfives',
           disabled: true
         },
         {
           name: 'Account Settings',
-          url: '#/account-settings',
+          url: 'account-settings',
           to: 'account-settings',
           disabled: true
         },
         {
           name: 'Admin',
-          url: '#/admin',
+          url: 'admin',
           to: 'admin',
           disabled: false,
           groupRequires: ['admin']
@@ -127,7 +127,7 @@ export default {
           setTimeout(() => {
             localStorage.clear()
             loadingComponent.close()
-            location.href = '#/login'
+            location.href = 'login'
             console.log('Signing out')
           }, 1.2 * 1000)
         }

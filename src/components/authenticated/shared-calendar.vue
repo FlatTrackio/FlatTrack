@@ -5,8 +5,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-            <li><a href="/#/">Home</a></li>
-            <li class="is-active"><a href="/#/sharedcalendar">Shared Calendar</a></li>
+            <li><a href="/">Home</a></li>
+            <li class="is-active"><a href="/sharedcalendar">Shared Calendar</a></li>
             </ul>
         </nav>
         <h1 class="title">Shared Calendar</h1>
@@ -26,7 +26,7 @@
               </div>
             </div>
             <footer class="card-footer">
-              <a :href="`/#/calendar/${link.address}`" class="card-footer-item">Add</a>
+              <a :href="`/calendar/${link.address}`" class="card-footer-item">Add</a>
             </footer>
           </div>
         </div>

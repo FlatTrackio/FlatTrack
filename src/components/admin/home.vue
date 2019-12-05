@@ -5,8 +5,8 @@
         <section class="section">
           <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><a href="/#/">Home</a></li>
-              <li class="is-active"><a href="/#/admin/tasks">Admin</a></li>
+              <li><a href="/">Home</a></li>
+              <li class="is-active"><a href="/admin/tasks">Admin</a></li>
             </ul>
           </nav>
           <greeting subtitle="This is the admin page, you can configure FlatTrack from here"/>
@@ -31,19 +31,19 @@ export default {
       pages: [
         {
           name: 'Configure Features',
-          url: '#/admin/features'
+          url: 'admin/features'
         },
         {
           name: 'Manage Flatmates',
-          url: '#/admin/members'
+          url: 'admin/members'
         },
         {
           name: 'Manage Tasks',
-          url: '#/admin/tasks'
+          url: 'admin/tasks'
         },
         {
           name: 'Assigned tasks and entries',
-          url: '#/admin/entries'
+          url: 'admin/entries'
         }
       ],
       login: {
