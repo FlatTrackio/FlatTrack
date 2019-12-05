@@ -6,16 +6,16 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
             <li>
-              <a href="/#/">Home</a>
+              <a href="/">Home</a>
             </li>
             <li class="is-active">
-              <a href="/#/noticeboard">Noticeboard</a>
+              <a href="/noticeboard">Noticeboard</a>
             </li>
           </ul>
         </nav>
         <h1 class="title">Noticeboard</h1>
         <h2 class="subtitle">Post to your flatmates</h2>
-        <b-button type="is-light" tag="a" href="/#/noticeboard/p" rounded>Add new post</b-button>
+        <b-button type="is-light" tag="a" href="/noticeboard/p" rounded>Add new post</b-button>
         <br><br>
         <div v-if="posts">
           <div class="card" v-for="post in posts" v-bind:key="post">

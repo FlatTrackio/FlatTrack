@@ -5,8 +5,8 @@
         <section class="section">
           <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
-              <li><a href="/#/login">Login</a></li>
-              <li class="is-active"><a href="/#/forgot-password">Forgot Password</a></li>
+              <li><a href="/login">Login</a></li>
+              <li class="is-active"><a href="/forgot-password">Forgot Password</a></li>
           </ul>
           </nav>
           <h1 class="title">Forgot Password</h1>

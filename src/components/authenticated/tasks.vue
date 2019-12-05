@@ -6,10 +6,10 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
             <li>
-              <a href="/#/">Home</a>
+              <a href="/">Home</a>
             </li>
             <li class="is-active">
-              <a href="/#/tasks">Tasks</a>
+              <a href="/tasks">Tasks</a>
             </li>
           </ul>
         </nav>
@@ -65,7 +65,7 @@
                 </div>
               </div>
               <footer class="card-footer">
-                <a :href="`/#/tasks/t?task=${entry.id}`" class="card-footer-item">View</a>
+                <a :href="`/tasks/t?task=${entry.id}`" class="card-footer-item">View</a>
               </footer>
             </div>
           </div>

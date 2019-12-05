@@ -5,8 +5,8 @@
         <section class="section">
           <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><a href="/#/">Home</a></li>
-              <li><a href="/#/tasks">Tasks</a></li>
+              <li><a href="/">Home</a></li>
+              <li><a href="/tasks">Tasks</a></li>
               <li class="is-active"><a href="/#" aria-current="page">{{ task.name }}</a></li>
             </ul>
           </nav>

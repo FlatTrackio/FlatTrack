@@ -36,6 +36,7 @@ const unauthenticatedRouteUninitialised = async (to, before, next) => {
 }
 
 export default new Router({
+  mode: 'history',
   routes: [
     {
       path: '/',

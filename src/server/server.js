@@ -20,6 +20,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const path = require('path')
 const morgan = require('morgan')
+const historyMode = require('connect-history-api-fallback')
 const knex = require('knex')({
   client: 'mysql',
   connection: {
@@ -64,8 +65,10 @@ app.use('/api', routesFlatmember)
 var routesAdmin = require('./routes/admin')(knex)
 app.use('/api/admin', routesAdmin)
 
+app.use(historyMode())
+
 // Sends static files from the public path directory
-app.use(express.static(path.join(__dirname, '..', '..', 'dist')))
+app.use('/', express.static(path.join(__dirname, '..', '..', 'dist')))
 
 app.get('/#', (req, res) => {
   return res.redirect('/')
@@ -73,7 +76,7 @@ app.get('/#', (req, res) => {
 
 app.get(/(.*)/, (req, res) => {
   res.status(404)
-  return res.redirect('/#/unknown-page')
+  return res.redirect('/unknown-page')
 })
 
 function start () {

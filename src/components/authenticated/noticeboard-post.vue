@@ -5,8 +5,8 @@
         <section class="section">
           <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><a href="/#/">Home</a></li>
-              <li><a href="/#/noticeboard">Noticeboard post</a></li>
+              <li><a href="/">Home</a></li>
+              <li><a href="/noticeboard">Noticeboard post</a></li>
               <li class="is-active"><a>{{ returnNameforID(id, name) || 'Add a post' }}</a></li>
             </ul>
           </nav>
@@ -95,7 +95,7 @@ export default {
           type: 'is-success'
         })
         setTimeout(() => {
-          window.window.location.href = '#/noticeboard'
+          window.window.location.href = 'noticeboard'
         }, 1000)
       })
         .catch(err => {
@@ -155,7 +155,7 @@ export default {
                 type: 'is-success'
               })
               setTimeout(() => {
-                window.window.location.href = '#/noticeboard'
+                window.window.location.href = 'noticeboard'
               }, 1.2 * 1000)
             })
             .catch(err => {
