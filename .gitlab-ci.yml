@@ -22,7 +22,7 @@ test:
 build:
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:v0.13.0
+    name: gcr.io/kaniko-project/executor:debug-v0.13.0
     entrypoint: [""]
   script:
     - if [ ! -z "$CI_COMMIT_TAG" ]; then KANIKO_EXTA_DESTINATION="--destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"; fi
