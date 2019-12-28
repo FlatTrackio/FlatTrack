@@ -119,7 +119,6 @@ module.exports = (knex) => {
     .get(functions.general.verifyAuthToken, (req, res) => {
       // get a list of all flat members
       var notID = req.query.all || req.flatmember.id
-      console.log({notID})
       functions.general.member.all.get(knex, notID).then(resp => {
         res.json(resp)
         return res.end()

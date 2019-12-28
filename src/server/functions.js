@@ -15,6 +15,16 @@ const path = require('path')
 const packageJSON = require('../../package.json')
 const configPath = path.resolve(path.join('.', 'deployment', 'config.json'))
 
+function JSONResponse (req, res, message) {
+  var response = {
+    message,
+    metadata: {
+      url: req.url
+    }
+  }
+  res.json(response)
+}
+
 function arrayToObjectByID (obj) {
   if (!(typeof obj === 'object' && typeof obj.id === 'undefined')) {
     console.error('Input must be a valid object')
@@ -38,7 +48,7 @@ function verifyAuthToken (req, res, next) {
       if (err) {
         console.log(err)
         res.status(403)
-        res.json({ message: 'Invalid auth token' })
+        JSONResponse(req, res, 'Invalid auth token')
         return res.end()
       }
       req.flatmember = flatmember.flatmember
@@ -46,7 +56,7 @@ function verifyAuthToken (req, res, next) {
     })
   } else {
     res.status(401)
-    res.json({ message: 'Authorisation token not found' })
+    JSONResponse(req, res, 'Authorisation token not found')
     return res.end()
   }
 }
@@ -494,5 +504,6 @@ module.exports = {
       read: readConfigJSON,
       write: writeConfigJSON
     }
-  }
+  },
+  JSONResponse
 }

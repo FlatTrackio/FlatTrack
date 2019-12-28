@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import headerDisplay from '../common/header-display'
+import headerDisplay from '@/components/header-display'
 
 export default {
   name: 'Unknown page',

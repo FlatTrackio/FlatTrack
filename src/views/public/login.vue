@@ -34,7 +34,7 @@
 <script>
 import axios from 'axios'
 import { Service } from 'axios-middleware'
-import headerDisplay from '../common/header-display'
+import headerDisplay from '@/components/header-display'
 import { ToastProgrammatic as Toast, LoadingProgrammatic as Loading } from 'buefy'
 
 const service = new Service(axios)
