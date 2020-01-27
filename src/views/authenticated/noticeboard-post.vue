@@ -36,21 +36,10 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { Service } from 'axios-middleware'
 import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog } from 'buefy'
 import headerDisplay from '@/components/header-display'
+import { GetAPInoticeboardEntryById, PostAPInoticeboardEntry, PutAPInoticeboardEntry, DeleteAPInoticeboardEntry } from '@/requests/authenticated/noticeboard'
 
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      window.location.href = '/'
-    }
-    return response
-  }
-})
 export default {
   name: 'Noticeboard post',
   data () {
@@ -63,12 +52,7 @@ export default {
   },
   created () {
     var id = this.$route.query.id
-    axios({
-      method: 'get',
-      url: `/api/noticeboard/${id}`,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-      }})
+    GetAPInoticeboardEntryById(id)
       .then(resp => {
         this.post = resp.data
       })
@@ -82,22 +66,17 @@ export default {
         title,
         message
       }
-      axios({
-        method: 'post',
-        url: `/api/noticeboard`,
-        data: post,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }}).then(resp => {
-        Toast.open({
-          message: 'Posted successfully',
-          position: 'is-bottom',
-          type: 'is-success'
+      PostAPInoticeboardEntry(post)
+        .then(resp => {
+          Toast.open({
+            message: 'Posted successfully',
+            position: 'is-bottom',
+            type: 'is-success'
+          })
+          setTimeout(() => {
+            window.window.location.href = '/noticeboard'
+          }, 1000)
         })
-        setTimeout(() => {
-          window.window.location.href = '/noticeboard'
-        }, 1000)
-      })
         .catch(err => {
           Toast.open({
             message: `Failed to add post: ${err}`,
@@ -111,13 +90,7 @@ export default {
         title,
         message
       }
-      axios({
-        method: 'put',
-        url: `/api/noticeboard/${id}`,
-        data: post,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }})
+      PutAPInoticeboardEntry(id, post)
         .then(resp => {
           Toast.open({
             message: 'Posted successfully',
@@ -142,12 +115,7 @@ export default {
         confirmText: 'Remove post',
         type: 'is-danger',
         onConfirm: () => {
-          axios.delete(`/api/noticeboard/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('authToken')}`
-              }
-            })
+          DeleteAPInoticeboardEntry(id)
             .then(resp => {
               Toast.open({
                 message: 'Post removed successfully',

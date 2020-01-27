@@ -3,7 +3,8 @@
     <headerDisplay/>
     <div class="container">
       <section class="section">
-        <greeting subtitle="Welcome to FlatTrack, where your flat or community house is organized"/>
+        <h2 class="title is-2">Home</h2>
+        <p class="subtitle is-4">Welcome back to FlatTrack, where your flat or community house is organized</p>
         <div>
           <div v-for="item in pages" v-bind:key="item">
             <b-button type="is-white" tag="a" :href="item.disabled === false ? `${item.url}` : ``" :disabled="item.disabled" v-if="determineItemDisplay(item, login)" size="is-large" expanded>{{ item.name }}</b-button>
@@ -29,22 +30,9 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { Service } from 'axios-middleware'
 import headerDisplay from '@/components/header-display'
-import greeting from '@/components/greeting'
 import { LoadingProgrammatic as Loading, DialogProgrammatic as Dialog } from 'buefy'
-
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      location.href = '/'
-    }
-    return response
-  }
-})
+import { GetAPIprofile } from '@/requests/authenticated/profile'
 
 export default {
   name: 'home',
@@ -139,12 +127,7 @@ export default {
     }
   },
   created () {
-    axios.get(`/api/profile`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
-      })
+    GetAPIprofile()
       .then(resp => {
         this.login = resp.data
       })
@@ -159,8 +142,7 @@ export default {
       })
   },
   components: {
-    headerDisplay,
-    greeting
+    headerDisplay
   }
 }
 </script>

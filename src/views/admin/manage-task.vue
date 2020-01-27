@@ -62,21 +62,11 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { Service } from 'axios-middleware'
 import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog } from 'buefy'
 import headerDisplay from '@/components/header-display'
+import { GetAPImembers } from '@/requests/authenticated/members'
+import { GetAPItaskById, PostAPItask, PutAPItask, DeleteAPItask } from '@/requests/authenticated/tasks'
 
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      window.location.href = '/'
-    }
-    return response
-  }
-})
 export default {
   name: 'Admin home',
   data () {
@@ -95,24 +85,14 @@ export default {
   },
   created () {
     var id = this.$route.query.id
-    axios({
-      method: 'get',
-      url: `/api/admin/members`,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-      }})
+    GetAPImembers()
       .then(resp => {
         this.members = resp.data
 
         if (!id) {
           return
         }
-        return axios.get(`/api/admin/task/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('authToken')}`
-            }
-          })
+        return GetAPItaskById(id)
       })
       .then(resp => {
         console.log(resp.data)
@@ -139,22 +119,17 @@ export default {
         rotation,
         frequency
       }
-      axios({
-        method: 'post',
-        url: `/api/admin/tasks`,
-        data: task,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }}).then(resp => {
-        Toast.open({
-          message: 'Task added successfully',
-          position: 'is-bottom',
-          type: 'is-success'
+      PostAPItask(task)
+        .then(resp => {
+          Toast.open({
+            message: 'Task added successfully',
+            position: 'is-bottom',
+            type: 'is-success'
+          })
+          setTimeout(() => {
+            window.window.location.href = 'admin/tasks'
+          }, 1000)
         })
-        setTimeout(() => {
-          window.window.location.href = 'admin/tasks'
-        }, 1000)
-      })
         .catch(err => {
           Toast.open({
             message: `Failed to add task: ${err}`,
@@ -172,13 +147,7 @@ export default {
         assignee,
         rotation
       }
-      axios({
-        method: 'put',
-        url: `/api/admin/task/${id}`,
-        data: task,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }})
+      PutAPItask(id, task)
         .then(resp => {
           Toast.open({
             message: 'Task updated successfully',
@@ -203,12 +172,7 @@ export default {
         confirmText: 'Remove task',
         type: 'is-danger',
         onConfirm: () => {
-          axios.delete(`/api/admin/task/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('authToken')}`
-              }
-            })
+          DeleteAPItask(id)
             .then(resp => {
               Toast.open({
                 message: 'Task removed successfully',
@@ -216,7 +180,7 @@ export default {
                 type: 'is-success'
               })
               setTimeout(() => {
-                window.window.location.href = 'admin/tasks'
+                window.window.location.href = '/admin/tasks'
               }, 1.2 * 1000)
             })
             .catch(err => {

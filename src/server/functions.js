@@ -47,7 +47,7 @@ function verifyAuthToken (req, res, next) {
     jwt.verify(bearerToken, config.system.ACCESS_TOKEN_SECRET, (err, flatmember) => {
       if (err) {
         console.log(err)
-        res.status(403)
+        res.status(401)
         JSONResponse(req, res, 'Invalid auth token')
         return res.end()
       }
@@ -374,6 +374,14 @@ function updateTaskNotificationFrequency (knex, id, frequency) {
   })
 }
 
+function getFeatures (knex) {
+  return new Promise((resolve, reject) => {
+    knex('features').select('*')
+      .then(resp => resolve(resp))
+      .catch(err => reject(err))
+  })
+}
+
 const configJSONTemplate = {
   'system': {
     'installedVersion': packageJSON.version,
@@ -451,6 +459,9 @@ module.exports = {
       all: {
         get: getNoticeboardPosts
       }
+    },
+    features: {
+      get: getFeatures
     },
     verifyAuthToken,
     generateToken,

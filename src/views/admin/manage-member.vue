@@ -80,21 +80,10 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { Service } from 'axios-middleware'
 import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog } from 'buefy'
 import headerDisplay from '@/components/header-display'
+import { GetAPImemberById, PostAPImember, PutAPImember, DeleteAPImember } from '@/requests/authenticated/members'
 
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      location.href = '/'
-    }
-    return response
-  }
-})
 export default {
   name: 'Admin home',
   data () {
@@ -120,12 +109,7 @@ export default {
       this.hasAction = false
       return
     }
-    axios.get(`/api/admin/members/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
-      })
+    GetAPImemberById(id)
       .then(resp => {
         var member = resp.data
         this.names = resp.data.names
@@ -154,20 +138,15 @@ export default {
         group,
         memberSetPassword
       }
-      axios({
-        method: 'post',
-        url: `/api/admin/members`,
-        data: member,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }}).then(resp => {
-        Toast.open({
-          message: 'Flatmate added successfully',
-          position: 'is-bottom',
-          type: 'is-success'
+      PostAPImember(member)
+        .then(resp => {
+          Toast.open({
+            message: 'Flatmate added successfully',
+            position: 'is-bottom',
+            type: 'is-success'
+          })
+          location.href = 'admin/members'
         })
-        location.href = 'admin/members'
-      })
         .catch(err => {
           Toast.open({
             message: `Failed to add flatmate; ${err}`,
@@ -188,13 +167,7 @@ export default {
         group,
         memberSetPassword
       }
-      axios({
-        method: 'put',
-        url: `/api/admin/members/${id}`,
-        data: member,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }})
+      PutAPImember(id, member)
         .then(resp => {
           this.hasAction = false
           Toast.open({
@@ -222,12 +195,7 @@ export default {
         confirmText: 'Remove Flatmember',
         type: 'is-danger',
         onConfirm: () => {
-          axios.delete(`/api/admin/members/${id}`,
-            {
-              headers: {
-                Authorization: `Bearer ${localStorage.getItem('authToken')}`
-              }
-            })
+          DeleteAPImember(id)
             .then(resp => {
               this.hasAction = false
               Toast.open({
@@ -236,7 +204,7 @@ export default {
                 type: 'is-success'
               })
               setTimeout(() => {
-                location.href = 'admin/members'
+                location.href = '/admin/members'
               }, 1.2 * 1000)
             })
             .catch(err => {

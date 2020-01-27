@@ -66,20 +66,8 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { Service } from 'axios-middleware'
 import headerDisplay from '@/components/header-display'
-
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      location.href = '/'
-    }
-    return response
-  }
-})
+import { GetAPImembers } from '@/requests/authenticated/members'
 
 export default {
   name: 'Admin home',
@@ -90,16 +78,12 @@ export default {
     }
   },
   created () {
-    axios({
-      method: 'get',
-      url: `/api/admin/members`,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`
-      }}).then(resp => {
-      this.members = resp.data
-    }).catch(err => {
-      this.pageErrors.push(err)
-    })
+    GetAPImembers()
+      .then(resp => {
+        this.members = resp.data
+      }).catch(err => {
+        this.pageErrors.push(err)
+      })
   },
   components: {
     headerDisplay

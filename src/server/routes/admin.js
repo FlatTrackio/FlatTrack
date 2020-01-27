@@ -233,6 +233,8 @@ module.exports = (knex) => {
         group: form.group
       }
 
+      form.password = hash.sha256().update(form.password).digest('hex')
+
       functions.admin.member.update(knex, id, form).then(resp => {
         res.json(resp)
         return res.end()

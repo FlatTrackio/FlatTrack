@@ -76,19 +76,8 @@
 <script>
 import axios from 'axios'
 import moment from 'moment'
-import { Service } from 'axios-middleware'
 import headerDisplay from '@/components/header-display'
 
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      location.href = '/'
-    }
-    return response
-  }
-})
 export default {
   name: 'manage-entries',
   data () {

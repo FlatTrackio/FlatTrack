@@ -81,20 +81,9 @@
 
 <script>
 import axios from 'axios'
-import { Service } from 'axios-middleware'
 import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog } from 'buefy'
 import headerDisplay from '@/components/header-display'
 
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      location.href = '/'
-    }
-    return response
-  }
-})
 export default {
   name: 'Admin home',
   data () {

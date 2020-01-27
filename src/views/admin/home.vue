@@ -9,7 +9,8 @@
               <li class="is-active"><a href="/admin/tasks">Admin</a></li>
             </ul>
           </nav>
-          <greeting subtitle="This is the admin page, you can configure FlatTrack from here"/>
+          <h2 class="title is-2">Admin</h2>
+          <p class="subtitle is-4">This is the admin page, you can configure FlatTrack from here</p>
           <div>
             <div v-for="item in pages" v-bind:key="item">
               <b-button type="is-white" tag="a" :href="item.url" size="is-large" expanded>{{ item.name }}</b-button>
@@ -22,7 +23,6 @@
 
 <script>
 import headerDisplay from '@/components/header-display'
-import greeting from '@/components/greeting'
 
 export default {
   name: 'Admin home',
@@ -52,8 +52,7 @@ export default {
     }
   },
   components: {
-    headerDisplay,
-    greeting
+    headerDisplay
   }
 }
 </script>

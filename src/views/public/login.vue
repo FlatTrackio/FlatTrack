@@ -32,21 +32,9 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { Service } from 'axios-middleware'
 import headerDisplay from '@/components/header-display'
 import { ToastProgrammatic as Toast, LoadingProgrammatic as Loading } from 'buefy'
-
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      location.href = '/'
-    }
-    return response
-  }
-})
+import { PostAPIauth, VerifyAuthToken } from '@/requests/public/login'
 
 export default {
   name: 'login',
@@ -69,46 +57,41 @@ export default {
         email: email,
         password: password
       }
-      axios.post('/api/login', form,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`
-          }
-        }).then(resp => {
-        console.log('Signing in')
-        localStorage.setItem('authToken', resp.data.refreshToken)
-        setTimeout(() => {
+      PostAPIauth(form)
+        .then(resp => {
+          localStorage.setItem('authToken', resp.data.refreshToken)
+          setTimeout(() => {
+            loadingComponent.close()
+            location.href = '/'
+          }, 2000)
+        }).catch(err => {
+          console.log(err)
           loadingComponent.close()
-          location.href = '/'
-        }, 2000)
-      }).catch(err => {
-        console.log('Failed to sign in')
-        console.log(err)
-        loadingComponent.close()
-        Toast.open({
-          duration: 10000,
-          message: 'Hmmm, something went wrong with the login. Email or password is incorrect. Please try again.',
-          position: 'is-bottom',
-          type: 'is-danger'
+          Toast.open({
+            duration: 10000,
+            message: 'Hmmm, something went wrong with the login. Email or password is incorrect. Please try again.',
+            position: 'is-bottom',
+            type: 'is-danger'
+          })
         })
-      })
     },
     checkForLoginToken: () => {
       if (localStorage.getItem('authToken')) {
-        // verify token via request or something
-        const loadingComponent = Loading.open({
-          container: null
+        VerifyAuthToken().then(res => {
+          // verify token via request or something
+          const loadingComponent = Loading.open({
+            container: null
+          })
+          Toast.open({
+            duration: 2000,
+            message: 'You\'re still signed in, let\'s go to the home page',
+            position: 'is-bottom'
+          })
+          setTimeout(() => {
+            loadingComponent.close()
+            location.href = '/'
+          }, 2000)
         })
-        Toast.open({
-          duration: 2000,
-          message: 'You\'re still signed in, let\'s go to the home page',
-          position: 'is-bottom'
-        })
-        setTimeout(() => {
-          loadingComponent.close()
-          console.log('Found auth token')
-          location.href = '/'
-        }, 2000)
       }
     }
   },

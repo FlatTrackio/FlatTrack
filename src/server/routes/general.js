@@ -38,7 +38,7 @@ module.exports = (knex) => {
             return res.end()
           }).catch(err => {
             console.log(err)
-            res.status(403)
+            res.status(500)
             res.json({message: 'Failed generating a token'})
             res.send()
             return res.end()
@@ -88,7 +88,7 @@ module.exports = (knex) => {
           res.json(resp)
           return res.end()
         } else {
-          res.status(403)
+          res.status(500)
           res.json({ message: 'Failed updating entry' })
           return res.end()
         }
@@ -282,6 +282,18 @@ module.exports = (knex) => {
         console.log(err)
         res.status(403)
         res.json({ message: 'Failed fetching flat info' })
+        return res.end()
+      })
+    })
+
+  router.route('/features')
+    .get(functions.general.verifyAuthToken, (req, res) => {
+      functions.general.features.get(knex).then(resp => {
+        res.json(resp)
+      }).catch(err => {
+        console.log(err)
+        res.status(403)
+        res.json({ message: 'Failed fetching features' })
         return res.end()
       })
     })

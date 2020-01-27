@@ -15,18 +15,6 @@
 
 <script>
 import axios from 'axios'
-import { Service } from 'axios-middleware'
-
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      location.href = '/'
-    }
-    return response
-  }
-})
 
 export default {
   name: 'header-display',

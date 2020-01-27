@@ -25,21 +25,8 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { Service } from 'axios-middleware'
 import headerDisplay from '@/components/header-display'
 import { ToastProgrammatic as Toast } from 'buefy'
-
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      location.href = '/'
-    }
-    return response
-  }
-})
 
 export default {
   name: 'forgot-password',
@@ -57,12 +44,7 @@ export default {
           type: 'is-danger'
         })
       }
-      axios.post('/api/',
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`
-          }
-        })
+      // post to api to request a password reset email
     }
   },
   components: {

@@ -40,20 +40,8 @@
 </template>
 
 <script>
-import axios from 'axios'
-import { Service } from 'axios-middleware'
 import headerDisplay from '@/components/header-display'
-
-const service = new Service(axios)
-service.register({
-  onResponse (response) {
-    if (response.status === 403) {
-      localStorage.removeItem('authToken')
-      location.href = '/'
-    }
-    return response
-  }
-})
+import { GetAPIflatInfo } from '@/requests/authenticated/flatinfo'
 
 export default {
   name: 'About this flat',
@@ -67,41 +55,36 @@ export default {
     headerDisplay
   },
   created () {
-    axios.get('/api/flatinfo',
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`
-        }
-      }).then(resp => {
-      console.log(resp)
-
-      // remap to add subpoints
-      var transformRespData = {}
-      resp.data.map(item => {
-        if (typeof transformRespData[item.subpointOf] === 'undefined') {
-          transformRespData[item.id] = {
-            line: item.line,
-            subPoints: []
+    GetAPIflatInfo()
+      .then(resp => {
+        console.log(resp)
+        // remap to add subpoints
+        var transformRespData = {}
+        resp.data.map(item => {
+          if (typeof transformRespData[item.subpointOf] === 'undefined') {
+            transformRespData[item.id] = {
+              line: item.line,
+              subPoints: []
+            }
+          } else {
+            transformRespData[item.subpointOf].subPoints = [...transformRespData[item.subpointOf].subPoints, item.line]
           }
-        } else {
-          transformRespData[item.subpointOf].subPoints = [...transformRespData[item.subpointOf].subPoints, item.line]
-        }
+        })
+
+        console.log(transformRespData)
+
+        // remap back into an array
+        transformRespData = Array.from(
+          Object.keys(transformRespData),
+          key => transformRespData[key]
+        )
+
+        console.log(transformRespData)
+
+        this.points = transformRespData
+      }).catch(err => {
+        console.error(err)
       })
-
-      console.log(transformRespData)
-
-      // remap back into an array
-      transformRespData = Array.from(
-        Object.keys(transformRespData),
-        key => transformRespData[key]
-      )
-
-      console.log(transformRespData)
-
-      this.points = transformRespData
-    }).catch(err => {
-      console.error(err)
-    })
   }
 }
 </script>
