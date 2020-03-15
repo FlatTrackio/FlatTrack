@@ -1,0 +1,22 @@
+* Development
+
+** Bring up a Postgres database
+   #+begin_src shell
+     export OCR=${OCR:-docker}
+     $OCR volume create flattrack_dev_db
+     $OCR run \
+       -d \
+       -e POSTGRES_PASSWORD=postgres \
+       -e POSTGRES_USER=postgres \
+       -e POSTGRES_DB=flattrack \
+       -e PGDATA=/var/lib/postgresql/data/pgdata \
+       -v flattrack_dev_db:/var/lib/postgresql/data/pgdata \
+       -p 5432:5432 \
+       --name flattrack_dev_db \
+       postgres:9.6.17
+   #+end_src
+   
+** Manually connecting to the Postgres database
+   #+begin_src shell
+   psql -h localhost flattrack -U postgres -W
+   #+end_src

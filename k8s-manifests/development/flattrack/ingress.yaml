@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: flattrack
+  namespace: flattrack-dev
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: flattrack.localdomain
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: flattrack
+          servicePort: 8080

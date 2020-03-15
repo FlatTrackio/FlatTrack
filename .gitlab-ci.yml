@@ -1,23 +1,5 @@
 stages:
-  - test
   - build
-
-variables:
-  MYSQL_DATABASE: flattracker
-  MYSQL_ROOT_PASSWORD: flattracker
-  MYSQL_USER: flattracker
-  MYSQL_PASSWORD: flattracker
-
-test:
-  services:
-    - mariadb:10.4
-  image: node:12.10.0-alpine
-  stage: test
-  allow_failure: true
-  before_script:
-    - npm i
-  script:
-    - npm test
 
 build:
   stage: build
@@ -25,8 +7,6 @@ build:
     name: gcr.io/kaniko-project/executor:debug-v0.13.0
     entrypoint: [""]
   script:
-    - if [ ! -z "$CI_COMMIT_TAG" ]; then KANIKO_EXTA_DESTINATION="--destination $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG"; fi
     - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
-    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest $KANIKO_EXTA_DESTINATION
-  dependencies:
-    - test
+    - /kaniko/executor --cache=false --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE/build:1.0.0 $KANIKO_EXTA_DESTINATION
+

@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-configuration
+  namespace: flattrack-dev
+data:
+  POSTGRES_DB: flattrack
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  PGDATABASE: flattrack
+  PGUSER: postgres
+
