@@ -5,19 +5,18 @@
 package common
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 	"os"
-	"log"
-	"fmt"
-
 	// "gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
 var (
-	APP_BUILD_VERSION = "0.0.0"
-	APP_BUILD_HASH = "???"
-	APP_BUILD_DATE = "???"
-	APP_BUILD_MODE = "development"
+	APP_BUILD_VERSION      = "0.0.0"
+	APP_BUILD_HASH         = "???"
+	APP_BUILD_DATE         = "???"
+	APP_BUILD_MODE         = "development"
 	APP_DB_MIGRATIONS_PATH = "/app/migrations"
 )
 
@@ -104,4 +103,3 @@ func GetAppDistFolder() string {
 func GetAppVersion() string {
 	return APP_BUILD_VERSION
 }
-

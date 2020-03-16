@@ -2,10 +2,10 @@ package routes
 
 import (
 	"encoding/json"
-	"log"
-	"time"
-	"net/http"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"time"
 
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
@@ -32,3 +32,12 @@ func GetHTTPresponseBodyContents(response *http.Response) (output types.JSONMess
 	return output
 }
 
+// HTTPuseMiddleware
+// append functions to run before the endpoint handler
+func HTTPuseMiddleware(handler http.HandlerFunc, middlewares ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
+	for _, middleware := range middlewares {
+		handler = middleware(handler)
+	}
+
+	return handler
+}

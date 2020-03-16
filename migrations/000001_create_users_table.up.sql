@@ -3,20 +3,22 @@
 begin;
 
 create table if not exists users (
-  id varchar(37) NOT NULL PRIMARY KEY,
-  names varchar(100) NOT NULL,
-  password text NOT NULL,
-  phoneNumber varchar(100) DEFAULT NULL,
-  email varchar(100) NOT NULL,
-  allergies varchar(100) DEFAULT NULL,
-  contractAgreement bool DEFAULT NULL,
-  disabled bool DEFAULT NULL,
-  groups varchar(100) DEFAULT NULL,
-  hasSetPassword bool DEFAULT NULL,
-  taskNotificationFrequency varchar(10) DEFAULT NULL,
+  id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
+  names text not null,
+  email text not null,
+  groups text not null,
+  password text,
+  phoneNumber text,
+  contractAgreement bool,
+  disabled bool,
+  hasSetPassword bool,
+  taskNotificationFrequency int,
+  lastLogin timestamptz default now(),
   creationTimestamp timestamptz not null default now(),
-  modificationTimestamp timestamptz not null default now(),
-  deletionTimestamp timestamptz not null default now()
+  modificationTimestamp timestamptz default now(),
+  deletionTimestamp timestamptz default now(),
+
+  primary key (id)
 );
 
 commit;

@@ -21,7 +21,7 @@ func Migrate(db *sql.DB) (err error) {
 	if err != nil {
 		return err
 	}
-	if err := m.Up(); err != nil {
+	if err := m.Up(); err != nil && err.Error() != "no change" {
 		return err
 	}
 	return err

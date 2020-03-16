@@ -12,10 +12,11 @@ import (
 	// "strings"
 	// "fmt"
 
+	"database/sql"
 	"github.com/ddo/go-vue-handler"
 	"github.com/gorilla/mux"
-	"github.com/rs/cors"
 	"github.com/joho/godotenv"
+	"github.com/rs/cors"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/database"
 	"gitlab.com/flattrack/flattrack/src/backend/migrations"
@@ -23,17 +24,17 @@ import (
 )
 
 // bring up the API
-func handleWebserver() {
+func handleWebserver(db *sql.DB) {
 	port := common.GetAppPort()
 	router := mux.NewRouter().StrictSlash(true)
 	apiEndpointPrefix := "/api"
 
-	for _, endpoint := range routes.GetEndpoints(apiEndpointPrefix) {
+	for _, endpoint := range routes.GetEndpoints(apiEndpointPrefix, db) {
 		router.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HttpMethod, http.MethodOptions)
 	}
 
-	router.HandleFunc(apiEndpointPrefix+"/{.*}", routes.APIunknownEndpoint)
-	router.HandleFunc(apiEndpointPrefix, routes.APIroot)
+	router.HandleFunc(apiEndpointPrefix+"/{.*}", routes.UnknownEndpoint)
+	router.HandleFunc(apiEndpointPrefix, routes.Root)
 	router.PathPrefix("/").Handler(vue.Handler(common.GetAppDistFolder())).Methods("GET")
 
 	router.Use(common.Logging)
@@ -57,11 +58,6 @@ func handleWebserver() {
 
 // initialise the app
 func main() {
-	// for _, element := range os.Environ() {
-	// 	variable := strings.Split(element, "=")
-	// 	fmt.Println(variable[0],"=>",variable[1])
-	// }
-
 	_ = godotenv.Load(".env")
 	dbUsername := common.GetDBusername()
 	dbPassword := common.GetDBpassword()
@@ -78,5 +74,5 @@ func main() {
 		return
 	}
 
-	handleWebserver()
+	handleWebserver(db)
 }
