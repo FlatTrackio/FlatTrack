@@ -5,11 +5,10 @@
 package routes
 
 import (
-	"encoding/json"
 	"database/sql"
+	"fmt"
 	"github.com/gorilla/mux"
 	"net/http"
-	"time"
 
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
@@ -23,14 +22,21 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 		response := "Failed to create user account"
 		vars := mux.Vars(r)
 
-		accountName := mux.Vars["name"]
-		accountEmail := mux.Vars["email"]
-		accountGroups := mux.Var["groups"]
-		accountPassword := mux.Var["password"]
-		accountPhoneNumber := mux.Var["phoneNumber"]
-		accountCreationTimestamp := time.Now()
+		accountName := vars["names"]
+		accountEmail := vars["email"]
+		accountGroups := vars["groups"]
+		accountPassword := vars["password"]
+		accountPhoneNumber := vars["phoneNumber"]
+		user := types.UserSpec{
+			Names:             accountName,
+			Email:             accountEmail,
+			Groups:            accountGroups,
+			Password:          accountPassword,
+			PhoneNumber:       accountPhoneNumber,
+		}
 
 		userAccount, err := users.CreateUser(db, user)
+		fmt.Println(err)
 		if err == nil {
 			code = 200
 			response = "Created user account"
