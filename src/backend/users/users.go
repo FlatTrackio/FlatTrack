@@ -9,10 +9,9 @@ import (
 )
 
 func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, err error) {
-	sqlStatement := `
-  insert into users (names, email, groups, password, phonenumber)
-  values ($1, $2, $3, $4, $5)
-  returning (id, names, email, groups, phonenumber)`
+	sqlStatement := `insert into users (names, email, groups, password, phonenumber)
+                         values ($1, $2, $3, $4, $5)
+                         returning id`
 	rows, err := db.Query(sqlStatement, user.Names, user.Email, user.Groups, user.Password, user.PhoneNumber)
 	if err != nil {
 		return userInserted, err
@@ -20,17 +19,13 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 	defer rows.Close()
 	for rows.Next() {
 		var id string
-		var names string
-		var email string
-		var groups string
-		var phoneNumber string
-		rows.Scan(&id, &names, &email, &groups, &phoneNumber)
+		rows.Scan(&id)
 		userInserted = types.UserSpec{
 			Id: id,
-			Names: names,
-			Email: email,
-			Groups: groups,
-			PhoneNumber: phoneNumber,
+			Names: user.Names,
+			Email: user.Email,
+			Groups: user.Groups,
+			PhoneNumber: user.PhoneNumber,
 		}
 	}
 	return userInserted, err

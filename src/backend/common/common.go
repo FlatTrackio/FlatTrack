@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	// "gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
@@ -102,4 +103,26 @@ func GetAppDistFolder() string {
 
 func GetAppVersion() string {
 	return APP_BUILD_VERSION
+}
+
+func RegexMatchName(name string) bool {
+	matches, _ := regexp.MatchString(`^([ \\u00c0-\\u01ffa-zA-Z'\-])+$`, name)
+	return matches
+}
+
+func RegexMatchEmail(email string) bool {
+	matches, err := regexp.MatchString(`^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$`, email)
+	fmt.Println(err)
+	return matches
+}
+
+func RegexMatchPassword(password string) bool {
+	// Minimum eight characters, at least one letter and one number
+	matches, _ := regexp.MatchString(`^([a-z]*)([A-Z]*).{10,}$`, password)
+	return matches
+}
+
+func RegexMatchPhoneNumber(phoneNumber string) bool {
+	matches, _ := regexp.MatchString(`^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$`, phoneNumber)
+	return matches
 }

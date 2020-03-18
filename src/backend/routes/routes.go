@@ -6,27 +6,52 @@ package routes
 
 import (
 	"database/sql"
-	"fmt"
-	"github.com/gorilla/mux"
+	//"fmt"
 	"net/http"
 
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
+	"gitlab.com/flattrack/flattrack/src/backend/common"
 )
 
 // PostUser
 // create a user
 func PostUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		// TODO
+		// - handle existing user
+		// - handle empty fields
+
 		code := 500
 		response := "Failed to create user account"
-		vars := mux.Vars(r)
+		invalid := false
 
-		accountName := vars["names"]
-		accountEmail := vars["email"]
-		accountGroups := vars["groups"]
-		accountPassword := vars["password"]
-		accountPhoneNumber := vars["phoneNumber"]
+		accountName := r.FormValue("names")
+		if common.RegexMatchName(accountName) == false {
+			invalid = true
+			code = 400
+			response = "Unable to use that name"
+		}
+		accountEmail := r.FormValue("email")
+		if common.RegexMatchEmail(accountEmail) == false {
+			invalid = true
+			code = 400
+			response = "Unable to use that email"
+		}
+		// TODO add group validation - requires creating admin and flatmember in migrations
+		accountGroups := r.FormValue("groups")
+		accountPassword := r.FormValue("password")
+		if common.RegexMatchPassword(accountPassword) == false {
+			invalid = true
+			code = 400
+			response = "Unable to use that password"
+		}
+		accountPhoneNumber := r.FormValue("phoneNumber")
+		if accountPhoneNumber != "" && common.RegexMatchPhoneNumber(accountPhoneNumber) == false {
+			invalid = true
+			code = 400
+			response = "Unable to use that phone number"
+		}
 		user := types.UserSpec{
 			Names:             accountName,
 			Email:             accountEmail,
@@ -35,9 +60,18 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 			PhoneNumber:       accountPhoneNumber,
 		}
 
+		if invalid == true {
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.User{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
 		userAccount, err := users.CreateUser(db, user)
-		fmt.Println(err)
-		if err == nil {
+		if err == nil && invalid == false {
 			code = 200
 			response = "Created user account"
 		}
