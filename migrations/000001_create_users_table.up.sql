@@ -6,7 +6,6 @@ create table if not exists users (
   id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
   names text not null,
   email text not null,
-  groups text not null,
   password text,
   phoneNumber text,
   contractAgreement bool,
@@ -15,8 +14,8 @@ create table if not exists users (
   taskNotificationFrequency int,
   lastLogin timestamptz default now(),
   creationTimestamp timestamptz not null default now(),
-  modificationTimestamp timestamptz default now(),
-  deletionTimestamp timestamptz default now(),
+  modificationTimestamp timestamptz not null default now(),
+  deletionTimestamp timestampt,
 
   primary key (id)
 );

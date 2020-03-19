@@ -6,12 +6,12 @@ package routes
 
 import (
 	"database/sql"
-	//"fmt"
+	"fmt"
 	"net/http"
 
+	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
-	"gitlab.com/flattrack/flattrack/src/backend/common"
 )
 
 // PostUser
@@ -40,6 +40,7 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 		}
 		// TODO add group validation - requires creating admin and flatmember in migrations
 		accountGroups := r.FormValue("groups")
+		fmt.Println(accountGroups)
 		accountPassword := r.FormValue("password")
 		if common.RegexMatchPassword(accountPassword) == false {
 			invalid = true
@@ -53,11 +54,10 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 			response = "Unable to use that phone number"
 		}
 		user := types.UserSpec{
-			Names:             accountName,
-			Email:             accountEmail,
-			Groups:            accountGroups,
-			Password:          accountPassword,
-			PhoneNumber:       accountPhoneNumber,
+			Names:       accountName,
+			Email:       accountEmail,
+			Password:    accountPassword,
+			PhoneNumber: accountPhoneNumber,
 		}
 
 		if invalid == true {

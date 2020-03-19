@@ -9,10 +9,10 @@ import (
 )
 
 func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, err error) {
-	sqlStatement := `insert into users (names, email, groups, password, phonenumber)
-                         values ($1, $2, $3, $4, $5)
+	sqlStatement := `insert into users (names, email, password, phonenumber)
+                         values ($1, $2, $3, $4)
                          returning id`
-	rows, err := db.Query(sqlStatement, user.Names, user.Email, user.Groups, user.Password, user.PhoneNumber)
+	rows, err := db.Query(sqlStatement, user.Names, user.Email, user.Password, user.PhoneNumber)
 	if err != nil {
 		return userInserted, err
 	}

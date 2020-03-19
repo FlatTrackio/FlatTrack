@@ -10,11 +10,11 @@ create table if not exists shopping_items (
   authorLast text not null,
   creationTimestamp timestamptz not null default now(),
   modificationTimestamp timestamptz not null default now(),
-  deletionTimestamp timestamptz not null default now(),
+  deletionTimestamp timestamptz,
 
   primary key (id),
-  foreign key (author) references users (id),
-  foreign key (authorLast) references users (id)
+  foreign key (author) references users(id),
+  foreign key (authorLast) references users(id)
 );
 
 commit;
