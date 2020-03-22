@@ -5,6 +5,8 @@
 package common
 
 import (
+	"crypto/sha512"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net/http"
@@ -125,4 +127,11 @@ func RegexMatchPassword(password string) bool {
 func RegexMatchPhoneNumber(phoneNumber string) bool {
 	matches, _ := regexp.MatchString(`^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$`, phoneNumber)
 	return matches
+}
+
+func HashSHA512(input string) (output string) {
+	hasher := sha512.New()
+	hasher.Write([]byte(input))
+	sha512_hash := hex.EncodeToString(hasher.Sum(nil))
+	return sha512_hash
 }

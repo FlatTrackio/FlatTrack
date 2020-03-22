@@ -15,7 +15,7 @@ create table if not exists users (
   lastLogin timestamptz default now(),
   creationTimestamp timestamptz not null default now(),
   modificationTimestamp timestamptz not null default now(),
-  deletionTimestamp timestampt,
+  deletionTimestamp timestamptz,
 
   primary key (id)
 );

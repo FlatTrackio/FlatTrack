@@ -17,7 +17,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: postgres
-        image: "docker.io/postgres:9.6.17-alpine"
+        image: "docker.io/postgres:12.2-alpine"
         ports:
         - containerPort: 5432
         livenessProbe:

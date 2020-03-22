@@ -43,13 +43,14 @@ type UserSpec struct {
 	Groups                    []string `json:"groups"`
 	Password                  string   `json:"password,omitempty"`
 	PhoneNumber               string   `json:"phoneNumber,omitempty"`
+	ContractAgreement         bool     `json:"contractAgreement,omitempty"`
 	Disabled                  bool     `json:"disabled,omitempty"`
 	HasSetPassword            bool     `json:"hasSetPassword,omitempty"`
 	TaskNotificationFrequency int      `json:"taskNotificationFrequency,omitempty"`
 	LastLogin                 string   `json:"lastLogin"`
 	CreationTimestamp         int64    `json:"creationTimestamp"`
-	ModificationTimestamp     string   `json:"modificationTimestamp"`
-	DeletionTimestamp         string   `json:"deletionTimestamp"`
+	ModificationTimestamp     int64    `json:"modificationTimestamp"`
+	DeletionTimestamp         int64    `json:"deletionTimestamp"`
 }
 
 // UserList
@@ -57,7 +58,7 @@ type UserSpec struct {
 type UserList struct {
 	TypeMeta `json:",inline"`
 	Metadata JSONResponseMetadata `json:"metadata"`
-	List     []UserSpec          `json:"list"`
+	List     []UserSpec           `json:"list"`
 }
 
 type JSONResponseMetadata struct {
@@ -70,7 +71,9 @@ type JSONResponseMetadata struct {
 
 type JSONMessageResponse struct {
 	Metadata JSONResponseMetadata `json:"metadata"`
-	Spec     interface{}          `json:"spec"`
+	Spec     interface{}          `json:"spec,omitempty"`
+	List     interface{}          `json:"list,omitempty"`
+	Data     interface{}          `json:"data,omitempty"`
 }
 
 type TypeMeta struct {
