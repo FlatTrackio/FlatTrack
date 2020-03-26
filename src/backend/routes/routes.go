@@ -8,6 +8,8 @@ import (
 	"database/sql"
 	"net/http"
 	"fmt"
+	"encoding/json"
+	"io/ioutil"
 
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
@@ -82,17 +84,10 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 		code := 500
 		response := "Failed to create user account"
 
-		accountName := r.PostFormValue("names")
-		accountEmail := r.PostFormValue("email")
-		accountPassword := r.PostFormValue("password")
-		accountPhoneNumber := r.PostFormValue("phoneNumber")
-
-		user := types.UserSpec{
-			Names:       accountName,
-			Email:       accountEmail,
-			Password:    accountPassword,
-			PhoneNumber: accountPhoneNumber,
-		}
+		var user types.UserSpec
+		body, err := ioutil.ReadAll(r.Body)
+		fmt.Println(string(body))
+		json.Unmarshal(body, &user)
 
 		userAccount, err := users.CreateUser(db, user)
 		if err == nil {

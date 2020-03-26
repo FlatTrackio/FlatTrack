@@ -22,22 +22,20 @@
 - Compatible with most database types
 
 ### Sections
-- Tasks (WIP)
-- Shopping List (WIP - heavy construction)
-- Noticeboard (WIP - heavy construction)
-- Shared Calendar (WIP - heavy construction)
-- Recipes (WIP - heavy construction)
-- Flatmates (WIP - heavy construction)
-- Highfives (WIP - heavy construction)
+- Tasks (WIP - no progress)
+- Shopping List (WIP)
+- Noticeboard (WIP - no progress)
+- Shared Calendar (WIP - no progress)
+- Recipes (WIP - no progress)
+- Flatmates (WIP - no progress)
+- Highfives (WIP - no progress)
 
 ## Technologies
-- [nodejs](https://nodejs.org) - server runtime
+- [golang](https://golang.org) - backend
 - [vuejs](https://vuejs.org) - frontend
-- [expressjs](https://expressjs.com) - library for API
+- [gorilla/mux](https://github.com/gorilla/mux) - HTTP multiplexer
 - [bulma](https://bulma.io/) / [buefy](https://buefy.org/) - CSS framework
 - [axios](https://github.com/axios/axios) - client-side HTTP request library
-- [express-jwt](https://www.npmjs.com/package/express-jwt) - auth tokens
-- [nodemailer](https://www.npmjs.com/package/nodemailer) - mail client (out-going)
 
 ## Build Setup
 
