@@ -16,10 +16,10 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: flattrack
-        image: registry.gitlab.com/flattrack/flattrack:latest-test
-        command:
-          - "/bin/sleep"
-          - "10000000"
+        image: registry.gitlab.com/flattrack/flattrack:latest
+        # command:
+        #   - "/bin/sleep"
+        #   - "10000000"
         securityContext:
           readOnlyRootFilesystem: true
           runAsUser: 1000
@@ -41,8 +41,6 @@ spec:
             value: flattrack
           - name: APP_MODE
             value: development
-          - name: APP_DB_MIGRATIONS_PATH
-            value: /app/migrations
         readinessProbe:
           tcpSocket:
             port: 8080
