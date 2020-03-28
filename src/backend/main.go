@@ -52,12 +52,13 @@ func handleWebserver(db *sql.DB) {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	log.Println("Listening on", port)
+	log.Println("listening on", port)
 	log.Fatal(srv.ListenAndServe())
 }
 
 // initialise the app
 func main() {
+	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
 	_ = godotenv.Load(".env")
 	dbUsername := common.GetDBusername()
 	dbPassword := common.GetDBpassword()

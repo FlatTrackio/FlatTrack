@@ -12,7 +12,7 @@ create table if not exists users (
   disabled bool,
   hasSetPassword bool,
   taskNotificationFrequency int,
-  lastLogin timestamptz default now(),
+  lastLogin timestamptz,
   creationTimestamp timestamptz not null default now(),
   modificationTimestamp timestamptz not null default now(),
   deletionTimestamp timestamptz,

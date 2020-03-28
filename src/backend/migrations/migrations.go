@@ -3,6 +3,7 @@ package migrations
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
@@ -21,8 +22,15 @@ func Migrate(db *sql.DB) (err error) {
 	if err != nil {
 		return err
 	}
-	if err := m.Up(); err != nil && err.Error() != "no change" {
+	log.Println("migrating database")
+	err = m.Up()
+	if err != nil && err.Error() == "no change" {
+		log.Println("database is up to date")
+		err = nil
+	} else if err != nil && err.Error() != "no change" {
 		return err
+	} else if err == nil {
+		log.Println("database migrated successfully")
 	}
 	return err
 }

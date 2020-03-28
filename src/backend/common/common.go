@@ -6,13 +6,18 @@ package common
 
 import (
 	"crypto/sha512"
+	"database/sql"
 	"encoding/hex"
 	"fmt"
+	jwt "github.com/dgrijalva/jwt-go"
+	"gitlab.com/flattrack/flattrack/src/backend/system"
+	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"log"
 	"net/http"
 	"os"
 	"regexp"
-	// "gitlab.com/flattrack/flattrack/src/backend/types"
+	"strings"
+	"time"
 )
 
 var (
@@ -113,8 +118,7 @@ func RegexMatchName(name string) bool {
 }
 
 func RegexMatchEmail(email string) bool {
-	matches, err := regexp.MatchString(`^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$`, email)
-	fmt.Println(err)
+	matches, _ := regexp.MatchString(`^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$`, email)
 	return matches
 }
 
@@ -134,4 +138,42 @@ func HashSHA512(input string) (output string) {
 	hasher.Write([]byte(input))
 	sha512_hash := hex.EncodeToString(hasher.Sum(nil))
 	return sha512_hash
+}
+
+func GenerateJWTauthToken(db *sql.DB, email string) (tokenString string, err error) {
+	secret, err := system.GetJWTsecret(db)
+	if err != nil {
+		return "", err
+	}
+	expirationTime := time.Now().Add(time.Hour * 24 * 5)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, types.JWTclaim{
+		Email: email,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	})
+
+	tokenString, err = token.SignedString([]byte(secret))
+	return tokenString, err
+}
+
+func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
+	secret, err := system.GetJWTsecret(db)
+	if err != nil {
+		return false, err
+	}
+	tokenHeader := r.Header.Get("Authorization")
+	if tokenHeader == "" {
+		return false, nil
+	}
+	tokenHeaderJWT := strings.Split(tokenHeader, " ")[1]
+	claims := &types.JWTclaim{}
+	token, err := jwt.ParseWithClaims(tokenHeaderJWT, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return token.Valid, nil
 }

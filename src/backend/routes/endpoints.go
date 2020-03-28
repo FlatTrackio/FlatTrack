@@ -12,18 +12,38 @@ import (
 func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 	return types.Endpoints{
 		{
+			EndpointPath: endpointPrefix + "/system/initialized",
+			HandlerFunc:  GetSystemInitialized(db),
+			HttpMethod:   http.MethodGet,
+		},
+		{
 			EndpointPath: endpointPrefix + "/admin/users",
-			HandlerFunc:  GetAllUsers(db),
+			HandlerFunc:  HTTPuseMiddleware(GetAllUsers(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/users/{id}",
-			HandlerFunc:  GetUser(db),
+			HandlerFunc:  HTTPuseMiddleware(GetUser(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/users",
-			HandlerFunc:  PostUser(db),
+			HandlerFunc:  HTTPuseMiddleware(PostUser(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodPost,
+		},
+		{
+			EndpointPath: endpointPrefix + "/admin/users/{id}",
+			HandlerFunc:  HTTPuseMiddleware(DeleteUser(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodDelete,
+		},
+		{
+			EndpointPath: endpointPrefix + "/user/auth",
+			HandlerFunc:  UserAuthValidate(db),
+			HttpMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: endpointPrefix + "/user/auth",
+			HandlerFunc:  UserAuth(db),
 			HttpMethod:   http.MethodPost,
 		},
 	}

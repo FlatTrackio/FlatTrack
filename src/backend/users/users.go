@@ -4,14 +4,12 @@ package users
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
 func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, err error) {
-	fmt.Println(user)
 	if common.RegexMatchName(user.Names) == false || user.Names == "" {
 		return userInserted, errors.New("Unable to use the provided name, as it is either empty or not valid")
 	}
@@ -26,6 +24,10 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 	user.Password = common.HashSHA512(user.Password)
 	if user.PhoneNumber != "" && common.RegexMatchPhoneNumber(user.PhoneNumber) == false {
 		return userInserted, errors.New("Unable to use the provided phone number")
+	}
+	localUser, err := GetUserByEmail(db, user.Email)
+	if localUser.Email == user.Email || err != nil {
+		return userInserted, errors.New("User account already exists")
 	}
 
 	sqlStatement := `insert into users (names, email, password, phonenumber)
@@ -141,8 +143,7 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 }
 
 func GetUserById(db *sql.DB, id string) (user types.UserSpec, err error) {
-	sqlStatement := `select * from users where id = $1;`
-	fmt.Println(sqlStatement)
+	sqlStatement := `select * from users where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
 		return user, err
@@ -152,8 +153,7 @@ func GetUserById(db *sql.DB, id string) (user types.UserSpec, err error) {
 }
 
 func GetUserByEmail(db *sql.DB, email string) (user types.UserSpec, err error) {
-	sqlStatement := `select * from users where email = ?;`
-	fmt.Println(sqlStatement)
+	sqlStatement := `select * from users where email = $1`
 	rows, err := db.Query(sqlStatement, email)
 	if err != nil {
 		return user, err
@@ -163,3 +163,17 @@ func GetUserByEmail(db *sql.DB, email string) (user types.UserSpec, err error) {
 	return user, err
 }
 
+func DeleteUserById(db *sql.DB, id string) (err error) {
+	sqlStatement := `delete from users where id = $1`
+	_, err = db.Query(sqlStatement, id)
+	return err
+}
+
+func CheckUserPassword(db *sql.DB, email string, password string) (matches bool, err error) {
+	user, err := GetUserByEmail(db, email)
+	if err != nil {
+		return matches, err
+	}
+	passwordHashed := common.HashSHA512(password)
+	return user.Password == passwordHashed, err
+}

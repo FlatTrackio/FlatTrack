@@ -6,12 +6,13 @@ package routes
 
 import (
 	"database/sql"
-	"net/http"
-	"fmt"
 	"encoding/json"
 	"io/ioutil"
+	"net/http"
 
 	"github.com/gorilla/mux"
+	"gitlab.com/flattrack/flattrack/src/backend/common"
+	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
 )
@@ -51,11 +52,22 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 		id := vars["id"]
 
 		user := types.UserSpec{
-			Id:    id,
+			Id: id,
 		}
-		fmt.Println(user)
 
 		user, err := users.GetUserById(db, id)
+		if err != nil || user.Id == "" {
+			code = 404
+			response = "Failed to find user"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.UserSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
 		if err == nil {
 			code = 200
 			response = "Fetched user account"
@@ -77,16 +89,11 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 // create a user
 func PostUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// TODO
-		// - handle existing user
-		// - handle empty fields
-
 		code := 500
 		response := "Failed to create user account"
 
 		var user types.UserSpec
 		body, err := ioutil.ReadAll(r.Body)
-		fmt.Println(string(body))
 		json.Unmarshal(body, &user)
 
 		userAccount, err := users.CreateUser(db, user)
@@ -107,8 +114,124 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// DeleteUser
+// delete a user
+func DeleteUser(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to delete user account"
+
+		vars := mux.Vars(r)
+		userId := vars["id"]
+
+		userInDB, err := users.GetUserById(db, userId)
+		if err != nil || userInDB.Id == "" {
+			code = 404
+			response = "Failed to find user"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: false,
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		err = users.DeleteUserById(db, userInDB.Id)
+		if err == nil {
+			code = 200
+			response = "Deleted user account"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: err == nil,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// Initialized
+// check if the server has been initialized
+func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to fetch if the server has initialized"
+		initialized, err := system.GetHasInitialized(db)
+		if err == nil {
+			code = 200
+		}
+		if err == nil && initialized == "true" {
+			response = "Server is initialized"
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Data: initialized == "true",
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+func UserAuth(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to authenticate user, incorrect email or password"
+		code := 403
+		jwtToken := ""
+
+		var user types.UserSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &user)
+
+		userInDB, err := users.GetUserByEmail(db, user.Email)
+		if err != nil {
+			response = "Failed to find user"
+		}
+		// Check password locally, fall back to remote if incorrect
+		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
+		if err == nil && matches == true {
+			jwtToken, _ = common.GenerateJWTauthToken(db, user.Email)
+			response = "Successfully authenticated user"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Data: jwtToken,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+func UserAuthValidate(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to validate authentication token, incorrect email or password"
+		code := 400
+
+		valid, err := common.ValidateJWTauthToken(db, r)
+		if valid == true && err == nil {
+			response = "Authentication token is valid"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Data: valid,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // Root
-// usually /api endpoint
+// /api endpoint
 func Root(w http.ResponseWriter, r *http.Request) {
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
@@ -127,3 +250,20 @@ func UnknownEndpoint(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 }
+
+func HTTPvalidateJWT(db *sql.DB) func(http.HandlerFunc) http.HandlerFunc {
+	return func(h http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			if completed, err := common.ValidateJWTauthToken(db, r); completed == true && err == nil {
+				h.ServeHTTP(w, r)
+				return
+			}
+			JSONResponse(r, w, 401, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Unauthorized",
+				},
+			})
+		}
+	}
+}
+

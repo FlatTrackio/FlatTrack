@@ -5,6 +5,7 @@
 package types
 
 import (
+	"github.com/dgrijalva/jwt-go"
 	"net/http"
 )
 
@@ -84,4 +85,9 @@ type Endpoints []struct {
 	EndpointPath string
 	HandlerFunc  http.HandlerFunc
 	HttpMethod   string
+}
+
+type JWTclaim struct {
+	Email string `json:"email"`
+	jwt.StandardClaims
 }
