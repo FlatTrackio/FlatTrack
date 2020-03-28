@@ -241,8 +241,8 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 	})
 
 	reqClaims := token.Claims.(*types.JWTclaim)
-	_, err = GetUserById(db, reqClaims.Id)
-	if err != nil {
+	user, err := GetUserById(db, reqClaims.Id)
+	if err != nil || user.Id == "" {
 		return false, err
 	}
 
