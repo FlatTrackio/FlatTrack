@@ -31,6 +31,7 @@ func SetHasInitialized(db *sql.DB) (err error) {
 	_, err = db.Query(sqlStatement)
 	return err
 }
+
 // GetJWTsecret
 // return the JWT secret, used in authentication
 func GetJWTsecret(db *sql.DB) (jwtSecret string, err error) {

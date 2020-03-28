@@ -13,6 +13,8 @@ variables:
 build-armv7:
   stage: build
   image: docker:stable
+  only:
+    - tags
   variables:
     ARCH: "arm/v7"
   before_script:

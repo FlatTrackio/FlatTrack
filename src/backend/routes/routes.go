@@ -13,11 +13,11 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"gitlab.com/flattrack/flattrack/src/backend/registration"
 	"gitlab.com/flattrack/flattrack/src/backend/settings"
 	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
-	"gitlab.com/flattrack/flattrack/src/backend/registration"
 )
 
 // GetAllUsers
@@ -221,13 +221,15 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 // validate an auth token
 func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		response := "Failed to validate authentication token, incorrect email or password"
+		response := "Failed to validate authentication token"
 		code := 400
 
 		valid, err := users.ValidateJWTauthToken(db, r)
 		if valid == true && err == nil {
 			response = "Authentication token is valid"
 			code = 200
+		} else {
+			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{

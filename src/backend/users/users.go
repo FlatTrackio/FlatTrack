@@ -8,6 +8,7 @@ package users
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"net/http"
 	"strings"
@@ -15,6 +16,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
+	"gitlab.com/flattrack/flattrack/src/backend/groups"
 	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
@@ -22,16 +24,22 @@ import (
 // CreateUser
 // given a UserSpec, create a user
 func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, err error) {
-	if common.RegexMatchName(user.Names) == false || user.Names == "" {
-		return userInserted, errors.New("Unable to use the provided name, as it is either empty or not valid")
+	if len(user.Names) == 0 || len(user.Names) > 60 || user.Names == "" {
+		return userInserted, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
 	}
 	if common.RegexMatchEmail(user.Email) == false || user.Email == "" {
-		return userInserted, errors.New("Unable to use the provided email")
+		return userInserted, errors.New("Unable to use the provided email, as it is either empty or not valid")
 	}
 
-	// TODO add group validation - requires creating admin and flatmember in migrations
+	for _, groupItem := range user.Groups {
+		group, err := groups.GetGroupByName(db, groupItem)
+		if err != nil || group.Id == "" {
+			return userInserted, errors.New(fmt.Sprintf("Unable to use the provide group '%v' as it is invalid", groupItem))
+		}
+	}
+
 	if common.RegexMatchPassword(user.Password) == false || user.Password == "" {
-		return userInserted, errors.New("Unable to use the provided password")
+		return userInserted, errors.New("Unable to use the provided password, as it is either empty of invalid")
 	}
 	user.Password = common.HashSHA512(user.Password)
 	if user.PhoneNumber != "" && common.RegexMatchPhoneNumber(user.PhoneNumber) == false {
@@ -59,6 +67,17 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 			Email:       user.Email,
 			Groups:      user.Groups,
 			PhoneNumber: user.PhoneNumber,
+		}
+	}
+
+	for _, groupItem := range user.Groups {
+		group, err := groups.GetGroupByName(db, groupItem)
+		if err != nil || group.Id == "" {
+			return userInserted, errors.New(fmt.Sprintf("Unable to use the provide group '%v' as it is invalid", groupItem))
+		}
+		err = groups.AddUserToGroup(db, userInserted.Id, group.Id)
+		if err != nil {
+			return userInserted, errors.New("Unable to add user account to the group")
 		}
 	}
 	return userInserted, err
@@ -132,6 +151,7 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 		var email string
 		var password string
 		var phoneNumber string
+		var birthday string
 		var contractAgreement bool
 		var disabled bool
 		var hasSetPassword bool
@@ -140,7 +160,7 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 		var creationTimestamp int64
 		var modificationTimestamp int64
 		var deletionTimestamp int64
-		rows.Scan(&id, &names, &email, &password, &phoneNumber, &contractAgreement, &disabled, &hasSetPassword, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+		rows.Scan(&id, &names, &email, &password, &phoneNumber, &birthday, &contractAgreement, &disabled, &hasSetPassword, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
 		user = types.UserSpec{
 			Id:                        id,
 			Names:                     names,
@@ -186,8 +206,18 @@ func GetUserByEmail(db *sql.DB, email string) (user types.UserSpec, err error) {
 }
 
 // DeleteUserById
-// given an id, delete a user account
+// given an id, remove the user account from all the groups and then delete a user account
 func DeleteUserById(db *sql.DB, id string) (err error) {
+	userGroups, err := groups.GetGroupsOfUserById(db, id)
+	if err != nil {
+		return err
+	}
+	for _, groupItem := range userGroups {
+		err = groups.RemoveUserFromGroup(db, id, groupItem.Id)
+		if err != nil {
+			return err
+		}
+	}
 	sqlStatement := `delete from users where id = $1`
 	_, err = db.Query(sqlStatement, id)
 	return err
@@ -228,22 +258,30 @@ func GenerateJWTauthToken(db *sql.DB, id string) (tokenString string, err error)
 func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 	secret, err := system.GetJWTsecret(db)
 	if err != nil {
-		return false, err
+		return false, errors.New("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
 	}
 	tokenHeader := r.Header.Get("Authorization")
 	if tokenHeader == "" {
-		return false, nil
+		return false, errors.New("Unable to find authorization token (header doesn't exist)")
 	}
-	tokenHeaderJWT := strings.Split(tokenHeader, " ")[1]
+	authorizationHeader := strings.Split(tokenHeader, " ")
+	if authorizationHeader[0] != "bearer" {
+		return false, errors.New("Unable to find authorization token (must be as bearer)")
+	}
+	tokenHeaderJWT := authorizationHeader[1]
 	claims := &types.JWTclaim{}
 	token, err := jwt.ParseWithClaims(tokenHeaderJWT, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
+	if err != nil {
+		return false, err
+	}
 
 	reqClaims := token.Claims.(*types.JWTclaim)
 	user, err := GetUserById(db, reqClaims.Id)
+	fmt.Println(reqClaims.Id, user)
 	if err != nil || user.Id == "" {
-		return false, err
+		return false, errors.New("Unable to find the user account which the authentication token belongs to")
 	}
 
 	if err != nil {

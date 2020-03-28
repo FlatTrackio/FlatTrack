@@ -7,15 +7,20 @@ package registration
 
 import (
 	"database/sql"
-	"gitlab.com/flattrack/flattrack/src/backend/types"
-	"gitlab.com/flattrack/flattrack/src/backend/users"
 	"gitlab.com/flattrack/flattrack/src/backend/settings"
 	"gitlab.com/flattrack/flattrack/src/backend/system"
+	"gitlab.com/flattrack/flattrack/src/backend/types"
+	"gitlab.com/flattrack/flattrack/src/backend/users"
+)
+
+var (
+	REGISTRATION_DEFAULT_USER_GROUPS = []string{"flatmember", "admin"}
 )
 
 // Register
 // perform initial FlatTrack instance setup
 func Register(db *sql.DB, registration types.Registration) (successful bool, jwt string, err error) {
+	registration.User.Groups = REGISTRATION_DEFAULT_USER_GROUPS
 	user, err := users.CreateUser(db, registration.User)
 	if err != nil || user.Id == "" {
 		return successful, jwt, err
@@ -40,4 +45,3 @@ func Register(db *sql.DB, registration types.Registration) (successful bool, jwt
 	}
 	return true, jwt, err
 }
-

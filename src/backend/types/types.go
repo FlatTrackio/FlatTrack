@@ -24,6 +24,7 @@ type GroupSpec struct {
 	Id           string `json:"id"`
 	Name         string `json:"name"`
 	DefaultGroup bool   `json:"defaultGroup"`
+	Description  string `json:"description"`
 }
 
 // GroupList
@@ -51,6 +52,7 @@ type UserSpec struct {
 	Groups                    []string `json:"groups"`
 	Password                  string   `json:"password,omitempty"`
 	PhoneNumber               string   `json:"phoneNumber,omitempty"`
+	Birthday                  string   `json:"birthday,omitempty"`
 	ContractAgreement         bool     `json:"contractAgreement,omitempty"`
 	Disabled                  bool     `json:"disabled,omitempty"`
 	HasSetPassword            bool     `json:"hasSetPassword,omitempty"`

@@ -72,4 +72,3 @@ func SetLanguage(db *sql.DB, language string) (err error) {
 	_, err = db.Query(sqlStatement, language)
 	return err
 }
-
