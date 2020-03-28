@@ -1,14 +1,26 @@
-// manage user accounts
+/*
+  users
+    manage user accounts
+*/
+
 package users
 
 import (
 	"database/sql"
 	"errors"
 
+	"net/http"
+	"strings"
+	"time"
+
+	jwt "github.com/dgrijalva/jwt-go"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
+	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
+// CreateUser
+// given a UserSpec, create a user
 func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, err error) {
 	if common.RegexMatchName(user.Names) == false || user.Names == "" {
 		return userInserted, errors.New("Unable to use the provided name, as it is either empty or not valid")
@@ -52,6 +64,8 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 	return userInserted, err
 }
 
+// GetAllUsers
+// return all users in the database
 func GetAllUsers(db *sql.DB) (users []types.UserSpec, err error) {
 	sqlStatement := `select * from users`
 	rows, err := db.Query(sqlStatement)
@@ -93,6 +107,8 @@ func GetAllUsers(db *sql.DB) (users []types.UserSpec, err error) {
 	return users, err
 }
 
+// GetUser
+// given a UserSpec and an ID or Email, return a user from the database
 func GetUser(db *sql.DB, userSelect types.UserSpec) (user types.UserSpec, err error) {
 	if userSelect.Id != "" {
 		return GetUserById(db, userSelect.Id)
@@ -106,6 +122,8 @@ func GetUser(db *sql.DB, userSelect types.UserSpec) (user types.UserSpec, err er
 	return user, err
 }
 
+// UserObjectFromRows
+// construct a UserSpec from database rows
 func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 	defer rows.Close()
 	for rows.Next() {
@@ -142,6 +160,8 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 	return user, err
 }
 
+// GetUserById
+// given an id, return a UserSpec
 func GetUserById(db *sql.DB, id string) (user types.UserSpec, err error) {
 	sqlStatement := `select * from users where id = $1`
 	rows, err := db.Query(sqlStatement, id)
@@ -152,6 +172,8 @@ func GetUserById(db *sql.DB, id string) (user types.UserSpec, err error) {
 	return user, err
 }
 
+// GetUserByEmail
+// given a email, return a UserSpec
 func GetUserByEmail(db *sql.DB, email string) (user types.UserSpec, err error) {
 	sqlStatement := `select * from users where email = $1`
 	rows, err := db.Query(sqlStatement, email)
@@ -163,12 +185,16 @@ func GetUserByEmail(db *sql.DB, email string) (user types.UserSpec, err error) {
 	return user, err
 }
 
+// DeleteUserById
+// given an id, delete a user account
 func DeleteUserById(db *sql.DB, id string) (err error) {
 	sqlStatement := `delete from users where id = $1`
 	_, err = db.Query(sqlStatement, id)
 	return err
 }
 
+// CheckUserPassword
+// given an email and password, find the user account with the email, return if the password matches
 func CheckUserPassword(db *sql.DB, email string, password string) (matches bool, err error) {
 	user, err := GetUserByEmail(db, email)
 	if err != nil {
@@ -176,4 +202,53 @@ func CheckUserPassword(db *sql.DB, email string, password string) (matches bool,
 	}
 	passwordHashed := common.HashSHA512(password)
 	return user.Password == passwordHashed, err
+}
+
+// GenerateJWTauthToken
+// given an email, return a usable JWT token
+func GenerateJWTauthToken(db *sql.DB, id string) (tokenString string, err error) {
+	secret, err := system.GetJWTsecret(db)
+	if err != nil {
+		return "", err
+	}
+	expirationTime := time.Now().Add(time.Hour * 24 * 5)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, types.JWTclaim{
+		Id: id,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: expirationTime.Unix(),
+		},
+	})
+
+	tokenString, err = token.SignedString([]byte(secret))
+	return tokenString, err
+}
+
+// ValidateJWTauthToken
+// given an HTTP request and Authorization header, return if auth is valid
+func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
+	secret, err := system.GetJWTsecret(db)
+	if err != nil {
+		return false, err
+	}
+	tokenHeader := r.Header.Get("Authorization")
+	if tokenHeader == "" {
+		return false, nil
+	}
+	tokenHeaderJWT := strings.Split(tokenHeader, " ")[1]
+	claims := &types.JWTclaim{}
+	token, err := jwt.ParseWithClaims(tokenHeaderJWT, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+
+	reqClaims := token.Claims.(*types.JWTclaim)
+	_, err = GetUserById(db, reqClaims.Id)
+	if err != nil {
+		return false, err
+	}
+
+	if err != nil {
+		return false, err
+	}
+
+	return token.Valid, nil
 }

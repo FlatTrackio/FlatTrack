@@ -14,5 +14,6 @@ create table if not exists system (
 
 insert into system (name, value) values ('initialized', 'false');
 insert into system (name, value) values ('jwtSecret', md5(random()::text || clock_timestamp()::text)::uuid);
+insert into system (name, value) values ('instanceUUID', md5(random()::text || clock_timestamp()::text)::uuid);
 
 commit;

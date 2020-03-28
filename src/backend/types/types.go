@@ -1,5 +1,6 @@
 /*
-	handle all types used by API
+  types
+    collection of go types used in FlatTrack's API
 */
 
 package types
@@ -9,18 +10,24 @@ import (
 	"net/http"
 )
 
+// Group
+// request object for a group
 type Group struct {
 	TypeMeta `json:",inline"`
 	Metadata JSONResponseMetadata `json:"metadata"`
 	Spec     GroupSpec            `json:"spec"`
 }
 
+// GroupSpec
+// standard values for a group
 type GroupSpec struct {
 	Id           string `json:"id"`
 	Name         string `json:"name"`
 	DefaultGroup bool   `json:"defaultGroup"`
 }
 
+// GroupList
+// a list of groups
 type GroupList struct {
 	TypeMeta `json:",inline"`
 	Metadata JSONResponseMetadata `json:"metadata"`
@@ -28,7 +35,7 @@ type GroupList struct {
 }
 
 // User
-//
+// request object for a user account
 type User struct {
 	TypeMeta `json:",inline"`
 	Metadata JSONResponseMetadata `json:"metadata"`
@@ -62,6 +69,14 @@ type UserList struct {
 	List     []UserSpec           `json:"list"`
 }
 
+// FlatName
+// the name of the flat
+type FlatName struct {
+	FlatName string `json:"flatName"`
+}
+
+// JSONResponseMetadata
+// values to return in each request
 type JSONResponseMetadata struct {
 	URL       string `json:"selfLink"`
 	Version   string `json:"version"`
@@ -70,6 +85,8 @@ type JSONResponseMetadata struct {
 	Response  string `json:"response"`
 }
 
+// JSONMessageResponse
+// generic JSON response
 type JSONMessageResponse struct {
 	Metadata JSONResponseMetadata `json:"metadata"`
 	Spec     interface{}          `json:"spec,omitempty"`
@@ -81,13 +98,18 @@ type TypeMeta struct {
 	Kind string `json:"kind"`
 }
 
+// Endpoints
+// all API endpoints stored in an array
 type Endpoints []struct {
 	EndpointPath string
 	HandlerFunc  http.HandlerFunc
 	HttpMethod   string
 }
 
+// JWTclaim
+// contents for JWT token
 type JWTclaim struct {
+	Id    string `json:"id"`
 	Email string `json:"email"`
 	jwt.StandardClaims
 }

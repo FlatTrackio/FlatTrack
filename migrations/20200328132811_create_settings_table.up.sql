@@ -10,4 +10,6 @@ create table if not exists settings (
   primary key (id)
 );
 
+insert into settings (name, value) values ('flatName', '');
+
 commit;

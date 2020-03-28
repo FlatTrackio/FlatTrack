@@ -1,3 +1,8 @@
+/*
+  migrations
+    handle database migrations
+*/
+
 package migrations
 
 import (

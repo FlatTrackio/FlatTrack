@@ -1,3 +1,8 @@
+/*
+  database
+    handle connections to the database
+*/
+
 package database
 
 import (
@@ -15,6 +20,8 @@ var (
 	DB_DATABASE = common.GetDBdatabase()
 )
 
+// DB
+// given database credentials, return a database connection
 func DB(username string, password string, hostname string, database string) (*sql.DB, error) {
 	username = common.SetFirstOrSecond(username, DB_USERNAME)
 	password = common.SetFirstOrSecond(password, DB_PASSWORD)

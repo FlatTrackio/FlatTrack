@@ -1,5 +1,7 @@
 /*
-	route related
+  routes
+    routes
+      declare all API routes
 */
 
 package routes
@@ -11,7 +13,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"gitlab.com/flattrack/flattrack/src/backend/common"
+	"gitlab.com/flattrack/flattrack/src/backend/settings"
 	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
@@ -179,6 +181,8 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// UserAuth
+// authenticate a user
 func UserAuth(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to authenticate user, incorrect email or password"
@@ -196,7 +200,7 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 		// Check password locally, fall back to remote if incorrect
 		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
 		if err == nil && matches == true {
-			jwtToken, _ = common.GenerateJWTauthToken(db, user.Email)
+			jwtToken, _ = users.GenerateJWTauthToken(db, user.Id)
 			response = "Successfully authenticated user"
 			code = 200
 		}
@@ -210,12 +214,14 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// UserAuthValidate
+// validate an auth token
 func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to validate authentication token, incorrect email or password"
 		code := 400
 
-		valid, err := common.ValidateJWTauthToken(db, r)
+		valid, err := users.ValidateJWTauthToken(db, r)
 		if valid == true && err == nil {
 			response = "Authentication token is valid"
 			code = 200
@@ -225,6 +231,60 @@ func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Data: valid,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetSettingsFlatName
+// response with the name of the flat
+func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch the flat name"
+		code := 500
+
+		flatName, err := settings.GetFlatName(db)
+		if flatName == "" {
+			response = "Flat name is not set"
+			code = 200
+		} else if err == nil {
+			response = "Fetched the flat name"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: flatName,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// SetSettingsFlatName
+// update the flat's name
+func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to update the flat name"
+
+		var flatName types.FlatName
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &flatName)
+
+		err := settings.SetFlatName(db, flatName.FlatName)
+		if err == nil {
+			code = 200
+			response = "Successfully set flat name"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: err == nil,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}
@@ -251,10 +311,12 @@ func UnknownEndpoint(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// HTTPvalidateJWT
+// middleware for checking JWT auth token validity
 func HTTPvalidateJWT(db *sql.DB) func(http.HandlerFunc) http.HandlerFunc {
 	return func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			if completed, err := common.ValidateJWTauthToken(db, r); completed == true && err == nil {
+			if completed, err := users.ValidateJWTauthToken(db, r); completed == true && err == nil {
 				h.ServeHTTP(w, r)
 				return
 			}
@@ -266,4 +328,3 @@ func HTTPvalidateJWT(db *sql.DB) func(http.HandlerFunc) http.HandlerFunc {
 		}
 	}
 }
-

@@ -1,3 +1,9 @@
+/*
+  routes
+    endpoints
+      declare all API routes paths and access configurations
+*/
+
 package routes
 
 import (
@@ -15,6 +21,16 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			EndpointPath: endpointPrefix + "/system/initialized",
 			HandlerFunc:  GetSystemInitialized(db),
 			HttpMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: endpointPrefix + "/admin/settings/flatName",
+			HandlerFunc:  HTTPuseMiddleware(GetSettingsFlatName(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: endpointPrefix + "/admin/settings/flatName",
+			HandlerFunc:  HTTPuseMiddleware(SetSettingsFlatName(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodPost,
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/users",
