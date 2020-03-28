@@ -75,6 +75,14 @@ type FlatName struct {
 	FlatName string `json:"flatName"`
 }
 
+// Registration
+// fields to initialize the instance of FlatTrack
+type Registration struct {
+	User     UserSpec `json:"user"`
+	Timezone string   `json:"timezone"`
+	Language string   `json:"language"`
+}
+
 // JSONResponseMetadata
 // values to return in each request
 type JSONResponseMetadata struct {

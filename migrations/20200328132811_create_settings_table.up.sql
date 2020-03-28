@@ -11,5 +11,7 @@ create table if not exists settings (
 );
 
 insert into settings (name, value) values ('flatName', '');
+insert into settings (name, value) values ('timezone', '');
+insert into settings (name, value) values ('language', 'en_US');
 
 commit;

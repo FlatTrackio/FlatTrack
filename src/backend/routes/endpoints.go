@@ -23,13 +23,18 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			HttpMethod:   http.MethodGet,
 		},
 		{
-			EndpointPath: endpointPrefix + "/admin/settings/flatName",
+			EndpointPath: endpointPrefix + "/system/flatName",
 			HandlerFunc:  HTTPuseMiddleware(GetSettingsFlatName(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/settings/flatName",
 			HandlerFunc:  HTTPuseMiddleware(SetSettingsFlatName(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodPost,
+		},
+		{
+			EndpointPath: endpointPrefix + "/admin/register",
+			HandlerFunc:  HTTPuseMiddleware(PostAdminRegister(db)),
 			HttpMethod:   http.MethodPost,
 		},
 		{

@@ -17,6 +17,7 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
+	"gitlab.com/flattrack/flattrack/src/backend/registration"
 )
 
 // GetAllUsers
@@ -163,13 +164,15 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		code := 500
-		response := "Failed to fetch if the server has initialized"
+		response := "Failed to fetch if this FlatTrack instance has initialized"
 		initialized, err := system.GetHasInitialized(db)
 		if err == nil {
 			code = 200
 		}
 		if err == nil && initialized == "true" {
-			response = "Server is initialized"
+			response = "This FlatTrack instance has initialized"
+		} else if err == nil && initialized == "false" {
+			response = "This FlatTrack instance has not initialized"
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -285,6 +288,50 @@ func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Spec: err == nil,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PostAdminRegister
+// register the instance of FlatTrack
+func PostAdminRegister(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to register the FlatTrack instance"
+
+		initialized, err := system.GetHasInitialized(db)
+		if err == nil && initialized == "true" {
+			response = "This instance is already registered"
+			code = 200
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: true,
+				Data: "",
+			}
+			JSONResponse(r, w, code, JSONresp)
+		}
+
+		var registrationForm types.Registration
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &registrationForm)
+
+		registered, jwt, err := registration.Register(db, registrationForm)
+		if err == nil {
+			code = 200
+			response = "Successfully registered the FlatTrack instance"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: registered,
+			Data: jwt,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}
