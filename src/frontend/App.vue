@@ -1,6 +1,11 @@
 <template>
   <div id="app">
+    <div>
+      <navbar/>
+    </div>
+    <div class="pad-left full-height main-view-container">
       <router-view class="main-view" />
+    </div>
   </div>
 </template>
 
@@ -9,7 +14,10 @@ import Vue from 'vue'
 import Component from 'vue-class-component'
 
 export default {
-  name: 'App'
+  name: 'App',
+  components: {
+    navbar: () => import('@/frontend/components/common/navbar.vue')
+  }
 }
 
 </script>
@@ -43,13 +51,29 @@ $footer-padding: 10px;
 
 </style>
 
-<style scoped>
+<style>
 .darken a.is-disabled {
-  color: black;
+    color: black;
 }
 
 .card-margin {
-  margin-top: 10px;
-  margin-bottom: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.pad-left {
+    margin-left: 265px;
+}
+
+.pad-top {
+    margin-top: 20px;
+}
+
+.full-height {
+    height: 100%;
+}
+
+html {
+    background-color: #f3f3f3;
 }
 </style>

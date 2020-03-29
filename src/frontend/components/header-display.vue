@@ -1,12 +1,12 @@
 <template>
   <div>
-    <section :class="`${admin !== 'true' ? 'hero is-info' : 'hero is-warning'}`">
+    <section class="hero is-info">
       <div class="hero-body">
         <p class="title">
-          FlatTrack {{ admin !== 'true' ? '' : '(Admin)' }}
+          FlatTrack
         </p>
         <p class="subtitle">
-          {{ subtitle }}
+          Keep track of your flat
         </p>
       </div>
     </section>
@@ -19,27 +19,12 @@ import axios from 'axios'
 export default {
   name: 'header-display',
   props: {
-    'genericMessage': Boolean,
-    'admin': Boolean
   },
   data () {
     return {
-      subtitle: 'Keep track of your flat'
     }
   },
   created () {
-    if (this.genericMessage !== 'true') {
-      axios.get(`/api/settings/deploymentName`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`
-          }
-        }).then(resp => {
-        this.subtitle = resp.data.value
-      }).catch(err => {
-        this.pageErrors.push(err)
-      })
-    }
   }
 }
 </script>

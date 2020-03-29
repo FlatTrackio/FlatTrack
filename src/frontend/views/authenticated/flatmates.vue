@@ -66,7 +66,6 @@
 <script>
 import headerDisplay from '@/frontend/components/header-display'
 import emoji from 'node-emoji'
-import { GetAPImembers } from '@/frontend/requests/authenticated/members'
 
 export default {
   name: 'Shopping List',
@@ -77,19 +76,6 @@ export default {
     }
   },
   created () {
-    GetAPImembers()
-      .then(resp => {
-        this.members = resp.data
-      })
-      .catch(err => {
-        this.$buefy.notification.open({
-          duration: 5000,
-          message: `An error has occured: ${err}`,
-          position: 'is-bottom-right',
-          type: 'is-danger',
-          hasIcon: true
-        })
-      })
   },
   methods: {
   },

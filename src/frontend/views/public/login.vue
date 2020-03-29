@@ -1,6 +1,6 @@
 <template>
     <div>
-      <headerDisplay genericMessage="true"/>
+      <headerDisplay/>
       <div class="container">
         <section class="section">
           <h1 class="title">Login</h1>
