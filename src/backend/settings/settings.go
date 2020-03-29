@@ -2,6 +2,7 @@ package settings
 
 import (
 	"database/sql"
+	"errors"
 )
 
 // GetFlatName
@@ -22,6 +23,9 @@ func GetFlatName(db *sql.DB) (flatName string, err error) {
 // SetFlatName
 // given a flatName, set the name of the flat
 func SetFlatName(db *sql.DB, flatName string) (err error) {
+	if flatName == "" || len(flatName) == 0 || len(flatName) > 60 {
+		return errors.New("Unable to set the flat name as it is either invalid, too short, or too long")
+	}
 	sqlStatement := `update settings set value = $1 where name = $2;`
 	_, err = db.Query(sqlStatement, flatName, "flatName")
 	return err

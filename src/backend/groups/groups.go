@@ -62,7 +62,7 @@ func GetGroupByName(db *sql.DB, name string) (group types.GroupSpec, err error) 
 // GetGroupById
 // given a group id, return the group
 func GetGroupById(db *sql.DB, id string) (group types.GroupSpec, err error) {
-	sqlStatement := `select * from groups where id = $1`
+	sqlStatement := `select id, name, defaultGroup from groups where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
 		return group, err
@@ -75,7 +75,7 @@ func GetGroupById(db *sql.DB, id string) (group types.GroupSpec, err error) {
 }
 
 // GetGroupsOfUserById
-// given a userId, return the group which the user belongs to
+// given a userId, return the group which the user account belongs to
 func GetGroupsOfUserById(db *sql.DB, userId string) (groups []types.GroupSpec, err error) {
 	var groupIds []string
 	sqlStatement := `select groupid from user_to_groups where userid = $1`
@@ -98,3 +98,17 @@ func GetGroupsOfUserById(db *sql.DB, userId string) (groups []types.GroupSpec, e
 	}
 	return groups, err
 }
+
+// GetGroupNamesOfUserById
+// given a userId, return the group names which the user account belongs to
+func GetGroupNamesOfUserById(db *sql.DB, userId string) (groups []string, err error) {
+	groupsFull, err := GetGroupsOfUserById(db, userId)
+	if err != nil {
+		return groups, err
+	}
+	for _, groupItem := range groupsFull {
+		groups = append(groups, groupItem.Name)
+	}
+	return groups, err
+}
+

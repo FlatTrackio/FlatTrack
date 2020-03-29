@@ -83,6 +83,7 @@ type Registration struct {
 	User     UserSpec `json:"user"`
 	Timezone string   `json:"timezone"`
 	Language string   `json:"language"`
+	FlatName string   `json:"flatName"`
 }
 
 // JSONResponseMetadata

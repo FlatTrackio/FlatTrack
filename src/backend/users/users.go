@@ -93,35 +93,16 @@ func GetAllUsers(db *sql.DB) (users []types.UserSpec, err error) {
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var id string
-		var names string
-		var email string
-		var password string
-		var phoneNumber string
-		var contractAgreement bool
-		var disabled bool
-		var hasSetPassword bool
-		var taskNotificationFrequency int
-		var lastLogin string
-		var creationTimestamp int64
-		var modificationTimestamp int64
-		var deletionTimestamp int64
-		rows.Scan(&id, &names, &email, &password, &phoneNumber, &contractAgreement, &disabled, &hasSetPassword, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
-		users = append(users, types.UserSpec{
-			Id:                        id,
-			Names:                     names,
-			Email:                     email,
-			Password:                  password,
-			PhoneNumber:               phoneNumber,
-			ContractAgreement:         contractAgreement,
-			Disabled:                  disabled,
-			HasSetPassword:            hasSetPassword,
-			TaskNotificationFrequency: taskNotificationFrequency,
-			LastLogin:                 lastLogin,
-			CreationTimestamp:         creationTimestamp,
-			ModificationTimestamp:     modificationTimestamp,
-			DeletionTimestamp:         deletionTimestamp,
-		})
+		user, err := UserObjectFromRows(rows)
+		if err != nil {
+			return users, err
+		}
+		groups, err := groups.GetGroupNamesOfUserById(db, user.Id)
+		if err != nil {
+			return users, err
+		}
+		user.Groups = groups
+		users = append(users, user)
 	}
 	return users, err
 }
@@ -145,37 +126,35 @@ func GetUser(db *sql.DB, userSelect types.UserSpec) (user types.UserSpec, err er
 // construct a UserSpec from database rows
 func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 	defer rows.Close()
-	for rows.Next() {
-		var id string
-		var names string
-		var email string
-		var password string
-		var phoneNumber string
-		var birthday string
-		var contractAgreement bool
-		var disabled bool
-		var hasSetPassword bool
-		var taskNotificationFrequency int
-		var lastLogin string
-		var creationTimestamp int64
-		var modificationTimestamp int64
-		var deletionTimestamp int64
-		rows.Scan(&id, &names, &email, &password, &phoneNumber, &birthday, &contractAgreement, &disabled, &hasSetPassword, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
-		user = types.UserSpec{
-			Id:                        id,
-			Names:                     names,
-			Email:                     email,
-			Password:                  password,
-			PhoneNumber:               phoneNumber,
-			ContractAgreement:         contractAgreement,
-			Disabled:                  disabled,
-			HasSetPassword:            hasSetPassword,
-			TaskNotificationFrequency: taskNotificationFrequency,
-			LastLogin:                 lastLogin,
-			CreationTimestamp:         creationTimestamp,
-			ModificationTimestamp:     modificationTimestamp,
-			DeletionTimestamp:         deletionTimestamp,
-		}
+	var id string
+	var names string
+	var email string
+	var password string
+	var phoneNumber string
+	var birthday string
+	var contractAgreement bool
+	var disabled bool
+	var hasSetPassword bool
+	var taskNotificationFrequency int
+	var lastLogin string
+	var creationTimestamp int64
+	var modificationTimestamp int64
+	var deletionTimestamp int64
+	rows.Scan(&id, &names, &email, &password, &phoneNumber, &birthday, &contractAgreement, &disabled, &hasSetPassword, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	user = types.UserSpec{
+		Id:                        id,
+		Names:                     names,
+		Email:                     email,
+		Password:                  password,
+		PhoneNumber:               phoneNumber,
+		ContractAgreement:         contractAgreement,
+		Disabled:                  disabled,
+		HasSetPassword:            hasSetPassword,
+		TaskNotificationFrequency: taskNotificationFrequency,
+		LastLogin:                 lastLogin,
+		CreationTimestamp:         creationTimestamp,
+		ModificationTimestamp:     modificationTimestamp,
+		DeletionTimestamp:         deletionTimestamp,
 	}
 	return user, err
 }
@@ -188,7 +167,14 @@ func GetUserById(db *sql.DB, id string) (user types.UserSpec, err error) {
 	if err != nil {
 		return user, err
 	}
+	defer rows.Close()
+	rows.Next()
 	user, err = UserObjectFromRows(rows)
+	groups, err := groups.GetGroupNamesOfUserById(db, user.Id)
+	if err != nil {
+		return user, err
+	}
+	user.Groups = groups
 	return user, err
 }
 
@@ -201,7 +187,13 @@ func GetUserByEmail(db *sql.DB, email string) (user types.UserSpec, err error) {
 		return user, err
 	}
 	defer rows.Close()
+	rows.Next()
 	user, err = UserObjectFromRows(rows)
+	groups, err := groups.GetGroupNamesOfUserById(db, user.Id)
+	if err != nil {
+		return user, err
+	}
+	user.Groups = groups
 	return user, err
 }
 
@@ -279,7 +271,6 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 
 	reqClaims := token.Claims.(*types.JWTclaim)
 	user, err := GetUserById(db, reqClaims.Id)
-	fmt.Println(reqClaims.Id, user)
 	if err != nil || user.Id == "" {
 		return false, errors.New("Unable to find the user account which the authentication token belongs to")
 	}
