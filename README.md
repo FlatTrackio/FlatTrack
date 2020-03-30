@@ -37,35 +37,18 @@
 - [bulma](https://bulma.io/) / [buefy](https://buefy.org/) - CSS framework
 - [axios](https://github.com/axios/axios) - client-side HTTP request library
 
-## Build Setup
+## Getting started
+Various options are available for running a FlatTrack instance:
+- [FlatTrack.io hosting](https://flattrack.io) (recommended)
+- [Self-hosted Kubernetes](#) (recommended)
+- [Self-hosted Docker-Compose](#)
+- [Self-hosted Docker](#)
+- [Plain server](#)
 
-``` bash
-# install dependencies
-npm install
-
-# serve with hot reload at localhost:8080
-npm run dev-svr
-
-# serve the UI alone with hot reload at localhost:8080
-npm run dev-ui
-
-# build for production with minification
-npm run build
-
-# build for production and view the bundle analyzer report
-npm run build --report
-
-# run unit tests
-npm run unit
-
-# run e2e tests
-npm run e2e
-
-# run all tests
-npm test
-```
+## Development
+For beginning development, please refer to the [development documentation](docs/DEVELOPMENT.org)
 
 ## License
 Copyright 2018-2019 Caleb Woodbine.  
-This project is licensed under the [GPL-3.0](http://www.gnu.org/licenses/gpl-3.0.html) and is [Free Software](https://www.gnu.org/philosophy/free-sw.en.html).  
+This project is licensed under the [AGPL-3.0](http://www.gnu.org/licenses/agpl-3.0.html) and is [Free Software](https://www.gnu.org/philosophy/free-sw.en.html).  
 This program comes with absolutely no warranty.  
