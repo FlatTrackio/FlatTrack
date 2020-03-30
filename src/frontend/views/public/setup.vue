@@ -69,6 +69,7 @@
 <script>
 import headerDisplay from '@/frontend/components/header-display.vue'
 import registration from '@/frontend/requests/public/registration'
+import { NotificationProgrammatic as Notification } from 'buefy'
 
 export default {
   name: 'setup',
@@ -87,7 +88,27 @@ export default {
   },
   methods: {
     Register: (form) => {
-      registration.PostAdminRegister(form)
+      registration.PostAdminRegister(form).then(resp => {
+        console.log(resp)
+        Notification.open({
+          duration: 8 * 1000,
+          message: `Welcome to FlatTrack! ${resp.data.metadata.message}`,
+          position: 'is-bottom-right',
+          type: 'is-light',
+          hasIcon: true
+        })
+        setTimeout(() => {
+          window.location.href = '/'
+        }, 8 * 1000)
+      }).catch(err => {
+        Notification.open({
+          duration: 8 * 1000,
+          message: `${err}`,
+          position: 'is-bottom-right',
+          type: 'is-danger',
+          hasIcon: true
+        })
+      })
     }
   }
 }

@@ -1,22 +1,48 @@
 <template>
   <div id="app">
     <div>
-      <navbar/>
+      <navbar v-if="!onMobile && !publicPages && displayNavigationBar"/>
     </div>
-    <div class="pad-left full-height main-view-container">
+    <div class="pad-bottom full-height main-view-container" :class="{ 'pad-left': !publicPages && !onMobile && displayNavigationBar }">
       <router-view class="main-view" />
+    </div>
+    <div>
+      <bottombar v-if="onMobile && !publicPages"/>
     </div>
   </div>
 </template>
 
-<script lang="ts">
+<script>
 import Vue from 'vue'
 import Component from 'vue-class-component'
 
 export default {
   name: 'App',
+  data () {
+    return {
+      onMobile: false,
+      displayNavigationBar: true,
+      publicPages: window.location.pathname === '/login' || window.location.pathname === '/setup'
+    }
+  },
+  created () {
+    this.adjustForMobile()
+    window.addEventListener('resize', this.adjustForMobile.bind(this))
+  },
   components: {
-    navbar: () => import('@/frontend/components/common/navbar.vue')
+    navbar: () => import('@/frontend/components/common/navbar.vue'),
+    bottombar: () => import('@/frontend/components/common/bottombar.vue')
+  },
+  methods: {
+    adjustForMobile () {
+      var vm = this
+      vm.onMobile = window.innerWidth <= 870
+      if (vm.onMobile) {
+        vm.displayNavigationBar = false
+      } else {
+        vm.displayNavigationBar = true
+      }
+    }
   }
 }
 
@@ -66,7 +92,7 @@ $footer-padding: 10px;
 }
 
 .pad-top {
-    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .full-height {

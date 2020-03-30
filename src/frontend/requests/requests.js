@@ -15,7 +15,7 @@ function Request (request) {
       Authorization: 'Bearer ' + authToken
     }
     axios(request)
-      .then(res => resolve(res))
+      .then(resp => resolve(resp))
       .catch(err => {
         if (err.response.status === 401) {
           localStorage.authToken = ''
