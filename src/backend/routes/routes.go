@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"fmt"
 
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/src/backend/registration"
@@ -304,8 +303,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 		response := "Failed to register the FlatTrack instance"
 
 		initialized, err := system.GetHasInitialized(db)
-		fmt.Println(initialized, err)
-		if initialized == "true" {
+		if err == nil && initialized == "true" {
 			response = "This instance is already registered"
 			code = 200
 			JSONresp := types.JSONMessageResponse{
@@ -316,6 +314,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 				Data: "",
 			}
 			JSONResponse(r, w, code, JSONresp)
+			return
 		}
 
 		var registrationForm types.Registration
