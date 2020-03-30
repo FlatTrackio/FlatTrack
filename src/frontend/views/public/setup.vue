@@ -89,7 +89,9 @@ export default {
   methods: {
     Register: (form) => {
       registration.PostAdminRegister(form).then(resp => {
-        console.log(resp)
+        if (resp.data.data !== '' || typeof resp.data.data !== 'undefined') {
+          localStorage.setItem('authToken', resp.data.data)
+        }
         Notification.open({
           duration: 8 * 1000,
           message: `Welcome to FlatTrack! ${resp.data.metadata.message}`,
