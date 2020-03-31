@@ -2,7 +2,7 @@
     <div>
       <headerDisplay/>
       <div class="container">
-        <section class="section">
+        <section class="section login-width">
           <h1 class="title">Login</h1>
           <p class="subtitle">
               Welcome to FlatTrack, please login.
@@ -102,5 +102,8 @@ export default {
 </script>
 
 <style scoped>
-
+.login-width {
+    width: 380px;
+    margin: auto;
+}
 </style>
