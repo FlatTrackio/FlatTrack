@@ -1,17 +1,13 @@
 <template>
   <div>
-    <headerDisplay />
     <div class="container">
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
-          <ul>
-            <li>
-              <a href="/">Home</a>
-            </li>
-            <li class="is-active">
-              <a href="/shopping-list">Shopping list</a>
-            </li>
-          </ul>
+            <ul>
+              <li><a href="/">Home</a></li>
+              <li><a href="/apps">Apps</a></li>
+              <li class="is-active"><a href="/apps/shopping-list">Shopping list</a></li>
+            </ul>
         </nav>
         <h1 class="title">Shopping list</h1>
         <h2 class="subtitle">Manage your weekly shop</h2>
@@ -57,8 +53,6 @@
 </template>
 
 <script>
-import headerDisplay from '@/frontend/components/header-display'
-
 export default {
   name: 'Shopping List',
   data () {
@@ -88,9 +82,6 @@ export default {
         }
       ]
     }
-  },
-  components: {
-    headerDisplay
   }
 }
 </script>

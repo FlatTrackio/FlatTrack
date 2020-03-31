@@ -1,12 +1,12 @@
 <template>
   <div>
-    <headerDisplay/>
     <div class="container">
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-            <li><a href="/">Home</a></li>
-            <li class="is-active"><a href="/members">Flatmates</a></li>
+              <li><a href="/">Home</a></li>
+              <li><a href="/apps">Apps</a></li>
+              <li class="is-active"><a href="/apps/flatmates">Flatmates</a></li>
             </ul>
         </nav>
         <h1 class="title">Flatmates</h1>
@@ -64,11 +64,10 @@
 </template>
 
 <script>
-import headerDisplay from '@/frontend/components/header-display'
 import emoji from 'node-emoji'
 
 export default {
-  name: 'Shopping List',
+  name: 'Flatmates',
   data () {
     return {
       members: [],
@@ -78,9 +77,6 @@ export default {
   created () {
   },
   methods: {
-  },
-  components: {
-    headerDisplay
   }
 }
 </script>

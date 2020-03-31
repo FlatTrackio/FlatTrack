@@ -10,12 +10,17 @@ export default [
     component: () => import('@/frontend/views/global/unknown-page.vue')
   },
   {
-    path: '/flatmates',
+    path: '/apps',
+    name: 'apps',
+    component: () => import('@/frontend/views/authenticated/apps.vue')
+  },
+  {
+    path: '/apps/flatmates',
     name: 'flatmates',
     component: () => import('@/frontend/views/authenticated/flatmates.vue')
   },
   {
-    path: '/shopping-list',
+    path: '/apps/shopping-list',
     name: 'shopping-list',
     component: () => import('@/frontend/views/authenticated/shopping-list.vue')
   },

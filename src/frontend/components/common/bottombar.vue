@@ -1,12 +1,11 @@
 <template>
-  <div>
-    <div id="bottombar">
-      <b-tabs type="is-toggle" size="is-medium" class="block" position="is-centered" expanded>
-        <b-tab-item label="Home" icon="google-photos"></b-tab-item>
-        <b-tab-item label="Menu" icon="library-music"></b-tab-item>
-        <b-tab-item label="Profile" icon="video"></b-tab-item>
-      </b-tabs>
-    </div>
+  <div class="bottombar">
+    <md-bottom-bar md-sync-route>
+      <md-bottom-bar-item to="/" exact md-label="Home" md-icon="home"></md-bottom-bar-item>
+      <md-bottom-bar-item to="/apps" md-label="Apps" md-icon="apps"></md-bottom-bar-item>
+      <md-bottom-bar-item to="/profile" md-label="Profile" md-icon="account_box"></md-bottom-bar-item>
+      <md-bottom-bar-item to="/admin" md-label="Admin" md-icon="web"></md-bottom-bar-item>
+    </md-bottom-bar>
   </div>
 </template>
 
@@ -17,7 +16,21 @@ export default {
 </script>
 
 <style>
-#bottombar .b-tabs .tab-content {
-  display: none;
+.bottombar {
+  position: fixed;
+  width: 100%;
+  bottom: 0;
 }
+</style>
+
+<style lang="scss" scoped>
+  .phone-viewport {
+    width: 322px;
+    height: 200px;
+    display: inline-flex;
+    align-items: flex-end;
+    overflow: hidden;
+    border: 1px solid rgba(#000, .26);
+    background: rgba(#000, .06);
+  }
 </style>

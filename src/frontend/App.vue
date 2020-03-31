@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <div>
+      <topbar v-if="onMobile && !publicPages"/>
       <navbar v-if="!onMobile && !publicPages && displayNavigationBar"/>
     </div>
     <div class="pad-bottom full-height main-view-container" :class="{ 'pad-left': !publicPages && !onMobile && displayNavigationBar }">
@@ -31,6 +32,7 @@ export default {
   },
   components: {
     navbar: () => import('@/frontend/components/common/navbar.vue'),
+    topbar: () => import('@/frontend/components/common/topbar.vue'),
     bottombar: () => import('@/frontend/components/common/bottombar.vue')
   },
   methods: {
@@ -50,6 +52,10 @@ export default {
 
 <style lang="scss">
 @import "~bulma/sass/utilities/_all";
+
+$material-icons-font-path: '~material-icons/iconfont/';
+
+@import '~material-icons/iconfont/material-icons.scss';
 
 $primary: #00a7d6;
 $primary-invert: findColorInvert($primary);
