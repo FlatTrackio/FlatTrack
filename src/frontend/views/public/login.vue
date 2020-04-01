@@ -59,7 +59,7 @@ export default {
       }
       login.PostUserAuth(form)
         .then(resp => {
-          localStorage.setItem('authToken', resp.data.refreshToken)
+          localStorage.setItem('authToken', resp.data.data)
           setTimeout(() => {
             loadingComponent.close()
             location.href = '/'
