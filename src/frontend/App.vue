@@ -1,14 +1,14 @@
 <template>
   <div id="app">
     <div>
-      <topbar v-if="onMobile && !publicPages"/>
-      <navbar v-if="!onMobile && !publicPages && displayNavigationBar"/>
+      <topbar v-if="onMobile && !publicPages" />
+      <navbar v-if="!onMobile && !publicPages && displayNavigationBar" />
     </div>
     <div class="pad-bottom full-height main-view-container" :class="{ 'pad-left': !publicPages && !onMobile && displayNavigationBar }">
       <router-view class="main-view" />
     </div>
     <div>
-      <bottombar v-if="onMobile && !publicPages"/>
+      <bottombar v-if="onMobile && !publicPages" />
     </div>
   </div>
 </template>

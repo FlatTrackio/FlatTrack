@@ -222,7 +222,7 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to validate authentication token"
-		code := 400
+		code := 401
 
 		valid, err := users.ValidateJWTauthToken(db, r)
 		if valid == true && err == nil {

@@ -6,7 +6,9 @@ import VueMaterial from 'vue-material'
 import 'vue-material/dist/vue-material.min.css'
 
 Vue.use(VueMaterial)
-Vue.use(Buefy)
+Vue.use(Buefy, {
+  defaultIconPack: 'mdi'
+})
 Vue.config.productionTip = false
 
 new Vue({

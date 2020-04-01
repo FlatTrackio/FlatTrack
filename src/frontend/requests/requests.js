@@ -4,12 +4,18 @@ function getAuthToken () {
   return localStorage.getItem('authToken')
 }
 
-function Request (request) {
+function redirectToLogin (redirect) {
+  if (window.location.href !== '/login' && redirect !== false) {
+    window.location.href = 'login'
+  }
+}
+
+function Request (request, redirect) {
   return new Promise((resolve, reject) => {
     var authToken = getAuthToken()
     if (typeof authToken === 'undefined') {
       reject(401) // eslint-disable-line prefer-promise-reject-errors
-      window.location.href = '/login'
+      redirectToLogin(redirect)
     }
     request.headers = {
       Authorization: 'Bearer ' + authToken
@@ -17,10 +23,11 @@ function Request (request) {
     axios(request)
       .then(resp => resolve(resp))
       .catch(err => {
-        if (err.response.status === 401) {
-          localStorage.authToken = ''
-          window.location.href = '/login'
-        }
+        // console.log({ err }, err.response)
+        // if (err.response && err.response.status === 401) {
+        //   delete localStorage['authToken']
+        //   redirectToLogin(redirect)
+        // }
         reject(err)
       })
   })

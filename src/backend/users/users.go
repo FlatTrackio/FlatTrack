@@ -257,7 +257,7 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 		return false, errors.New("Unable to find authorization token (header doesn't exist)")
 	}
 	authorizationHeader := strings.Split(tokenHeader, " ")
-	if authorizationHeader[0] != "bearer" {
+	if authorizationHeader[0] != "bearer" || len(authorizationHeader) <= 1 {
 		return false, errors.New("Unable to find authorization token (must be as bearer)")
 	}
 	tokenHeaderJWT := authorizationHeader[1]

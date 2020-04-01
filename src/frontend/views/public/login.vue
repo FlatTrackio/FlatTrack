@@ -34,7 +34,7 @@
 <script>
 import headerDisplay from '@/frontend/components/header-display'
 import { ToastProgrammatic as Toast, LoadingProgrammatic as Loading } from 'buefy'
-import { PostAPIauth, VerifyAuthToken } from '@/frontend/requests/public/login'
+import login from '@/frontend/requests/public/login'
 
 export default {
   name: 'login',
@@ -57,7 +57,7 @@ export default {
         email: email,
         password: password
       }
-      PostAPIauth(form)
+      login.PostUserAuth(form)
         .then(resp => {
           localStorage.setItem('authToken', resp.data.refreshToken)
           setTimeout(() => {
@@ -77,7 +77,7 @@ export default {
     },
     checkForLoginToken: () => {
       if (localStorage.getItem('authToken')) {
-        VerifyAuthToken().then(res => {
+        login.GetUserAuth(false).then(res => {
           // verify token via request or something
           const loadingComponent = Loading.open({
             container: null
