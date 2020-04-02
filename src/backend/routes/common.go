@@ -11,6 +11,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"database/sql"
@@ -61,7 +62,16 @@ func HTTPuseMiddleware(handler http.HandlerFunc, middlewares ...func(http.Handle
 func Logging(next http.Handler) http.Handler {
 	// log all requests
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%v %v %v %v %v", r.Method, r.URL, r.Proto, r.Response, r.RemoteAddr)
+		var pathSection string
+		requestPath := strings.Split(r.URL.Path, "/")
+		if len(requestPath) >= 1 && requestPath[1] == "api" {
+			pathSection = "backend "
+		} else if len(requestPath) >= 1 && requestPath[1] == "metrics" {
+			pathSection = "metrics "
+		} else {
+			pathSection = "frontend"
+		}
+		log.Printf("[%v] %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, r.RemoteAddr)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -79,6 +89,7 @@ func HandleWebserver(db *sql.DB) {
 
 	router.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)
 	router.HandleFunc(apiEndpointPrefix, Root)
+	// TODO implement metrics endpoint on separate port
 	router.PathPrefix("/").Handler(vue.Handler(common.GetAppDistFolder())).Methods("GET")
 
 	router.Use(Logging)

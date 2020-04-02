@@ -8,10 +8,16 @@ import Request from '@/frontend/requests/requests'
 // GetUserAuth
 // validate JWT
 function GetUserAuth (redirect) {
-  return Request({
-    url: '/api/user/auth',
-    method: 'GET'
-  }, redirect)
+  return new Promise((resolve, reject) => {
+    Request({
+      url: '/api/user/auth',
+      method: 'GET'
+    }, redirect).then(resp => {
+      console.log({ resp })
+    }).catch(err => {
+      console.log({ err })
+    })
+  })
 }
 
 // PostUserAuth

@@ -2,7 +2,7 @@
     <div>
       <headerDisplay/>
       <div class="container">
-        <section class="section login-width">
+        <section class="section form-width">
           <h1 class="title">Login</h1>
           <p class="subtitle">
               Welcome to FlatTrack, please login.
@@ -35,6 +35,7 @@
 import headerDisplay from '@/frontend/components/header-display'
 import { ToastProgrammatic as Toast, LoadingProgrammatic as Loading } from 'buefy'
 import login from '@/frontend/requests/public/login'
+import common from '@/frontend/common/common'
 
 export default {
   name: 'login',
@@ -76,7 +77,8 @@ export default {
         })
     },
     checkForLoginToken: () => {
-      if (localStorage.getItem('authToken')) {
+      var authToken = common.getAuthToken()
+      if (!(typeof authToken === 'undefined' || authToken === null || authToken === '')) {
         login.GetUserAuth(false).then(res => {
           // verify token via request or something
           const loadingComponent = Loading.open({
@@ -102,7 +104,7 @@ export default {
 </script>
 
 <style scoped>
-.login-width {
+.form-width {
     width: 380px;
     margin: auto;
 }

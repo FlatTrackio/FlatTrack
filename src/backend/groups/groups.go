@@ -111,4 +111,3 @@ func GetGroupNamesOfUserById(db *sql.DB, userId string) (groups []string, err er
 	}
 	return groups, err
 }
-

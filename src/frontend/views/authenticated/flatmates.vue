@@ -65,6 +65,8 @@
 
 <script>
 import emoji from 'node-emoji'
+import flatmates from '@/frontend/requests/authenticated/flatmates'
+import { ToastProgrammatic as Toast } from 'buefy'
 
 export default {
   name: 'Flatmates',
@@ -75,8 +77,22 @@ export default {
     }
   },
   created () {
+    this.fetchAllFlatmates()
   },
   methods: {
+    fetchAllFlatmates () {
+      flatmates.GetAllFlatmates().then(resp => {
+        this.members = resp.data.list
+      }).catch(err => {
+        Toast.open({
+          duration: 8 * 1000,
+          message: `Failed to list flatmates<br/>${err}`,
+          position: 'is-top',
+          type: 'is-danger',
+          hasIcon: true
+        })
+      })
+    }
   }
 }
 </script>

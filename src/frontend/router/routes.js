@@ -4,7 +4,7 @@ import registration from '@/frontend/requests/public/registration'
 
 function checkForAuthToken (to, from, next) {
   var authToken = common.getAuthToken()
-  if (typeof authToken === 'undefined' || authToken === null) {
+  if (typeof authToken === 'undefined' || authToken === null || authToken === '') {
     window.location.href = '/login'
   }
   next()
@@ -56,17 +56,44 @@ export default [
     name: 'login',
     component: () => import('@/frontend/views/public/login.vue'),
     beforeEnter: (to, from, next) => {
-      var authToken = common.getAuthToken()
-      if (authToken === 'undefined' || authToken === null) {
-        next()
-        return
-      }
-      login.GetUserAuth().then(resp => {
-        if (resp.data.data === true) {
-          window.location.href = '/'
+      var instanceRegistered
+      var hasAuthToken
+      var validAuthToken
+      var nextRoute = ''
+      // check that the instance is set up
+      registration.GetInstanceRegistered().then(resp => {
+        instanceRegistered = resp.data.data === true
+      }).then(resp => {
+        // check if the authToken in localStorage isn't empty
+        var authToken = common.getAuthToken()
+        hasAuthToken = (!(typeof authToken === 'undefined' || authToken === null || authToken === ''))
+        // check if authToken is valid
+        login.GetUserAuth(false).then(resp => {
+          return resp
+        }).catch(() => {
+          return false
+        })
+      }).then(resp => {
+        if (typeof resp === 'undefined') {
+          validAuthToken = false
+        } else {
+          validAuthToken = resp.data.data === true
         }
-        next()
-      }).catch(() => {
+        if (instanceRegistered && validAuthToken) {
+          nextRoute = '/'
+        } else if (!hasAuthToken && instanceRegistered) {
+          nextRoute = null
+        } else if (!instanceRegistered) {
+          nextRoute = '/setup'
+        }
+
+        if (nextRoute !== null) {
+          window.location.pathname = nextRoute
+        } else {
+          next()
+        }
+      }).catch(err => {
+        console.log({ err })
         next()
       })
     }
@@ -87,12 +114,11 @@ export default [
     component: () => import('@/frontend/views/public/setup.vue'),
     beforeEnter: (to, from, next) => {
       registration.GetInstanceRegistered().then(resp => {
-        if (resp.data.data !== false) {
-          window.location.href = '/'
+        if (resp.data.data === true) {
+          window.location.pathname = '/'
         }
         next()
-      }).catch(err => {
-        console.log({ err })
+      }).catch(() => {
         next()
       })
     }

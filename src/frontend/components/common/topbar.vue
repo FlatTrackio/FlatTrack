@@ -13,14 +13,31 @@
         <b-navbar-item href="https://flattrack.io/help">
           Help
         </b-navbar-item>
+        <b-navbar-item @click="signOut">
+          Sign out
+        </b-navbar-item>
       </template>
     </b-navbar>
   </div>
 </template>
 
 <script>
+import common from '@/frontend/common/common'
+import { DialogProgrammatic as Dialog } from 'buefy'
+
 export default {
-  name: 'topbar'
+  name: 'topbar',
+  methods: {
+    signOut () {
+      Dialog.confirm({
+        message: 'Are you sure you want to sign out?',
+        onConfirm: () => {
+          common.deleteAuthToken()
+          window.location.href = '/login'
+        }
+      })
+    }
+  }
 }
 </script>
 

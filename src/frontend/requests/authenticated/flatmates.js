@@ -9,7 +9,7 @@ import Request from '@/frontend/requests/requests'
 // get a list of all Flatmates
 function GetAllFlatmates () {
   return Request({
-    url: '/api/flatmates',
+    url: '/api/users',
     method: 'GET'
   })
 }
@@ -18,7 +18,7 @@ function GetAllFlatmates () {
 // get a Flatmate
 function GetFlatmate (id) {
   return Request({
-    url: `/api/flatmates/${id}`,
+    url: `/api/users/${id}`,
     method: 'GET'
   })
 }
