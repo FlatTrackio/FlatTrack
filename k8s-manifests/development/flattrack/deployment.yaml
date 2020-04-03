@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flattrack
+  namespace: flattrack-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flattrack
+  template:
+    metadata:
+      labels:
+        app: flattrack
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: flattrack
+        image: registry.gitlab.com/flattrack/flattrack:latest
+        # command:
+        #   - "/bin/sleep"
+        #   - "10000000"
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 1000
+          runAsGroup: 1000
+          allowPrivilegeEscalation: false
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 8080
+        env:
+          - name: TZ
+            value: "Pacific/Auckland"
+          - name: APP_DB_USERNAME
+            value: postgres
+          - name: APP_DB_PASSWORD
+            value: postgres
+          - name: APP_DB_HOST
+            value: postgres
+          - name: APP_DB_DATABASE
+            value: flattrack
+          - name: APP_MODE
+            value: development
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 2
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 1
+          periodSeconds: 20
+

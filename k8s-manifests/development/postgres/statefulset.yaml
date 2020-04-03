@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: flattrack-dev
+spec:
+  replicas: 1
+  serviceName: "postgres"
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: postgres
+        image: "docker.io/postgres:12.2-alpine"
+        ports:
+        - containerPort: 5432
+        livenessProbe:
+          exec:
+            command:
+            - "sh"
+            - "-c"
+            - "pg_isready"
+            - "-U"
+            - "$POSTGRES_USER"
+          failureThreshold: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-configuration
+              key: POSTGRES_DB
+        - name: POSTGRES_USER
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-configuration
+              key: POSTGRES_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-configuration
+              key: POSTGRES_PASSWORD
+        - name: PGDATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-configuration
+              key: PGDATABASE
+        - name: PGUSER
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-configuration
+              key: PGUSER
+

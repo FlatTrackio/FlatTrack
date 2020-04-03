@@ -1,0 +1,36 @@
+#+TITLE: FlatTrack development
+#+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
+
+* Development
+[[https://minikube.sigs.k8s.io][Minikube]] is recommended for working out of.
+
+** Bring up the deployments
+   #+begin_src shell
+   kubectl apply -k k8s-manifests/development/postgres
+   #+end_src
+   
+** Port-forward the database connection   
+   #+begin_src shell
+   kubectl -n flattrack-dev port-forward service/postgres 5432:5432
+   #+end_src
+
+** Quick development patterns
+*** Backend
+    #+begin_src shell
+    go build -o flattrack src/backend/main.go && ./flattrack
+    #+end_src
+*** Frontend
+    #+begin_src shell
+    npm run build:frontend
+    #+end_src
+
+** Complete-testing development patterns
+   #+begin_src shell
+   tilt up --host 0.0.0.0
+   #+end_src
+
+* Additional
+** Manually connecting to the Postgres database
+   #+begin_src shell
+   psql -h localhost flattrack -U postgres -W
+   #+end_src
