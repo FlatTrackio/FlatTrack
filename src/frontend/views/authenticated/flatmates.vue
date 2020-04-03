@@ -19,10 +19,14 @@
                 <div class="media">
                   <div class="media-content">
                     <p class="title is-4">{{ member.names }}</p>
-                    <div class="tags has-addons">
-                      <span class="tag">is</span>
-                      <span class="tag is-info">{{ member.group }}</span>
-                    </div>
+                    <b-field grouped group-multiline>
+                      <div class="control" v-for="group in member.groups" v-bind:key="group">
+                        <b-taglist attached>
+                          <b-tag type="is-dark">is</b-tag>
+                          <b-tag type="is-info">{{ group }}</b-tag>
+                        </b-taglist>
+                      </div>
+                    </b-field>
                   </div>
                 </div>
                 <div class="content">
@@ -31,9 +35,6 @@
                   </div>
                   <div v-if="member.email">
                     Email: <a :href="`mailto:${member.email}`">{{ member.email }}</a><br/>
-                  </div>
-                  <div v-if="member.allergies">
-                    Allergies: {{ member.allergies }}<br/>
                   </div>
                 </div>
               </div>
@@ -66,7 +67,7 @@
 <script>
 import emoji from 'node-emoji'
 import flatmates from '@/frontend/requests/authenticated/flatmates'
-import { ToastProgrammatic as Toast } from 'buefy'
+import common from '@/frontend/common/common'
 
 export default {
   name: 'Flatmates',
@@ -77,20 +78,14 @@ export default {
     }
   },
   created () {
-    this.fetchAllFlatmates()
+    this.FetchAllFlatmates()
   },
   methods: {
-    fetchAllFlatmates () {
+    FetchAllFlatmates () {
       flatmates.GetAllFlatmates().then(resp => {
         this.members = resp.data.list
       }).catch(err => {
-        Toast.open({
-          duration: 8 * 1000,
-          message: `Failed to list flatmates<br/>${err}`,
-          position: 'is-top',
-          type: 'is-danger',
-          hasIcon: true
-        })
+        common.DisplayFailureToast('Failed to list flatmates' + `<br/>${err}`)
       })
     }
   }

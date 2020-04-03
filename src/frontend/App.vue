@@ -108,4 +108,8 @@ $footer-padding: 10px;
 html {
     background-color: #f3f3f3;
 }
+
+.pointer-cursor-on-hover {
+    cursor: pointer;
+}
 </style>
