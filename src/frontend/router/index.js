@@ -10,4 +10,11 @@ const router = new VueRouter({
   routes
 })
 
+router.beforeEach((to, from, next) => {
+  if (typeof to.name !== 'undefined') {
+    document.title = `FlatTrack | ${to.name}`
+  }
+  next()
+})
+
 export default router

@@ -41,7 +41,7 @@
             </div>
           </div>
           <div class="section">
-            <p>{{ members.length }} {{ members.length === 1 ? 'flatmember' : 'flatmembers' }}</p>
+            <p>{{ members.length }} {{ members.length === 1 ? 'flatmate' : 'flatmates' }}</p>
           </div>
         </div>
         <div v-if="members && !members.length">

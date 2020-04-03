@@ -28,6 +28,14 @@ export default [
     }
   },
   {
+    path: '/flat',
+    name: 'flat',
+    component: () => import('@/frontend/views/authenticated/flat.vue'),
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
+    }
+  },
+  {
     path: '/apps',
     name: 'apps',
     component: () => import('@/frontend/views/authenticated/apps.vue'),
@@ -60,28 +68,8 @@ export default [
       var hasAuthToken
       var validAuthToken
       var nextRoute = ''
-      // check that the instance is set up
-      registration.GetInstanceRegistered().then(resp => {
-        instanceRegistered = resp.data.data === true
-      }).then(() => {
-        // check if the authToken in localStorage isn't empty
-        var authToken = common.GetAuthToken()
-        hasAuthToken = (!(typeof authToken === 'undefined' || authToken === null || authToken === ''))
-        // check if authToken is valid
-        return login.GetUserAuth(false)
-        // .then(resp => {
-        //   console.log({ resp })
-        //   validAuthToken = resp.data.data === true
-        //   return resp
-        // }).catch(err => {
-        //   console.log({ err })
-        //   validAuthToken = err.data.data === true
-        //   return false
-        // })
-      }).then(resp => {
-        console.log({ resp })
-        validAuthToken = resp.data.data === true
 
+      function handleRedirections () {
         if (instanceRegistered && validAuthToken) {
           nextRoute = '/'
         } else if (!(hasAuthToken || validAuthToken)) {
@@ -97,8 +85,24 @@ export default [
         } else {
           next()
         }
+      }
+      // check that the instance is set up
+      registration.GetInstanceRegistered().then(resp => {
+        instanceRegistered = resp.data.data === true
+      }).then(() => {
+        // check if the authToken in localStorage isn't empty
+        var authToken = common.GetAuthToken()
+        hasAuthToken = (!(typeof authToken === 'undefined' || authToken === null || authToken === ''))
+        // check if authToken is valid
+        return login.GetUserAuth(false)
+      }).then(resp => {
+        console.log({ resp })
+        validAuthToken = resp.data.data === true
+        handleRedirections()
       }).catch(err => {
         console.log({ err })
+        validAuthToken = err.response.data.data === true
+        handleRedirections()
         next()
       })
     }
