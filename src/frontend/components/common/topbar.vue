@@ -23,7 +23,7 @@
 
 <script>
 import common from '@/frontend/common/common'
-import { DialogProgrammatic as Dialog } from 'buefy'
+import { DialogProgrammatic as Dialog, LoadingProgrammatic as Loading } from 'buefy'
 
 export default {
   name: 'topbar',
@@ -32,8 +32,13 @@ export default {
       Dialog.confirm({
         message: 'Are you sure you want to sign out?',
         onConfirm: () => {
-          common.deleteAuthToken()
-          window.location.href = '/login'
+          const loadingComponent = Loading.open({
+            container: null
+          })
+          setTimeout(() => {
+            common.DeleteAuthToken()
+            window.location.href = '/login'
+          }, 1 * 1000)
         }
       })
     }

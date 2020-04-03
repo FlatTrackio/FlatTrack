@@ -3,12 +3,12 @@
   <headerDisplay/>
   <div class="container">
     <section class="section form-width">
-      <h1 class="title is-1">Set up FlatTrack</h1>
+      <h1 class="title is-1">Set up</h1>
       <p class="subtitle is-5">
-        Let's get started
+        Let's get started.
       </p>
       <br/>
-      <div class="form-width">
+      <div class="">
         <!-- TODO add system icon -->
         <h3 class="title is-4">System</h3>
         <b-field label="Language">
@@ -73,7 +73,8 @@
 <script>
 import headerDisplay from '@/frontend/components/header-display.vue'
 import registration from '@/frontend/requests/public/registration'
-import { ToastProgrammatic as Toast, LoadingProgrammatic as Loading } from 'buefy'
+import common from '@/frontend/common/common'
+import { LoadingProgrammatic as Loading } from 'buefy'
 
 export default {
   name: 'setup',
@@ -102,26 +103,14 @@ export default {
         } else {
           Error('failed to find authToken')
         }
-        Toast.open({
-          duration: 8 * 1000,
-          message: `Welcome to FlatTrack!<br/>${resp.data.metadata.response}`,
-          position: 'is-top',
-          type: 'is-success',
-          hasIcon: true
-        })
+        common.DisplaySuccessToast('Welcome to FlatTrack!')
         setTimeout(() => {
           loadingComponent.close()
           window.location.href = '/'
         }, 3 * 1000)
       }).catch(err => {
         loadingComponent.close()
-        Toast.open({
-          duration: 8 * 1000,
-          message: `${err}`,
-          position: 'is-top',
-          type: 'is-danger',
-          hasIcon: true
-        })
+        common.DisplayFailureToast(err.response.data.metadata.response)
       })
     }
   }

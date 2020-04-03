@@ -17,7 +17,7 @@
             <b-menu>
               <b-menu-list label="General">
                 <b-menu-item icon="home" label="Home" tag="router-link" to="/"></b-menu-item>
-                <b-menu-item icon="account_box" label="Profile" tag="router-link" to="/profile"></b-menu-item>
+                <b-menu-item icon="information-outline" :label="flatName" tag="router-link" to="/flat"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Apps">
                 <b-menu-item icon="information-outline" label="Shopping list" tag="router-link" to="/apps/shopping-list"></b-menu-item>
@@ -31,6 +31,10 @@
                 <b-menu-item icon="web" label="FlatTrack help" tag="a" href="https://flattrack.io/help"></b-menu-item>
                 <b-menu-item icon="phone" label="Contact admin" tag="router-link" to="/apps/flatmates?group=admin"></b-menu-item>
               </b-menu-list>
+              <b-menu-list label="Account">
+                <b-menu-item icon="account_box" label="Profile" tag="router-link" to="/profile"></b-menu-item>
+                <b-menu-item icon="exit-to-app" label="Sign out" @click="signOut"></b-menu-item>
+              </b-menu-list>
             </b-menu>
           </div>
         </b-sidebar>
@@ -40,7 +44,12 @@
 </template>
 
 <script>
+import common from '@/frontend/common/common'
+import flatInfo from '@/frontend/requests/authenticated/flatInfo'
+import { DialogProgrammatic as Dialog, LoadingProgrammatic as Loading } from 'buefy'
+
 export default {
+  name: 'navbar',
   data () {
     return {
       isActive: true,
@@ -48,22 +57,47 @@ export default {
       overlay: false,
       fullheight: true,
       fullwidth: false,
-      right: false
+      right: false,
+      flatName: 'My flat'
     }
+  },
+  methods: {
+    signOut () {
+      Dialog.confirm({
+        message: 'Are you sure you want to sign out?',
+        onConfirm: () => {
+          const loadingComponent = Loading.open({
+            container: null
+          })
+          setTimeout(() => {
+            common.DeleteAuthToken()
+            window.location.href = '/login'
+          }, 1 * 1000)
+        }
+      })
+    },
+    GetFlatName () {
+      flatInfo.GetFlatName().then(resp => {
+        this.flatName = resp.data.spec
+      })
+    }
+  },
+  async created () {
+    this.GetFlatName()
   }
 }
 </script>
 
 <style>
 .p-1 {
-  padding: 1em;
+    padding: 1em;
 }
 
 .p-1 .menu {
-  margin-top: 23px;
+    margin-top: 23px;
 }
 
 .navbar-text {
-  text-align: center;
+    text-align: center;
 }
 </style>

@@ -1,8 +1,5 @@
 import axios from 'axios'
-
-function getAuthToken () {
-  return localStorage.getItem('authToken')
-}
+import common from '@/frontend/common/common'
 
 function redirectToLogin (redirect) {
   if (redirect === false) {
@@ -14,20 +11,24 @@ function redirectToLogin (redirect) {
   }
 }
 
-function Request (request, redirect) {
+function Request (request, redirect = true, publicRoute = false) {
   return new Promise((resolve, reject) => {
-    var authToken = getAuthToken()
-    if (typeof authToken === 'undefined' || authToken === null || authToken === '') {
+    var authToken = common.GetAuthToken()
+    // if there is no token, and the request is a public route
+    if ((typeof authToken === 'undefined' || authToken === null || authToken === '') && publicRoute !== true) {
       redirectToLogin(redirect)
     }
-    request.headers = {
-      Authorization: 'bearer ' + authToken
+    if (publicRoute !== true) {
+      request.headers = {
+        Authorization: 'bearer ' + authToken
+      }
     }
+    console.log({ request, publicRoute, redirect })
     axios(request)
       .then(resp => resolve(resp))
       .catch(err => {
         if (err.response.status === 401) {
-          redirectToLogin()
+          redirectToLogin(redirect)
         }
         reject(err)
       })

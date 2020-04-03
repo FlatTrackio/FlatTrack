@@ -77,7 +77,7 @@ export default {
         })
     },
     checkForLoginToken: () => {
-      var authToken = common.getAuthToken()
+      var authToken = common.GetAuthToken()
       if (!(typeof authToken === 'undefined' || authToken === null || authToken === '')) {
         login.GetUserAuth(false).then(res => {
           // verify token via request or something

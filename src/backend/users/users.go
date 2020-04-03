@@ -45,7 +45,7 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 	if user.PhoneNumber != "" && common.RegexMatchPhoneNumber(user.PhoneNumber) == false {
 		return userInserted, errors.New("Unable to use the provided phone number")
 	}
-	localUser, err := GetUserByEmail(db, user.Email)
+	localUser, err := GetUserByEmail(db, user.Email, false)
 	if localUser.Email == user.Email || err != nil {
 		return userInserted, errors.New("User account already exists")
 	}
@@ -85,7 +85,7 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 
 // GetAllUsers
 // return all users in the database
-func GetAllUsers(db *sql.DB) (users []types.UserSpec, err error) {
+func GetAllUsers(db *sql.DB, includePassword bool) (users []types.UserSpec, err error) {
 	sqlStatement := `select * from users`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
@@ -102,6 +102,9 @@ func GetAllUsers(db *sql.DB) (users []types.UserSpec, err error) {
 			return users, err
 		}
 		user.Groups = groups
+		if includePassword == false {
+			user.Password = ""
+		}
 		users = append(users, user)
 	}
 	return users, err
@@ -109,15 +112,18 @@ func GetAllUsers(db *sql.DB) (users []types.UserSpec, err error) {
 
 // GetUser
 // given a UserSpec and an ID or Email, return a user from the database
-func GetUser(db *sql.DB, userSelect types.UserSpec) (user types.UserSpec, err error) {
+func GetUser(db *sql.DB, userSelect types.UserSpec, includePassword bool) (user types.UserSpec, err error) {
 	if userSelect.Id != "" {
-		return GetUserById(db, userSelect.Id)
+		return GetUserById(db, userSelect.Id, includePassword)
 	}
 	if userSelect.Email != "" {
 		if common.RegexMatchEmail(userSelect.Email) {
 			return user, errors.New("Invalid email address")
 		}
-		return GetUserByEmail(db, userSelect.Email)
+		return GetUserByEmail(db, userSelect.Email, includePassword)
+	}
+	if includePassword == false {
+		user.Password = ""
 	}
 	return user, err
 }
@@ -161,7 +167,7 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 
 // GetUserById
 // given an id, return a UserSpec
-func GetUserById(db *sql.DB, id string) (user types.UserSpec, err error) {
+func GetUserById(db *sql.DB, id string, includePassword bool) (user types.UserSpec, err error) {
 	sqlStatement := `select * from users where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
@@ -175,12 +181,15 @@ func GetUserById(db *sql.DB, id string) (user types.UserSpec, err error) {
 		return user, err
 	}
 	user.Groups = groups
+	if includePassword == false {
+		user.Password = ""
+	}
 	return user, err
 }
 
 // GetUserByEmail
 // given a email, return a UserSpec
-func GetUserByEmail(db *sql.DB, email string) (user types.UserSpec, err error) {
+func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.UserSpec, err error) {
 	sqlStatement := `select * from users where email = $1`
 	rows, err := db.Query(sqlStatement, email)
 	if err != nil {
@@ -194,6 +203,9 @@ func GetUserByEmail(db *sql.DB, email string) (user types.UserSpec, err error) {
 		return user, err
 	}
 	user.Groups = groups
+	if includePassword == false {
+		user.Password = ""
+	}
 	return user, err
 }
 
@@ -218,7 +230,7 @@ func DeleteUserById(db *sql.DB, id string) (err error) {
 // CheckUserPassword
 // given an email and password, find the user account with the email, return if the password matches
 func CheckUserPassword(db *sql.DB, email string, password string) (matches bool, err error) {
-	user, err := GetUserByEmail(db, email)
+	user, err := GetUserByEmail(db, email, true)
 	if err != nil {
 		return matches, err
 	}
@@ -270,7 +282,7 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 	}
 
 	reqClaims := token.Claims.(*types.JWTclaim)
-	user, err := GetUserById(db, reqClaims.Id)
+	user, err := GetUserById(db, reqClaims.Id, true)
 	if err != nil || user.Id == "" {
 		return false, errors.New("Unable to find the user account which the authentication token belongs to")
 	}

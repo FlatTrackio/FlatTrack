@@ -27,7 +27,7 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 		code := 500
 		response := "Failed to fetch user accounts"
 
-		users, err := users.GetAllUsers(db)
+		users, err := users.GetAllUsers(db, false)
 		if err == nil {
 			code = 200
 			response = "Fetched user accounts"
@@ -58,7 +58,7 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 			Id: id,
 		}
 
-		user, err := users.GetUserById(db, id)
+		user, err := users.GetUserById(db, id, false)
 		if err != nil || user.Id == "" {
 			code = 404
 			response = "Failed to find user"
@@ -127,7 +127,7 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		userId := vars["id"]
 
-		userInDB, err := users.GetUserById(db, userId)
+		userInDB, err := users.GetUserById(db, userId, false)
 		if err != nil || userInDB.Id == "" {
 			code = 404
 			response = "Failed to find user"
@@ -189,21 +189,21 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 func UserAuth(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to authenticate user, incorrect email or password"
-		code := 403
+		code := 401
 		jwtToken := ""
 
 		var user types.UserSpec
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &user)
 
-		userInDB, err := users.GetUserByEmail(db, user.Email)
+		userInDB, err := users.GetUserByEmail(db, user.Email, false)
 		if err != nil {
 			response = "Failed to find user"
 		}
 		// Check password locally, fall back to remote if incorrect
 		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
 		if err == nil && matches == true {
-			jwtToken, _ = users.GenerateJWTauthToken(db, user.Id)
+			jwtToken, _ = users.GenerateJWTauthToken(db, userInDB.Id)
 			response = "Successfully authenticated user"
 			code = 200
 		}

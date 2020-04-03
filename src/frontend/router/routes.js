@@ -3,7 +3,7 @@ import login from '@/frontend/requests/public/login'
 import registration from '@/frontend/requests/public/registration'
 
 function checkForAuthToken (to, from, next) {
-  var authToken = common.getAuthToken()
+  var authToken = common.GetAuthToken()
   if (typeof authToken === 'undefined' || authToken === null || authToken === '') {
     window.location.href = '/login'
   }
@@ -63,31 +63,36 @@ export default [
       // check that the instance is set up
       registration.GetInstanceRegistered().then(resp => {
         instanceRegistered = resp.data.data === true
-      }).then(resp => {
+      }).then(() => {
         // check if the authToken in localStorage isn't empty
-        var authToken = common.getAuthToken()
+        var authToken = common.GetAuthToken()
         hasAuthToken = (!(typeof authToken === 'undefined' || authToken === null || authToken === ''))
         // check if authToken is valid
-        login.GetUserAuth(false).then(resp => {
-          return resp
-        }).catch(() => {
-          return false
-        })
+        return login.GetUserAuth(false)
+        // .then(resp => {
+        //   console.log({ resp })
+        //   validAuthToken = resp.data.data === true
+        //   return resp
+        // }).catch(err => {
+        //   console.log({ err })
+        //   validAuthToken = err.data.data === true
+        //   return false
+        // })
       }).then(resp => {
-        if (typeof resp === 'undefined') {
-          validAuthToken = false
-        } else {
-          validAuthToken = resp.data.data === true
-        }
+        console.log({ resp })
+        validAuthToken = resp.data.data === true
+
         if (instanceRegistered && validAuthToken) {
           nextRoute = '/'
-        } else if (!hasAuthToken && instanceRegistered) {
+        } else if (!(hasAuthToken || validAuthToken)) {
           nextRoute = null
         } else if (!instanceRegistered) {
           nextRoute = '/setup'
         }
 
-        if (nextRoute !== null) {
+        console.log({ validAuthToken, instanceRegistered, hasAuthToken, nextRoute })
+
+        if (!(nextRoute === null || nextRoute === '')) {
           window.location.pathname = nextRoute
         } else {
           next()

@@ -11,7 +11,7 @@ function GetInstanceRegistered () {
   return Request({
     url: '/api/system/initialized',
     method: 'GET'
-  })
+  }, undefined, true)
 }
 
 // PostAdminRegister
