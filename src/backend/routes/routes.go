@@ -11,15 +11,15 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"fmt"
 
 	"github.com/gorilla/mux"
+	"gitlab.com/flattrack/flattrack/src/backend/groups"
 	"gitlab.com/flattrack/flattrack/src/backend/registration"
 	"gitlab.com/flattrack/flattrack/src/backend/settings"
 	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
-	"gitlab.com/flattrack/flattrack/src/backend/groups"
+	"gitlab.com/flattrack/flattrack/src/backend/shoppinglist"
 )
 
 // GetAllUsers
@@ -285,7 +285,7 @@ func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 }
 
 // GetSettingsFlatName
-// response with the name of the flat
+// responds with the name of the flat
 func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch the flat name"
@@ -378,6 +378,84 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 			},
 			Spec: registered,
 			Data: jwt,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetShoppingList
+// responds with list of shopping lists
+func GetShoppingList(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch shopping lists"
+		code := 500
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		shoppingList, err := shoppinglist.GetShoppingList(db, id)
+		if err == nil && shoppingList.Id != "" {
+			response = "Fetched the shopping lists"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: shoppingList,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetShoppingLists
+// responds with shopping list by id
+func GetShoppingLists(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch shopping lists"
+		code := 500
+
+		shoppingLists, err := shoppinglist.GetShoppingLists(db)
+		if err == nil {
+			response = "Fetched the shopping lists"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			List: shoppingLists,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PostShoppingList
+// creates a new shopping list to add items to
+func PostShoppingList(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to create the shopping list"
+
+		var shoppingList types.ShoppingListSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &shoppingList)
+
+		id, errId := users.GetIdFromJWT(db, r)
+		shoppingList.Author = id
+		shoppingListInserted, err := shoppinglist.CreateShoppingList(db, shoppingList)
+		if err == nil && errId == nil {
+			code = 200
+			response = "Successfully created the shopping list"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: shoppingListInserted,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}

@@ -57,6 +57,14 @@
                    >
           </b-input>
         </b-field>
+        <b-field label="Confirm password">
+          <b-input type="password"
+                   v-model="passwordConfirm"
+                   password-reveal
+                   maxlength="70"
+                   >
+          </b-input>
+        </b-field>
         <!-- <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="Register({ language, timezone, flatName, user: { names, email, password } })">Save</b-button> -->
       </section>
     </div>

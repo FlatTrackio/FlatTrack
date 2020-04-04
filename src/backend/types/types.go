@@ -76,6 +76,31 @@ type UserSelector struct {
 	notId string `json:"notId,omitempty"`
 }
 
+type ShoppingListSpec struct {
+	Id                    string `json:"id"`
+	Name                  string `json:"name"`
+	Notes                 string `json:"notes"`
+	Author                string `json:"author"`
+	AuthorLast            string `json:"authorLast"`
+	Completed             bool   `json:"completed"`
+	CreationTimestamp     int    `json:"creationTimestamp"`
+	ModificationTimestamp int    `json:"modificationTimestamp"`
+	DeletionTimestamp     int    `json:"deletionTimestamp"`
+}
+
+type ShoppingItemSpec struct {
+	Id                    string  `json:"id"`
+	Name                  string  `json:"name"`
+	Price                 float64 `json:"price"`
+	Regular               bool    `json:"regular"`
+	Notes                 string  `json:"notes"`
+	Author                string  `json:"author"`
+	AuthorLast            string  `json:"authorLast"`
+	CreationTimestamp     int     `json:"creationTimestamp"`
+	ModificationTimestamp int     `json:"modificationTimestamp"`
+	DeletionTimestamp     int     `json:"deletionTimestamp"`
+}
+
 // FlatName
 // the name of the flat
 type FlatName struct {

@@ -6,13 +6,16 @@ create table if not exists shopping_list (
   notes text,
   author text not null,
   authorLast text not null,
-  creationTimestamp timestamptz not null default now(),
-  modificationTimestamp timestamptz not null default now(),
-  deletionTimestamp timestamptz,
+  completed bool not null default false,
+  creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  deletionTimestamp int,
 
   primary key (id),
   foreign key (author) references users(id),
   foreign key (authorLast) references users(id)
 );
+
+comment on table shopping_list is 'The table shopping_list is used for shopping lists which items are associated with through shopping_item_to_list';
 
 commit;

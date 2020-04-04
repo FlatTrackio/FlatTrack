@@ -3,7 +3,7 @@
     commonly used JS functions
 */
 
-import { ToastProgrammatic as Toast } from 'buefy'
+import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog, LoadingProgrammatic as Loading } from 'buefy'
 
 // GetAuthToken
 // returns the JWT from localStorage
@@ -43,9 +43,29 @@ function DisplayFailureToast (message) {
   })
 }
 
+// SignoutDialog
+// shows a dialog prompt to signout
+function SignoutDialog () {
+  Dialog.confirm({
+    message: 'Are you sure you want to sign out?',
+    type: 'is-danger',
+    hasIcon: 'true',
+    onConfirm: () => {
+      const loadingComponent = Loading.open({
+        container: null
+      })
+      setTimeout(() => {
+        common.DeleteAuthToken()
+        window.location.href = '/login'
+      }, 1 * 1000)
+    }
+  })
+}
+
 export default {
   GetAuthToken,
   DeleteAuthToken,
   DisplaySuccessToast,
-  DisplayFailureToast
+  DisplayFailureToast,
+  SignoutDialog
 }

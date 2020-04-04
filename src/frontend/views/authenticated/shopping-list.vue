@@ -16,7 +16,7 @@
           <b-tab-item label="Completed" :disabled="lists.length === 0"></b-tab-item>
         </b-tabs>
         <div id="lists" v-if="!lists.length">
-          <section class="section">
+          <section>
             <div class="card">
               <div class="card-content">
                 <div class="media">
@@ -32,6 +32,7 @@
             </div>
           </section>
         </div>
+        <br/><br/><br/>
         <addButton @click="addList"/>
     </div>
   </div>

@@ -13,12 +13,14 @@ create table if not exists users (
   disabled bool default false not null,
   registered bool default false not null,
   taskNotificationFrequency int default 7 not null,
-  lastLogin int,
+  lastLogin int not null default 0,
   creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
   modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
-  deletionTimestamp int,
+  deletionTimestamp int not null default 0,
 
   primary key (id)
 );
+
+comment on table users is 'The users table is used for storing user accounts';
 
 commit;

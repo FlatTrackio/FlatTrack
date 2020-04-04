@@ -1,6 +1,6 @@
 <template>
   <div class="bottombar">
-    <md-bottom-bar md-sync-route>
+    <md-bottom-bar class="md-accent" md-sync-route>
       <md-bottom-bar-item to="/" exact md-label="Home" md-icon="home"></md-bottom-bar-item>
       <md-bottom-bar-item to="/apps" md-label="Apps" md-icon="apps"></md-bottom-bar-item>
       <md-bottom-bar-item to="/profile" md-label="Profile" md-icon="account_box"></md-bottom-bar-item>
@@ -17,9 +17,12 @@ export default {
 
 <style>
 .bottombar {
-  position: fixed;
-  width: 100%;
-  bottom: 0;
+    position: fixed;
+    width: 100%;
+    bottom: 0;
+    display: inline-flex;
+    align-items: flex-end;
+    background: rbga(#209cee, 0.8);
 }
 </style>
 

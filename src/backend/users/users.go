@@ -52,26 +52,15 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 
 	sqlStatement := `insert into users (names, email, password, phonenumber, birthday, contractAgreement, disabled, registered, taskNotificationFrequency)
                          values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                         returning id`
+                         returning *`
 	rows, err := db.Query(sqlStatement, user.Names, user.Email, user.Password, user.PhoneNumber, user.Birthday, user.ContractAgreement, user.Disabled, user.Registered, user.TaskNotificationFrequency)
 	if err != nil {
 		return userInserted, err
 	}
-	defer rows.Close()
 	for rows.Next() {
-		var id string
-		rows.Scan(&id)
-		userInserted = types.UserSpec{
-			Id:                        id,
-			Names:                     user.Names,
-			Email:                     user.Email,
-			Groups:                    user.Groups,
-			PhoneNumber:               user.PhoneNumber,
-			Birthday:                  user.Birthday,
-			ContractAgreement:         user.ContractAgreement,
-			Disabled:                  user.Disabled,
-			Registered:                user.Registered,
-			TaskNotificationFrequency: user.TaskNotificationFrequency,
+		userInserted, err = UserObjectFromRows(rows)
+		if err != nil {
+			return userInserted, err
 		}
 	}
 
@@ -117,9 +106,10 @@ func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector)
 		if includePassword == false {
 			user.Password = ""
 		}
-		if found == true {
-			users = append(users, user)
+		if found == false {
+			continue
 		}
+		users = append(users, user)
 	}
 	return users, err
 }
@@ -145,7 +135,6 @@ func GetUser(db *sql.DB, userSelect types.UserSpec, includePassword bool) (user 
 // UserObjectFromRows
 // construct a UserSpec from database rows
 func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
-	defer rows.Close()
 	var id string
 	var names string
 	var email string
@@ -160,7 +149,11 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 	var creationTimestamp int
 	var modificationTimestamp int
 	var deletionTimestamp int
-	rows.Scan(&id, &names, &email, &password, &phoneNumber, &birthday, &contractAgreement, &disabled, &registered, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	err = rows.Scan(&id, &names, &email, &password, &phoneNumber, &birthday, &contractAgreement, &disabled, &registered, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	if err != nil {
+		fmt.Println(err)
+		return user, err
+	}
 	user = types.UserSpec{
 		Id:                        id,
 		Names:                     names,
@@ -190,6 +183,9 @@ func GetUserById(db *sql.DB, id string, includePassword bool) (user types.UserSp
 	defer rows.Close()
 	rows.Next()
 	user, err = UserObjectFromRows(rows)
+	if err != nil {
+		return user, err
+	}
 	groups, err := groups.GetGroupNamesOfUserById(db, user.Id)
 	if err != nil {
 		return user, err
@@ -209,9 +205,8 @@ func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.
 	if err != nil {
 		return user, err
 	}
-	defer rows.Close()
 	rows.Next()
-	user, err = UserObjectFromRows(rows)
+	user, _ = UserObjectFromRows(rows)
 	groups, err := groups.GetGroupNamesOfUserById(db, user.Id)
 	if err != nil {
 		return user, err

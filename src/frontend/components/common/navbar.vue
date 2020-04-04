@@ -28,7 +28,7 @@
                 <b-menu-item icon="settings" label="Settings" tag="router-link" to="/admin"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Help">
-                <b-menu-item icon="web" label="FlatTrack help" tag="a" href="https://flattrack.io/help"></b-menu-item>
+                <b-menu-item icon="web" label="FlatTrack help" tag="a" target="_blank" href="https://flattrack.io/help"></b-menu-item>
                 <b-menu-item icon="phone" label="Contact admin" tag="router-link" to="/apps/flatmates?group=admin"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Account">
@@ -63,18 +63,7 @@ export default {
   },
   methods: {
     signOut () {
-      Dialog.confirm({
-        message: 'Are you sure you want to sign out?',
-        onConfirm: () => {
-          const loadingComponent = Loading.open({
-            container: null
-          })
-          setTimeout(() => {
-            common.DeleteAuthToken()
-            window.location.href = '/login'
-          }, 1 * 1000)
-        }
-      })
+      common.SignoutDialog()
     },
     GetFlatName () {
       flatInfo.GetFlatName().then(resp => {
