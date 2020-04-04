@@ -23,4 +23,17 @@ function GetShoppingList (id) {
   })
 }
 
-export default { GetShoppingLists, GetShoppingList }
+// PostShoppingList
+// given a name and optional notes, create a shopping list
+function PostShoppingList (name, notes) {
+  return Request({
+    url: '/api/apps/shoppinglist',
+    method: 'POST',
+    data: {
+      name,
+      notes
+    }
+  })
+}
+
+export default { GetShoppingLists, GetShoppingList, PostShoppingList }

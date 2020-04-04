@@ -13,7 +13,7 @@ function checkForAuthToken (to, from, next) {
 export default [
   {
     path: '/',
-    name: 'home',
+    name: 'Home',
     component: () => import('@/frontend/views/authenticated/home.vue'),
     beforeEnter: (to, from, next) => {
       checkForAuthToken(to, from, next)
@@ -21,7 +21,7 @@ export default [
   },
   {
     path: '*',
-    name: 'unknown-page',
+    name: 'Unknown Page',
     component: () => import('@/frontend/views/global/unknown-page.vue'),
     beforeEnter: (to, from, next) => {
       checkForAuthToken(to, from, next)
@@ -29,7 +29,7 @@ export default [
   },
   {
     path: '/flat',
-    name: 'flat',
+    name: 'My Flat',
     component: () => import('@/frontend/views/authenticated/flat.vue'),
     beforeEnter: (to, from, next) => {
       checkForAuthToken(to, from, next)
@@ -37,7 +37,7 @@ export default [
   },
   {
     path: '/profile',
-    name: 'profile',
+    name: 'Profile',
     component: () => import('@/frontend/views/authenticated/profile.vue'),
     beforeEnter: (to, from, next) => {
       checkForAuthToken(to, from, next)
@@ -45,7 +45,7 @@ export default [
   },
   {
     path: '/apps',
-    name: 'apps',
+    name: 'Apps',
     component: () => import('@/frontend/views/authenticated/apps.vue'),
     beforeEnter: (to, from, next) => {
       checkForAuthToken(to, from, next)
@@ -53,7 +53,7 @@ export default [
   },
   {
     path: '/apps/flatmates',
-    name: 'flatmates',
+    name: 'My Flatmates',
     component: () => import('@/frontend/views/authenticated/flatmates.vue'),
     beforeEnter: (to, from, next) => {
       checkForAuthToken(to, from, next)
@@ -61,15 +61,23 @@ export default [
   },
   {
     path: '/apps/shopping-list',
-    name: 'shopping-list',
+    name: 'Shopping list',
     component: () => import('@/frontend/views/authenticated/shopping-list.vue'),
     beforeEnter: (to, from, next) => {
       checkForAuthToken(to, from, next)
     }
   },
   {
+    path: '/apps/shopping-list/new',
+    name: 'New shopping list',
+    component: () => import('@/frontend/views/authenticated/shopping-list-new.vue'),
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
+    }
+  },
+  {
     path: '/login',
-    name: 'login',
+    name: 'Login',
     component: () => import('@/frontend/views/public/login.vue'),
     beforeEnter: (to, from, next) => {
       var instanceRegistered
@@ -117,7 +125,7 @@ export default [
   },
   {
     path: '/forgot-password',
-    name: 'forgot-password',
+    name: 'Forgot password',
     component: () => import('@/frontend/views/public/forgot-password.vue')
   },
   // {
@@ -127,7 +135,7 @@ export default [
   // },
   {
     path: '/setup',
-    name: 'setup',
+    name: 'Set up',
     component: () => import('@/frontend/views/public/setup.vue'),
     beforeEnter: (to, from, next) => {
       registration.GetInstanceRegistered().then(resp => {

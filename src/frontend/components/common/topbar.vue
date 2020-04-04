@@ -1,6 +1,6 @@
 <template>
   <div id="topbar">
-    <b-navbar type="is-info" shadow="true" transparent="true">
+    <b-navbar fixed-top type="is-info" shadow="true" transparent="false">
       <template slot="brand">
         <b-navbar-item tag="router-link" :to="{ path: '/' }">
           <h1 class="title is-5" style="color: #fff;">FlatTrack ({{ flatName }})</h1>
@@ -11,7 +11,13 @@
           Home
         </b-navbar-item>
         <b-navbar-item href="https://flattrack.io/help" tag="a" target="_blank">
-          Help
+          FlatTrack Help
+        </b-navbar-item>
+        <b-navbar-item tag="router-link" :to="{ path: '/apps/flatmates?group=admin' }">
+          Contact admin
+        </b-navbar-item>
+        <b-navbar-item tag="router-link" :to="{ path: '/flat' }">
+          {{ flatName }}
         </b-navbar-item>
         <b-navbar-item @click="signOut">
           Sign out

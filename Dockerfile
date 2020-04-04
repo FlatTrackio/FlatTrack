@@ -10,8 +10,8 @@ FROM golang:1.13.4-alpine3.10 AS api
 WORKDIR /app
 COPY src /app/src
 COPY go.* /app/
-COPY .git /app
 RUN adduser -D user
+# TODO build the version, git hash, and build date into the binary from build-args or env
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static" -s -w' -o flattrack src/backend/main.go
 
 FROM alpine:3.10

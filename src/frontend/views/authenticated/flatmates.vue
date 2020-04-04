@@ -4,12 +4,12 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><a href="/">Home</a></li>
-              <li><a href="/apps">Apps</a></li>
-              <li class="is-active"><a href="/apps/flatmates">Flatmates</a></li>
+              <li><router-link to="/">Home</router-link></li>
+              <li><router-link to="/apps">Apps</router-link></li>
+              <li class="is-active"><router-link to="/apps/flatmates">Flatmates</router-link></li>
             </ul>
         </nav>
-        <h1 class="title">Flatmates</h1>
+        <h1 class="title is-1">Flatmates</h1>
         <div v-if="typeof groupQuery === 'undefined'">
           <p>These are your flatmates, make sure to get to know them {{ emojiSmile }}</p>
           <br>

@@ -22,6 +22,7 @@
               <b-menu-list label="Apps">
                 <b-menu-item icon="information-outline" label="Shopping list" tag="router-link" to="/apps/shopping-list"></b-menu-item>
                 <b-menu-item icon="people" label="Flatmates" tag="router-link" to="/apps/flatmates"></b-menu-item>
+                <b-menu-item icon="apps" label="Apps" tag="router-link" to="/apps"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Admin">
                 <b-menu-item icon="people" label="Flatmates" tag="router-link" to="/admin/flatmates"></b-menu-item>

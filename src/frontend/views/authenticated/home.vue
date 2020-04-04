@@ -2,7 +2,8 @@
   <div>
     <div class="container">
       <section class="section">
-        <h2 class="title is-2">Home</h2>
+        <h1 class="title is-1">Home</h1>
+        <p>WIP dashboard of recent updates</p>
       </section>
     </div>
   </div>

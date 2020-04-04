@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"fmt"
 
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/src/backend/groups"
@@ -440,10 +441,12 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 		var shoppingList types.ShoppingListSpec
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &shoppingList)
+		fmt.Println(shoppingList)
 
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingList.Author = id
 		shoppingListInserted, err := shoppinglist.CreateShoppingList(db, shoppingList)
+		fmt.Println(shoppingListInserted, err)
 		if err == nil && errId == nil {
 			code = 200
 			response = "Successfully created the shopping list"

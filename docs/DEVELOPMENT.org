@@ -24,9 +24,10 @@
     npm run build:frontend
     #+end_src
 
-** Complete-testing development patterns
+** Auto build and launch with [[https://tilt.dev][Tilt]]
    #+begin_src shell
-   tilt up --host 0.0.0.0
+     eval $(minikube -p minikube docker-env)
+     tilt up --host 0.0.0.0
    #+end_src
 
 * Additional

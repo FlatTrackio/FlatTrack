@@ -4,3 +4,5 @@ bases:
   - ./flattrack
   - ./postgres
   - ./pgadmin
+resources:
+  - ./namespace.yaml

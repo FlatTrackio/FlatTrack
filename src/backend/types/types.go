@@ -101,6 +101,10 @@ type ShoppingItemSpec struct {
 	DeletionTimestamp     int     `json:"deletionTimestamp"`
 }
 
+type ShoppingItemSelector struct {
+	Regular bool `json:"regular,omitempty"`
+}
+
 // FlatName
 // the name of the flat
 type FlatName struct {

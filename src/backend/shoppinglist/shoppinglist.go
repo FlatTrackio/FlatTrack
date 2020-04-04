@@ -30,7 +30,6 @@ func GetShoppingLists(db *sql.DB) (shoppingLists []types.ShoppingListSpec, err e
 			fmt.Println(err)
 			return shoppingLists, err
 		}
-		fmt.Println(shoppingList)
 		shoppingLists = append(shoppingLists, shoppingList)
 	}
 	return shoppingLists, err
@@ -52,7 +51,7 @@ func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingList
 
 // GetShoppingListItems
 // returns a list of items on a shopping list
-func GetShoppingListItems(db *sql.DB, listId string) (items []types.ShoppingItemSpec, err error) {
+func GetShoppingListItems(db *sql.DB, listId string, itemSelector types.ShoppingItemSelector) (items []types.ShoppingItemSpec, err error) {
 	sqlStatement := `select * from shopping_item`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
@@ -61,9 +60,18 @@ func GetShoppingListItems(db *sql.DB, listId string) (items []types.ShoppingItem
 	defer rows.Close()
 
 	for rows.Next() {
+		found := true
 		item, err := ShoppingItemObjectFromRows(rows)
 		if err != nil {
 			return items, err
+		}
+		if itemSelector.Regular == true {
+			if item.Regular == false {
+				found = false
+			}
+		}
+		if found == false {
+			continue
 		}
 		items = append(items, item)
 	}
@@ -111,9 +119,33 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppi
 	if err != nil {
 		return shoppingListInserted, err
 	}
+	rows.Next()
 	shoppingListInserted, err = ShoppingListObjectFromRows(rows)
+	if err != nil || shoppingListInserted.Id == "" {
+		return shoppingListInserted, errors.New("Failed to create shopping list")
+	}
+	err = AddRegularItemsToList(db, shoppingListInserted.Id)
 
 	return shoppingListInserted, err
+}
+
+// AddRegularItemsToList
+// finds and adds the items marked as regular to a list via new entries
+func AddRegularItemsToList(db *sql.DB, listId string) (err error) {
+	itemSelector := types.ShoppingItemSelector{Regular: true}
+	regularItems, err := GetShoppingListItems(db, listId, itemSelector)
+	if err != nil {
+		return err
+	}
+	for _, regularItem := range regularItems {
+		// ensure there aren't duplicate regular items
+		regularItem.Regular = false
+		itemInserted, err := AddItemToList(db, listId, regularItem)
+		if err != nil || itemInserted.Id == "" {
+			return err
+		}
+	}
+	return err
 }
 
 // ShoppingListObjectFromRows

@@ -4,13 +4,14 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-            <li><a href="/">Home</a></li>
-            <li class="is-active"><a href="/apps">Apps</a></li>
+            <li><router-link to="/">Home</router-link></li>
+            <li class="is-active"><router-link to="/apps">Apps</router-link></li>
             </ul>
         </nav>
-        <h1 class="title">Apps</h1>
+        <h1 class="title is-1">Apps</h1>
         <p></p>
         <br>
+        <!-- TODO make into iterative list -->
         <div class="tile is-ancestor pointer-cursor-on-hover">
           <div class="tile is-parent" @click="goToApp('/apps/shopping-list')">
             <div class="tile is-child box">
@@ -48,8 +49,8 @@ export default {
   created () {
   },
   methods: {
-    goToApp: (ref) => {
-      window.location.href = ref
+    goToApp (ref) {
+      this.$router.push({ path: ref })
     }
   }
 }

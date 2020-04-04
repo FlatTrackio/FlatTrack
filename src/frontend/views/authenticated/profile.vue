@@ -4,10 +4,11 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><a href="/">Home</a></li>
-              <li class="is-active"><a href="/profile">Profile</a></li>
+              <li><router-link to="/">Home</router-link></li>
+              <li class="is-active"><router-link to="/profile">Profile</router-link></li>
             </ul>
         </nav>
+        <h1 class="title is-1">Profile</h1>
         <div class="card">
           <div class="card-content">
             <div class="media">
@@ -18,7 +19,7 @@
               </div>
               <div class="media-content">
                 <p class="title is-4">{{ names }}</p>
-                <p class="subtitle is-6">Subtitle</p>
+                <p class="subtitle is-6">Joined {{ creationTimestamp }}</p>
               </div>
             </div>
           </div>
@@ -82,7 +83,8 @@ export default {
       email: '',
       phoneNumber: '',
       groups: [],
-      password: ''
+      password: '',
+      creationTimestamp: ''
     }
   },
   methods: {
@@ -91,6 +93,7 @@ export default {
         this.names = resp.data.spec.names
         this.groups = resp.data.spec.groups
         this.email = resp.data.spec.email
+        this.creationTimestamp = resp.data.spec.creationTimestamp
       })
     }
   },
