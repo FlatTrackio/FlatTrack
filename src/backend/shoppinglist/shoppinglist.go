@@ -149,8 +149,13 @@ func AddRegularItemsToList(db *sql.DB, listId string) (err error) {
 	}
 	for _, regularItem := range regularItems {
 		// ensure there aren't duplicate regular items
-		regularItem.Regular = false
-		itemInserted, err := AddItemToList(db, listId, regularItem)
+		newRegularItem := types.ShoppingItemSpec{
+			Name: regularItem.Name,
+			Price: regularItem.Price,
+			Regular: false,
+			Notes: regularItem.Notes,
+		}
+		itemInserted, err := AddItemToList(db, listId, newRegularItem)
 		if err != nil || itemInserted.Id == "" {
 			return err
 		}

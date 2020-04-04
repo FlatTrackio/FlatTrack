@@ -3,7 +3,7 @@
     <section>
       <div class="block">
         <b-sidebar
-          type="is-light"
+          type="is-white"
           :fullheight="fullheight"
           :fullwidth="fullwidth"
           :overlay="overlay"
