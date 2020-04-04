@@ -129,7 +129,8 @@ func ShoppingListObjectFromRows(rows *sql.Rows) (shoppingList types.ShoppingList
 	var creationTimestamp int
 	var modificationTimestamp int
 	var deletionTimestamp int
-	err = rows.Scan(&id, &name, &notes, &author, &authorLast, &completed, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	rows.Scan(&id, &name, &notes, &author, &authorLast, &completed, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	err = rows.Err()
 	if err != nil {
 		return shoppingList, err
 	}
@@ -203,7 +204,8 @@ func ShoppingItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, er
 	var creationTimestamp int
 	var modificationTimestamp int
 	var deletionTimestamp int
-	err = rows.Scan(&id, &name, &price, &regular, &notes, &author, &authorLast, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	rows.Scan(&id, &name, &price, &regular, &notes, &author, &authorLast, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	err = rows.Err()
 	if err != nil {
 		return item, err
 	}

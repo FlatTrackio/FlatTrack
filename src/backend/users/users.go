@@ -149,7 +149,8 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 	var creationTimestamp int
 	var modificationTimestamp int
 	var deletionTimestamp int
-	err = rows.Scan(&id, &names, &email, &password, &phoneNumber, &birthday, &contractAgreement, &disabled, &registered, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	rows.Scan(&id, &names, &email, &password, &phoneNumber, &birthday, &contractAgreement, &disabled, &registered, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	err = rows.Err()
 	if err != nil {
 		fmt.Println(err)
 		return user, err
@@ -206,7 +207,10 @@ func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.
 		return user, err
 	}
 	rows.Next()
-	user, _ = UserObjectFromRows(rows)
+	user, err = UserObjectFromRows(rows)
+	if err != nil {
+		return user, err
+	}
 	groups, err := groups.GetGroupNamesOfUserById(db, user.Id)
 	if err != nil {
 		return user, err

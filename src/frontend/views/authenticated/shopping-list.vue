@@ -15,7 +15,7 @@
           <b-tab-item label="In Progress"></b-tab-item>
           <b-tab-item label="Completed" :disabled="lists.length === 0"></b-tab-item>
         </b-tabs>
-        <div id="lists" v-if="!lists.length">
+        <div v-if="!lists.length">
           <section>
             <div class="card">
               <div class="card-content">
@@ -32,6 +32,25 @@
             </div>
           </section>
         </div>
+        <div v-else>
+          <div v-for="list in lists" v-bind:key="list">
+            <section>
+              <div class="card">
+                <div class="card-content">
+                  <div class="media">
+                    <div class="media-content">
+                      <p class="title is-4">{{ list.name }}</p>
+                    </div>
+                  </div>
+                  <div class="content" v-if="list.notes">
+                    {{ list.notes }}
+                    <br />
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
         <br/><br/><br/>
         <addButton @click="addList"/>
     </div>
@@ -40,6 +59,7 @@
 
 <script>
 import common from '@/frontend/common/common'
+import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
 
 export default {
   name: 'Shopping List',
@@ -54,7 +74,17 @@ export default {
   methods: {
     addList: () => {
       console.log('Adding a list')
+    },
+    GetShoppingLists () {
+      shoppinglist.GetShoppingLists().then(resp => {
+        this.lists = resp.data.list
+      }).catch(() => {
+        common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping lists')
+      })
     }
+  },
+  async created () {
+    this.GetShoppingLists()
   }
 }
 </script>
