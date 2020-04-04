@@ -7,7 +7,7 @@ create table if not exists groups (
   description text,
   creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
   modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
-  deletionTimestamp int,
+  deletionTimestamp int not null default 0,
 
   primary key (id)
 );

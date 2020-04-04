@@ -10,10 +10,10 @@
           :right="right"
           can-cancel="false"
           :open.sync="open">
+          <div class="navbar-text">
+            <h1 class="title is-2">FlatTrack</h1>
+          </div>
           <div class="p-1">
-            <div class="navbar-text">
-              <h1 class="title is-2">FlatTrack</h1>
-            </div>
             <b-menu>
               <b-menu-list label="General">
                 <b-menu-item icon="home" label="Home" tag="router-link" to="/"></b-menu-item>
@@ -80,7 +80,9 @@ export default {
 
 <style>
 .p-1 {
-    padding: 1em;
+    padding-left: 1em;
+    padding-bottom: 1em;
+    padding-right: 1em;
 }
 
 .p-1 .menu {
@@ -89,5 +91,11 @@ export default {
 
 .navbar-text {
     text-align: center;
+    padding: 15px;
+    background-color: #209cee;
+}
+
+.navbar-text .title {
+    color: white;
 }
 </style>

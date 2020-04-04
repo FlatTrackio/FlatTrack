@@ -10,7 +10,7 @@ create table if not exists shopping_item (
   authorLast text not null,
   creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
   modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
-  deletionTimestamp int,
+  deletionTimestamp int not null default 0,
 
   primary key (id),
   foreign key (author) references users(id),
