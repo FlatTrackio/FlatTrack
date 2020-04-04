@@ -67,6 +67,8 @@
               </div>
             </section>
           </div>
+          <br/>
+          <p>{{ lists.length }} shopping list(s)</p>
         </div>
     </div>
   </div>

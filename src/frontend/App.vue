@@ -98,7 +98,11 @@ $footer-padding: 10px;
 }
 
 .pad-top {
-    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.pad-bottom {
+    margin-bottom: 40px;
 }
 
 .full-height {
