@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	REGISTRATION_DEFAULT_USER_GROUPS = []string{"flatmember", "admin"}
+	defaultInitalizationGroups = []string{"flatmember", "admin"}
 )
 
 // Register
@@ -34,7 +34,8 @@ func Register(db *sql.DB, registration types.Registration) (successful bool, jwt
 	if err != nil {
 		return successful, jwt, err
 	}
-	registration.User.Groups = REGISTRATION_DEFAULT_USER_GROUPS
+	registration.User.Groups = defaultInitalizationGroups
+	registration.User.Registered = true
 	user, err := users.CreateUser(db, registration.User)
 	if err != nil || user.Id == "" {
 		return successful, jwt, err

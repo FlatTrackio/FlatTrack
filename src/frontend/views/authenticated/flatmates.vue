@@ -23,19 +23,25 @@
             <div class="card">
               <div class="card-content">
                 <div class="media">
+                  <div class="media-left">
+                    <figure class="image is-48x48">
+                      <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image">
+                    </figure>
+                  </div>
                   <div class="media-content">
                     <p class="title is-4">{{ member.names }}</p>
-                    <b-field grouped group-multiline>
-                      <div class="control" v-for="group in member.groups" v-bind:key="group">
-                        <b-taglist attached>
-                          <b-tag type="is-dark">is</b-tag>
-                          <b-tag type="is-info">{{ group }}</b-tag>
-                        </b-taglist>
-                      </div>
-                    </b-field>
+                    <p class="subtitle is-6">Joined {{ member.creationTimestamp }}</p>
                   </div>
                 </div>
                 <div class="content">
+                  <b-field grouped group-multiline>
+                    <div class="control" v-for="group in member.groups" v-bind:key="group">
+                      <b-taglist attached>
+                        <b-tag type="is-dark">is</b-tag>
+                        <b-tag type="is-info">{{ group }}</b-tag>
+                      </b-taglist>
+                    </div>
+                  </b-field>
                   <div v-if="member.phoneNumber">
                     Phone: <a :href="`tel:${member.phoneNumber}`">{{ member.phoneNumber }}</a><br/>
                   </div>

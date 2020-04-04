@@ -8,15 +8,15 @@ create table if not exists users (
   email text not null,
   password text,
   phoneNumber text,
-  birthday timestamptz,
+  birthday int,
   contractAgreement bool default false not null,
   disabled bool default false not null,
   registered bool default false not null,
   taskNotificationFrequency int default 7 not null,
-  lastLogin timestamptz,
-  creationTimestamp timestamptz not null default now(),
-  modificationTimestamp timestamptz not null default now(),
-  deletionTimestamp timestamptz,
+  lastLogin int,
+  creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  deletionTimestamp int,
 
   primary key (id)
 );

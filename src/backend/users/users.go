@@ -50,10 +50,10 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 		return userInserted, errors.New("User account already exists")
 	}
 
-	sqlStatement := `insert into users (names, email, password, phonenumber)
-                         values ($1, $2, $3, $4)
+	sqlStatement := `insert into users (names, email, password, phonenumber, birthday, contractAgreement, disabled, registered, taskNotificationFrequency)
+                         values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                          returning id`
-	rows, err := db.Query(sqlStatement, user.Names, user.Email, user.Password, user.PhoneNumber)
+	rows, err := db.Query(sqlStatement, user.Names, user.Email, user.Password, user.PhoneNumber, user.Birthday, user.ContractAgreement, user.Disabled, user.Registered, user.TaskNotificationFrequency)
 	if err != nil {
 		return userInserted, err
 	}
@@ -62,11 +62,16 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 		var id string
 		rows.Scan(&id)
 		userInserted = types.UserSpec{
-			Id:          id,
-			Names:       user.Names,
-			Email:       user.Email,
-			Groups:      user.Groups,
-			PhoneNumber: user.PhoneNumber,
+			Id:                        id,
+			Names:                     user.Names,
+			Email:                     user.Email,
+			Groups:                    user.Groups,
+			PhoneNumber:               user.PhoneNumber,
+			Birthday:                  user.Birthday,
+			ContractAgreement:         user.ContractAgreement,
+			Disabled:                  user.Disabled,
+			Registered:                user.Registered,
+			TaskNotificationFrequency: user.TaskNotificationFrequency,
 		}
 	}
 
@@ -85,7 +90,7 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 
 // GetAllUsers
 // return all users in the database
-func GetAllUsers(db *sql.DB, includePassword bool, groupSelector string) (users []types.UserSpec, err error) {
+func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector) (users []types.UserSpec, err error) {
 	sqlStatement := `select * from users`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
@@ -102,8 +107,8 @@ func GetAllUsers(db *sql.DB, includePassword bool, groupSelector string) (users 
 		if err != nil {
 			return users, err
 		}
-		if groupSelector != "" {
-			found, err = groups.CheckUserInGroup(db, user.Id, groupSelector)
+		if selectors.Group != "" {
+			found, err = groups.CheckUserInGroup(db, user.Id, selectors.Group)
 			if err != nil {
 				return users, err
 			}
@@ -146,16 +151,16 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 	var email string
 	var password string
 	var phoneNumber string
-	var birthday string
+	var birthday int
 	var contractAgreement bool
 	var disabled bool
-	var hasSetPassword bool
+	var registered bool
 	var taskNotificationFrequency int
 	var lastLogin string
-	var creationTimestamp int64
-	var modificationTimestamp int64
-	var deletionTimestamp int64
-	rows.Scan(&id, &names, &email, &password, &phoneNumber, &birthday, &contractAgreement, &disabled, &hasSetPassword, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	var creationTimestamp int
+	var modificationTimestamp int
+	var deletionTimestamp int
+	rows.Scan(&id, &names, &email, &password, &phoneNumber, &birthday, &contractAgreement, &disabled, &registered, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
 	user = types.UserSpec{
 		Id:                        id,
 		Names:                     names,
@@ -164,7 +169,7 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 		PhoneNumber:               phoneNumber,
 		ContractAgreement:         contractAgreement,
 		Disabled:                  disabled,
-		HasSetPassword:            hasSetPassword,
+		Registered:                registered,
 		TaskNotificationFrequency: taskNotificationFrequency,
 		LastLogin:                 lastLogin,
 		CreationTimestamp:         creationTimestamp,
@@ -299,6 +304,8 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 	return token.Valid, nil
 }
 
+// GetIdFromJWT
+// return the userId in a JWT from a header in a HTTP request
 func GetIdFromJWT(db *sql.DB, r *http.Request) (id string, err error) {
 	secret, err := system.GetJWTsecret(db)
 	if err != nil {
@@ -329,6 +336,8 @@ func GetIdFromJWT(db *sql.DB, r *http.Request) (id string, err error) {
 	return user.Id, err
 }
 
+// GetProfile
+// return user from Id in JWT from HTTP request
 func GetProfile(db *sql.DB, r *http.Request) (user types.UserSpec, err error) {
 	id, err := GetIdFromJWT(db, r)
 	if err != nil {
@@ -338,4 +347,3 @@ func GetProfile(db *sql.DB, r *http.Request) (user types.UserSpec, err error) {
 	user, err = GetUserById(db, id, false)
 	return user, err
 }
-

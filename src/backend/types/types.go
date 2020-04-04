@@ -52,15 +52,15 @@ type UserSpec struct {
 	Groups                    []string `json:"groups"`
 	Password                  string   `json:"password,omitempty"`
 	PhoneNumber               string   `json:"phoneNumber,omitempty"`
-	Birthday                  string   `json:"birthday,omitempty"`
+	Birthday                  int      `json:"birthday,omitempty"`
 	ContractAgreement         bool     `json:"contractAgreement,omitempty"`
 	Disabled                  bool     `json:"disabled,omitempty"`
-	HasSetPassword            bool     `json:"hasSetPassword,omitempty"`
+	Registered                bool     `json:"registered,omitempty"`
 	TaskNotificationFrequency int      `json:"taskNotificationFrequency,omitempty"`
 	LastLogin                 string   `json:"lastLogin"`
-	CreationTimestamp         int64    `json:"creationTimestamp"`
-	ModificationTimestamp     int64    `json:"modificationTimestamp"`
-	DeletionTimestamp         int64    `json:"deletionTimestamp"`
+	CreationTimestamp         int      `json:"creationTimestamp"`
+	ModificationTimestamp     int      `json:"modificationTimestamp"`
+	DeletionTimestamp         int      `json:"deletionTimestamp"`
 }
 
 // UserList
@@ -69,6 +69,11 @@ type UserList struct {
 	TypeMeta `json:",inline"`
 	Metadata JSONResponseMetadata `json:"metadata"`
 	List     []UserSpec           `json:"list"`
+}
+
+type UserSelector struct {
+	Group string `json:"group,omitempty"`
+	notId string `json:"notId,omitempty"`
 }
 
 // FlatName

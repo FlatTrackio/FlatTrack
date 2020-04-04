@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"fmt"
 
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/src/backend/registration"
@@ -18,6 +19,7 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
+	"gitlab.com/flattrack/flattrack/src/backend/groups"
 )
 
 // GetAllUsers
@@ -27,9 +29,11 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 		code := 500
 		response := "Failed to fetch user accounts"
 
-		groupSelector := r.FormValue("group")
+		selectors := types.UserSelector{
+			Group: r.FormValue("group"),
+		}
 
-		users, err := users.GetAllUsers(db, false, groupSelector)
+		users, err := users.GetAllUsers(db, false, selectors)
 		if err == nil {
 			code = 200
 			response = "Fetched user accounts"
@@ -412,6 +416,25 @@ func HTTPvalidateJWT(db *sql.DB) func(http.HandlerFunc) http.HandlerFunc {
 			JSONResponse(r, w, 401, types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
 					Response: "Unauthorized",
+				},
+			})
+		}
+	}
+}
+
+// HTTPcheckGroupFromId
+// middleware for checking if a route can be accessed given a Id and groupId
+func HTTPcheckGroupFromId(db *sql.DB, group string) func(http.HandlerFunc) http.HandlerFunc {
+	return func(h http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			id, errId := users.GetIdFromJWT(db, r)
+			if userInGroup, err := groups.CheckUserInGroup(db, id, group); userInGroup == true && err == nil && err == errId {
+				h.ServeHTTP(w, r)
+				return
+			}
+			JSONResponse(r, w, 403, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Forbidden",
 				},
 			})
 		}
