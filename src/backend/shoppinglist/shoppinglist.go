@@ -30,6 +30,11 @@ func GetShoppingLists(db *sql.DB) (shoppingLists []types.ShoppingListSpec, err e
 			fmt.Println(err)
 			return shoppingLists, err
 		}
+		shoppingList.Count, err = GetListCount(db, shoppingList.Id)
+		if err != nil {
+			fmt.Println(err)
+			return shoppingLists, err
+		}
 		shoppingLists = append(shoppingLists, shoppingList)
 	}
 	return shoppingLists, err
@@ -46,7 +51,12 @@ func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingList
 	defer rows.Close()
 
 	rows.Next()
-	return ShoppingListObjectFromRows(rows)
+	shoppingList, err = ShoppingListObjectFromRows(rows)
+	if err != nil {
+		return shoppingList, err
+	}
+	shoppingList.Count, err = GetListCount(db, shoppingList.Id)
+	return shoppingList, err
 }
 
 // GetShoppingListItems
@@ -299,4 +309,19 @@ func RemoveItemFromList(db *sql.DB, itemId string, listId string) (err error) {
 		return err
 	}
 	return RemoveItem(db, itemId)
+}
+
+// GetListCount
+// returns a count of the items in a list
+func GetListCount(db *sql.DB, listId string) (count int, err error) {
+	sqlStatement := `select count(*) from shopping_item_to_list where listId = $1`
+	rows, err := db.Query(sqlStatement, listId)
+	if err != nil {
+		return count, err
+	}
+	defer rows.Close()
+	rows.Next()
+	rows.Scan(&count)
+
+	return count, err
 }

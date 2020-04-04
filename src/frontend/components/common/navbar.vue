@@ -20,20 +20,20 @@
                 <b-menu-item icon="information-outline" :label="flatName" tag="router-link" to="/flat"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Apps">
-                <b-menu-item icon="information-outline" label="Shopping list" tag="router-link" to="/apps/shopping-list"></b-menu-item>
-                <b-menu-item icon="people" label="Flatmates" tag="router-link" to="/apps/flatmates"></b-menu-item>
+                <b-menu-item icon="format-list-checks" label="Shopping list" tag="router-link" to="/apps/shopping-list"></b-menu-item>
+                <b-menu-item icon="account-group" label="Flatmates" tag="router-link" to="/apps/flatmates"></b-menu-item>
                 <b-menu-item icon="apps" label="Apps" tag="router-link" to="/apps"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Admin">
-                <b-menu-item icon="people" label="Flatmates" tag="router-link" to="/admin/flatmates"></b-menu-item>
+                <b-menu-item icon="account-group" label="Flatmates" tag="router-link" to="/admin/flatmates"></b-menu-item>
                 <b-menu-item icon="settings" label="Settings" tag="router-link" to="/admin"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Help">
-                <b-menu-item icon="web" label="FlatTrack help" tag="a" target="_blank" href="https://flattrack.io/help"></b-menu-item>
+                <b-menu-item icon="open-in-new" label="FlatTrack help" tag="a" target="_blank" href="https://flattrack.io/help"></b-menu-item>
                 <b-menu-item icon="phone" label="Contact admin" tag="router-link" to="/apps/flatmates?group=admin"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Account">
-                <b-menu-item icon="account_box" label="Profile" tag="router-link" to="/profile"></b-menu-item>
+                <b-menu-item icon="account" label="Profile" tag="router-link" to="/profile"></b-menu-item>
                 <b-menu-item icon="exit-to-app" label="Sign out" @click="signOut"></b-menu-item>
               </b-menu-list>
             </b-menu>

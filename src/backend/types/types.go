@@ -83,6 +83,7 @@ type ShoppingListSpec struct {
 	Author                string `json:"author"`
 	AuthorLast            string `json:"authorLast"`
 	Completed             bool   `json:"completed"`
+	Count                 int    `json:"count,omitempty"`
 	CreationTimestamp     int    `json:"creationTimestamp"`
 	ModificationTimestamp int    `json:"modificationTimestamp"`
 	DeletionTimestamp     int    `json:"deletionTimestamp"`

@@ -12,13 +12,13 @@
         <p></p>
         <br>
         <!-- TODO make into iterative list -->
+        <!-- TODO add icons to the left sides of cards -->
         <div class="tile is-ancestor pointer-cursor-on-hover">
           <div class="tile is-parent" @click="goToApp('/apps/shopping-list')">
             <div class="tile is-child box">
               <p class="title">Shopping list</p>
               <p>Manage a flat-wide shopping list for all to contribute to</p>
             </div>
-            <!-- TODO add '>' arrow at right side of this box && change mouse-over to click (?) -->
           </div>
         </div>
         <div class="tile is-ancestor pointer-cursor-on-hover">
@@ -27,7 +27,6 @@
               <p class="title">Flatmates</p>
               <p>View your flatmates and their contact details</p>
             </div>
-            <!-- TODO add '>' arrow at right side of this box && change mouse-over to click (?) -->
           </div>
         </div>
       </section>

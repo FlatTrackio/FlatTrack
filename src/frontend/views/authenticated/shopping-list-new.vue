@@ -24,7 +24,7 @@
                    >
           </b-input>
         </b-field>
-        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewShoppingList(name, notes)">Setup</b-button>
+        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewShoppingList(name, notes)">Create</b-button>
       </section>
     </div>
   </div>

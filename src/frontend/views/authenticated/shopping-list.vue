@@ -22,7 +22,7 @@
                 <div class="media">
                   <div class="media-left">
                     <b-icon
-                      icon="add_shopping_cart"
+                      icon="cart-plus"
                       size="is-medium">
                     </b-icon>
                   </div>
@@ -41,6 +41,12 @@
               <div class="card pointer-cursor-on-hover">
                 <div class="card-content">
                   <div class="media">
+                    <div class="media-left">
+                      <b-icon
+                        icon="cart-outline"
+                        size="is-medium">
+                      </b-icon>
+                    </div>
                     <div class="media-content">
                       <p class="title is-4">{{ list.name }}</p>
                       <p class="subtitle is-6">Added on {{ list.creationTimestamp }}, by {{ list.author }}</p>
@@ -48,7 +54,14 @@
                   </div>
                   <div class="content" v-if="list.notes">
                     {{ list.notes }}
-                    <br />
+                    <br/>
+                    <br/>
+                    <div v-if="typeof list.count !== 'undefined' && list.count > 0">
+                      {{ list.count }} item(s)
+                    </div>
+                    <div v-else>
+                      0 items
+                    </div>
                   </div>
                 </div>
               </div>
