@@ -111,3 +111,18 @@ func GetGroupNamesOfUserById(db *sql.DB, userId string) (groups []string, err er
 	}
 	return groups, err
 }
+
+// CheckUserInGroup
+// return bool if user is in a group
+func CheckUserInGroup(db *sql.DB, userId string, group string) (found bool, err error) {
+	groups, err := GetGroupNamesOfUserById(db, userId)
+	if err != nil {
+		return found, err
+	}
+	for _, groupItem := range groups {
+		if groupItem == group {
+			return true, err
+		}
+	}
+	return found, err
+}

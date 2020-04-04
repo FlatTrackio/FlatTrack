@@ -10,8 +10,14 @@
             </ul>
         </nav>
         <h1 class="title">Flatmates</h1>
-        <p>These are your flatmates, make sure to get to know them {{ emojiSmile }}</p>
-        <br>
+        <div v-if="typeof groupQuery === 'undefined'">
+          <p>These are your flatmates, make sure to get to know them {{ emojiSmile }}</p>
+          <br>
+        </div>
+        <div v-else="">
+          <p>Listing flatmates, filtering by the group {{ groupQuery }}</p>
+          <br>
+        </div>
         <div v-if="members && members.length">
           <div class="card-margin" v-for="member of members" v-bind:key="member">
             <div class="card">
@@ -74,15 +80,21 @@ export default {
   data () {
     return {
       members: [],
+      groupQuery: undefined,
       emojiSmile: emoji.get('smile')
     }
   },
   created () {
+    this.groupQuery = this.$route.query.group
     this.FetchAllFlatmates()
   },
   methods: {
     FetchAllFlatmates () {
-      flatmates.GetAllFlatmates().then(resp => {
+      var params = {}
+      if (typeof groupQuery !== 'undefined') {
+        params.group = groupQuery
+      }
+      flatmates.GetAllFlatmates(params).then(resp => {
         this.members = resp.data.list
       }).catch(err => {
         common.DisplayFailureToast('Failed to list flatmates' + `<br/>${err}`)

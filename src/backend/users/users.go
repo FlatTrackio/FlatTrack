@@ -85,7 +85,7 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 
 // GetAllUsers
 // return all users in the database
-func GetAllUsers(db *sql.DB, includePassword bool) (users []types.UserSpec, err error) {
+func GetAllUsers(db *sql.DB, includePassword bool, groupSelector string) (users []types.UserSpec, err error) {
 	sqlStatement := `select * from users`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
@@ -93,19 +93,28 @@ func GetAllUsers(db *sql.DB, includePassword bool) (users []types.UserSpec, err 
 	}
 	defer rows.Close()
 	for rows.Next() {
+		found := true
 		user, err := UserObjectFromRows(rows)
 		if err != nil {
 			return users, err
 		}
-		groups, err := groups.GetGroupNamesOfUserById(db, user.Id)
+		groupsOfUser, err := groups.GetGroupNamesOfUserById(db, user.Id)
 		if err != nil {
 			return users, err
 		}
-		user.Groups = groups
+		if groupSelector != "" {
+			found, err = groups.CheckUserInGroup(db, user.Id, groupSelector)
+			if err != nil {
+				return users, err
+			}
+		}
+		user.Groups = groupsOfUser
 		if includePassword == false {
 			user.Password = ""
 		}
-		users = append(users, user)
+		if found == true {
+			users = append(users, user)
+		}
 	}
 	return users, err
 }
@@ -287,9 +296,46 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 		return false, errors.New("Unable to find the user account which the authentication token belongs to")
 	}
 
-	if err != nil {
-		return false, err
-	}
-
 	return token.Valid, nil
 }
+
+func GetIdFromJWT(db *sql.DB, r *http.Request) (id string, err error) {
+	secret, err := system.GetJWTsecret(db)
+	if err != nil {
+		return "", errors.New("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
+	}
+	tokenHeader := r.Header.Get("Authorization")
+	if tokenHeader == "" {
+		return "", errors.New("Unable to find authorization token (header doesn't exist)")
+	}
+	authorizationHeader := strings.Split(tokenHeader, " ")
+	if authorizationHeader[0] != "bearer" || len(authorizationHeader) <= 1 {
+		return "", errors.New("Unable to find authorization token (must be as bearer)")
+	}
+	tokenHeaderJWT := authorizationHeader[1]
+	claims := &types.JWTclaim{}
+	token, err := jwt.ParseWithClaims(tokenHeaderJWT, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secret), nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	reqClaims := token.Claims.(*types.JWTclaim)
+	user, err := GetUserById(db, reqClaims.Id, true)
+	if err != nil || user.Id == "" {
+		return "", errors.New("Unable to find the user account which the authentication token belongs to")
+	}
+	return user.Id, err
+}
+
+func GetProfile(db *sql.DB, r *http.Request) (user types.UserSpec, err error) {
+	id, err := GetIdFromJWT(db, r)
+	if err != nil {
+		return user, err
+	}
+
+	user, err = GetUserById(db, id, false)
+	return user, err
+}
+

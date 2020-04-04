@@ -27,7 +27,9 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 		code := 500
 		response := "Failed to fetch user accounts"
 
-		users, err := users.GetAllUsers(db, false)
+		groupSelector := r.FormValue("group")
+
+		users, err := users.GetAllUsers(db, false, groupSelector)
 		if err == nil {
 			code = 200
 			response = "Fetched user accounts"
@@ -154,6 +156,43 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Spec: err == nil,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetProfile
+// returns the authenticated user's profile
+func GetProfile(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to fetch user account"
+
+		user, err := users.GetProfile(db, r)
+		if err != nil || user.Id == "" {
+			code = 404
+			response = "Failed to find user"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.UserSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+		if err == nil {
+			code = 200
+			response = "Fetched user account"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: user,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}

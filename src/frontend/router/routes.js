@@ -36,6 +36,14 @@ export default [
     }
   },
   {
+    path: '/profile',
+    name: 'profile',
+    component: () => import('@/frontend/views/authenticated/profile.vue'),
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
+    }
+  },
+  {
     path: '/apps',
     name: 'apps',
     component: () => import('@/frontend/views/authenticated/apps.vue'),

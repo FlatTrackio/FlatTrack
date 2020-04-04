@@ -11,6 +11,10 @@
         </nav>
         <h1 class="title">Shopping list</h1>
         <h2 class="subtitle">Manage your weekly shop</h2>
+        <b-tabs position="is-centered" class="block">
+          <b-tab-item label="In Progress"></b-tab-item>
+          <b-tab-item label="Completed" :disabled="lists.length === 0"></b-tab-item>
+        </b-tabs>
         <div id="lists" v-if="!lists.length">
           <section class="section">
             <div class="card">
