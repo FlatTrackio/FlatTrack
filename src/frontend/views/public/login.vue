@@ -104,8 +104,4 @@ export default {
 </script>
 
 <style scoped>
-.form-width {
-    width: 380px;
-    margin: auto;
-}
 </style>

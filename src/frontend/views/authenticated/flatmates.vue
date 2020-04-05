@@ -30,7 +30,7 @@
                   </div>
                   <div class="media-content">
                     <p class="title is-4">{{ member.names }}</p>
-                    <p class="subtitle is-6">Joined {{ member.creationTimestamp }}</p>
+                    <p class="subtitle is-6">Joined {{ TimestampToCalendar(member.creationTimestamp) }}</p>
                   </div>
                 </div>
                 <div class="content">
@@ -105,6 +105,9 @@ export default {
       }).catch(err => {
         common.DisplayFailureToast('Failed to list flatmates' + `<br/>${err}`)
       })
+    },
+    TimestampToCalendar (timestamp) {
+      return common.TimestampToCalendar(timestamp)
     }
   }
 }

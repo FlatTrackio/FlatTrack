@@ -19,7 +19,7 @@
               </div>
               <div class="media-content">
                 <p class="title is-4">{{ names }}</p>
-                <p class="subtitle is-6">Joined {{ creationTimestamp }}</p>
+                <p class="subtitle is-6">Joined {{ TimestampToCalendar(creationTimestamp) }}</p>
               </div>
             </div>
           </div>
@@ -73,6 +73,7 @@
 </template>
 
 <script>
+import common from '@/frontend/common/common'
 import profile from '@/frontend/requests/authenticated/profile'
 
 export default {
@@ -95,6 +96,9 @@ export default {
         this.email = resp.data.spec.email
         this.creationTimestamp = resp.data.spec.creationTimestamp
       })
+    },
+    TimestampToCalendar (timestamp) {
+      return common.TimestampToCalendar(timestamp)
     }
   },
   async created () {

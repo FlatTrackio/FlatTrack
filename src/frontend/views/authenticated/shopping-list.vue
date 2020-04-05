@@ -49,7 +49,7 @@
                     </div>
                     <div class="media-content">
                       <p class="title is-4">{{ list.name }}</p>
-                      <p class="subtitle is-6">Added on {{ list.creationTimestamp }}, by {{ list.author }}</p>
+                      <p class="subtitle is-6">Added on {{ TimestampToCalendar(list.creationTimestamp) }}, by {{ list.author }}</p>
                     </div>
                   </div>
                   <div class="content" v-if="list.notes">
@@ -99,6 +99,9 @@ export default {
       }).catch(() => {
         common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping lists')
       })
+    },
+    TimestampToCalendar (timestamp) {
+      return common.TimestampToCalendar(timestamp)
     }
   },
   async created () {

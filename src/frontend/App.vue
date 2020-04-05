@@ -116,4 +116,9 @@ html {
 .pointer-cursor-on-hover {
     cursor: pointer;
 }
+
+.form-width {
+    width: 380px;
+    margin: auto;
+}
 </style>

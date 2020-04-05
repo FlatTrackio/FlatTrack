@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="container">
-      <section class="section">
+      <section class="section form-width">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
               <li><router-link to="/apps">Apps</router-link></li>

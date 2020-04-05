@@ -4,6 +4,7 @@
 */
 
 import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog, LoadingProgrammatic as Loading } from 'buefy'
+import moment from 'moment'
 
 // GetAuthToken
 // returns the JWT from localStorage
@@ -62,10 +63,17 @@ function SignoutDialog () {
   })
 }
 
+// TimestampToCalendar
+// converts a unix timestamp to a human readable string
+function TimestampToCalendar (timestamp) {
+  return moment.unix(timestamp).calendar().toLowerCase()
+}
+
 export default {
   GetAuthToken,
   DeleteAuthToken,
   DisplaySuccessToast,
   DisplayFailureToast,
-  SignoutDialog
+  SignoutDialog,
+  TimestampToCalendar
 }

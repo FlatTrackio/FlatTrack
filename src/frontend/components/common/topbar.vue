@@ -17,7 +17,7 @@
           Contact admin
         </b-navbar-item>
         <b-navbar-item tag="router-link" :to="{ path: '/flat' }">
-          {{ flatName }}
+          My flat: {{ flatName }}
         </b-navbar-item>
         <b-navbar-item @click="signOut">
           Sign out

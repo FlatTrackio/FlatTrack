@@ -4,12 +4,9 @@
       <div class="block">
         <b-sidebar
           type="is-white"
-          :fullheight="fullheight"
-          :fullwidth="fullwidth"
-          :overlay="overlay"
-          :right="right"
+          fullheight="true"
           can-cancel="false"
-          :open.sync="open">
+          open="true">
           <div class="navbar-text">
             <h1 class="title is-2">FlatTrack</h1>
           </div>
@@ -58,7 +55,6 @@ export default {
       overlay: false,
       fullheight: true,
       fullwidth: false,
-      right: false,
       flatName: 'My flat'
     }
   },
