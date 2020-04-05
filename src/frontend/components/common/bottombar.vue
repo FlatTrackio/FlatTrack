@@ -39,23 +39,20 @@ export default {
     bottom: 0;
     display: inline-flex;
     align-items: flex-end;
-    background: rbga(#209cee, 0.8);
+    #background: rbga(#209cee, 0.8);
     z-index: 100;
+    background: inherit;
+}
+
+.bottombar:before {
+    content: '';
+    box-shadow: inset 0 0 0 200px rgba(255,255,255,0.3);
+    filter: blur(10px);
+    background: inherit;
 }
 
 .bottombar-background {
-    background-color: white;
+    background-color: #ffffffeb;
+    backdrop-filter: blur(5px);
 }
-</style>
-
-<style lang="scss" scoped>
-  .phone-viewport {
-    width: 322px;
-    height: 200px;
-    display: inline-flex;
-    align-items: flex-end;
-    overflow: hidden;
-    border: 1px solid rgba(#000, .26);
-    background: rgba(#000, .06);
-  }
 </style>
