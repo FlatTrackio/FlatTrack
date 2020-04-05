@@ -8,6 +8,12 @@
           can-cancel="false"
           open="true">
           <div class="navbar-text">
+            <div class="block">
+              <img
+                src=""
+                alt="FlatTrack logo"
+                />
+            </div>
             <h1 class="title is-2">FlatTrack</h1>
           </div>
           <div class="p-1">
@@ -93,5 +99,14 @@ export default {
 
 .navbar-text .title {
     color: white;
+}
+
+.align-bottom {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 40px;
+    background-color: #496c8a40;
+    position: absolute;
 }
 </style>

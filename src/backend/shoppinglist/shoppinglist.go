@@ -17,7 +17,7 @@ import (
 // GetShoppingLists
 // returns a list of all shopping lists (name, notes, author, etc...)
 func GetShoppingLists(db *sql.DB) (shoppingLists []types.ShoppingListSpec, err error) {
-	sqlStatement := `select * from shopping_list`
+	sqlStatement := `select * from shopping_list order by creationTimestamp desc`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		return shoppingLists, err
@@ -166,7 +166,6 @@ func AddRegularItemsToList(db *sql.DB, listId string) (err error) {
 // ShoppingListObjectFromRows
 // returns a shopping list object from rows
 func ShoppingListObjectFromRows(rows *sql.Rows) (shoppingList types.ShoppingListSpec, err error) {
-	defer rows.Close()
 	var id string
 	var name string
 	var notes string

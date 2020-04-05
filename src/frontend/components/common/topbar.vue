@@ -3,7 +3,11 @@
     <b-navbar fixed-top type="is-info" shadow="true" transparent="false">
       <template slot="brand">
         <b-navbar-item tag="router-link" :to="{ path: '/' }">
-          <h1 class="title is-5" style="color: #fff;">FlatTrack ({{ flatName }})</h1>
+          <img
+            src=""
+            alt="FlatTrack logo"
+            />
+          <h1 class="title is-5" style="color: #fff;">{{ flatName }}</h1>
         </b-navbar-item>
       </template>
       <template slot="start">

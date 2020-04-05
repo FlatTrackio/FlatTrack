@@ -49,7 +49,15 @@
                     </div>
                     <div class="media-content">
                       <p class="title is-4">{{ list.name }}</p>
-                      <p class="subtitle is-6">Added on {{ TimestampToCalendar(list.creationTimestamp) }}, by {{ list.author }}</p>
+                      <p class="subtitle is-6">
+                        <span v-if="list.creationTimestamp == list.modificationTimestamp">
+                          Created
+                        </span>
+                        <span v-else>
+                          Updated
+                        </span>
+                        {{ TimestampToCalendar(list.creationTimestamp) }}, by {{ list.author }}
+                      </p>
                     </div>
                   </div>
                   <div class="content" v-if="list.notes">
