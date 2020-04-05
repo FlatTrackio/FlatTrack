@@ -124,6 +124,7 @@ func RegexMatchName(name string) bool {
 // RegexMatchEmail
 // regex check for valid email address string
 func RegexMatchEmail(email string) bool {
+	// TODO find better regex; emails like xxyyzz@aa.coop won't match
 	matches, _ := regexp.MatchString(`^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$`, email)
 	return matches
 }

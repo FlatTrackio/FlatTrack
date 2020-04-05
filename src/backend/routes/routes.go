@@ -519,6 +519,53 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// GetAllGroups
+// returns a list of all groups
+func GetAllGroups(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch groups"
+		code := 500
+
+		groups, err := groups.GetAllGroups(db)
+		if err == nil {
+			response = "Fetched all groups"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			List: groups,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetGroup
+// returns a group by id
+func GetGroup(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch groups"
+		code := 500
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		group, err := groups.GetGroupById(db, id)
+		if err == nil && group.Id != "" {
+			response = "Fetched the groups"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: group,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // Root
 // /api endpoint
 func Root(w http.ResponseWriter, r *http.Request) {

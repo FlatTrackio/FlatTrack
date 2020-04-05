@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="navbar-z">
     <section>
       <div class="block">
         <b-sidebar
@@ -28,8 +28,8 @@
                 <b-menu-item icon="apps" label="Apps" tag="router-link" to="/apps"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Admin" v-if="canUserAccountAdmin">
-                <b-menu-item icon="account-group" label="Flatmates" tag="router-link" to="/admin/flatmates"></b-menu-item>
-                <b-menu-item icon="settings" label="Settings" tag="router-link" to="/admin"></b-menu-item>
+                <b-menu-item icon="account-group" label="Flatmates" tag="router-link" to="/admin/accounts"></b-menu-item>
+                <b-menu-item icon="settings" label="Admin" tag="router-link" to="/admin"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Help">
                 <b-menu-item icon="open-in-new" label="FlatTrack help" tag="a" target="_blank" href="https://flattrack.io/help"></b-menu-item>
@@ -89,6 +89,10 @@ export default {
 </script>
 
 <style>
+.navbar-z {
+    z-index: 100;
+}
+
 .p-1 {
     padding-left: 1em;
     padding-bottom: 1em;

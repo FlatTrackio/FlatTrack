@@ -60,4 +60,7 @@ export default {
 </script>
 
 <style>
+#topbar {
+    z-index: 100;
+}
 </style>

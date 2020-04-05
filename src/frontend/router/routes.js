@@ -1,13 +1,26 @@
 import common from '@/frontend/common/common'
+import cani from '@/frontend/requests/authenticated/can-i'
 import login from '@/frontend/requests/public/login'
 import registration from '@/frontend/requests/public/registration'
 
 function checkForAuthToken (to, from, next) {
   var authToken = common.GetAuthToken()
   if (typeof authToken === 'undefined' || authToken === null || authToken === '') {
-    window.location.href = '/login'
+    next('/login')
   }
   next()
+}
+
+function checkForAdminGroup (to, from, next) {
+  cani.GetCanIgroup('admin').then(resp => {
+    if (resp.data.spec === true) {
+      next()
+    } else {
+      next(from.path)
+    }
+  }).catch(() => {
+    next(from.path)
+  })
 }
 
 export default [
@@ -83,10 +96,52 @@ export default [
   },
   {
     path: '/apps/shopping-list/list/:id',
-    name: 'New shopping list',
+    name: 'View shopping list',
     component: () => import('@/frontend/views/authenticated/shopping-list-view.vue'),
     beforeEnter: (to, from, next) => {
       checkForAuthToken(to, from, next)
+    }
+  },
+  {
+    path: '/admin',
+    name: 'Admin home',
+    component: () => import('@/frontend/views/admin/home.vue'),
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
+      checkForAdminGroup(to, from, next)
+    }
+  },
+  {
+    path: '/admin/accounts',
+    name: 'Admin accounts',
+    component: () => import('@/frontend/views/admin/accounts.vue'),
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
+      checkForAdminGroup(to, from, next)
+    }
+  },
+  {
+    path: '/admin/accounts/new',
+    name: 'Admin new account',
+    component: () => import('@/frontend/views/admin/accounts-new.vue'),
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
+      checkForAdminGroup(to, from, next)
+    }
+  },
+  {
+    path: '/admin/accounts/edit',
+    redirect: {
+      name: 'Admin accounts'
+    }
+  },
+  {
+    path: '/admin/accounts/edit/:id',
+    name: 'View user account',
+    component: () => import('@/frontend/views/admin/account-edit.vue'),
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
+      checkForAdminGroup(to, from, next)
     }
   },
   {

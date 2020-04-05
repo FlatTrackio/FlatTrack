@@ -23,7 +23,6 @@ function Request (request, redirect = true, publicRoute = false) {
         Authorization: 'bearer ' + authToken
       }
     }
-    console.log({ request, publicRoute, redirect })
     axios(request)
       .then(resp => resolve(resp))
       .catch(err => {

@@ -40,6 +40,7 @@ export default {
     display: inline-flex;
     align-items: flex-end;
     background: rbga(#209cee, 0.8);
+    z-index: 100;
 }
 
 .bottombar-background {

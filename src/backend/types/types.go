@@ -25,6 +25,9 @@ type GroupSpec struct {
 	Name         string `json:"name"`
 	DefaultGroup bool   `json:"defaultGroup"`
 	Description  string `json:"description"`
+	CreationTimestamp         int      `json:"creationTimestamp"`
+	ModificationTimestamp     int      `json:"modificationTimestamp"`
+	DeletionTimestamp         int      `json:"deletionTimestamp"`
 }
 
 // GroupList

@@ -9,6 +9,7 @@
             </ul>
         </nav>
         <h1 class="title is-1">Profile</h1>
+        <p class="subtitle is-3">Manage your accounts</p>
         <div class="card">
           <div class="card-content">
             <div class="media">
@@ -50,6 +51,19 @@
                    >
           </b-input>
         </b-field>
+
+        <b-field label="Birthday">
+          <b-datepicker
+            v-model="jsBirthday"
+            show-week-number
+            inline
+            placeholder="Click to select birthday"
+            icon="calendar-today"
+            trap-focus>
+            </b-datepicker>
+        </b-field>
+        <br/>
+
         <b-field label="Password">
           <b-input type="password"
                    v-model="password"
@@ -66,7 +80,7 @@
                    >
           </b-input>
         </b-field>
-        <!-- <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="Register({ language, timezone, flatName, user: { names, email, password } })">Save</b-button> -->
+        <b-button type="is-success" size="is-medium" rounded disabled native-type="submit" @click="UpdateProfile(email, phoneNumber, birthday, password, passwordConfirm, jsBirthday)">Update profile</b-button>
       </section>
     </div>
   </div>
@@ -96,6 +110,8 @@ export default {
         this.email = resp.data.spec.email
         this.creationTimestamp = resp.data.spec.creationTimestamp
       })
+    },
+    UpdateProfile () {
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)

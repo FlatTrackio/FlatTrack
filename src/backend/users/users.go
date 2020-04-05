@@ -140,41 +140,8 @@ func GetUser(db *sql.DB, userSelect types.UserSpec, includePassword bool) (user 
 // UserObjectFromRows
 // construct a UserSpec from database rows
 func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
-	var id string
-	var names string
-	var email string
-	var password string
-	var phoneNumber string
-	var birthday int
-	var contractAgreement bool
-	var disabled bool
-	var registered bool
-	var taskNotificationFrequency int
-	var lastLogin string
-	var creationTimestamp int
-	var modificationTimestamp int
-	var deletionTimestamp int
-	rows.Scan(&id, &names, &email, &password, &phoneNumber, &birthday, &contractAgreement, &disabled, &registered, &taskNotificationFrequency, &lastLogin, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	rows.Scan(&user.Id, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.TaskNotificationFrequency, &user.LastLogin, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
 	err = rows.Err()
-	if err != nil {
-		fmt.Println(err)
-		return user, err
-	}
-	user = types.UserSpec{
-		Id:                        id,
-		Names:                     names,
-		Email:                     email,
-		Password:                  password,
-		PhoneNumber:               phoneNumber,
-		ContractAgreement:         contractAgreement,
-		Disabled:                  disabled,
-		Registered:                registered,
-		TaskNotificationFrequency: taskNotificationFrequency,
-		LastLogin:                 lastLogin,
-		CreationTimestamp:         creationTimestamp,
-		ModificationTimestamp:     modificationTimestamp,
-		DeletionTimestamp:         deletionTimestamp,
-	}
 	return user, err
 }
 

@@ -10,7 +10,7 @@
             </ul>
         </nav>
         <h1 class="title is-1">Shopping list</h1>
-        <h2 class="subtitle">Manage your weekly shop</h2>
+        <p class="subtitle is-3">Manage your weekly shop</p>
         <b-tabs position="is-centered" class="block">
           <b-tab-item label="In Progress"></b-tab-item>
           <b-tab-item label="Completed" :disabled="lists.length === 0"></b-tab-item>

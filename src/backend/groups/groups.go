@@ -38,7 +38,11 @@ func GetAllGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 	defer rows.Close()
 	for rows.Next() {
 		var group types.GroupSpec
-		rows.Scan(&group.Id, &group.Name, &group.DefaultGroup)
+		rows.Scan(&group.Id, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp)
+		err = rows.Err()
+		if err != nil {
+			return groups, err
+		}
 		groups = append(groups, group)
 	}
 	return groups, err
@@ -125,4 +129,25 @@ func CheckUserInGroup(db *sql.DB, userId string, group string) (found bool, err 
 		}
 	}
 	return found, err
+}
+
+// GetDefaultGroups
+// return a list of default groups
+func GetDefaultGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
+	sqlStatement := `select * from groups where defaultGroup = true`
+	rows, err := db.Query(sqlStatement)
+	if err != nil {
+		return groups, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var group types.GroupSpec
+		rows.Scan(&group.Id, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp)
+		err = rows.Err()
+		if err != nil {
+			return groups, err
+		}
+		groups = append(groups, group)
+	}
+	return groups, err
 }

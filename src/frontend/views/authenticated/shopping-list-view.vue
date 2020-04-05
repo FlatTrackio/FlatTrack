@@ -5,7 +5,7 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
             <li><router-link to="/apps">Apps</router-link></li>
-            <li><router-link to="/apps/shoppinglist">Apps</router-link></li>
+            <li><router-link to="/apps/shopping-list">Apps</router-link></li>
             <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">Shopping list</router-link></li>
           </ul>
         </nav>
@@ -17,9 +17,6 @@
                   <input type="text" autocomplete="on" class="input title is-1" v-model="name"/>
                 </div>
               </div>
-              <!-- <b-field id="shoppinglistname"> -->
-              <!--   <b-input v-model="name" class="title is-1"></b-input> -->
-              <!-- </b-field> -->
             </div>
             <div v-else>
               <h1 class="title is-1 display-is-editable" @click="editing = !editing">{{ name }}</h1>

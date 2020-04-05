@@ -9,7 +9,7 @@
             </ul>
         </nav>
         <h1 class="title is-1">{{ flatName }}</h1>
-        <p>About your flat</p>
+        <p class="subtitle is-3">About your flat</p>
       </section>
     </div>
   </div>

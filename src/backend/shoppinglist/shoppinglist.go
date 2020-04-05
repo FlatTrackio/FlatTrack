@@ -8,7 +8,6 @@ package shoppinglist
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
@@ -30,12 +29,10 @@ func GetShoppingLists(db *sql.DB) (shoppingLists []types.ShoppingListSpec, err e
 	for rows.Next() {
 		shoppingList, err := ShoppingListObjectFromRows(rows)
 		if err != nil {
-			fmt.Println(err)
 			return shoppingLists, err
 		}
 		shoppingList.Count, err = GetListItemCount(db, shoppingList.Id)
 		if err != nil {
-			fmt.Println(err)
 			return shoppingLists, err
 		}
 		shoppingLists = append(shoppingLists, shoppingList)
@@ -168,34 +165,10 @@ func AddRegularItemsToList(db *sql.DB, listId string) (err error) {
 
 // ShoppingListObjectFromRows
 // returns a shopping list object from rows
-func ShoppingListObjectFromRows(rows *sql.Rows) (shoppingList types.ShoppingListSpec, err error) {
-	var id string
-	var name string
-	var notes string
-	var author string
-	var authorLast string
-	var completed bool
-	var creationTimestamp int
-	var modificationTimestamp int
-	var deletionTimestamp int
-	rows.Scan(&id, &name, &notes, &author, &authorLast, &completed, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+func ShoppingListObjectFromRows(rows *sql.Rows) (list types.ShoppingListSpec, err error) {
+	rows.Scan(&list.Id, &list.Name, &list.Notes, &list.Author, &list.AuthorLast, &list.Completed, &list.CreationTimestamp, &list.ModificationTimestamp, &list.DeletionTimestamp)
 	err = rows.Err()
-	if err != nil {
-		return shoppingList, err
-	}
-	shoppingList = types.ShoppingListSpec{
-		Id:                    id,
-		Name:                  name,
-		Notes:                 notes,
-		Author:                author,
-		AuthorLast:            authorLast,
-		Completed:             completed,
-		CreationTimestamp:     creationTimestamp,
-		ModificationTimestamp: modificationTimestamp,
-		DeletionTimestamp:     deletionTimestamp,
-	}
-
-	return shoppingList, err
+	return list, err
 }
 
 // DeleteShoppingList
@@ -243,35 +216,8 @@ func AddItem(db *sql.DB, item types.ShoppingItemSpec) (itemInserted types.Shoppi
 // returns an item object from rows
 func ShoppingItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, err error) {
 	defer rows.Close()
-	var id string
-	var name string
-	var price string
-	var regular string
-	var notes string
-	var obtained bool
-	var author string
-	var authorLast string
-	var creationTimestamp int
-	var modificationTimestamp int
-	var deletionTimestamp int
-	rows.Scan(&id, &name, &price, &regular, &notes, &obtained, &author, &authorLast, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	rows.Scan(&item.Id, &item.Name, &item.Price, &item.Regular, &item.Notes, &item.Obtained, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp)
 	err = rows.Err()
-	if err != nil {
-		return item, err
-	}
-	item = types.ShoppingItemSpec{
-		Id:                    id,
-		Name:                  item.Name,
-		Price:                 item.Price,
-		Regular:               item.Regular,
-		Notes:                 item.Notes,
-		Obtained:              item.Obtained,
-		Author:                item.Author,
-		AuthorLast:            item.AuthorLast,
-		CreationTimestamp:     item.CreationTimestamp,
-		ModificationTimestamp: item.ModificationTimestamp,
-		DeletionTimestamp:     item.DeletionTimestamp,
-	}
 	return item, err
 }
 

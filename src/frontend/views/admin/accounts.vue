@@ -5,21 +5,34 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
               <li><router-link to="/">Home</router-link></li>
-              <li><router-link to="/apps">Apps</router-link></li>
-              <li class="is-active"><router-link to="/apps/flatmates">Flatmates</router-link></li>
+              <li><router-link to="/admin">Admin</router-link></li>
+              <li class="is-active"><router-link to="/admin/accounts">Accounts</router-link></li>
             </ul>
         </nav>
-        <h1 class="title is-1">Flatmates</h1>
-        <p class="subtitle is-3">
-          <span v-if="typeof groupQuery === 'undefined'">
-            Get to know your flatmates
-          </span>
-          <span v-else>
-            Listing flatmates, filtering by the group {{ groupQuery }}
-          </span>
-        </p>
+        <h1 class="title is-1">Accounts</h1>
+        <p class="subtitle is-3">Manage your flatmates' accounts</p>
+        <div>
+          <section>
+            <div class="card pointer-cursor-on-hover" @click="goToRef('/admin/accounts/new')">
+              <div class="card-content">
+                <div class="media">
+                  <div class="media-left">
+                    <b-icon
+                      icon="account-plus"
+                      size="is-medium">
+                    </b-icon>
+                  </div>
+                  <div class="media-content">
+                    <p class="title is-4">Add a new flatmate</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <br/>
         <div v-if="members && members.length">
-          <div class="card-margin" v-for="member of members" v-bind:key="member">
+          <div class="card-margin pointer-cursor-on-hover" v-for="member of members" v-bind:key="member" @click="goToRef('/admin/accounts/edit/' + member.id)">
             <div class="card">
               <div class="card-content">
                 <div class="media">
@@ -95,6 +108,9 @@ export default {
     this.FetchAllFlatmates()
   },
   methods: {
+    goToRef (ref) {
+      this.$router.push({ path: ref })
+    },
     FetchAllFlatmates () {
       var params = {}
       if (typeof this.groupQuery !== 'undefined') {
