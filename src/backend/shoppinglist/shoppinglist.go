@@ -17,7 +17,10 @@ import (
 // GetShoppingLists
 // returns a list of all shopping lists (name, notes, author, etc...)
 func GetShoppingLists(db *sql.DB) (shoppingLists []types.ShoppingListSpec, err error) {
-	sqlStatement := `select * from shopping_list order by creationTimestamp desc`
+	sqlStatement := `select * from shopping_list
+                         where deletionTimestamp = 0
+	                 order by creationTimestamp desc`
+
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		return shoppingLists, err
@@ -108,7 +111,7 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppi
 	if len(shoppingList.Name) == 0 || len(shoppingList.Name) > 30 || shoppingList.Name == "" {
 		return shoppingListInserted, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
 	}
-	if shoppingList.Notes != "" && len(shoppingList.Notes) > 40 {
+	if shoppingList.Notes != "" && len(shoppingList.Notes) > 100 {
 		return shoppingListInserted, errors.New("Unable to save shopping list notes, as they are too long")
 	}
 	if len(shoppingList.Author) == 0 || shoppingList.Author == "" {
@@ -198,7 +201,7 @@ func ShoppingListObjectFromRows(rows *sql.Rows) (shoppingList types.ShoppingList
 // DeleteShoppingList
 // deletes a shopping list, given a shopping list Id
 func DeleteShoppingList(db *sql.DB, listId string) (err error) {
-	sqlStatement := `delete from shopping_list where id = $1`
+	sqlStatement := `update shopping_list set deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
 	_, err = db.Query(sqlStatement, listId)
 	return err
 }
@@ -245,12 +248,13 @@ func ShoppingItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, er
 	var price string
 	var regular string
 	var notes string
+	var obtained bool
 	var author string
 	var authorLast string
 	var creationTimestamp int
 	var modificationTimestamp int
 	var deletionTimestamp int
-	rows.Scan(&id, &name, &price, &regular, &notes, &author, &authorLast, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
+	rows.Scan(&id, &name, &price, &regular, &notes, &obtained, &author, &authorLast, &creationTimestamp, &modificationTimestamp, &deletionTimestamp)
 	err = rows.Err()
 	if err != nil {
 		return item, err
@@ -261,6 +265,7 @@ func ShoppingItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, er
 		Price:                 item.Price,
 		Regular:               item.Regular,
 		Notes:                 item.Notes,
+		Obtained:              item.Obtained,
 		Author:                item.Author,
 		AuthorLast:            item.AuthorLast,
 		CreationTimestamp:     item.CreationTimestamp,

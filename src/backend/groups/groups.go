@@ -22,7 +22,7 @@ func AddUserToGroup(db *sql.DB, userId string, groupId string) (err error) {
 // RemoveUserToGroup
 // given a userId and a groupId, removes a user from a group
 func RemoveUserFromGroup(db *sql.DB, userId string, groupId string) (err error) {
-	sqlStatement := `delete from user_to_groups where userid = $1 and groupid = $2`
+	sqlStatement := `update user_to_groups set deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where userid = $1 and groupid = $2`
 	_, err = db.Query(sqlStatement, userId, groupId)
 	return err
 }
@@ -30,7 +30,7 @@ func RemoveUserFromGroup(db *sql.DB, userId string, groupId string) (err error) 
 // GetAllGroups
 // returns a list of all groups
 func GetAllGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
-	sqlStatement := `select * from groups`
+	sqlStatement := `select * from groups where deletionTimestamp = 0`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		return groups, err

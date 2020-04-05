@@ -90,16 +90,17 @@ export default {
       emojiSmile: emoji.get('smile')
     }
   },
-  created () {
+  async created () {
     this.groupQuery = this.$route.query.group
     this.FetchAllFlatmates()
   },
   methods: {
     FetchAllFlatmates () {
       var params = {}
-      if (typeof groupQuery !== 'undefined') {
-        params.group = groupQuery
+      if (typeof this.groupQuery !== 'undefined') {
+        params.group = this.groupQuery
       }
+      console.log(params)
       flatmates.GetAllFlatmates(params).then(resp => {
         this.members = resp.data.list
       }).catch(err => {

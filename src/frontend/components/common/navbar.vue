@@ -27,7 +27,7 @@
                 <b-menu-item icon="account-group" label="Flatmates" tag="router-link" to="/apps/flatmates"></b-menu-item>
                 <b-menu-item icon="apps" label="Apps" tag="router-link" to="/apps"></b-menu-item>
               </b-menu-list>
-              <b-menu-list label="Admin">
+              <b-menu-list label="Admin" v-if="canUserAccountAdmin">
                 <b-menu-item icon="account-group" label="Flatmates" tag="router-link" to="/admin/flatmates"></b-menu-item>
                 <b-menu-item icon="settings" label="Settings" tag="router-link" to="/admin"></b-menu-item>
               </b-menu-list>
@@ -50,6 +50,7 @@
 <script>
 import common from '@/frontend/common/common'
 import flatInfo from '@/frontend/requests/authenticated/flatInfo'
+import cani from '@/frontend/requests/authenticated/can-i'
 import { DialogProgrammatic as Dialog, LoadingProgrammatic as Loading } from 'buefy'
 
 export default {
@@ -61,7 +62,8 @@ export default {
       overlay: false,
       fullheight: true,
       fullwidth: false,
-      flatName: 'My flat'
+      flatName: 'My flat',
+      canUserAccountAdmin: false
     }
   },
   methods: {
@@ -72,10 +74,16 @@ export default {
       flatInfo.GetFlatName().then(resp => {
         this.flatName = resp.data.spec
       })
+    },
+    CanIadmin () {
+      cani.GetCanIgroup('admin').then(resp => {
+        this.canUserAccountAdmin = resp.data.spec
+      })
     }
   },
   async created () {
     this.GetFlatName()
+    this.CanIadmin()
   }
 }
 </script>

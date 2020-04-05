@@ -95,6 +95,7 @@ type ShoppingItemSpec struct {
 	Price                 float64 `json:"price"`
 	Regular               bool    `json:"regular"`
 	Notes                 string  `json:"notes"`
+	Obtained              string  `json:"obtained"`
 	Author                string  `json:"author"`
 	AuthorLast            string  `json:"authorLast"`
 	CreationTimestamp     int     `json:"creationTimestamp"`

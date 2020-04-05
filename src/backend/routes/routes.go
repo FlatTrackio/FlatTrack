@@ -203,7 +203,7 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// Initialized
+// GetSystemInitialized
 // check if the server has been initialized
 func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -280,6 +280,33 @@ func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Data: valid,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// UserCanIgroup
+// respond whether the current user account is in a group
+func UserCanIgroup(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to determine group privileges"
+		code := 500
+
+		vars := mux.Vars(r)
+		groupName := vars["name"]
+
+		id, errId := users.GetIdFromJWT(db, r)
+		userIsInGroup, err := groups.CheckUserInGroup(db, id, groupName)
+		if err == nil && errId == nil {
+			response = "Determined if user account can perform tasks of group"
+			code = 200
+		}
+
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: userIsInGroup,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}
@@ -417,6 +444,7 @@ func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 		code := 500
 
 		shoppingLists, err := shoppinglist.GetShoppingLists(db)
+		fmt.Println(err)
 		if err == nil {
 			response = "Fetched the shopping lists"
 			code = 200
@@ -459,6 +487,33 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Spec: shoppingListInserted,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// DeleteShoppingList
+// delete a new shopping list by it's id
+func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to delete the shopping list"
+
+		vars := mux.Vars(r)
+		listId := vars["id"]
+
+		err := shoppinglist.DeleteShoppingList(db, listId)
+		if err == nil {
+			code = 200
+			response = "Successfully deleted the shopping list"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}

@@ -6,6 +6,7 @@ create table if not exists shopping_item (
   price float8,
   regular bool,
   notes text,
+  obtained bool not null default false,
   author text not null,
   authorLast text not null,
   creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,

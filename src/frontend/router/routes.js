@@ -76,6 +76,20 @@ export default [
     }
   },
   {
+    path: '/apps/shopping-list/list',
+    redirect: {
+      name: 'Shopping list'
+    }
+  },
+  {
+    path: '/apps/shopping-list/list/:id',
+    name: 'New shopping list',
+    component: () => import('@/frontend/views/authenticated/shopping-list-view.vue'),
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
+    }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/frontend/views/public/login.vue'),

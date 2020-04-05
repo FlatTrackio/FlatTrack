@@ -20,7 +20,7 @@
         <b-field label="Notes">
           <b-input type="text"
                    v-model="notes"
-                   maxlength="30"
+                   maxlength="100"
                    >
           </b-input>
         </b-field>

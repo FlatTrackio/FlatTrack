@@ -4,14 +4,31 @@
       <md-bottom-bar-item to="/" exact md-label="Home" md-icon="home"></md-bottom-bar-item>
       <md-bottom-bar-item to="/apps" md-label="Apps" md-icon="apps"></md-bottom-bar-item>
       <md-bottom-bar-item to="/profile" md-label="Profile" md-icon="account_box"></md-bottom-bar-item>
-      <md-bottom-bar-item to="/admin" md-label="Admin" md-icon="web"></md-bottom-bar-item>
+      <md-bottom-bar-item to="/admin" md-label="Admin" md-icon="web" v-if="canUserAccountAdmin"></md-bottom-bar-item>
     </md-bottom-bar>
   </div>
 </template>
 
 <script>
+import cani from '@/frontend/requests/authenticated/can-i'
+
 export default {
-  name: 'bottombar'
+  name: 'bottombar',
+  data () {
+    return {
+      canUserAccountAdmin: false
+    }
+  },
+  methods: {
+    CanIadmin () {
+      cani.GetCanIgroup('admin').then(resp => {
+        this.canUserAccountAdmin = resp.data.spec
+      })
+    }
+  },
+  async created () {
+    this.CanIadmin()
+  }
 }
 </script>
 

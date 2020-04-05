@@ -38,7 +38,7 @@
         <div v-if="lists.length > 0">
           <div v-for="list in lists" v-bind:key="list">
             <section>
-              <div class="card pointer-cursor-on-hover">
+              <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + list.id)">
                 <div class="card-content">
                   <div class="media">
                     <div class="media-left">

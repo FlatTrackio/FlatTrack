@@ -31,6 +31,9 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 		return userInserted, errors.New("Unable to use the provided email, as it is either empty or not valid")
 	}
 
+	if len(user.Groups) == 0 {
+		return userInserted, errors.New("No groups provided; please select at least one group")
+	}
 	for _, groupItem := range user.Groups {
 		group, err := groups.GetGroupByName(db, groupItem)
 		if err != nil || group.Id == "" {
@@ -74,13 +77,15 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 			return userInserted, errors.New("Unable to add user account to the group")
 		}
 	}
+	userInserted.Groups = user.Groups
+	userInserted.Password = ""
 	return userInserted, err
 }
 
 // GetAllUsers
 // return all users in the database
 func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector) (users []types.UserSpec, err error) {
-	sqlStatement := `select * from users`
+	sqlStatement := `select * from users where deletionTimestamp = 0`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		return users, err
@@ -176,7 +181,7 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 // GetUserById
 // given an id, return a UserSpec
 func GetUserById(db *sql.DB, id string, includePassword bool) (user types.UserSpec, err error) {
-	sqlStatement := `select * from users where id = $1`
+	sqlStatement := `select * from users where id = $1 and deletionTimestamp = 0`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
 		return user, err
@@ -201,7 +206,7 @@ func GetUserById(db *sql.DB, id string, includePassword bool) (user types.UserSp
 // GetUserByEmail
 // given a email, return a UserSpec
 func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.UserSpec, err error) {
-	sqlStatement := `select * from users where email = $1`
+	sqlStatement := `select * from users where email = $1 and deletionTimestamp = 0`
 	rows, err := db.Query(sqlStatement, email)
 	if err != nil {
 		return user, err
@@ -235,7 +240,7 @@ func DeleteUserById(db *sql.DB, id string) (err error) {
 			return err
 		}
 	}
-	sqlStatement := `delete from users where id = $1`
+	sqlStatement := `update users set deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
 	_, err = db.Query(sqlStatement, id)
 	return err
 }

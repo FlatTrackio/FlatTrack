@@ -18,7 +18,7 @@ function GetShoppingLists () {
 // returns a shopping list
 function GetShoppingList (id) {
   return Request({
-    url: '/api/apps/shoppinglist/{id}',
+    url: `/api/apps/shoppinglist/${id}`,
     method: 'GET'
   })
 }

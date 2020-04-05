@@ -68,6 +68,11 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			HttpMethod:   http.MethodPost,
 		},
 		{
+			EndpointPath: endpointPrefix + "/user/can-i/group/{name}",
+			HandlerFunc:  UserCanIgroup(db),
+			HttpMethod:   http.MethodGet,
+		},
+		{
 			EndpointPath: endpointPrefix + "/user/profile",
 			HandlerFunc:  HTTPuseMiddleware(GetProfile(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
@@ -91,6 +96,11 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			EndpointPath: endpointPrefix + "/apps/shoppinglist/{id}",
 			HandlerFunc:  HTTPuseMiddleware(GetShoppingList(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/{id}",
+			HandlerFunc:  HTTPuseMiddleware(DeleteShoppingList(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodDelete,
 		},
 		{
 			EndpointPath: endpointPrefix + "/apps/shoppinglist",
