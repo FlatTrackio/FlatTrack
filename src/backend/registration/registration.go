@@ -40,7 +40,7 @@ func Register(db *sql.DB, registration types.Registration) (successful bool, jwt
 	if err != nil || user.Id == "" {
 		return successful, jwt, err
 	}
-	jwt, err = users.GenerateJWTauthToken(db, user.Id)
+	jwt, err = users.GenerateJWTauthToken(db, user.Id, user.AuthNonce)
 	if err != nil {
 		return successful, "", err
 	}

@@ -57,6 +57,8 @@
             v-model="jsBirthday"
             show-week-number
             inline
+            :max-date="maxDate"
+            :focused-date="focusedDate"
             placeholder="Click to select birthday"
             icon="calendar-today"
             trap-focus>
@@ -93,7 +95,12 @@ import profile from '@/frontend/requests/authenticated/profile'
 export default {
   name: 'profile',
   data () {
+    const today = new Date()
+    const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDate())
+
     return {
+      maxDate: maxDate,
+      focusedDate: maxDate,
       names: '',
       email: '',
       phoneNumber: '',

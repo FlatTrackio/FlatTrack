@@ -89,7 +89,9 @@ func HandleWebserver(db *sql.DB) {
 
 	router.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)
 	router.HandleFunc(apiEndpointPrefix, Root)
-	// TODO implement metrics endpoint on separate port
+	// TODO implement /metrics for prometheus
+	// TODO implement /healthz for healthiness checks
+	// TODO implement /readyz for readiness checks
 	router.PathPrefix("/").Handler(vue.Handler(common.GetAppDistFolder())).Methods("GET")
 
 	router.Use(Logging)

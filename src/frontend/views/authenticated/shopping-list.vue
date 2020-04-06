@@ -85,6 +85,7 @@
 <script>
 import common from '@/frontend/common/common'
 import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
+import flatmates from '@/frontend/requests/authenticated/flatmates'
 
 export default {
   name: 'Shopping List',
@@ -100,7 +101,6 @@ export default {
     GetShoppingLists () {
       shoppinglist.GetShoppingLists().then(resp => {
         this.lists = resp.data.list
-        console.log(this.lists)
         if (this.lists === null) {
           this.lists = []
         }
@@ -110,6 +110,15 @@ export default {
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
+    },
+    GetFlatmateName (id) {
+      flatmates.GetFlatmate(id).then(resp => {
+        console.log({ resp })
+        return resp.data.spec.names
+      }).catch(err => {
+        common.DisplayFailureToast('Failed to fetch user account' + `<br/>${err.response.data.metadata.response}`)
+        return id
+      })
     }
   },
   async created () {

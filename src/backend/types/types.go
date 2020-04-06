@@ -21,13 +21,13 @@ type Group struct {
 // GroupSpec
 // standard values for a group
 type GroupSpec struct {
-	Id           string `json:"id"`
-	Name         string `json:"name"`
-	DefaultGroup bool   `json:"defaultGroup"`
-	Description  string `json:"description"`
-	CreationTimestamp         int      `json:"creationTimestamp"`
-	ModificationTimestamp     int      `json:"modificationTimestamp"`
-	DeletionTimestamp         int      `json:"deletionTimestamp"`
+	Id                    string `json:"id"`
+	Name                  string `json:"name"`
+	DefaultGroup          bool   `json:"defaultGroup"`
+	Description           string `json:"description"`
+	CreationTimestamp     int    `json:"creationTimestamp"`
+	ModificationTimestamp int    `json:"modificationTimestamp"`
+	DeletionTimestamp     int    `json:"deletionTimestamp"`
 }
 
 // GroupList
@@ -61,6 +61,7 @@ type UserSpec struct {
 	Registered                bool     `json:"registered,omitempty"`
 	TaskNotificationFrequency int      `json:"taskNotificationFrequency,omitempty"`
 	LastLogin                 string   `json:"lastLogin"`
+	AuthNonce                 string   `json:"uuthNonce"`
 	CreationTimestamp         int      `json:"creationTimestamp"`
 	ModificationTimestamp     int      `json:"modificationTimestamp"`
 	DeletionTimestamp         int      `json:"deletionTimestamp"`
@@ -159,7 +160,7 @@ type Endpoints []struct {
 // JWTclaim
 // contents for JWT token
 type JWTclaim struct {
-	Id    string `json:"id"`
-	Email string `json:"email"`
+	Id        string `json:"id"`
+	AuthNonce string `json:"authNonce"`
 	jwt.StandardClaims
 }

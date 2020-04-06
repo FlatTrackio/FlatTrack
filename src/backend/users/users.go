@@ -140,7 +140,7 @@ func GetUser(db *sql.DB, userSelect types.UserSpec, includePassword bool) (user 
 // UserObjectFromRows
 // construct a UserSpec from database rows
 func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
-	rows.Scan(&user.Id, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.TaskNotificationFrequency, &user.LastLogin, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
+	rows.Scan(&user.Id, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.TaskNotificationFrequency, &user.LastLogin, &user.AuthNonce, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
 	err = rows.Err()
 	return user, err
 }
@@ -225,7 +225,7 @@ func CheckUserPassword(db *sql.DB, email string, password string) (matches bool,
 
 // GenerateJWTauthToken
 // given an email, return a usable JWT token
-func GenerateJWTauthToken(db *sql.DB, id string) (tokenString string, err error) {
+func GenerateJWTauthToken(db *sql.DB, id string, authNonce string) (tokenString string, err error) {
 	secret, err := system.GetJWTsecret(db)
 	if err != nil {
 		return "", err
@@ -233,6 +233,7 @@ func GenerateJWTauthToken(db *sql.DB, id string) (tokenString string, err error)
 	expirationTime := time.Now().Add(time.Hour * 24 * 5)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, types.JWTclaim{
 		Id: id,
+		AuthNonce: authNonce,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
 		},
@@ -272,7 +273,19 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 		return false, errors.New("Unable to find the user account which the authentication token belongs to")
 	}
 
+	if reqClaims.AuthNonce != user.AuthNonce {
+		return false, errors.New("Authentication has been invalidated, please log in again")
+	}
+
 	return token.Valid, nil
+}
+
+// InvalidAllAuthTokens
+// updates the authNonce to invalidate auth tokens
+func InvalidateAllAuthTokens(db *sql.DB, id string) (err error) {
+	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid where id = $1`
+	_, err = db.Query(sqlStatement, id)
+	return err
 }
 
 // GetIdFromJWT

@@ -23,20 +23,23 @@
             </div>
           </div>
         </nav>
-        <div v-if="editing">
-          <b-field>
-            <b-input maxlength="100" type="textarea" v-model="notes" class="subtitle is-3"></b-input>
-          </b-field>
-        </div>
-        <div v-else>
-          <div class="notification">
-            <div class="content">
-              <p class="display-is-editable" @click="editing = !editing">
-                {{ notes }}
-              </p>
+        <div v-if="notes">
+          <div v-if="editing">
+            <b-field>
+              <b-input maxlength="100" type="textarea" v-model="notes" class="subtitle is-3"></b-input>
+            </b-field>
+          </div>
+          <div v-else>
+            <div class="notification">
+              <div class="content">
+                <p class="display-is-editable" @click="editing = !editing">
+                  {{ notes }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
+
         <b-button type="is-info" @click="editing = !editing" v-if="editing">Done</b-button>
       </section>
     </div>

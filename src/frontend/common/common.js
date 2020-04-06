@@ -56,7 +56,7 @@ function SignoutDialog () {
         container: null
       })
       setTimeout(() => {
-        common.DeleteAuthToken()
+        DeleteAuthToken()
         window.location.href = '/login'
       }, 1 * 1000)
     }
