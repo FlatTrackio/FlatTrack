@@ -31,6 +31,8 @@
             <option value="Pacific/Auckland">Pacific/Auckland</option>
           </b-select>
         </b-field>
+        <br/>
+        <h3 class="title is-4">Your flat</h3>
         <b-field label="Flat name">
           <b-input type="text"
                    v-model="flatName"
