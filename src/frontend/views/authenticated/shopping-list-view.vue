@@ -39,8 +39,34 @@
             </div>
           </div>
         </div>
-
         <b-button type="is-info" @click="editing = !editing" v-if="editing">Done</b-button>
+        <br/>
+        <br/>
+        <div>
+          <section>
+            <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/newitem')">
+              <div class="card-content">
+                <div class="media">
+                  <div class="media-left">
+                    <b-icon
+                      icon="plus-box"
+                      size="is-medium">
+                    </b-icon>
+                  </div>
+                  <div class="media-content">
+                    <p class="subtitle is-4">Add a new item</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <br/>
+        <shoppinglistTable :listId="id" :items="list"/>
+        <br/>
+        <p>
+          <b>Total items</b>: {{ list.length }}
+        </p>
       </section>
     </div>
   </div>
@@ -63,8 +89,23 @@ export default {
       completed: false,
       creationTimestamp: 0,
       modificationTimestamp: 0,
-      list: []
+      list: [
+        {
+          'id': '1',
+          'name': 'test',
+          'obtained': false
+        },
+        {
+          'id': '2',
+          'name': 'test 2',
+          'obtained': true,
+          'notes': 'Description here'
+        }
+      ]
     }
+  },
+  components: {
+    shoppinglistTable: () => import('@/frontend/components/authenticated/shopping-list.vue')
   },
   methods: {
     goToRef (ref) {

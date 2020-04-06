@@ -36,6 +36,15 @@ function PostShoppingList (name, notes) {
   })
 }
 
+// DeleteShoppingList
+// deletes a shopping list
+function DeleteShoppingList (id) {
+  return Request({
+    url: `/api/apps/shoppinglist/${id}`,
+    method: 'DELETE'
+  })
+}
+
 // TODO
 // GetShoppingListItems
 // returns shopping list items by id
