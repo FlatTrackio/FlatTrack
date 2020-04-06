@@ -52,7 +52,7 @@ export default {
 }
 
 .bottombar-background {
-    background-color: #ffffffeb;
+    background-color: hsla(0, 0%, 100%, 0.73);
     backdrop-filter: blur(5px);
 }
 </style>

@@ -5,8 +5,8 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
             <li><router-link to="/apps">Apps</router-link></li>
-            <li><router-link to="/apps/shopping-list">Apps</router-link></li>
-            <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">Shopping list</router-link></li>
+            <li><router-link to="/apps/shopping-list">Shopping list</router-link></li>
+            <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">{{ name }}</router-link></li>
           </ul>
         </nav>
         <nav class="level">
@@ -23,23 +23,36 @@
             </div>
           </div>
         </nav>
-        <div v-if="notes">
+        <div v-if="!editing">
+          <p>
+          <span v-if="creationTimestamp == modificationTimestamp">
+            Created
+          </span>
+          <span v-else>
+            Updated
+          </span>
+          {{ TimestampToCalendar(creationTimestamp) }}, by {{ author }}
+          </p>
+          <br/>
+        </div>
+        <div v-if="notes || notesFromEmpty || editing">
           <div v-if="editing">
             <b-field>
-              <b-input maxlength="100" type="textarea" v-model="notes" class="subtitle is-3"></b-input>
+              <b-input maxlength="100" :type="notes.length > 30 ? 'textarea' : 'text'" v-model="notes" class="subtitle is-3"></b-input>
             </b-field>
           </div>
           <div v-else>
             <div class="notification">
               <div class="content">
-                <p class="display-is-editable" @click="editing = !editing">
+                <p class="display-is-editable subtitle is-4" @click="editing = true">
                   {{ notes }}
                 </p>
               </div>
             </div>
           </div>
         </div>
-        <b-button type="is-info" @click="editing = !editing" v-if="editing">Done</b-button>
+        <b-button type="is-info" @click="() => { notesFromEmpty = true; editing = true }" v-if="!editing && notes.length == 0">Add notes</b-button>
+        <b-button type="is-info" @click="editing = false" v-if="editing">Done</b-button>
         <br/>
         <br/>
         <div>
@@ -81,6 +94,7 @@ export default {
   data () {
     return {
       editing: false,
+      notesFromEmpty: false,
       id: this.$route.params.id,
       name: '',
       notes: '',
