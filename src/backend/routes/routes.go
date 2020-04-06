@@ -9,6 +9,7 @@ package routes
 import (
 	"database/sql"
 	"encoding/json"
+	"strconv"
 	"io/ioutil"
 	"net/http"
 	"fmt"
@@ -506,6 +507,131 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 		if err == nil {
 			code = 200
 			response = "Successfully deleted the shopping list"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetShoppingListItems
+// responds with shopping items by list id
+func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch shopping list items"
+		code := 500
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		formRegular := r.FormValue("regular")
+		selectorRegular, errSR := strconv.ParseBool(formRegular)
+		if formRegular == "" {
+			errSR = nil
+		}
+
+		selectors := types.ShoppingItemSelector{
+			Regular: selectorRegular,
+		}
+
+		shoppingListItems, err := shoppinglist.GetShoppingListItems(db, id, selectors)
+		if err == nil && errSR == nil {
+			response = "Fetched the shopping list items"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			List: shoppingListItems,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetShoppingListItem
+// responds with list of shopping lists
+func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch shopping list item"
+		code := 500
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		shoppingListItem, err := shoppinglist.GetShoppingListItem(db, id)
+		if err == nil && shoppingListItem.Id != "" {
+			response = "Fetched the shopping list item"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: shoppingListItem,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PostItemToShoppingList
+// adds an item to a shopping list
+func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to create the shopping list item"
+
+		// TODO fix input
+		var shoppingItem types.ShoppingItemSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &shoppingItem)
+		fmt.Println(shoppingItem)
+
+		vars := mux.Vars(r)
+		listId := vars["listId"]
+
+		id, errId := users.GetIdFromJWT(db, r)
+		shoppingItem.Author = id
+		shoppingItemInserted, err := shoppinglist.AddItemToList(db, listId, shoppingItem)
+		fmt.Println(shoppingItemInserted, err)
+		if err == nil && errId == nil {
+			code = 200
+			response = "Successfully created the shopping list item"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: shoppingItemInserted,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// DeleteShoppingListItem
+// delete a shopping list item by it's id
+func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to delete the shopping list item"
+
+		vars := mux.Vars(r)
+		itemId := vars["itemId"]
+		listId := vars["listId"]
+
+		err := shoppinglist.RemoveItemFromList(db, itemId, listId)
+		if err == nil {
+			code = 200
+			response = "Successfully deleted the shopping list item"
 		} else {
 			code = 400
 			response = err.Error()
