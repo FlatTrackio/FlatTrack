@@ -7,7 +7,7 @@
           fullheight="true"
           can-cancel="false"
           open="true">
-          <div class="navbar-text">
+          <div class="hero is-info is-bold navbar-text">
             <div class="block">
               <img
                 src=""
@@ -106,7 +106,6 @@ export default {
 .navbar-text {
     text-align: center;
     padding: 15px;
-    background-color: #209cee;
 }
 
 .navbar-text .title {

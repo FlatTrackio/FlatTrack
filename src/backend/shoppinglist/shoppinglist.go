@@ -62,8 +62,8 @@ func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingList
 // GetShoppingListItems
 // returns a list of items on a shopping list
 func GetShoppingListItems(db *sql.DB, listId string, itemSelector types.ShoppingItemSelector) (items []types.ShoppingItemSpec, err error) {
-	sqlStatement := `select * from shopping_item`
-	rows, err := db.Query(sqlStatement)
+	sqlStatement := `select * from shopping_item where listId = $1`
+	rows, err := db.Query(sqlStatement, listId)
 	if err != nil {
 		return items, err
 	}
@@ -179,9 +179,9 @@ func DeleteShoppingList(db *sql.DB, listId string) (err error) {
 	return err
 }
 
-// AddItem
+// AddItemToList
 // adds a new item
-func AddItem(db *sql.DB, item types.ShoppingItemSpec) (itemInserted types.ShoppingItemSpec, err error) {
+func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (itemInserted types.ShoppingItemSpec, err error) {
 	if len(item.Name) == 0 || len(item.Name) > 30 || item.Name == "" {
 		return itemInserted, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
 	}
@@ -195,10 +195,10 @@ func AddItem(db *sql.DB, item types.ShoppingItemSpec) (itemInserted types.Shoppi
 
 	item.AuthorLast = item.Author
 
-	sqlStatement := `insert into shopping_item (name, price, regular, notes, author, authorLast)
-                         values ($1, $2, $3, $4, $5, $6)
+	sqlStatement := `insert into shopping_item (listId, name, price, quantity, regular, notes, author, authorLast)
+                         values ($1, $2, $3, $4, $5, $6, $7, $8)
                          returning *`
-	rows, err := db.Query(sqlStatement, item.Name, item.Price, item.Regular, item.Notes, item.Author, item.AuthorLast)
+	rows, err := db.Query(sqlStatement, listId, item.Name, item.Price, item.Quantity, item.Regular, item.Notes, item.Author, item.AuthorLast)
 	if err != nil {
 		return itemInserted, err
 	}
@@ -215,55 +215,17 @@ func AddItem(db *sql.DB, item types.ShoppingItemSpec) (itemInserted types.Shoppi
 // ShoppingItemObjectFromRows
 // returns an item object from rows
 func ShoppingItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, err error) {
-	defer rows.Close()
-	rows.Scan(&item.Id, &item.Name, &item.Price, &item.Regular, &item.Notes, &item.Obtained, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp)
+	rows.Scan(&item.Id, &item.ListId, &item.Name, &item.Price, &item.Quantity, &item.Regular, &item.Notes, &item.Obtained, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp)
 	err = rows.Err()
 	return item, err
 }
 
-// RemoveItem
-// given an item id, remove it
-func RemoveItem(db *sql.DB, itemId string) (err error) {
-	sqlStatement := `delete from shopping_item where id = $1`
-	_, err = db.Query(sqlStatement, itemId)
-	return err
-}
-
-// AssignItemToLinkList
-// links an item to a list
-func AssignItemToLinkList(db *sql.DB, itemId string, listId string) (err error) {
-	sqlStatement := `insert into shopping_item_to_list (itemId, listId) values ($1, $2)`
-	_, err = db.Query(sqlStatement, itemId, listId)
-	return err
-}
-
-// RemoveItemFromLinkList
-// unlinks an item from a list
-func RemoveItemFromLinkList(db *sql.DB, itemId string, listId string) (err error) {
-	sqlStatement := `delete from shopping_item_to_list where itemId = $1 and listId = $2`
-	_, err = db.Query(sqlStatement, itemId, listId)
-	return err
-}
-
-// AddItemToList
-// adds an item and then links it to a list
-func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (itemInserted types.ShoppingItemSpec, err error) {
-	itemInserted, err = AddItem(db, item)
-	if err != nil {
-		return itemInserted, err
-	}
-	err = AssignItemToLinkList(db, itemInserted.Id, listId)
-	return itemInserted, err
-}
-
 // RemoveItemFromList
-// unlinks an item then removes it
+// given an item id, remove it
 func RemoveItemFromList(db *sql.DB, itemId string, listId string) (err error) {
-	err = RemoveItemFromLinkList(db, itemId, listId)
-	if err != nil {
-		return err
-	}
-	return RemoveItem(db, itemId)
+	sqlStatement := `delete from shopping_item where id = $1 and listId = $2`
+	_, err = db.Query(sqlStatement, itemId, listId)
+	return err
 }
 
 // GetListCount
@@ -284,7 +246,7 @@ func GetListCount(db *sql.DB) (count int, err error) {
 // GetListItemCount
 // returns a count of the items in a list
 func GetListItemCount(db *sql.DB, listId string) (count int, err error) {
-	sqlStatement := `select count(*) from shopping_item_to_list where listId = $1`
+	sqlStatement := `select count(*) from shopping_item where listId = $1`
 	rows, err := db.Query(sqlStatement, listId)
 	if err != nil {
 		return count, err

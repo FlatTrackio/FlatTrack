@@ -95,11 +95,13 @@ type ShoppingListSpec struct {
 
 type ShoppingItemSpec struct {
 	Id                    string  `json:"id"`
+	ListId                string  `json:"listId"`
 	Name                  string  `json:"name"`
 	Price                 float64 `json:"price,omitempty"`
+	Quantity              int     `json:"quantity"`
 	Regular               bool    `json:"regular"`
 	Notes                 string  `json:"notes"`
-	Obtained              string  `json:"obtained"`
+	Obtained              bool    `json:"obtained"`
 	Author                string  `json:"author"`
 	AuthorLast            string  `json:"authorLast"`
 	CreationTimestamp     int     `json:"creationTimestamp"`

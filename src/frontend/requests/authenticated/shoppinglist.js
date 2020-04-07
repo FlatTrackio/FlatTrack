@@ -56,12 +56,28 @@ function GetShoppingListItems (id) {
 }
 
 // TODO
+// GetShoppingListItem
+// returns shopping item by id
+function GetShoppingListItem (itemId) {
+  return Request({
+    url: `/api/apps/shoppinglist/0/items/${id}`,
+    method: 'GET'
+  })
+}
+
+// TODO
 // PostShoppingListItems
 // adds to the shopping list
-function PostShoppingListItems (id) {
+function PostShoppingListItem (id, name, notes, price, regular) {
   return Request({
     url: `/api/apps/shoppinglist/${id}/items`,
-    method: 'POST'
+    method: 'POST',
+    data: {
+      name,
+      notes,
+      price,
+      regular
+    }
   })
 }
 
@@ -75,4 +91,4 @@ function DeleteShoppingListItem (id, itemId) {
   })
 }
 
-export default { GetShoppingLists, GetShoppingList, PostShoppingList, GetShoppingListItems, PostShoppingListItems, DeleteShoppingListItem }
+export default { GetShoppingLists, GetShoppingList, PostShoppingList, GetShoppingListItems, GetShoppingListItem, PostShoppingListItem, DeleteShoppingListItem }

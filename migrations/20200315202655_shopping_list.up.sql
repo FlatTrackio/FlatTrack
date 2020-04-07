@@ -1,14 +1,12 @@
 begin;
 
-create table if not exists shopping_item (
+create table if not exists shopping_list (
   id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
   name text not null,
-  price float8,
-  regular bool,
   notes text,
-  obtained bool not null default false,
   author text not null,
   authorLast text not null,
+  completed bool not null default false,
   creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
   modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
   deletionTimestamp int not null default 0,
@@ -18,6 +16,6 @@ create table if not exists shopping_item (
   foreign key (authorLast) references users(id)
 );
 
-comment on table shopping_item is 'The table shopping_item is used for shopping list items which are not necessarily associated with a list';
+comment on table shopping_list is 'The table shopping_list is used for grouping items together';
 
 commit;

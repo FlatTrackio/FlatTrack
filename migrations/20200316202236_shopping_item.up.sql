@@ -1,21 +1,26 @@
 begin;
 
-create table if not exists shopping_list (
+create table if not exists shopping_item (
   id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
+  listId text not null,
   name text not null,
+  price float8,
+  quantity int not null default 1,
+  regular bool,
   notes text,
+  obtained bool not null default false,
   author text not null,
   authorLast text not null,
-  completed bool not null default false,
   creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
   modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
   deletionTimestamp int not null default 0,
 
   primary key (id),
+  foreign key (listId) references shopping_list(id),
   foreign key (author) references users(id),
   foreign key (authorLast) references users(id)
 );
 
-comment on table shopping_list is 'The table shopping_list is used for shopping lists which items are associated with through shopping_item_to_list';
+comment on table shopping_item is 'The table shopping_item is used for shopping list items which are not necessarily associated with a list';
 
 commit;

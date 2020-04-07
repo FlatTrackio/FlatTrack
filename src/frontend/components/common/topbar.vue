@@ -1,6 +1,6 @@
 <template>
   <div id="topbar">
-    <b-navbar fixed-top type="is-info" shadow="true" transparent="false">
+    <b-navbar fixed-top type="is-info" class="gradient-blue" shadow="true" transparent="false">
       <template slot="brand">
         <b-navbar-item tag="router-link" :to="{ path: '/' }">
           <img
@@ -62,5 +62,9 @@ export default {
 <style>
 #topbar {
     z-index: 100;
+}
+
+.gradient-blue {
+    background-image: linear-gradient(141deg, #04a6d7, #209cee 71%, #3287f5);
 }
 </style>

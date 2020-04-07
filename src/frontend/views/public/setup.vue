@@ -67,6 +67,8 @@
         </b-field>
         <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="Register({ language, timezone, flatName, user: { names, email, password } })">Setup</b-button>
       </div>
+      <br/>
+      <p>FlatTrack version {{ flatTrackVersion }}</p>
     </section>
   </div>
 </div>
@@ -75,6 +77,7 @@
 <script>
 import headerDisplay from '@/frontend/components/header-display.vue'
 import registration from '@/frontend/requests/public/registration'
+import apiroot from '@/frontend/requests/public/apiroot'
 import common from '@/frontend/common/common'
 import { LoadingProgrammatic as Loading } from 'buefy'
 
@@ -82,6 +85,7 @@ export default {
   name: 'setup',
   data () {
     return {
+      flatTrackVersion: '0.0.0',
       language: 'English',
       timezone: 'Pacific/Auckland',
       flatName: null,
@@ -114,7 +118,15 @@ export default {
         loadingComponent.close()
         common.DisplayFailureToast(err.response.data.metadata.response)
       })
+    },
+    GetAPIversion () {
+      apiroot.GetAPIroot().then(resp => {
+        this.flatTrackVersion = resp.data.metadata.version
+      })
     }
+  },
+  async created () {
+    this.GetAPIversion()
   }
 }
 </script>

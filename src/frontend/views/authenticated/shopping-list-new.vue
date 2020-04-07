@@ -41,7 +41,6 @@ export default {
   name: 'shopping-list-new',
   data () {
     return {
-      flatName: 'New shopping list',
       name: '',
       notes: ''
     }

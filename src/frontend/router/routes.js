@@ -103,6 +103,14 @@ export default [
     }
   },
   {
+    path: '/apps/shopping-list/list/:id/new',
+    name: 'New shopping list item',
+    component: () => import('@/frontend/views/authenticated/shopping-list-item-new.vue'),
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
+    }
+  },
+  {
     path: '/admin',
     name: 'Admin home',
     component: () => import('@/frontend/views/admin/home.vue'),

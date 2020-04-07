@@ -423,6 +423,7 @@ func GetShoppingList(db *sql.DB) http.HandlerFunc {
 		id := vars["id"]
 
 		shoppingList, err := shoppinglist.GetShoppingList(db, id)
+		fmt.Println(err)
 		if err == nil && shoppingList.Id != "" {
 			response = "Fetched the shopping lists"
 			code = 200
@@ -566,6 +567,7 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 		id := vars["id"]
 
 		shoppingListItem, err := shoppinglist.GetShoppingListItem(db, id)
+		fmt.Println(err)
 		if err == nil && shoppingListItem.Id != "" {
 			response = "Fetched the shopping list item"
 			code = 200
@@ -587,14 +589,13 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 		code := 500
 		response := "Failed to create the shopping list item"
 
-		// TODO fix input
 		var shoppingItem types.ShoppingItemSpec
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &shoppingItem)
 		fmt.Println(shoppingItem)
 
 		vars := mux.Vars(r)
-		listId := vars["listId"]
+		listId := vars["id"]
 
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingItem.Author = id

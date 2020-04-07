@@ -2,7 +2,7 @@
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
 
 * Development
-[[https://minikube.sigs.k8s.io][Minikube]] is recommended for working out of.
+In-cluster local development is recommended, use [[https://minikube.sigs.k8s.io][minikube]] or [[https://kind.sigs.k8s.io/][kind]].
 
 ** Bring up the deployments
    #+begin_src shell
@@ -35,3 +35,9 @@
    #+begin_src shell
    psql -h localhost flattrack -U postgres -W
    #+end_src
+
+** Remove migrations   
+   #+begin_src shell
+   gomigrate -source "file://$(pwd)/migrations" -database postgres://postgres:postgres@localhost/flattrack?sslmode=disable down
+   #+end_src
+

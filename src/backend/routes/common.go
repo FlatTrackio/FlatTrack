@@ -83,12 +83,12 @@ func HandleWebserver(db *sql.DB) {
 	router := mux.NewRouter().StrictSlash(true)
 	apiEndpointPrefix := "/api"
 
+	router.HandleFunc(apiEndpointPrefix, Root)
 	for _, endpoint := range GetEndpoints(apiEndpointPrefix, db) {
 		router.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HttpMethod, http.MethodOptions)
 	}
 
 	router.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)
-	router.HandleFunc(apiEndpointPrefix, Root)
 	// TODO implement /metrics for prometheus
 	// TODO implement /healthz for healthiness checks
 	// TODO implement /readyz for readiness checks

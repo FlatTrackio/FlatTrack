@@ -57,7 +57,7 @@
         <br/>
         <div>
           <section>
-            <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/newitem')">
+            <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/new')">
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
@@ -103,19 +103,7 @@ export default {
       completed: false,
       creationTimestamp: 0,
       modificationTimestamp: 0,
-      list: [
-        {
-          'id': '1',
-          'name': 'test',
-          'obtained': false
-        },
-        {
-          'id': '2',
-          'name': 'test 2',
-          'obtained': true,
-          'notes': 'Description here'
-        }
-      ]
+      list: []
     }
   },
   components: {
@@ -146,6 +134,13 @@ export default {
   },
   async created () {
     this.GetShoppingList()
+    shoppinglist.GetShoppingListItems(this.id).then(resp => {
+      this.list = resp.data.list
+      if (this.list === null) {
+        this.list = []
+      }
+      console.log(this.list)
+    })
   }
 }
 </script>

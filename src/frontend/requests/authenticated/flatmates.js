@@ -11,7 +11,7 @@ function GetAllFlatmates (params) {
   return Request({
     url: '/api/users',
     method: 'GET',
-    data: params
+    params: params
   })
 }
 
