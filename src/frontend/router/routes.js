@@ -114,6 +114,14 @@ export default [
     }
   },
   {
+    path: '/apps/shopping-list/list/:listId/item/:itemId',
+    name: 'View shopping list item',
+    component: () => import('@/frontend/views/authenticated/shopping-list-item-view.vue'),
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
+    }
+  },
+  {
     path: '/admin',
     name: 'Admin home',
     component: () => import('@/frontend/views/admin/home.vue'),
