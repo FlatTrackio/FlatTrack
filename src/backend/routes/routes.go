@@ -9,7 +9,6 @@ package routes
 import (
 	"database/sql"
 	"encoding/json"
-	"strconv"
 	"io/ioutil"
 	"net/http"
 	"fmt"
@@ -531,18 +530,8 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		id := vars["id"]
 
-		formRegular := r.FormValue("regular")
-		selectorRegular, errSR := strconv.ParseBool(formRegular)
-		if formRegular == "" {
-			errSR = nil
-		}
-
-		selectors := types.ShoppingItemSelector{
-			Regular: selectorRegular,
-		}
-
-		shoppingListItems, err := shoppinglist.GetShoppingListItems(db, id, selectors)
-		if err == nil && errSR == nil {
+		shoppingListItems, err := shoppinglist.GetShoppingListItems(db, id)
+		if err == nil {
 			response = "Fetched the shopping list items"
 			code = 200
 		}

@@ -77,17 +77,18 @@ type UserList struct {
 
 type UserSelector struct {
 	Group string `json:"group,omitempty"`
-	notId string `json:"notId,omitempty"`
+	NotId string `json:"notId,omitempty"`
 }
 
 type ShoppingListSpec struct {
 	Id                    string `json:"id"`
 	Name                  string `json:"name"`
 	Notes                 string `json:"notes"`
-	Author                string `json:"author"`
-	AuthorLast            string `json:"authorLast"`
+	TemplateId            string `json:"templateId"`
 	Completed             bool   `json:"completed"`
 	Count                 int    `json:"count,omitempty"`
+	Author                string `json:"author"`
+	AuthorLast            string `json:"authorLast"`
 	CreationTimestamp     int    `json:"creationTimestamp"`
 	ModificationTimestamp int    `json:"modificationTimestamp"`
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
@@ -99,7 +100,6 @@ type ShoppingItemSpec struct {
 	Name                  string  `json:"name"`
 	Price                 float64 `json:"price,omitempty"`
 	Quantity              int     `json:"quantity"`
-	Regular               bool    `json:"regular"`
 	Notes                 string  `json:"notes"`
 	Obtained              bool    `json:"obtained"`
 	Author                string  `json:"author"`
@@ -107,10 +107,6 @@ type ShoppingItemSpec struct {
 	CreationTimestamp     int     `json:"creationTimestamp"`
 	ModificationTimestamp int     `json:"modificationTimestamp"`
 	DeletionTimestamp     int     `json:"deletionTimestamp"`
-}
-
-type ShoppingItemSelector struct {
-	Regular bool `json:"regular,omitempty"`
 }
 
 // FlatName

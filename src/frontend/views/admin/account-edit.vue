@@ -171,7 +171,7 @@ export default {
     DeleteUserAccount (id) {
       Dialog.confirm({
         title: 'Delete user account',
-        message: `Are you sure that you wish to remove this account?` + '<br/>' + `This action cannot be undone.`,
+        message: 'Are you sure that you wish to remove this account?' + '<br/>' + 'This action cannot be undone.',
         confirmText: 'Delete account',
         type: 'is-danger',
         hasIcon: true,

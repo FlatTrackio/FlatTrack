@@ -6,7 +6,6 @@ create table if not exists shopping_item (
   name text not null,
   price float8,
   quantity int not null default 1,
-  regular bool,
   notes text,
   obtained bool not null default false,
   author text not null,

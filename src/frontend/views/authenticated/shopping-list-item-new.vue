@@ -4,8 +4,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link :to="'/apps/shopping-list/list/' + id">{{ shoppingListName }}</router-link></li>
-              <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id + '/new'">New shopping item</router-link></li>
+              <li><router-link :to="'/apps/shopping-list/list/' + shoppingListId">{{ shoppingListName }}</router-link></li>
+              <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + shoppingListId + '/new'">New shopping item</router-link></li>
             </ul>
         </nav>
         <div>
@@ -33,9 +33,6 @@
             <b-numberinput v-model="quantity" size="is-medium">
             </b-numberinput>
           </b-field>
-          <div class="field">
-            <b-checkbox v-model="regular" size="is-medium">Regular item</b-checkbox>
-          </div>
           <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostShoppingListItem(shoppingListId, name, notes, price, regular)">Add</b-button>
         </div>
       </section>
@@ -56,7 +53,6 @@ export default {
       name: '',
       notes: '',
       price: 0,
-      regular: false,
       quantity: 1
     }
   },

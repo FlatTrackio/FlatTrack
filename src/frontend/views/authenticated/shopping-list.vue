@@ -99,10 +99,7 @@ export default {
     },
     GetShoppingLists () {
       shoppinglist.GetShoppingLists().then(resp => {
-        this.lists = resp.data.list
-        if (this.lists === null) {
-          this.lists = []
-        }
+        this.lists = resp.data.list || []
       }).catch(() => {
         common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping lists')
       })

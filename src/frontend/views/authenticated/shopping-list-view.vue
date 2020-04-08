@@ -34,7 +34,7 @@
           </p>
           <br/>
         </div>
-        <div v-if="notes || notesFromEmpty || editing">
+        <div v-if="notes != '' || notesFromEmpty || editing">
           <div v-if="editing">
             <b-field>
               <b-input maxlength="100" :type="notes.length > 30 ? 'textarea' : 'text'" v-model="notes" class="subtitle is-3"></b-input>
@@ -50,8 +50,8 @@
             </div>
           </div>
         </div>
-        <b-button type="is-info" @click="() => { notesFromEmpty = true; editing = true }" v-if="!editing && notes.length == 0">Add notes</b-button>
-        <b-button type="is-info" @click="editing = false" v-if="editing">Done</b-button>
+        <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true }" v-if="!editing && notes.length == 0">Add notes</b-button>
+        <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false }" v-if="editing">Done</b-button>
         <br/>
         <br/>
         <div>
@@ -79,6 +79,10 @@
         <p>
           <b>Total items</b>: {{ list.length }}
         </p>
+
+        <br/>
+        <br/>
+        <b-button type="is-danger" @click="DeleteShoppingList(id)">Delete list</b-button>
       </section>
     </div>
   </div>
@@ -87,6 +91,7 @@
 <script>
 import common from '@/frontend/common/common'
 import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
+import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
   name: 'Shopping List',
@@ -125,6 +130,25 @@ export default {
         this.modificationTimestamp = resp.data.spec.modificationTimestamp
       }).catch(() => {
         common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping list')
+      })
+    },
+    DeleteShoppingList (id) {
+      Dialog.confirm({
+        title: 'Delete shopping list',
+        message: 'Are you sure that you wish to delete this shopping list?',
+        confirmText: 'Delete shopping list',
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: () => {
+          shoppinglist.DeleteShoppingList(id).then(resp => {
+            common.DisplaySuccessToast('Deleted the shopping list')
+            setTimeout(() => {
+              this.$router.push({ name: 'Shopping list' })
+            }, 1 * 1000)
+          }).catch(err => {
+            common.DisplayFailureToast('Failed to delete the shopping list' + `<br/>${err.response.data.metadata.response}`)
+          })
+        }
       })
     },
     TimestampToCalendar (timestamp) {

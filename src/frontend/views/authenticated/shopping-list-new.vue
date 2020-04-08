@@ -26,7 +26,18 @@
                      >
             </b-input>
           </b-field>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewShoppingList(name, notes)">Create</b-button>
+          <b-field label="Use another list as a template (optional)" v-if="lists.length > 0">
+            <b-select placeholder="Template a preview list" v-model="listTemplate">
+              <option
+                v-for="list in lists"
+                :value="list.id"
+                :key="list.id">
+                {{ list.name }}
+                </option>
+            </b-select>
+          </b-field>
+          <br/>
+          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewShoppingList(name, notes, listTemplate)">Create</b-button>
         </div>
       </section>
     </div>
@@ -42,15 +53,18 @@ export default {
   data () {
     return {
       name: '',
-      notes: ''
+      notes: '',
+      listTemplate: '',
+      lists: []
     }
   },
   methods: {
-    PostNewShoppingList (name, notes) {
+    PostNewShoppingList (name, notes, listTemplate) {
+      console.log(name, notes, listTemplate)
       if (notes === '') {
         notes = undefined
       }
-      shoppinglist.PostShoppingList(name, notes).then(resp => {
+      shoppinglist.PostShoppingList(name, notes, listTemplate).then(resp => {
         var list = resp.data.spec
         if (list.id !== '' || typeof list.id === 'undefined') {
           this.$router.push({ path: `/apps/shopping-list/list/${list.id}` })
@@ -61,6 +75,11 @@ export default {
         common.DisplayFailureToast(`Failed to create shopping list - ${err.response.data.metadata.response}`)
       })
     }
+  },
+  async beforeMount () {
+    shoppinglist.GetShoppingLists().then(resp => {
+      this.lists = resp.data.list || []
+    })
   }
 }
 </script>

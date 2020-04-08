@@ -43,7 +43,7 @@ func GetShoppingLists(db *sql.DB) (shoppingLists []types.ShoppingListSpec, err e
 // GetShoppingList
 // returns a given shopping list, by it's Id
 func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingListSpec, err error) {
-	sqlStatement := `select * from shopping_list where id = $1`
+	sqlStatement := `select * from shopping_list where id = $1 and deletionTimestamp = 0`
 	rows, err := db.Query(sqlStatement, listId)
 	if err != nil {
 		return shoppingList, err
@@ -61,7 +61,7 @@ func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingList
 
 // GetShoppingListItems
 // returns a list of items on a shopping list
-func GetShoppingListItems(db *sql.DB, listId string, itemSelector types.ShoppingItemSelector) (items []types.ShoppingItemSpec, err error) {
+func GetShoppingListItems(db *sql.DB, listId string) (items []types.ShoppingItemSpec, err error) {
 	sqlStatement := `select * from shopping_item where listId = $1`
 	rows, err := db.Query(sqlStatement, listId)
 	if err != nil {
@@ -70,18 +70,9 @@ func GetShoppingListItems(db *sql.DB, listId string, itemSelector types.Shopping
 	defer rows.Close()
 
 	for rows.Next() {
-		found := true
 		item, err := ShoppingItemObjectFromRows(rows)
 		if err != nil {
 			return items, err
-		}
-		if itemSelector.Regular == true {
-			if item.Regular == false {
-				found = false
-			}
-		}
-		if found == false {
-			continue
 		}
 		items = append(items, item)
 	}
@@ -118,6 +109,12 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppi
 	if err != nil || user.Id == "" {
 		return shoppingListInserted, errors.New("Unable to find author for shopping list")
 	}
+	if shoppingList.TemplateId != "" {
+		list, err := GetShoppingList(db, shoppingList.TemplateId)
+		if err != nil || list.Id == "" {
+			return shoppingListInserted, errors.New("Unable to find list to use as template from provided id")
+		}
+	}
 
 	shoppingList.AuthorLast = shoppingList.Author
 	shoppingList.Completed = false
@@ -134,33 +131,31 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppi
 	if err != nil || shoppingListInserted.Id == "" {
 		return shoppingListInserted, errors.New("Failed to create shopping list")
 	}
-	err = AddRegularItemsToList(db, shoppingListInserted.Id)
+	if shoppingList.TemplateId == "" {
+		return shoppingListInserted, err
+	}
+
+	shoppingListItems, err := GetShoppingListItems(db, shoppingList.TemplateId)
+	if err != nil {
+		return shoppingListInserted, errors.New("Failed to fetch items from shopping list")
+	}
+
+	for _, item := range shoppingListItems {
+		newItem := types.ShoppingItemSpec{
+			Name: item.Name,
+			Notes: item.Notes,
+			Price: item.Price,
+			Quantity: item.Quantity,
+			Author: shoppingList.Author,
+			AuthorLast: shoppingList.Author,
+		}
+		newItem, err := AddItemToList(db, shoppingListInserted.Id, newItem)
+		if err != nil || newItem.Id == "" {
+			return shoppingListInserted, errors.New("Failed to add new item to new shopping list from template")
+		}
+	}
 
 	return shoppingListInserted, err
-}
-
-// AddRegularItemsToList
-// finds and adds the items marked as regular to a list via new entries
-func AddRegularItemsToList(db *sql.DB, listId string) (err error) {
-	itemSelector := types.ShoppingItemSelector{Regular: true}
-	regularItems, err := GetShoppingListItems(db, listId, itemSelector)
-	if err != nil {
-		return err
-	}
-	for _, regularItem := range regularItems {
-		// ensure there aren't duplicate regular items
-		newRegularItem := types.ShoppingItemSpec{
-			Name: regularItem.Name,
-			Price: regularItem.Price,
-			Regular: false,
-			Notes: regularItem.Notes,
-		}
-		itemInserted, err := AddItemToList(db, listId, newRegularItem)
-		if err != nil || itemInserted.Id == "" {
-			return err
-		}
-	}
-	return err
 }
 
 // ShoppingListObjectFromRows
@@ -174,7 +169,7 @@ func ShoppingListObjectFromRows(rows *sql.Rows) (list types.ShoppingListSpec, er
 // DeleteShoppingList
 // deletes a shopping list, given a shopping list Id
 func DeleteShoppingList(db *sql.DB, listId string) (err error) {
-	sqlStatement := `update shopping_list set deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
+	sqlStatement := `update shopping_list set name = '(Deleted list)', notes = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
 	_, err = db.Query(sqlStatement, listId)
 	return err
 }
@@ -195,10 +190,10 @@ func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (item
 
 	item.AuthorLast = item.Author
 
-	sqlStatement := `insert into shopping_item (listId, name, price, quantity, regular, notes, author, authorLast)
-                         values ($1, $2, $3, $4, $5, $6, $7, $8)
+	sqlStatement := `insert into shopping_item (listId, name, price, quantity, notes, author, authorLast)
+                         values ($1, $2, $3, $4, $5, $6, $7)
                          returning *`
-	rows, err := db.Query(sqlStatement, listId, item.Name, item.Price, item.Quantity, item.Regular, item.Notes, item.Author, item.AuthorLast)
+	rows, err := db.Query(sqlStatement, listId, item.Name, item.Price, item.Quantity, item.Notes, item.Author, item.AuthorLast)
 	if err != nil {
 		return itemInserted, err
 	}
@@ -215,7 +210,7 @@ func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (item
 // ShoppingItemObjectFromRows
 // returns an item object from rows
 func ShoppingItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, err error) {
-	rows.Scan(&item.Id, &item.ListId, &item.Name, &item.Price, &item.Quantity, &item.Regular, &item.Notes, &item.Obtained, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp)
+	rows.Scan(&item.Id, &item.ListId, &item.Name, &item.Price, &item.Quantity, &item.Notes, &item.Obtained, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp)
 	err = rows.Err()
 	return item, err
 }

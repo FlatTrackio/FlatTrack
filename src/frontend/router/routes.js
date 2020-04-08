@@ -178,7 +178,7 @@ export default [
         }
 
         if (!(nextRoute === null || nextRoute === '')) {
-          window.location.pathname = nextRoute
+          next(nextRoute)
         } else {
           next()
         }

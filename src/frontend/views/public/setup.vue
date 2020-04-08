@@ -3,9 +3,11 @@
   <headerDisplay/>
   <div class="container">
     <section class="section form-width">
+      <h1 class="title is-1">Welcome to FlatTrack!</h1>
+
       <h1 class="title is-1">Set up</h1>
       <p class="subtitle is-5">
-        Let's get started.
+        Let's get started and set up your instance.
       </p>
       <br/>
       <div class="">
@@ -54,7 +56,8 @@
         </b-icon>
 
         <h3 class="title is-4">Your account</h3>
-        <b-field label="Your name">
+        <p class="subtitle is-6">Note: your account will be set up as Administrator</p>
+        <b-field label="Name">
           <b-input type="text"
                    v-model="names"
                    maxlength="70"
@@ -77,7 +80,6 @@
                    required>
           </b-input>
         </b-field>
-        <p>Note: your account will be set up as Administrator</p>
         <br/>
         <br/>
 
