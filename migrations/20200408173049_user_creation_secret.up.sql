@@ -1,0 +1,19 @@
+-- flattrack.user_creation_secret definition
+
+begin;
+
+create table if not exists shopping_item_tags (
+  id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
+  userId text not null,
+  secret text default md5(random()::text || clock_timestamp()::text)::uuid not null,
+  creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  deletionTimestamp int not null default 0,
+
+  primary key (id),
+  foreign key (userId) references users(id)
+);
+
+comment on table shopping_item_tags is 'The table user_creation_secret is used for storing single use secrets for user accounts to be set up from';
+
+commit;

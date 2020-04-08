@@ -148,7 +148,7 @@ func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 // GetUserById
 // given an id, return a UserSpec
 func GetUserById(db *sql.DB, id string, includePassword bool) (user types.UserSpec, err error) {
-	sqlStatement := `select * from users where id = $1 and deletionTimestamp = 0`
+	sqlStatement := `select * from users where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
 		return user, err
@@ -173,7 +173,7 @@ func GetUserById(db *sql.DB, id string, includePassword bool) (user types.UserSp
 // GetUserByEmail
 // given a email, return a UserSpec
 func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.UserSpec, err error) {
-	sqlStatement := `select * from users where email = $1 and deletionTimestamp = 0`
+	sqlStatement := `select * from users where email = $1`
 	rows, err := db.Query(sqlStatement, email)
 	if err != nil {
 		return user, err
@@ -207,7 +207,7 @@ func DeleteUserById(db *sql.DB, id string) (err error) {
 			return err
 		}
 	}
-	sqlStatement := `update users set deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
+	sqlStatement := `update users set names = '(Deleted User)', email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
 	_, err = db.Query(sqlStatement, id)
 	return err
 }
