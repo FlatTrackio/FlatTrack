@@ -1,5 +1,5 @@
 begin;
 
-drop table if exists shopping_items;
+drop table if exists shopping_item cascade;
 
 commit;
