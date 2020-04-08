@@ -27,6 +27,7 @@
         </div>
         <br />
 
+        <!-- TODO migrate to a selection instead of a view like in admin flatmates -->
         <b-field grouped group-multiline>
           <div class="control" v-for="group in groups" v-bind:key="group">
             <b-taglist attached>
