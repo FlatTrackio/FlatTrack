@@ -92,6 +92,9 @@ export default [
     path: '/apps/shopping-list/list',
     redirect: {
       name: 'Shopping list'
+    },
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
     }
   },
   {
@@ -141,6 +144,9 @@ export default [
     path: '/admin/accounts/edit',
     redirect: {
       name: 'Admin accounts'
+    },
+    beforeEnter: (to, from, next) => {
+      checkForAuthToken(to, from, next)
     }
   },
   {
@@ -160,18 +166,16 @@ export default [
       var instanceRegistered
       var hasAuthToken
       var validAuthToken
-      var nextRoute = ''
+      var nextRoute
 
       function handleRedirections () {
         if (instanceRegistered && validAuthToken) {
           nextRoute = '/'
-        } else if (!(hasAuthToken || validAuthToken)) {
-          nextRoute = null
         } else if (!instanceRegistered) {
           nextRoute = '/setup'
+        } else if (!(hasAuthToken || validAuthToken)) {
+          nextRoute = null
         }
-
-        console.log({ validAuthToken, instanceRegistered, hasAuthToken, nextRoute })
 
         if (!(nextRoute === null || nextRoute === '')) {
           window.location.pathname = nextRoute
@@ -189,11 +193,9 @@ export default [
         // check if authToken is valid
         return login.GetUserAuth(false)
       }).then(resp => {
-        console.log({ resp })
         validAuthToken = resp.data.data === true
         handleRedirections()
       }).catch(err => {
-        console.log({ err })
         validAuthToken = err.response.data.data === true
         handleRedirections()
         next()
@@ -217,7 +219,8 @@ export default [
     beforeEnter: (to, from, next) => {
       registration.GetInstanceRegistered().then(resp => {
         if (resp.data.data === true) {
-          window.location.pathname = '/'
+          next('/')
+          return
         }
         next()
       }).catch(() => {

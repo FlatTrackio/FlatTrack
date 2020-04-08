@@ -18,7 +18,7 @@ export default {
   },
   methods: {
   },
-  async created () {
+  async beforeMount () {
   }
 }
 </script>

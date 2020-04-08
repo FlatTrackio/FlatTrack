@@ -4,7 +4,6 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/admin">Admin</router-link></li>
               <li><router-link to="/admin/accounts">Accounts</router-link></li>
               <li class="is-active"><router-link to="/admin/accounts/new">New account</router-link></li>
             </ul>
@@ -189,7 +188,7 @@ export default {
       })
     }
   },
-  async created () {
+  async beforeMount () {
     this.GetAvailableGroups()
     this.GetUserAccount()
   }

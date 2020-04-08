@@ -27,6 +27,7 @@ function Request (request, redirect = true, publicRoute = false) {
       .then(resp => resolve(resp))
       .catch(err => {
         if (err.response.status === 401) {
+          console.log(request)
           redirectToLogin(redirect)
         }
         reject(err)

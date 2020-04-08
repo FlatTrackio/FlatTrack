@@ -11,7 +11,7 @@ function GetAPIroot () {
   return Request({
     url: '/api',
     method: 'GET'
-  })
+  }, false, true)
 }
 
 export default { GetAPIroot }

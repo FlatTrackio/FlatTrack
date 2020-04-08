@@ -32,7 +32,7 @@ export default {
       })
     }
   },
-  async created () {
+  async beforeMount () {
     this.GetFlatName()
   }
 }

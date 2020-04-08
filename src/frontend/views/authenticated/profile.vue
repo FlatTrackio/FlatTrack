@@ -124,7 +124,7 @@ export default {
       return common.TimestampToCalendar(timestamp)
     }
   },
-  async created () {
+  async beforeMount () {
     this.GetProfile()
   }
 }

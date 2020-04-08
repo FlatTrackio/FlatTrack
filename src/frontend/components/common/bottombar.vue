@@ -26,7 +26,7 @@ export default {
       })
     }
   },
-  async created () {
+  async beforeMount () {
     this.CanIadmin()
   }
 }

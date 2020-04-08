@@ -21,7 +21,7 @@ function PostAdminRegister (form) {
     url: '/api/admin/register',
     method: 'POST',
     data: form
-  })
+  }, false, true)
 }
 
 export default { GetInstanceRegistered, PostAdminRegister }

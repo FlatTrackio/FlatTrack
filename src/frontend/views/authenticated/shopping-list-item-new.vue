@@ -4,7 +4,6 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/apps/shopping-list">Shopping list</router-link></li>
               <li><router-link :to="'/apps/shopping-list/list/' + id">{{ shoppingListName }}</router-link></li>
               <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id + '/new'">New shopping item</router-link></li>
             </ul>
@@ -82,7 +81,7 @@ export default {
       })
     }
   },
-  async created () {
+  async beforeMount () {
     shoppinglist.GetShoppingList(this.shoppingListId).then(resp => {
       var list = resp.data.spec
       this.shoppingListName = list.name

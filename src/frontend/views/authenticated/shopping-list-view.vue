@@ -4,7 +4,6 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
-            <li><router-link to="/apps">Apps</router-link></li>
             <li><router-link to="/apps/shopping-list">Shopping list</router-link></li>
             <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">{{ name }}</router-link></li>
           </ul>
@@ -132,7 +131,7 @@ export default {
       return common.TimestampToCalendar(timestamp)
     }
   },
-  async created () {
+  async beforeMount () {
     this.GetShoppingList()
     shoppinglist.GetShoppingListItems(this.id).then(resp => {
       this.list = resp.data.list

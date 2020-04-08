@@ -18,7 +18,7 @@ function GetUserAuth (redirect) {
     }).catch(err => {
       console.log({ err })
       reject(err)
-    })
+    }, false, true)
   })
 }
 
@@ -29,7 +29,7 @@ function PostUserAuth (credentials) {
     url: '/api/user/auth',
     method: 'POST',
     data: credentials
-  })
+  }, false, true)
 }
 
 export default { GetUserAuth, PostUserAuth }
