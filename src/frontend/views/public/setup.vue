@@ -9,7 +9,10 @@
       </p>
       <br/>
       <div class="">
-        <!-- TODO add system icon -->
+        <b-icon
+          icon="cogs"
+          size="is-medium">
+        </b-icon>
         <h3 class="title is-4">System</h3>
         <b-field label="Language">
           <b-select
@@ -32,6 +35,11 @@
           </b-select>
         </b-field>
         <br/>
+        <b-icon
+          icon="home"
+          size="is-medium">
+        </b-icon>
+
         <h3 class="title is-4">Your flat</h3>
         <b-field label="Flat name">
           <b-input type="text"
@@ -40,7 +48,11 @@
                    required>
           </b-input>
         </b-field>
-        <!-- TODO add account icon -->
+        <b-icon
+          icon="account"
+          size="is-medium">
+        </b-icon>
+
         <h3 class="title is-4">Your account</h3>
         <b-field label="Your name">
           <b-input type="text"
@@ -65,6 +77,10 @@
                    required>
           </b-input>
         </b-field>
+        <p>Note: your account will be set up as Administrator</p>
+        <br/>
+        <br/>
+
         <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="Register({ language, timezone, flatName, user: { names, email, password } })">Setup</b-button>
       </div>
       <br/>
