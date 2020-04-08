@@ -21,36 +21,47 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
-// CreateUser
-// given a UserSpec, create a user
-func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, err error) {
+// ValidateUser
+// given a UserSpec, return if it's valid
+func ValidateUser(db *sql.DB, user types.UserSpec) (valid bool, err error) {
 	if len(user.Names) == 0 || len(user.Names) > 60 || user.Names == "" {
-		return userInserted, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
+		return false, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
 	}
 	if common.RegexMatchEmail(user.Email) == false || user.Email == "" {
-		return userInserted, errors.New("Unable to use the provided email, as it is either empty or not valid")
+		return false, errors.New("Unable to use the provided email, as it is either empty or not valid")
 	}
 
 	if len(user.Groups) == 0 {
-		return userInserted, errors.New("No groups provided; please select at least one group")
+		return false, errors.New("No groups provided; please select at least one group")
 	}
 	for _, groupItem := range user.Groups {
 		group, err := groups.GetGroupByName(db, groupItem)
 		if err != nil || group.Id == "" {
-			return userInserted, errors.New(fmt.Sprintf("Unable to use the provide group '%v' as it is invalid", groupItem))
+			return false, errors.New(fmt.Sprintf("Unable to use the provide group '%v' as it is invalid", groupItem))
 		}
 	}
 
 	if common.RegexMatchPassword(user.Password) == false || user.Password == "" {
-		return userInserted, errors.New("Unable to use the provided password, as it is either empty of invalid")
+		return false, errors.New("Unable to use the provided password, as it is either empty of invalid")
 	}
 	user.Password = common.HashSHA512(user.Password)
 	if user.PhoneNumber != "" && common.RegexMatchPhoneNumber(user.PhoneNumber) == false {
-		return userInserted, errors.New("Unable to use the provided phone number")
+		return false, errors.New("Unable to use the provided phone number")
 	}
 	localUser, err := GetUserByEmail(db, user.Email, false)
 	if localUser.Email == user.Email || err != nil {
-		return userInserted, errors.New("User account already exists")
+		return false, errors.New("User account already exists")
+	}
+
+	return true, err
+}
+
+// CreateUser
+// given a UserSpec, create a user
+func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, err error) {
+	validUser, err := ValidateUser(db, user)
+	if !validUser || err != nil {
+		return userInserted, err
 	}
 
 	sqlStatement := `insert into users (names, email, password, phonenumber, birthday, contractAgreement, disabled, registered, taskNotificationFrequency)
