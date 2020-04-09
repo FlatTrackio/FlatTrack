@@ -30,7 +30,7 @@
           <span v-else>
             Updated
           </span>
-          {{ TimestampToCalendar(creationTimestamp) }}, by {{ author }}
+          {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates/' + author"> {{ authorNames }} </router-link>
           </p>
           <br/>
         </div>
@@ -91,6 +91,7 @@
 <script>
 import common from '@/frontend/common/common'
 import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
+import flatmates from '@/frontend/requests/authenticated/flatmates'
 import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
@@ -99,6 +100,7 @@ export default {
     return {
       editing: false,
       notesFromEmpty: false,
+      authorNames: '',
       id: this.$route.params.id,
       name: '',
       notes: '',
@@ -128,6 +130,9 @@ export default {
         this.completed = resp.data.spec.completed
         this.creationTimestamp = resp.data.spec.creationTimestamp
         this.modificationTimestamp = resp.data.spec.modificationTimestamp
+        return flatmates.GetFlatmate(this.author)
+      }).then(resp => {
+        this.authorNames = resp.data.spec.names
       }).catch(() => {
         common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping list')
       })

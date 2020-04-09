@@ -35,45 +35,7 @@
         </div>
         <br/>
         <div v-if="lists.length > 0">
-          <div v-for="list in lists" v-bind:key="list">
-            <section>
-              <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + list.id)">
-                <div class="card-content">
-                  <div class="media">
-                    <div class="media-left">
-                      <b-icon
-                        icon="cart-outline"
-                        size="is-medium">
-                      </b-icon>
-                    </div>
-                    <div class="media-content">
-                      <p class="title is-4">{{ list.name }}</p>
-                      <p class="subtitle is-6">
-                        <span v-if="list.creationTimestamp == list.modificationTimestamp">
-                          Created
-                        </span>
-                        <span v-else>
-                          Updated
-                        </span>
-                        {{ TimestampToCalendar(list.creationTimestamp) }}, by {{ list.author }}
-                      </p>
-                    </div>
-                  </div>
-                  <div class="content" v-if="list.notes">
-                    {{ list.notes }}
-                    <br/>
-                    <br/>
-                    <div v-if="typeof list.count !== 'undefined' && list.count > 0">
-                      {{ list.count }} item(s)
-                    </div>
-                    <div v-else>
-                      0 items
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
+          <shoppingListCardView :lists="lists" :authors="authors" />
           <br/>
           <p>{{ lists.length }} shopping list(s)</p>
         </div>
@@ -90,8 +52,12 @@ export default {
   name: 'Shopping List',
   data () {
     return {
-      lists: []
+      lists: [],
+      authors: {}
     }
+  },
+  components: {
+    shoppingListCardView: () => import('@/frontend/components/authenticated/shopping-list-card-view.vue')
   },
   methods: {
     goToRef (ref) {
@@ -103,9 +69,6 @@ export default {
       }).catch(() => {
         common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping lists')
       })
-    },
-    TimestampToCalendar (timestamp) {
-      return common.TimestampToCalendar(timestamp)
     },
     GetFlatmateName (id) {
       flatmates.GetFlatmate(id).then(resp => {

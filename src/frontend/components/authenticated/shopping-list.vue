@@ -5,10 +5,10 @@
         <div class="card-content">
           <div class="media">
             <div class="media-left">
-              <b-checkbox size="is-medium"></b-checkbox>
+              <b-checkbox size="is-medium" v-model="item.obtained" @click="!item.obtained"></b-checkbox>
             </div>
             <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + listId + '/item/' + item.id)">
-              <p class="subtitle is-4">{{ item.name }}</p>
+              <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">{{ item.name }}</p>
             </div>
           </div>
         </div>
@@ -44,5 +44,10 @@ export default {
     padding-top: 0.6em;
     padding-bottom: 0.6em;
     padding-right: 1.5em;
+}
+
+.obtained {
+    color: #adadad;
+    text-decoration: line-through;
 }
 </style>

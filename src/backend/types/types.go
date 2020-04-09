@@ -59,8 +59,8 @@ type UserSpec struct {
 	ContractAgreement         bool     `json:"contractAgreement,omitempty"`
 	Disabled                  bool     `json:"disabled,omitempty"`
 	Registered                bool     `json:"registered,omitempty"`
-	LastLogin                 string   `json:"lastLogin"`
-	AuthNonce                 string   `json:"uuthNonce"`
+	LastLogin                 string   `json:"lastLogin,omitempty"`
+	AuthNonce                 string   `json:"-"`
 	CreationTimestamp         int      `json:"creationTimestamp"`
 	ModificationTimestamp     int      `json:"modificationTimestamp"`
 	DeletionTimestamp         int      `json:"deletionTimestamp"`

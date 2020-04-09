@@ -20,7 +20,7 @@
             <b-menu>
               <b-menu-list label="General">
                 <b-menu-item icon="home" label="Home" tag="router-link" to="/"></b-menu-item>
-                <b-menu-item icon="information-outline" :label="flatName" tag="router-link" to="/flat"></b-menu-item>
+                <b-menu-item icon="information-outline" :label="flatName" tag="router-link" to="/flat" v-cloak></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Apps">
                 <b-menu-item icon="format-list-checks" label="Shopping list" tag="router-link" to="/apps/shopping-list"></b-menu-item>
