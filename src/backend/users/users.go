@@ -44,7 +44,6 @@ func ValidateUser(db *sql.DB, user types.UserSpec) (valid bool, err error) {
 	if common.RegexMatchPassword(user.Password) == false || user.Password == "" {
 		return false, errors.New("Unable to use the provided password, as it is either empty of invalid")
 	}
-	user.Password = common.HashSHA512(user.Password)
 	if user.PhoneNumber != "" && common.RegexMatchPhoneNumber(user.PhoneNumber) == false {
 		return false, errors.New("Unable to use the provided phone number")
 	}
@@ -63,11 +62,12 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 	if !validUser || err != nil {
 		return userInserted, err
 	}
+	user.Password = common.HashSHA512(user.Password)
 
-	sqlStatement := `insert into users (names, email, password, phonenumber, birthday, contractAgreement, disabled, registered, taskNotificationFrequency)
-                         values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	sqlStatement := `insert into users (names, email, password, phonenumber, birthday, contractAgreement, disabled, registered)
+                         values ($1, $2, $3, $4, $5, $6, $7, $8)
                          returning *`
-	rows, err := db.Query(sqlStatement, user.Names, user.Email, user.Password, user.PhoneNumber, user.Birthday, user.ContractAgreement, user.Disabled, user.Registered, user.TaskNotificationFrequency)
+	rows, err := db.Query(sqlStatement, user.Names, user.Email, user.Password, user.PhoneNumber, user.Birthday, user.ContractAgreement, user.Disabled, user.Registered)
 	if err != nil {
 		return userInserted, err
 	}
@@ -151,7 +151,7 @@ func GetUser(db *sql.DB, userSelect types.UserSpec, includePassword bool) (user 
 // UserObjectFromRows
 // construct a UserSpec from database rows
 func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
-	rows.Scan(&user.Id, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.TaskNotificationFrequency, &user.LastLogin, &user.AuthNonce, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
+	rows.Scan(&user.Id, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.AuthNonce, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
 	err = rows.Err()
 	return user, err
 }
@@ -230,7 +230,9 @@ func CheckUserPassword(db *sql.DB, email string, password string) (matches bool,
 	if err != nil {
 		return matches, err
 	}
+	fmt.Println(user.Password)
 	passwordHashed := common.HashSHA512(password)
+	fmt.Println(passwordHashed)
 	return user.Password == passwordHashed, err
 }
 

@@ -241,7 +241,7 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &user)
 
 		userInDB, err := users.GetUserByEmail(db, user.Email, false)
-		if err != nil {
+		if err != nil || userInDB.Id == "" {
 			response = "Failed to find user"
 		}
 		// Check password locally, fall back to remote if incorrect
