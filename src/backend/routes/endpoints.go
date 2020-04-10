@@ -133,6 +133,16 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			HttpMethod:   http.MethodPost,
 		},
 		{
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{.*}/items/{id}",
+			HandlerFunc:  HTTPuseMiddleware(PatchShoppingListItem(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodPatch,
+		},
+		{
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{.*}/items/{id}/obtained",
+			HandlerFunc:  HTTPuseMiddleware(PatchShoppingListItemObtained(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodPatch,
+		},
+		{
 			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{listId}/items/{itemId}",
 			HandlerFunc:  HTTPuseMiddleware(DeleteShoppingListItem(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodDelete,

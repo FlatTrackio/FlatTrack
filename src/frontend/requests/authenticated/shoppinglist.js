@@ -65,7 +65,7 @@ function GetShoppingListItem (listId, itemId) {
   })
 }
 
-// PostShoppingListItems
+// PostShoppingListItemObtained
 // adds to the shopping list
 function PostShoppingListItem (id, name, notes, price, regular, quantity, tag) {
   return Request({
@@ -78,6 +78,18 @@ function PostShoppingListItem (id, name, notes, price, regular, quantity, tag) {
       regular,
       quantity,
       tag
+    }
+  })
+}
+
+// PatchShoppingListItemObtained
+// adds to the shopping list
+function PatchShoppingListItemObtained (listId, itemId, obtained) {
+  return Request({
+    url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}/obtained`,
+    method: 'PATCH',
+    data: {
+      obtained
     }
   })
 }
@@ -98,4 +110,4 @@ function GetShoppingListItemTags () {
   })
 }
 
-export default { GetShoppingLists, GetShoppingList, PostShoppingList, DeleteShoppingList, GetShoppingListItems, GetShoppingListItem, PostShoppingListItem, DeleteShoppingListItem, GetShoppingListItemTags }
+export default { GetShoppingLists, GetShoppingList, PostShoppingList, DeleteShoppingList, GetShoppingListItems, GetShoppingListItem, PostShoppingListItem, DeleteShoppingListItem, GetShoppingListItemTags, PatchShoppingListItemObtained }

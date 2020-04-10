@@ -614,6 +614,74 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// PatchShoppingListItem
+// adds an item to a shopping list
+func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to patch the shopping list item"
+
+		var shoppingItem types.ShoppingItemSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &shoppingItem)
+
+		vars := mux.Vars(r)
+		itemId := vars["id"]
+
+		id, errId := users.GetIdFromJWT(db, r)
+		shoppingItem.AuthorLast = id
+		patchedItem, err := shoppinglist.PatchItem(db, itemId, shoppingItem)
+		if err == nil && errId == nil {
+			code = 200
+			response = "Successfully patched the shopping list item"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: patchedItem,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PatchShoppingListItemObtained
+// adds an item to a shopping list
+func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to patch the shopping list item obtained field"
+
+		var shoppingItem types.ShoppingItemSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &shoppingItem)
+
+		vars := mux.Vars(r)
+		itemId := vars["id"]
+
+		id, errId := users.GetIdFromJWT(db, r)
+		shoppingItem.AuthorLast = id
+		patchedItem, err := shoppinglist.SetItemObtained(db, itemId, shoppingItem.Obtained)
+		if err == nil && errId == nil {
+			code = 200
+			response = "Successfully patched the shopping list item obtained field"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: patchedItem,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // DeleteShoppingListItem
 // delete a shopping list item by it's id
 func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {

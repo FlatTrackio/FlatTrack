@@ -10,6 +10,7 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.9.1
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
+	github.com/imdario/mergo v0.3.9
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.3.0
 	github.com/onsi/ginkgo v1.11.0

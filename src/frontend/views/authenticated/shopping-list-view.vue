@@ -80,8 +80,8 @@
             <div class="card">
               <div class="card-content card-content-list">
                 <div class="media">
-                  <div class="media-left">
-                    <b-checkbox size="is-medium" v-model="item.obtained" @click="item.obtained = !item.obtained" @input="$emit('update:items', $event.target)"></b-checkbox>
+                  <div class="media-left" @click="PatchItemObtained(item.id, !item.obtained)">
+                    <b-checkbox size="is-medium" v-model="item.obtained"></b-checkbox>
                   </div>
                   <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/item/' + item.id)">
                     <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">
@@ -199,6 +199,11 @@ export default {
             common.DisplayFailureToast('Failed to delete the shopping list' + '<br/>' + err.response.data.metadata.response)
           })
         }
+      })
+    },
+    PatchItemObtained (itemId, obtained) {
+      shoppinglist.PatchShoppingListItemObtained(this.id, itemId, obtained).catch(err => {
+        common.DisplayFailureToast('Failed to patch the obtained field of this item' + '<br/>' + err.response.data.metadata.response)
       })
     },
     TimestampToCalendar (timestamp) {

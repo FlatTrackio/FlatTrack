@@ -8,6 +8,7 @@ package shoppinglist
 import (
 	"database/sql"
 	"errors"
+	"github.com/imdario/mergo"
 
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
@@ -42,6 +43,9 @@ func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bo
 	}
 	if item.Notes != "" && len(item.Notes) > 40 {
 		return valid, errors.New("Unable to save shopping list notes, as they are too long")
+	}
+	if item.Quantity == 0 {
+		return valid, errors.New("Item quanity must be greater than zero")
 	}
 	user, err := users.GetUserById(db, item.Author, false)
 	if err != nil || user.Id == "" {
@@ -228,6 +232,52 @@ func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (item
 		}
 	}
 	return itemInserted, err
+}
+
+// PatchItem
+// patches a shopping item
+func PatchItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemPatched types.ShoppingItemSpec, err error) {
+	existingItem, err := GetShoppingListItem(db, itemId)
+	err = mergo.Merge(&item, existingItem)
+	if err != nil {
+		return itemPatched, errors.New("Failed to update fields in the item")
+	}
+
+	valid, err := ValidateShoppingListItem(db, existingItem)
+	if !valid || err != nil {
+		return itemPatched, err
+	}
+
+	sqlStatement := `update shopping_item set name = $2, price = $3, quantity = $4, notes = $5, authorLast = $6, tag = $7, obtained = $8 where id = $1 returning *`
+	rows, err := db.Query(sqlStatement, itemId, item.Name, item.Price, item.Quantity, item.Notes, item.AuthorLast, item.Tag, item.Obtained)
+	if err != nil {
+		return itemPatched, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		itemPatched, err = ShoppingItemObjectFromRows(rows)
+		if err != nil {
+			return itemPatched, err
+		}
+	}
+	return itemPatched, err
+}
+
+func SetItemObtained(db *sql.DB, itemId string, obtained bool) (item types.ShoppingItemSpec, err error) {
+	sqlStatement := `update shopping_item set obtained = $1 where id = $2 returning *`
+	rows, err := db.Query(sqlStatement, obtained, itemId)
+	if err != nil {
+		return item, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		item, err = ShoppingItemObjectFromRows(rows)
+		if err != nil {
+			return item, err
+		}
+	}
+	return item, err
+
 }
 
 // ShoppingItemObjectFromRows
