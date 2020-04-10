@@ -12,16 +12,10 @@
           <h1 class="title is-1">{{ name || 'Unnamed item' }}</h1>
           <p class="subtitle is-3">View or edit this item</p>
           <p>
-            <span v-if="creationTimestamp == modificationTimestamp">
-              Added
-            </span>
-            <span v-else>
-              Updated
-            </span>
-            {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
+            Added {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
           </p>
-          <p v-if="author !== authorLast && creationTimestamp !== modificationTimestamp">
-            Last updated {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
+          <p v-if="creationTimestamp !== modificationTimestamp">
+            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
           </p>
           <br/>
           <b-field label="Name">

@@ -12,19 +12,20 @@
               </b-icon>
             </div>
             <div class="media-content">
-              <div class="block">
+              <div class="display-items-on-the-same-line">
                 <p class="title is-4">{{ list.name }}</p>
-                <b-tag type="is-info" v-if="list.completed">Completed</b-tag>
-                <b-tag type="is-warning" v-if="!list.completed">Uncompleted</b-tag>
+                <div>
+                  <b-tag type="is-info" v-if="list.completed">Completed</b-tag>
+                  <b-tag type="is-warning" v-if="!list.completed">Uncompleted</b-tag>
+                </div>
               </div>
               <p class="subtitle is-6">
                 <span v-if="list.creationTimestamp == list.modificationTimestamp">
-                  Created
+                  Created {{ TimestampToCalendar(list.creationTimestamp) }}, by {{ authorNames }}
                 </span>
                 <span v-else>
-                  Updated
+                  Updated {{ TimestampToCalendar(list.modificationTimestamp) }}, by {{ authorLastNames }}
                 </span>
-                {{ TimestampToCalendar(list.creationTimestamp) }}, by {{ authorNames }}
               </p>
             </div>
           </div>
@@ -56,7 +57,8 @@ export default {
   },
   data () {
     return {
-      authorNames: ''
+      authorNames: '',
+      authorLastNames: ''
     }
   },
   methods: {
@@ -67,14 +69,29 @@ export default {
       return common.TimestampToCalendar(timestamp)
     }
   },
-  async created () {
+  async beforeMount () {
     var list = this.list
     var userId = list.author
+
     flatmates.GetFlatmate(userId).then(resp => {
       this.authorNames = resp.data.spec.names
+      return flatmates.GetFlatmate(this.list.authorLast)
+    }).then(resp => {
+      this.authorLastNames = resp.data.spec.names
     }).catch(err => {
       common.DisplayFailureToast('Unable to find author of list' + '<br/>' + err.response.data.metadata.response)
     })
   }
 }
 </script>
+
+<style>
+.display-items-on-the-same-line {
+    display: flex;
+
+}
+
+.display-items-on-the-same-line div {
+    margin-left: 10px;
+}
+</style>

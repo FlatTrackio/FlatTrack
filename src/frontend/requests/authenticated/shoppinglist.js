@@ -50,6 +50,18 @@ function PatchShoppingList (id, name, notes) {
   })
 }
 
+// PatchShoppingListCompleted
+// given a bool, patch a shopping list's completed field
+function PatchShoppingListCompleted (id, completed) {
+  return Request({
+    url: `/api/apps/shoppinglist/lists/${id}/completed`,
+    method: 'PATCH',
+    data: {
+      completed
+    }
+  })
+}
+
 // DeleteShoppingList
 // deletes a shopping list
 function DeleteShoppingList (id) {
@@ -137,4 +149,4 @@ function GetShoppingListItemTags () {
   })
 }
 
-export default { GetShoppingLists, GetShoppingList, PostShoppingList, PatchShoppingList, DeleteShoppingList, GetShoppingListItems, GetShoppingListItem, PostShoppingListItem, DeleteShoppingListItem, GetShoppingListItemTags, PatchShoppingListItem, PatchShoppingListItemObtained }
+export default { GetShoppingLists, GetShoppingList, PostShoppingList, PatchShoppingList, PatchShoppingListCompleted, DeleteShoppingList, GetShoppingListItems, GetShoppingListItem, PostShoppingListItem, DeleteShoppingListItem, GetShoppingListItemTags, PatchShoppingListItem, PatchShoppingListItemObtained }

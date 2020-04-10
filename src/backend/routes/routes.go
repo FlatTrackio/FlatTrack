@@ -646,8 +646,42 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PatchShoppingListItem
+// PatchShoppingListCompleted
 // adds an item to a shopping list
+func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to patch the shopping list completed field"
+
+		var shoppingList types.ShoppingListSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &shoppingList)
+
+		vars := mux.Vars(r)
+		itemId := vars["id"]
+
+		id, errId := users.GetIdFromJWT(db, r)
+		shoppingList.AuthorLast = id
+		patchedList, err := shoppinglist.SetListCompleted(db, itemId, shoppingList.Completed)
+		if err == nil && errId == nil {
+			code = 200
+			response = "Successfully patched the shopping list completed field"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: patchedList,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PatchShoppingListItem
+// patches an item in a shopping list
 func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		code := 500
@@ -681,7 +715,7 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 }
 
 // PatchShoppingListItemObtained
-// adds an item to a shopping list
+// patches an item in a shopping list
 func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		code := 500

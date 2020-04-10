@@ -24,18 +24,16 @@
         </nav>
         <div v-if="!editing">
           <p>
-          <span v-if="creationTimestamp == modificationTimestamp">
-            Created
-          </span>
-          <span v-else>
-            Updated
-          </span>
-          {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
+            Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
           </p>
-          <p v-if="author !== authorLast && creationTimestamp !== modificationTimestamp">
-            Last updated {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
+          <p v-if="creationTimestamp !== modificationTimestamp">
+            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
           </p>
           <br/>
+        </div>
+        <div>
+          <b-tag type="is-info" v-if="completed">Completed</b-tag>
+          <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
         </div>
         <div v-if="notes != '' || notesFromEmpty || editing">
           <div v-if="editing">
@@ -117,9 +115,7 @@
           <br/>
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 }}%)
         </p>
-        <br/>
-        <br/>
-        <b-button type="is-info" @click="MarkListAsCompleted(id)">Mark as completed</b-button>
+        <b-button type="is-info" @click="PatchShoppingListCompleted(id, !completed)">Mark as {{ completed === false ? 'completed' : 'uncompleted' }}</b-button>
         <b-button type="is-danger" @click="DeleteShoppingList(id)">Delete list</b-button>
       </section>
     </div>
@@ -222,6 +218,13 @@ export default {
       var id = this.id
       shoppinglist.PatchShoppingList(id, name, notes).catch(err => {
         common.DisplayFailureToast('Failed to update shopping list' + '<br/>' + err.response.data.metadata.response)
+      })
+    },
+    PatchShoppingListCompleted (id, completed) {
+      shoppinglist.PatchShoppingListCompleted(id, completed).then(resp => {
+        this.completed = resp.data.spec.completed
+      }).catch(err => {
+        common.DisplayFailureToast('Failed to set list as completed' + '<br/>' + err.response.data.metadata.response)
       })
     },
     DeleteShoppingList (id) {

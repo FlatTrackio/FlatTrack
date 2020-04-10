@@ -217,6 +217,24 @@ func PatchShoppingList(db *sql.DB, listId string, shoppingList types.ShoppingLis
 	return shoppingListPatched, err
 }
 
+// SetListCompleted
+// updates the list's completed field
+func SetListCompleted(db *sql.DB, listId string, completed bool) (list types.ShoppingListSpec, err error) {
+	sqlStatement := `update shopping_list set completed = $1 where id = $2 returning *`
+	rows, err := db.Query(sqlStatement, completed, listId)
+	if err != nil {
+		return list, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		list, err = ShoppingListObjectFromRows(rows)
+		if err != nil {
+			return list, err
+		}
+	}
+	return list, err
+}
+
 // ShoppingListObjectFromRows
 // returns a shopping list object from rows
 func ShoppingListObjectFromRows(rows *sql.Rows) (list types.ShoppingListSpec, err error) {
@@ -297,6 +315,8 @@ func PatchItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemPatc
 	return itemPatched, err
 }
 
+// SetItemObtained
+// updates the item's obtained field
 func SetItemObtained(db *sql.DB, itemId string, obtained bool) (item types.ShoppingItemSpec, err error) {
 	sqlStatement := `update shopping_item set obtained = $1 where id = $2 returning *`
 	rows, err := db.Query(sqlStatement, obtained, itemId)
@@ -311,7 +331,6 @@ func SetItemObtained(db *sql.DB, itemId string, obtained bool) (item types.Shopp
 		}
 	}
 	return item, err
-
 }
 
 // ShoppingItemObjectFromRows
