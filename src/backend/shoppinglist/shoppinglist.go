@@ -8,6 +8,8 @@ package shoppinglist
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+
 	"github.com/imdario/mergo"
 
 	"gitlab.com/flattrack/flattrack/src/backend/types"
@@ -186,6 +188,37 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppi
 	return shoppingListInserted, err
 }
 
+// PatchShoppingList
+// patches a shopping list
+func PatchShoppingList(db *sql.DB, listId string, shoppingList types.ShoppingListSpec) (shoppingListPatched types.ShoppingListSpec, err error) {
+	existingList, err := GetShoppingList(db, listId)
+	if err != nil || existingList.Id == "" {
+		return shoppingListPatched, errors.New("Failed to fetch existing shopping list")
+	}
+	fmt.Println(shoppingList, existingList)
+	err = mergo.Merge(&shoppingList, existingList)
+	if err != nil {
+		return shoppingListPatched, errors.New("Failed to update fields in the item")
+	}
+	valid, err := ValidateShoppingList(db, existingList)
+	if !valid || err != nil {
+		return shoppingListPatched, err
+	}
+
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4 where id = $5
+                         returning *`
+	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listId)
+	if err != nil {
+		return shoppingListPatched, err
+	}
+	rows.Next()
+	shoppingListPatched, err = ShoppingListObjectFromRows(rows)
+	if err != nil || shoppingListPatched.Id == "" {
+		return shoppingListPatched, errors.New("Failed to create shopping list")
+	}
+	return shoppingListPatched, err
+}
+
 // ShoppingListObjectFromRows
 // returns a shopping list object from rows
 func ShoppingListObjectFromRows(rows *sql.Rows) (list types.ShoppingListSpec, err error) {
@@ -238,6 +271,9 @@ func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (item
 // patches a shopping item
 func PatchItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemPatched types.ShoppingItemSpec, err error) {
 	existingItem, err := GetShoppingListItem(db, itemId)
+	if err != nil || existingItem.Id == "" {
+		return itemPatched, errors.New("Failed to fetch existing shopping list")
+	}
 	err = mergo.Merge(&item, existingItem)
 	if err != nil {
 		return itemPatched, errors.New("Failed to update fields in the item")

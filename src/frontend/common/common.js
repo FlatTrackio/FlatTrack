@@ -22,7 +22,7 @@ function DeleteAuthToken () {
 // shows a toast at the top of the screen with a message and a green background for 8 seconds
 function DisplaySuccessToast (message) {
   Toast.open({
-    duration: 8 * 1000,
+    duration: 4 * 1000,
     message: message,
     position: 'is-top',
     type: 'is-success',
@@ -35,7 +35,7 @@ function DisplaySuccessToast (message) {
 // shows a toast at the top of the screen with a message and a red background for 8 seconds
 function DisplayFailureToast (message) {
   Toast.open({
-    duration: 8 * 1000,
+    duration: 4 * 1000,
     message: message,
     position: 'is-top',
     type: 'is-danger',

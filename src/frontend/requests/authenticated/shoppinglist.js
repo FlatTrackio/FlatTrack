@@ -37,6 +37,19 @@ function PostShoppingList (name, notes, templateId) {
   })
 }
 
+// PatchShoppingList
+// given a name and optional notes, patch a shopping list
+function PatchShoppingList (id, name, notes) {
+  return Request({
+    url: `/api/apps/shoppinglist/lists/${id}`,
+    method: 'PATCH',
+    data: {
+      name,
+      notes
+    }
+  })
+}
+
 // DeleteShoppingList
 // deletes a shopping list
 function DeleteShoppingList (id) {
@@ -55,7 +68,6 @@ function GetShoppingListItems (id) {
   })
 }
 
-// TODO
 // GetShoppingListItem
 // returns shopping item by id
 function GetShoppingListItem (listId, itemId) {
@@ -65,12 +77,29 @@ function GetShoppingListItem (listId, itemId) {
   })
 }
 
-// PostShoppingListItemObtained
+// PostShoppingListItem
 // adds to the shopping list
 function PostShoppingListItem (id, name, notes, price, regular, quantity, tag) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}/items`,
     method: 'POST',
+    data: {
+      name,
+      notes,
+      price,
+      regular,
+      quantity,
+      tag
+    }
+  })
+}
+
+// PatchShoppingListItem
+// adds to the shopping list
+function PatchShoppingListItem (listId, itemId, name, notes, price, regular, quantity, tag) {
+  return Request({
+    url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
+    method: 'PATCH',
     data: {
       name,
       notes,
@@ -110,4 +139,4 @@ function GetShoppingListItemTags () {
   })
 }
 
-export default { GetShoppingLists, GetShoppingList, PostShoppingList, DeleteShoppingList, GetShoppingListItems, GetShoppingListItem, PostShoppingListItem, DeleteShoppingListItem, GetShoppingListItemTags, PatchShoppingListItemObtained }
+export default { GetShoppingLists, GetShoppingList, PostShoppingList, PatchShoppingList, DeleteShoppingList, GetShoppingListItems, GetShoppingListItem, PostShoppingListItem, DeleteShoppingListItem, GetShoppingListItemTags, PatchShoppingListItem, PatchShoppingListItemObtained }

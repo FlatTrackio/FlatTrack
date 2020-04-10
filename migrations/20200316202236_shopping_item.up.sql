@@ -4,7 +4,7 @@ create table if not exists shopping_item (
   id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
   listId text not null,
   name text not null,
-  price float8,
+  price float8 not null default 0,
   quantity int not null default 1,
   notes text,
   obtained bool not null default false,

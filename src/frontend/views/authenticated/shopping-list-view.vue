@@ -37,7 +37,7 @@
         <div v-if="notes != '' || notesFromEmpty || editing">
           <div v-if="editing">
             <b-field>
-              <b-input maxlength="100" type="textarea" v-model="notes" class="subtitle is-3"></b-input>
+              <b-input size="is-medium" maxlength="100" type="textarea" v-model="notes" class="subtitle is-3"></b-input>
             </b-field>
           </div>
           <div v-else>
@@ -51,7 +51,7 @@
           </div>
         </div>
         <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true }" v-if="!editing && notes.length == 0">Add notes</b-button>
-        <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false }" v-if="editing">Done</b-button>
+        <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; PatchShoppingList(name, notes) }" v-if="editing">Done</b-button>
         <br/>
         <br/>
         <div>
@@ -84,11 +84,18 @@
                     <b-checkbox size="is-medium" v-model="item.obtained"></b-checkbox>
                   </div>
                   <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/item/' + item.id)">
-                    <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">
-                      {{ item.name }}
-                      <b v-if="item.quantity > 1">x{{ item.quantity }}</b>
-                      <span v-if="typeof item.price !== 'undefined' || item.price !== 0"> (${{ item.price }})</span>
-                    </p>
+                    <div class="block">
+                      <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">
+                        {{ item.name }}
+                        <b v-if="item.quantity > 1">x{{ item.quantity }}</b>
+                        <span v-if="typeof item.price !== 'undefined' || item.price !== 0"> (${{ item.price }}) </span>
+                        <b-icon
+                          v-if="item.notes.length > 0"
+                          icon="note-text-outline"
+                          size="is-small">
+                        </b-icon>
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -154,6 +161,7 @@ export default {
       var list = this.list
       for (var itemTag in list) {
         for (var item in list[itemTag].items) {
+          console.log(list[itemTag].items[item].price)
           totalPrice += list[itemTag].items[item].price * list[itemTag].items[item].quantity
         }
       }
@@ -169,7 +177,7 @@ export default {
       var id = this.id
       shoppinglist.GetShoppingList(id).then(resp => {
         this.name = resp.data.spec.name
-        this.notes = resp.data.spec.notes
+        this.notes = resp.data.spec.notes || ''
         this.author = resp.data.spec.author
         this.authorLast = resp.data.spec.authorLast
         this.completed = resp.data.spec.completed
@@ -178,8 +186,14 @@ export default {
         return flatmates.GetFlatmate(this.author)
       }).then(resp => {
         this.authorNames = resp.data.spec.names
-      }).catch(() => {
-        common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping list')
+      }).catch(err => {
+        common.DisplayFailureToast('Error loading the shopping list' + '<br/>' + err.response.data.metadata.response)
+      })
+    },
+    PatchShoppingList (name, notes) {
+      var id = this.id
+      shoppinglist.PatchShoppingList(id, name, notes).catch(err => {
+        common.DisplayFailureToast('Failed to update shopping list' + '<br/>' + err.response.data.metadata.response)
       })
     },
     DeleteShoppingList (id) {
@@ -214,7 +228,7 @@ export default {
     this.GetShoppingList()
     shoppinglist.GetShoppingListItems(this.id).then(resp => {
       var responseList = resp.data.list
-      this.totalItems = responseList.length
+      this.totalItems = responseList === null ? 0 : responseList.length
       if (this.list === null) {
         this.list = []
       }

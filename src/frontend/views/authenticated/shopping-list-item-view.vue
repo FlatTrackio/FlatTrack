@@ -57,7 +57,7 @@
               </b-dropdown>
             </p>
           </b-field>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, regular)" disabled>Update</b-button>
+          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchShoppingListItem(shoppingListId, id, name, notes, price, regular)">Update</b-button>
           <b-button type="is-danger" size="is-medium" rounded native-type="submit" @click="DeleteShoppingListItem(shoppingListId, id)">Delete</b-button>
         </div>
       </section>
@@ -91,7 +91,7 @@ export default {
     }
   },
   methods: {
-    UpdateShoppingListItem (listId, name, notes, price, regular, quantity) {
+    PatchShoppingListItem (listId, itemId, name, notes, price, regular, quantity) {
       if (notes === '') {
         notes = undefined
       }
@@ -99,10 +99,11 @@ export default {
         price = undefined
       }
 
-      shoppinglist.UpdateShoppingListItem(listId, name, notes, price, regular, quantity).then(resp => {
+      shoppinglist.PatchShoppingListItem(listId, itemId, name, notes, price, regular, quantity).then(resp => {
+        console.log(resp)
         var item = resp.data.spec
-        if (item.id !== '' || typeof item.id === 'undefined') {
-          this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
+        if (item.id !== '' && typeof item.id !== 'undefined') {
+          common.DisplaySuccessToast('Updated item successfully')
         } else {
           common.DisplayFailureToast('Unable to find created shopping item')
         }

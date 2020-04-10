@@ -84,7 +84,7 @@ type UserSelector struct {
 type ShoppingListSpec struct {
 	Id                    string `json:"id"`
 	Name                  string `json:"name"`
-	Notes                 string `json:"notes"`
+	Notes                 string `json:"notes,omitempty"`
 	TemplateId            string `json:"templateId,omitempty"`
 	Completed             bool   `json:"completed"`
 	Count                 int    `json:"count,omitempty"`
