@@ -84,7 +84,11 @@
                     <b-checkbox size="is-medium" v-model="item.obtained" @click="item.obtained = !item.obtained" @input="$emit('update:items', $event.target)"></b-checkbox>
                   </div>
                   <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/item/' + item.id)">
-                    <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">{{ item.name }}</p>
+                    <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">
+                      {{ item.name }}
+                      <b v-if="item.quantity > 1">x{{ item.quantity }}</b>
+                      <span v-if="typeof item.price !== 'undefined' || item.price !== 0"> (${{ item.price }})</span>
+                    </p>
                   </div>
                 </div>
               </div>
