@@ -10,17 +10,17 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io/ioutil"
-	"net/http"
 	"log"
+	"net/http"
 
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/src/backend/groups"
 	"gitlab.com/flattrack/flattrack/src/backend/registration"
 	"gitlab.com/flattrack/flattrack/src/backend/settings"
+	"gitlab.com/flattrack/flattrack/src/backend/shoppinglist"
 	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
-	"gitlab.com/flattrack/flattrack/src/backend/shoppinglist"
 )
 
 // GetAllUsers
@@ -30,12 +30,22 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 		code := 500
 		response := "Failed to fetch user accounts"
 
+		userSelectorId := r.FormValue("id")
+		userSelectorNotId := r.FormValue("notId")
+		userSelectorGroup := r.FormValue("group")
+		var errJWT error = nil
+		if r.FormValue("notSelf") == "true" {
+			userSelectorNotId, errJWT = users.GetIdFromJWT(db, r)
+		}
+
 		selectors := types.UserSelector{
-			Group: r.FormValue("group"),
+			Id:    userSelectorId,
+			NotId: userSelectorNotId,
+			Group: userSelectorGroup,
 		}
 
 		users, err := users.GetAllUsers(db, false, selectors)
-		if err == nil {
+		if err == nil && errJWT == nil {
 			code = 200
 			response = "Fetched user accounts"
 		} else {
@@ -147,6 +157,9 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
+
+		// TODO make sure that if any errors occur the user account still won't be deleted
+		// TODO make sure that admins can't be deleted
 
 		err = users.DeleteUserById(db, userInDB.Id)
 		if err == nil {

@@ -49,21 +49,21 @@ type User struct {
 // UserSpec
 // standard user account objects
 type UserSpec struct {
-	Id                        string   `json:"id"`
-	Names                     string   `json:"names"`
-	Email                     string   `json:"email"`
-	Groups                    []string `json:"groups"`
-	Password                  string   `json:"password,omitempty"`
-	PhoneNumber               string   `json:"phoneNumber,omitempty"`
-	Birthday                  int      `json:"birthday,omitempty"`
-	ContractAgreement         bool     `json:"contractAgreement,omitempty"`
-	Disabled                  bool     `json:"disabled,omitempty"`
-	Registered                bool     `json:"registered,omitempty"`
-	LastLogin                 string   `json:"lastLogin,omitempty"`
-	AuthNonce                 string   `json:"-"`
-	CreationTimestamp         int      `json:"creationTimestamp"`
-	ModificationTimestamp     int      `json:"modificationTimestamp"`
-	DeletionTimestamp         int      `json:"deletionTimestamp"`
+	Id                    string   `json:"id"`
+	Names                 string   `json:"names"`
+	Email                 string   `json:"email"`
+	Groups                []string `json:"groups"`
+	Password              string   `json:"password,omitempty"`
+	PhoneNumber           string   `json:"phoneNumber,omitempty"`
+	Birthday              int      `json:"birthday,omitempty"`
+	ContractAgreement     bool     `json:"contractAgreement,omitempty"`
+	Disabled              bool     `json:"disabled,omitempty"`
+	Registered            bool     `json:"registered,omitempty"`
+	LastLogin             string   `json:"lastLogin,omitempty"`
+	AuthNonce             string   `json:"-"`
+	CreationTimestamp     int      `json:"creationTimestamp"`
+	ModificationTimestamp int      `json:"modificationTimestamp"`
+	DeletionTimestamp     int      `json:"deletionTimestamp"`
 }
 
 // UserList
@@ -75,8 +75,10 @@ type UserList struct {
 }
 
 type UserSelector struct {
-	Group string `json:"group,omitempty"`
-	NotId string `json:"notId,omitempty"`
+	Id      string `json:"id,omitempty"`
+	Group   string `json:"group,omitempty"`
+	NotId   string `json:"notId,omitempty"`
+	NotSelf string `json:"notSelf,omitempty"`
 }
 
 type ShoppingListSpec struct {

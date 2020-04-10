@@ -55,17 +55,16 @@
             <p>{{ members.length }} {{ members.length === 1 ? 'flatmate' : 'flatmates' }}</p>
           </div>
         </div>
-        <div v-if="members && !members.length">
+        <div v-if="!members || members.length === 0">
           <div class="card">
             <div class="card-content">
               <div class="media">
                 <div class="media-content">
-                  <p class="title is-4">No flatmates added</p>
+                  <p class="title is-4">No flatmates found</p>
                 </div>
               </div>
               <div class="content">
-                Hmm, it appears that you don't have an flatmates added.<br/>
-                Please contact the administrator(s) to add your flatmates.
+                Either you haven't added any flatmates, or you are trying to search or filter for flatmates and none could be found.
               </div>
             </div>
           </div>
@@ -85,11 +84,13 @@ export default {
   data () {
     return {
       members: [],
+      idQuery: undefined,
       groupQuery: undefined,
       emojiSmile: emoji.get('smile')
     }
   },
   async beforeMount () {
+    this.idQuery = this.$route.query.id
     this.groupQuery = this.$route.query.group
     this.FetchAllFlatmates()
   },
@@ -98,7 +99,10 @@ export default {
       var params = {}
       if (typeof this.groupQuery !== 'undefined') {
         params.group = this.groupQuery
+      } else if (typeof this.idQuery !== 'undefined') {
+        params.id = this.idQuery
       }
+      params.notSelf = true
       console.log(params)
       flatmates.GetAllFlatmates(params).then(resp => {
         this.members = resp.data.list

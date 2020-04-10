@@ -165,11 +165,11 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppi
 
 	for _, item := range shoppingListItems {
 		newItem := types.ShoppingItemSpec{
-			Name: item.Name,
-			Notes: item.Notes,
-			Price: item.Price,
-			Quantity: item.Quantity,
-			Author: shoppingList.Author,
+			Name:       item.Name,
+			Notes:      item.Notes,
+			Price:      item.Price,
+			Quantity:   item.Quantity,
+			Author:     shoppingList.Author,
 			AuthorLast: shoppingList.Author,
 		}
 		newItem, err := AddItemToList(db, shoppingListInserted.Id, newItem)

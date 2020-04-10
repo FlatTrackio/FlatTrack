@@ -5,7 +5,7 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
             <li><router-link to="/apps/shopping-list">Shopping list</router-link></li>
-            <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">{{ name }}</router-link></li>
+            <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">{{ name || 'Unnamed list' }}</router-link></li>
           </ul>
         </nav>
         <nav class="level">
@@ -18,7 +18,7 @@
               </div>
             </div>
             <div v-else>
-              <h1 class="title is-1 display-is-editable" @click="editing = !editing">{{ name }}</h1>
+              <h1 class="title is-1 display-is-editable" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
             </div>
           </div>
         </nav>
@@ -30,7 +30,7 @@
           <span v-else>
             Updated
           </span>
-          {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates/' + author"> {{ authorNames }} </router-link>
+          {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
           </p>
           <br/>
         </div>
@@ -74,7 +74,20 @@
           </section>
         </div>
         <br/>
-        <shoppinglistTable :listId="id" :items="list"/>
+        <section v-for="item in list" v-bind:key="item">
+          <div class="card">
+            <div class="card-content card-content-list">
+              <div class="media">
+                <div class="media-left">
+                  <b-checkbox size="is-medium" v-model="item.obtained" @click="!item.obtained" @input="$emit('update:items', $event.target)"></b-checkbox>
+                </div>
+                <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + listId + '/item/' + item.id)">
+                  <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">{{ item.name }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
         <br/>
         <p>
           <b>Total items</b>: {{ obtainedCount }}/{{ list.length }}
@@ -117,8 +130,9 @@ export default {
   computed: {
     obtainedCount () {
       var obtained = 0
-      for (var item in this.list) {
-        if (item.obtained === true) {
+      var list = this.list
+      for (var item in list) {
+        if (list[item].obtained === true) {
           obtained += 1
         }
       }
@@ -133,9 +147,6 @@ export default {
       }
       return totalPrice
     }
-  },
-  components: {
-    shoppinglistTable: () => import('@/frontend/components/authenticated/shopping-list.vue')
   },
   methods: {
     goToRef (ref) {
@@ -198,5 +209,17 @@ export default {
 <style scoped>
 .display-is-editable:hover {
     text-decoration: underline dotted;
+}
+.card-content-list {
+    background-color: transparent;
+    padding-left: 1.5em;
+    padding-top: 0.6em;
+    padding-bottom: 0.6em;
+    padding-right: 1.5em;
+}
+
+.obtained {
+    color: #adadad;
+    text-decoration: line-through;
 }
 </style>

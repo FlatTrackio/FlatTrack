@@ -117,6 +117,10 @@ func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector)
 			if err != nil {
 				return users, err
 			}
+		} else if selectors.Id != "" {
+			found = selectors.Id == user.Id
+		} else if selectors.NotId != "" {
+			found = !(selectors.NotId == user.Id)
 		}
 		user.Groups = groupsOfUser
 		if includePassword == false {
@@ -243,7 +247,7 @@ func GenerateJWTauthToken(db *sql.DB, id string, authNonce string) (tokenString 
 	}
 	expirationTime := time.Now().Add(time.Hour * 24 * 5)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, types.JWTclaim{
-		Id: id,
+		Id:        id,
 		AuthNonce: authNonce,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),

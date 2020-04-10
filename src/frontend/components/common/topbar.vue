@@ -14,7 +14,7 @@
         <b-navbar-item tag="router-link" :to="{ path: '/' }">
           Home
         </b-navbar-item>
-        <b-navbar-item href="https://flattrack.io/help" tag="a" target="_blank">
+        <b-navbar-item href="https://flattrack.io/help" tag="a" target="_blank" v-if="false">
           FlatTrack Help
         </b-navbar-item>
         <b-navbar-item tag="router-link" :to="{ path: '/apps/flatmates?group=admin' }">

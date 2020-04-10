@@ -5,11 +5,11 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
               <li><router-link :to="'/apps/shopping-list/list/' + shoppingListId">{{ shoppingListName }}</router-link></li>
-              <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + shoppingListId + '/item/' + id">{{ name }}</router-link></li>
+              <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + shoppingListId + '/item/' + id">{{ name || 'Unnamed item' }}</router-link></li>
             </ul>
         </nav>
         <div>
-          <h1 class="title is-1">{{ name }}</h1>
+          <h1 class="title is-1">{{ name || 'Unnamed item' }}</h1>
           <p class="subtitle is-3">View or edit this item</p>
           <b-field label="Name">
             <b-input type="text"

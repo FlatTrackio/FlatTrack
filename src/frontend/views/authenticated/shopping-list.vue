@@ -31,7 +31,7 @@
         </div>
         <br/>
         <div v-if="lists.length > 0">
-          <shoppingListCardView :lists="lists" :authors="authors" />
+          <shoppingListCardView :list="list" :authors="authors" v-for="list in lists" v-bind:key="list" />
           <br/>
           <p>{{ lists.length }} shopping list(s)</p>
         </div>

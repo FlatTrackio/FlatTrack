@@ -32,7 +32,7 @@
                 <b-menu-item icon="settings" label="Admin" tag="router-link" to="/admin"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Help">
-                <b-menu-item icon="open-in-new" label="FlatTrack help" tag="a" target="_blank" href="https://flattrack.io/help"></b-menu-item>
+                <b-menu-item icon="open-in-new" label="FlatTrack help" tag="a" target="_blank" href="https://flattrack.io/help" disabled></b-menu-item>
                 <b-menu-item icon="phone" label="Contact admin" tag="router-link" to="/apps/flatmates?group=admin"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Account">
