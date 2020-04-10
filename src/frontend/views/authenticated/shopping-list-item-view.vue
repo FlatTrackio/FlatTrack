@@ -48,13 +48,13 @@
             <b-numberinput v-model="quantity" size="is-medium">
             </b-numberinput>
           </b-field>
-          <div v-if="tags.length > 0">
+          <div>
             <label class="label">Tag</label>
             <b-field>
               <p class="control">
                 <b-input type="text" v-model="tag" size="is-medium"></b-input>
               </p>
-              <p class="control">
+              <p class="control" v-if="tags.length > 0">
                 <b-dropdown>
                   <button class="button is-primary" slot="trigger">
                     <b-icon icon="menu-down"></b-icon>

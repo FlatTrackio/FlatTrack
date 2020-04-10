@@ -92,6 +92,9 @@ func HandleWebserver(db *sql.DB) {
 	// TODO implement /metrics for prometheus
 	// TODO implement /healthz for healthiness checks
 	// TODO implement /readyz for readiness checks
+	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./dist/robots.txt")
+	})
 	router.PathPrefix("/").Handler(vue.Handler(common.GetAppDistFolder())).Methods("GET")
 
 	router.Use(Logging)

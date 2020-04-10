@@ -248,7 +248,7 @@ func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (item
 
 	item.AuthorLast = item.Author
 
-	sqlStatement := `insert into shopping_item (listId, name, price, quantity, notes, author, authorLast, Tag)
+	sqlStatement := `insert into shopping_item (listId, name, price, quantity, notes, author, authorLast, tag)
                          values ($1, $2, $3, $4, $5, $6, $7, $8)
                          returning *`
 	rows, err := db.Query(sqlStatement, listId, item.Name, item.Price, item.Quantity, item.Notes, item.Author, item.AuthorLast, item.Tag)

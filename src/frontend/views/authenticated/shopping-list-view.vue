@@ -91,7 +91,12 @@
                       <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">
                         {{ item.name }}
                         <b v-if="item.quantity > 1">x{{ item.quantity }}</b>
-                        <span v-if="typeof item.price !== 'undefined' || item.price !== 0"> (${{ item.price }}) </span>
+                        <span v-if="typeof item.price !== 'undefined' && item.price !== 0"> (${{ item.price }}) </span>
+                        <b-icon
+                          v-if="item.price === 0"
+                          icon="currency-usd-off"
+                          size="is-small">
+                        </b-icon>
                         <b-icon
                           v-if="item.notes.length > 0"
                           icon="note-text-outline"
@@ -110,7 +115,7 @@
         <p>
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br/>
-          <b>Total price</b>: ${{ totalPrice }}
+          <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 }}%)
         </p>
         <br/>
         <br/>
@@ -160,13 +165,30 @@ export default {
       }
       return obtained
     },
+    currentPrice () {
+      var currentPrice = 0
+      var list = this.list
+      for (var itemTag in list) {
+        for (var item in list[itemTag].items) {
+          var itemInList = list[itemTag].items[item]
+          itemInList.price = typeof itemInList.price === 'undefined' ? 0 : itemInList.price
+          if (itemInList.obtained === true) {
+            currentPrice += itemInList.price * itemInList.quantity
+          }
+        }
+      }
+
+      currentPrice = Math.round(currentPrice * 100) / 100
+      return currentPrice
+    },
     totalPrice () {
       var totalPrice = 0
       var list = this.list
       for (var itemTag in list) {
         for (var item in list[itemTag].items) {
-          console.log(list[itemTag].items[item].price)
-          totalPrice += list[itemTag].items[item].price * list[itemTag].items[item].quantity
+          var itemInList = list[itemTag].items[item]
+          itemInList.price = typeof itemInList.price === 'undefined' ? 0 : itemInList.price
+          totalPrice += itemInList.price * itemInList.quantity
         }
       }
       totalPrice = Math.round(totalPrice * 100) / 100
