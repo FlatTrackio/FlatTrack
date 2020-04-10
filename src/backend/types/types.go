@@ -85,7 +85,7 @@ type ShoppingListSpec struct {
 	Id                    string `json:"id"`
 	Name                  string `json:"name"`
 	Notes                 string `json:"notes"`
-	TemplateId            string `json:"templateId"`
+	TemplateId            string `json:"templateId,omitempty"`
 	Completed             bool   `json:"completed"`
 	Count                 int    `json:"count,omitempty"`
 	Author                string `json:"author"`
@@ -103,6 +103,7 @@ type ShoppingItemSpec struct {
 	Quantity              int     `json:"quantity"`
 	Notes                 string  `json:"notes"`
 	Obtained              bool    `json:"obtained"`
+	Tag                   string  `json:"tag,omitempty"`
 	Author                string  `json:"author"`
 	AuthorLast            string  `json:"authorLast"`
 	CreationTimestamp     int     `json:"creationTimestamp"`

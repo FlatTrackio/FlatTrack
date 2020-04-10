@@ -31,7 +31,21 @@
           <b-field label="Quantity">
             <b-numberinput v-model="quantity" size="is-medium"></b-numberinput>
           </b-field>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostShoppingListItem(shoppingListId, name, notes, price, regular, quantity)">Add</b-button>
+          <b-field label="Tag">
+            <p class="control">
+              <b-input type="text" v-model="tag" size="is-medium"></b-input>
+            </p>
+            <p class="control">
+              <b-dropdown>
+                <button class="button is-primary" slot="trigger">
+                  <b-icon icon="menu-down"></b-icon>
+                </button>
+
+                <b-dropdown-item v-for="existingTag in tags" v-bind:key="existingTag" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
+              </b-dropdown>
+            </p>
+          </b-field>
+          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostShoppingListItem(shoppingListId, name, notes, price, regular, quantity, tag)">Add</b-button>
         </div>
       </section>
     </div>
@@ -48,14 +62,16 @@ export default {
     return {
       shoppingListId: this.$route.params.id,
       shoppingListName: '',
+      tags: [],
       name: '',
       notes: '',
       price: 0,
-      quantity: 1
+      quantity: 1,
+      tag: undefined
     }
   },
   methods: {
-    PostShoppingListItem (listId, name, notes, price, regular, quantity) {
+    PostShoppingListItem (listId, name, notes, price, regular, quantity, tag) {
       if (notes === '') {
         notes = undefined
       }
@@ -65,7 +81,7 @@ export default {
         price = parseFloat(price)
       }
 
-      shoppinglist.PostShoppingListItem(listId, name, notes, price, regular, quantity).then(resp => {
+      shoppinglist.PostShoppingListItem(listId, name, notes, price, regular, quantity, tag).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' || typeof item.id === 'undefined') {
           this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
@@ -81,6 +97,9 @@ export default {
     shoppinglist.GetShoppingList(this.shoppingListId).then(resp => {
       var list = resp.data.spec
       this.shoppingListName = list.name
+      return shoppinglist.GetShoppingListItemTags()
+    }).then(resp => {
+      this.tags = resp.data.list || []
     })
   }
 }

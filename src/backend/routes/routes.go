@@ -642,6 +642,28 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// GetShoppingListItemTags
+// responds with tags used in shopping list items
+func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch shopping list item tags"
+		code := 500
+
+		tags, err := shoppinglist.GetShoppingListTags(db)
+		if err == nil {
+			response = "Fetched the shopping list item tags"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			List: tags,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // GetAllGroups
 // returns a list of all groups
 func GetAllGroups(db *sql.DB) http.HandlerFunc {

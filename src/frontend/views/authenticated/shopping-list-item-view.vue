@@ -11,6 +11,16 @@
         <div>
           <h1 class="title is-1">{{ name || 'Unnamed item' }}</h1>
           <p class="subtitle is-3">View or edit this item</p>
+          <p>
+            <span v-if="creationTimestamp == modificationTimestamp">
+              Added
+            </span>
+            <span v-else>
+              Updated
+            </span>
+            {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
+          </p>
+          <br/>
           <b-field label="Name">
             <b-input type="text"
                      v-model="name"
@@ -33,6 +43,20 @@
             <b-numberinput v-model="quantity" size="is-medium">
             </b-numberinput>
           </b-field>
+          <b-field label="Tag">
+            <p class="control">
+              <b-input type="text" v-model="tag" size="is-medium"></b-input>
+            </p>
+            <p class="control">
+              <b-dropdown>
+                <button class="button is-primary" slot="trigger">
+                  <b-icon icon="menu-down"></b-icon>
+                </button>
+
+                <b-dropdown-item v-for="existingTag in tags" v-bind:key="existingTag" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
+              </b-dropdown>
+            </p>
+          </b-field>
           <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, regular)" disabled>Update</b-button>
           <b-button type="is-danger" size="is-medium" rounded native-type="submit" @click="DeleteShoppingListItem(shoppingListId, id)">Delete</b-button>
         </div>
@@ -44,6 +68,7 @@
 <script>
 import common from '@/frontend/common/common'
 import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
+import flatmates from '@/frontend/requests/authenticated/flatmates'
 import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
@@ -52,15 +77,21 @@ export default {
     return {
       shoppingListId: this.$route.params.listId,
       shoppingListName: '',
+      authorNames: '',
+      tags: [],
       id: this.$route.params.itemId,
       name: '',
       notes: '',
       price: 0,
-      quantity: 1
+      quantity: 1,
+      tag: undefined,
+      author: '',
+      creationTimestamp: 0,
+      modificationTimestamp: 0
     }
   },
   methods: {
-    UpdateShoppingListItem (listId, name, notes, price, regular) {
+    UpdateShoppingListItem (listId, name, notes, price, regular, quantity) {
       if (notes === '') {
         notes = undefined
       }
@@ -68,7 +99,7 @@ export default {
         price = undefined
       }
 
-      shoppinglist.UpdateShoppingListItem(listId, name, notes, price, regular).then(resp => {
+      shoppinglist.UpdateShoppingListItem(listId, name, notes, price, regular, quantity).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' || typeof item.id === 'undefined') {
           this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
@@ -97,20 +128,33 @@ export default {
           })
         }
       })
+    },
+    TimestampToCalendar (timestamp) {
+      return common.TimestampToCalendar(timestamp)
     }
   },
   async beforeMount () {
     shoppinglist.GetShoppingList(this.shoppingListId).then(resp => {
       var list = resp.data.spec
       this.shoppingListName = list.name
-    })
-    shoppinglist.GetShoppingListItem(this.shoppingListId, this.id).then(resp => {
+      return shoppinglist.GetShoppingListItem(this.shoppingListId, this.id)
+    }).then(resp => {
       var item = resp.data.spec
-      console.log({ item })
       this.name = item.name
       this.notes = item.notes
       this.price = item.price
       this.quantity = item.quantity
+      this.tag = item.tag
+      this.author = item.author
+      this.creationTimestamp = item.creationTimestamp
+      this.modificationTimestamp = item.modificationTimestamp
+      return flatmates.GetFlatmate(item.author)
+    }).then(resp => {
+      console.log({ resp })
+      this.authorNames = resp.data.spec.names
+      return shoppinglist.GetShoppingListItemTags()
+    }).then(resp => {
+      this.tags = resp.data.list || []
     })
   }
 }

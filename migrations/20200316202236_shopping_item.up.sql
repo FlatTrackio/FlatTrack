@@ -8,6 +8,7 @@ create table if not exists shopping_item (
   quantity int not null default 1,
   notes text,
   obtained bool not null default false,
+  tag text,
   author text not null,
   authorLast text not null,
   creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,

@@ -98,44 +98,49 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			HttpMethod:   http.MethodGet,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists",
 			HandlerFunc:  HTTPuseMiddleware(GetShoppingLists(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist/{id}",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{id}",
 			HandlerFunc:  HTTPuseMiddleware(GetShoppingList(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist/{id}",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{id}",
 			HandlerFunc:  HTTPuseMiddleware(DeleteShoppingList(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodDelete,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists",
 			HandlerFunc:  HTTPuseMiddleware(PostShoppingList(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodPost,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist/{id}/items",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{id}/items",
 			HandlerFunc:  HTTPuseMiddleware(GetShoppingListItems(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist/{.*}/items/{id}",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{.*}/items/{id}",
 			HandlerFunc:  HTTPuseMiddleware(GetShoppingListItem(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist/{id}/items",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{id}/items",
 			HandlerFunc:  HTTPuseMiddleware(PostItemToShoppingList(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodPost,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist/{listId}/items/{itemId}",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{listId}/items/{itemId}",
 			HandlerFunc:  HTTPuseMiddleware(DeleteShoppingListItem(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodDelete,
+		},
+		{
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/tags",
+			HandlerFunc:  HTTPuseMiddleware(GetShoppingListItemTags(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodGet,
 		},
 	}
 }

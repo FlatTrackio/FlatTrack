@@ -74,23 +74,27 @@
           </section>
         </div>
         <br/>
-        <section v-for="item in list" v-bind:key="item">
-          <div class="card">
-            <div class="card-content card-content-list">
-              <div class="media">
-                <div class="media-left">
-                  <b-checkbox size="is-medium" v-model="item.obtained" @click="!item.obtained" @input="$emit('update:items', $event.target)"></b-checkbox>
-                </div>
-                <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + listId + '/item/' + item.id)">
-                  <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">{{ item.name }}</p>
+        <section v-for="itemTag in list" v-bind:key="itemTag">
+          <p class="title is-5">{{ itemTag.tag }}</p>
+          <div v-for="item in itemTag.items" v-bind:key="item">
+            <div class="card">
+              <div class="card-content card-content-list">
+                <div class="media">
+                  <div class="media-left">
+                    <b-checkbox size="is-medium" v-model="item.obtained" @click="item.obtained = !item.obtained" @input="$emit('update:items', $event.target)"></b-checkbox>
+                  </div>
+                  <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/item/' + item.id)">
+                    <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">{{ item.name }}</p>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          <br/>
         </section>
         <br/>
         <p>
-          <b>Total items</b>: {{ obtainedCount }}/{{ list.length }}
+          <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br/>
           <b>Total price</b>: ${{ totalPrice }}
         </p>
@@ -116,6 +120,7 @@ export default {
       editing: false,
       notesFromEmpty: false,
       authorNames: '',
+      totalItems: 0,
       id: this.$route.params.id,
       name: '',
       notes: '',
@@ -131,9 +136,11 @@ export default {
     obtainedCount () {
       var obtained = 0
       var list = this.list
-      for (var item in list) {
-        if (list[item].obtained === true) {
-          obtained += 1
+      for (var itemTag in list) {
+        for (var item in list[itemTag].items) {
+          if (list[itemTag].items[item].obtained === true) {
+            obtained += 1
+          }
         }
       }
       return obtained
@@ -141,10 +148,12 @@ export default {
     totalPrice () {
       var totalPrice = 0
       var list = this.list
-      for (var item in list) {
-        console.log(list[item].price, list[item].quantity)
-        totalPrice += list[item].price * list[item].quantity
+      for (var itemTag in list) {
+        for (var item in list[itemTag].items) {
+          totalPrice += list[itemTag].items[item].price * list[itemTag].items[item].quantity
+        }
       }
+      totalPrice = Math.round(totalPrice * 100) / 100
       return totalPrice
     }
   },
@@ -155,7 +164,6 @@ export default {
     GetShoppingList () {
       var id = this.id
       shoppinglist.GetShoppingList(id).then(resp => {
-        console.log(resp)
         this.name = resp.data.spec.name
         this.notes = resp.data.spec.notes
         this.author = resp.data.spec.author
@@ -196,9 +204,29 @@ export default {
   async beforeMount () {
     this.GetShoppingList()
     shoppinglist.GetShoppingListItems(this.id).then(resp => {
-      this.list = resp.data.list
+      var responseList = resp.data.list
+      this.totalItems = responseList.length
       if (this.list === null) {
         this.list = []
+      }
+
+      // restructure be be organised by tag
+      var currentTag = ''
+      for (var item in responseList) {
+        if (currentTag !== responseList[item].tag) {
+          currentTag = responseList[item].tag
+          var newItem = {
+            tag: currentTag || 'Untagged',
+            items: [responseList[item]]
+          }
+
+          this.list = [...this.list, newItem]
+        } else {
+          var currentListPosition = this.list.length - 1
+          var currentSubListItems = this.list[currentListPosition].items
+
+          this.list[currentListPosition].items = [...currentSubListItems, responseList[item]]
+        }
       }
       console.log(this.list)
     })

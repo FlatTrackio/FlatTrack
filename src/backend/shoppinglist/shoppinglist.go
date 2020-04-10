@@ -99,7 +99,7 @@ func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingList
 // GetShoppingListItems
 // returns a list of items on a shopping list
 func GetShoppingListItems(db *sql.DB, listId string) (items []types.ShoppingItemSpec, err error) {
-	sqlStatement := `select * from shopping_item where listId = $1`
+	sqlStatement := `select * from shopping_item where listId = $1 order by tag`
 	rows, err := db.Query(sqlStatement, listId)
 	if err != nil {
 		return items, err
@@ -169,6 +169,7 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppi
 			Notes:      item.Notes,
 			Price:      item.Price,
 			Quantity:   item.Quantity,
+			Tag:        item.Tag,
 			Author:     shoppingList.Author,
 			AuthorLast: shoppingList.Author,
 		}
@@ -212,10 +213,10 @@ func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (item
 
 	item.AuthorLast = item.Author
 
-	sqlStatement := `insert into shopping_item (listId, name, price, quantity, notes, author, authorLast)
-                         values ($1, $2, $3, $4, $5, $6, $7)
+	sqlStatement := `insert into shopping_item (listId, name, price, quantity, notes, author, authorLast, Tag)
+                         values ($1, $2, $3, $4, $5, $6, $7, $8)
                          returning *`
-	rows, err := db.Query(sqlStatement, listId, item.Name, item.Price, item.Quantity, item.Notes, item.Author, item.AuthorLast)
+	rows, err := db.Query(sqlStatement, listId, item.Name, item.Price, item.Quantity, item.Notes, item.Author, item.AuthorLast, item.Tag)
 	if err != nil {
 		return itemInserted, err
 	}
@@ -232,7 +233,7 @@ func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (item
 // ShoppingItemObjectFromRows
 // returns an item object from rows
 func ShoppingItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, err error) {
-	rows.Scan(&item.Id, &item.ListId, &item.Name, &item.Price, &item.Quantity, &item.Notes, &item.Obtained, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp)
+	rows.Scan(&item.Id, &item.ListId, &item.Name, &item.Price, &item.Quantity, &item.Notes, &item.Obtained, &item.Tag, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp)
 	err = rows.Err()
 	return item, err
 }
@@ -281,4 +282,21 @@ func GetListItemCount(db *sql.DB, listId string) (count int, err error) {
 	rows.Scan(&count)
 
 	return count, err
+}
+
+// GetShoppingListTags
+// returns a list of tags used in items across lists
+func GetShoppingListTags(db *sql.DB) (tags []string, err error) {
+	sqlStatement := `select distinct tag from shopping_item`
+	rows, err := db.Query(sqlStatement)
+	if err != nil {
+		return tags, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var tag string
+		rows.Scan(&tag)
+		tags = append(tags, tag)
+	}
+	return tags, err
 }
