@@ -32,6 +32,9 @@
           </span>
           {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
           </p>
+          <p v-if="author !== authorLast && creationTimestamp !== modificationTimestamp">
+            Last updated {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
+          </p>
           <br/>
         </div>
         <div v-if="notes != '' || notesFromEmpty || editing">
@@ -131,6 +134,7 @@ export default {
       editing: false,
       notesFromEmpty: false,
       authorNames: '',
+      authorLastNames: '',
       totalItems: 0,
       id: this.$route.params.id,
       name: '',
@@ -186,6 +190,9 @@ export default {
         return flatmates.GetFlatmate(this.author)
       }).then(resp => {
         this.authorNames = resp.data.spec.names
+        return flatmates.GetFlatmate(this.authorLast)
+      }).then(resp => {
+        this.authorLastNames = resp.data.spec.names
       }).catch(err => {
         common.DisplayFailureToast('Error loading the shopping list' + '<br/>' + err.response.data.metadata.response)
       })

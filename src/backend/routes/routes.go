@@ -10,7 +10,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -519,7 +518,6 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingList.AuthorLast = id
 		shoppingListPatched, err := shoppinglist.PatchShoppingList(db, listId, shoppingList)
-		log.Println(err, errId)
 		if err == nil && errId == nil && shoppingListPatched.Id != "" {
 			code = 200
 			response = "Successfully patched the shopping list"
@@ -548,7 +546,6 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 		listId := vars["id"]
 
 		err := shoppinglist.DeleteShoppingList(db, listId)
-		log.Println(err)
 		if err == nil {
 			code = 200
 			response = "Successfully deleted the shopping list"

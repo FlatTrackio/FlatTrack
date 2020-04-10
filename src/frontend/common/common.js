@@ -24,7 +24,7 @@ function DisplaySuccessToast (message) {
   Toast.open({
     duration: 4 * 1000,
     message: message,
-    position: 'is-top',
+    position: 'is-bottom',
     type: 'is-success',
     hasIcon: true,
     queue: false
@@ -37,7 +37,7 @@ function DisplayFailureToast (message) {
   Toast.open({
     duration: 4 * 1000,
     message: message,
-    position: 'is-top',
+    position: 'is-bottom',
     type: 'is-danger',
     hasIcon: true,
     queue: false

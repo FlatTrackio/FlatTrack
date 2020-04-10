@@ -8,7 +8,6 @@ package shoppinglist
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/imdario/mergo"
 
@@ -195,7 +194,6 @@ func PatchShoppingList(db *sql.DB, listId string, shoppingList types.ShoppingLis
 	if err != nil || existingList.Id == "" {
 		return shoppingListPatched, errors.New("Failed to fetch existing shopping list")
 	}
-	fmt.Println(shoppingList, existingList)
 	err = mergo.Merge(&shoppingList, existingList)
 	if err != nil {
 		return shoppingListPatched, errors.New("Failed to update fields in the item")
@@ -205,7 +203,7 @@ func PatchShoppingList(db *sql.DB, listId string, shoppingList types.ShoppingLis
 		return shoppingListPatched, err
 	}
 
-	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4 where id = $5
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $5
                          returning *`
 	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listId)
 	if err != nil {
@@ -284,7 +282,7 @@ func PatchItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemPatc
 		return itemPatched, err
 	}
 
-	sqlStatement := `update shopping_item set name = $2, price = $3, quantity = $4, notes = $5, authorLast = $6, tag = $7, obtained = $8 where id = $1 returning *`
+	sqlStatement := `update shopping_item set name = $2, price = $3, quantity = $4, notes = $5, authorLast = $6, tag = $7, obtained = $8, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1 returning *`
 	rows, err := db.Query(sqlStatement, itemId, item.Name, item.Price, item.Quantity, item.Notes, item.AuthorLast, item.Tag, item.Obtained)
 	if err != nil {
 		return itemPatched, err

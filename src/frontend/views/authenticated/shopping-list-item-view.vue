@@ -20,10 +20,14 @@
             </span>
             {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
           </p>
+          <p v-if="author !== authorLast && creationTimestamp !== modificationTimestamp">
+            Last updated {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
+          </p>
           <br/>
           <b-field label="Name">
             <b-input type="text"
                      v-model="name"
+                     size="is-medium"
                      maxlength="30"
                      required>
             </b-input>
@@ -31,6 +35,7 @@
           <b-field label="Notes">
             <b-input type="textarea"
                      v-model="notes"
+                     size="is-medium"
                      maxlength="100"
                      >
             </b-input>
@@ -43,21 +48,26 @@
             <b-numberinput v-model="quantity" size="is-medium">
             </b-numberinput>
           </b-field>
-          <b-field label="Tag">
-            <p class="control">
-              <b-input type="text" v-model="tag" size="is-medium"></b-input>
-            </p>
-            <p class="control">
-              <b-dropdown>
-                <button class="button is-primary" slot="trigger">
-                  <b-icon icon="menu-down"></b-icon>
-                </button>
+          <div v-if="tags.length > 0">
+            <label class="label">Tag</label>
+            <b-field>
+              <p class="control">
+                <b-input type="text" v-model="tag" size="is-medium"></b-input>
+              </p>
+              <p class="control">
+                <b-dropdown>
+                  <button class="button is-primary" slot="trigger">
+                    <b-icon icon="menu-down"></b-icon>
+                  </button>
 
-                <b-dropdown-item v-for="existingTag in tags" v-bind:key="existingTag" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
-              </b-dropdown>
-            </p>
-          </b-field>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchShoppingListItem(shoppingListId, id, name, notes, price, regular)">Update</b-button>
+                  <b-dropdown-item v-for="existingTag in tags" v-bind:key="existingTag" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
+                </b-dropdown>
+              </p>
+            </b-field>
+          </div>
+          <br/>
+          <br/>
+          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag)">Update</b-button>
           <b-button type="is-danger" size="is-medium" rounded native-type="submit" @click="DeleteShoppingListItem(shoppingListId, id)">Delete</b-button>
         </div>
       </section>
@@ -78,6 +88,7 @@ export default {
       shoppingListId: this.$route.params.listId,
       shoppingListName: '',
       authorNames: '',
+      authorLastNames: '',
       tags: [],
       id: this.$route.params.itemId,
       name: '',
@@ -86,12 +97,13 @@ export default {
       quantity: 1,
       tag: undefined,
       author: '',
+      authorLast: '',
       creationTimestamp: 0,
       modificationTimestamp: 0
     }
   },
   methods: {
-    PatchShoppingListItem (listId, itemId, name, notes, price, regular, quantity) {
+    PatchShoppingListItem (listId, itemId, name, notes, price, quantity, tag) {
       if (notes === '') {
         notes = undefined
       }
@@ -99,8 +111,7 @@ export default {
         price = undefined
       }
 
-      shoppinglist.PatchShoppingListItem(listId, itemId, name, notes, price, regular, quantity).then(resp => {
-        console.log(resp)
+      shoppinglist.PatchShoppingListItem(listId, itemId, name, notes, price, quantity, tag).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' && typeof item.id !== 'undefined') {
           common.DisplaySuccessToast('Updated item successfully')
@@ -147,12 +158,16 @@ export default {
       this.quantity = item.quantity
       this.tag = item.tag
       this.author = item.author
+      this.authorLast = item.authorLast
       this.creationTimestamp = item.creationTimestamp
       this.modificationTimestamp = item.modificationTimestamp
       return flatmates.GetFlatmate(item.author)
     }).then(resp => {
       console.log({ resp })
       this.authorNames = resp.data.spec.names
+      return flatmates.GetFlatmate(this.authorLast)
+    }).then(resp => {
+      this.authorLastNames = resp.data.spec.names
       return shoppinglist.GetShoppingListItemTags()
     }).then(resp => {
       this.tags = resp.data.list || []

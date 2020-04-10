@@ -14,6 +14,7 @@
           <b-field label="Name">
             <b-input type="text"
                      v-model="name"
+                     size="is-medium"
                      maxlength="30"
                      required>
             </b-input>
@@ -21,8 +22,8 @@
           <b-field label="Notes">
             <b-input type="textarea"
                      v-model="notes"
-                     maxlength="100"
-                     >
+                     size="is-medium"
+                     maxlength="100">
             </b-input>
           </b-field>
           <b-field label="Price">
@@ -31,21 +32,26 @@
           <b-field label="Quantity">
             <b-numberinput v-model="quantity" size="is-medium"></b-numberinput>
           </b-field>
-          <b-field label="Tag">
-            <p class="control">
-              <b-input type="text" v-model="tag" size="is-medium"></b-input>
-            </p>
-            <p class="control">
-              <b-dropdown>
-                <button class="button is-primary" slot="trigger">
-                  <b-icon icon="menu-down"></b-icon>
-                </button>
+          <div v-if="tags.length > 0">
+            <label class="label">Tag</label>
+            <b-field>
+              <p class="control">
+                <b-input type="text" v-model="tag" size="is-medium"></b-input>
+              </p>
+              <p class="control">
+                <b-dropdown>
+                  <button class="button is-primary" slot="trigger">
+                    <b-icon icon="menu-down"></b-icon>
+                  </button>
 
-                <b-dropdown-item v-for="existingTag in tags" v-bind:key="existingTag" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
-              </b-dropdown>
-            </p>
-          </b-field>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostShoppingListItem(shoppingListId, name, notes, price, regular, quantity, tag)">Add</b-button>
+                  <b-dropdown-item v-for="existingTag in tags" v-bind:key="existingTag" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
+                </b-dropdown>
+              </p>
+            </b-field>
+          </div>
+          <br/>
+          <br/>
+          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostShoppingListItem(shoppingListId, name, notes, price, quantity, tag)">Add</b-button>
         </div>
       </section>
     </div>
@@ -71,7 +77,7 @@ export default {
     }
   },
   methods: {
-    PostShoppingListItem (listId, name, notes, price, regular, quantity, tag) {
+    PostShoppingListItem (listId, name, notes, price, quantity, tag) {
       if (notes === '') {
         notes = undefined
       }
@@ -81,7 +87,7 @@ export default {
         price = parseFloat(price)
       }
 
-      shoppinglist.PostShoppingListItem(listId, name, notes, price, regular, quantity, tag).then(resp => {
+      shoppinglist.PostShoppingListItem(listId, name, notes, price, quantity, tag).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' || typeof item.id === 'undefined') {
           this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })

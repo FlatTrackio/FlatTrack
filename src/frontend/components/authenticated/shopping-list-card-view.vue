@@ -12,9 +12,11 @@
               </b-icon>
             </div>
             <div class="media-content">
-              <p class="title is-4">{{ list.name }}</p>
-              <b-tag type="is-info" v-if="list.completed">Completed</b-tag>
-              <b-tag type="is-warning" v-if="!list.completed">Uncompleted</b-tag>
+              <div class="block">
+                <p class="title is-4">{{ list.name }}</p>
+                <b-tag type="is-info" v-if="list.completed">Completed</b-tag>
+                <b-tag type="is-warning" v-if="!list.completed">Uncompleted</b-tag>
+              </div>
               <p class="subtitle is-6">
                 <span v-if="list.creationTimestamp == list.modificationTimestamp">
                   Created

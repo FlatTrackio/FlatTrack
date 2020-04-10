@@ -79,7 +79,7 @@ function GetShoppingListItem (listId, itemId) {
 
 // PostShoppingListItem
 // adds to the shopping list
-function PostShoppingListItem (id, name, notes, price, regular, quantity, tag) {
+function PostShoppingListItem (id, name, notes, price, quantity, tag) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}/items`,
     method: 'POST',
@@ -87,7 +87,6 @@ function PostShoppingListItem (id, name, notes, price, regular, quantity, tag) {
       name,
       notes,
       price,
-      regular,
       quantity,
       tag
     }
@@ -96,7 +95,7 @@ function PostShoppingListItem (id, name, notes, price, regular, quantity, tag) {
 
 // PatchShoppingListItem
 // adds to the shopping list
-function PatchShoppingListItem (listId, itemId, name, notes, price, regular, quantity, tag) {
+function PatchShoppingListItem (listId, itemId, name, notes, price, quantity, tag) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
     method: 'PATCH',
@@ -104,7 +103,6 @@ function PatchShoppingListItem (listId, itemId, name, notes, price, regular, qua
       name,
       notes,
       price,
-      regular,
       quantity,
       tag
     }
