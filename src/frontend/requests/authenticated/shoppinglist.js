@@ -67,7 +67,7 @@ function GetShoppingListItem (listId, itemId) {
 
 // PostShoppingListItems
 // adds to the shopping list
-function PostShoppingListItem (id, name, notes, price, regular) {
+function PostShoppingListItem (id, name, notes, price, regular, quantity) {
   return Request({
     url: `/api/apps/shoppinglist/${id}/items`,
     method: 'POST',
@@ -75,12 +75,12 @@ function PostShoppingListItem (id, name, notes, price, regular) {
       name,
       notes,
       price,
-      regular
+      regular,
+      quantity
     }
   })
 }
 
-// TODO
 // DeleteShoppingListItem
 // adds to the shopping list
 function DeleteShoppingListItem (listId, itemId) {

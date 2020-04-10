@@ -26,14 +26,12 @@
             </b-input>
           </b-field>
           <b-field label="Price">
-            <b-numberinput v-model="price" size="is-medium">
-            </b-numberinput>
+            <b-input type="number" step="0.1" placeholder="0.00" v-model="price" size="is-medium"></b-input>
           </b-field>
           <b-field label="Quantity">
-            <b-numberinput v-model="quantity" size="is-medium">
-            </b-numberinput>
+            <b-numberinput v-model="quantity" size="is-medium"></b-numberinput>
           </b-field>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostShoppingListItem(shoppingListId, name, notes, price, regular)">Add</b-button>
+          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostShoppingListItem(shoppingListId, name, notes, price, regular, quantity)">Add</b-button>
         </div>
       </section>
     </div>
@@ -57,15 +55,17 @@ export default {
     }
   },
   methods: {
-    PostShoppingListItem (listId, name, notes, price, regular) {
+    PostShoppingListItem (listId, name, notes, price, regular, quantity) {
       if (notes === '') {
         notes = undefined
       }
       if (price === 0) {
         price = undefined
+      } else {
+        price = parseFloat(price)
       }
 
-      shoppinglist.PostShoppingListItem(listId, name, notes, price, regular).then(resp => {
+      shoppinglist.PostShoppingListItem(listId, name, notes, price, regular, quantity).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' || typeof item.id === 'undefined') {
           this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })

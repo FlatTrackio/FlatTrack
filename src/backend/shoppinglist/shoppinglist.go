@@ -13,6 +13,43 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/users"
 )
 
+func ValidateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (valid bool, err error) {
+	if len(shoppingList.Name) == 0 || len(shoppingList.Name) > 30 || shoppingList.Name == "" {
+		return valid, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
+	}
+	if shoppingList.Notes != "" && len(shoppingList.Notes) > 100 {
+		return valid, errors.New("Unable to save shopping list notes, as they are too long")
+	}
+	if len(shoppingList.Author) == 0 || shoppingList.Author == "" {
+		return valid, errors.New("No shopping list author has been provided")
+	}
+	user, err := users.GetUserById(db, shoppingList.Author, false)
+	if err != nil || user.Id == "" {
+		return valid, errors.New("Unable to find author for shopping list")
+	}
+	if shoppingList.TemplateId != "" {
+		list, err := GetShoppingList(db, shoppingList.TemplateId)
+		if err != nil || list.Id == "" {
+			return valid, errors.New("Unable to find list to use as template from provided id")
+		}
+	}
+	return true, err
+}
+
+func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bool, err error) {
+	if len(item.Name) == 0 || len(item.Name) > 30 || item.Name == "" {
+		return valid, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
+	}
+	if item.Notes != "" && len(item.Notes) > 40 {
+		return valid, errors.New("Unable to save shopping list notes, as they are too long")
+	}
+	user, err := users.GetUserById(db, item.Author, false)
+	if err != nil || user.Id == "" {
+		return valid, errors.New("Unable to find author for shopping list")
+	}
+	return true, err
+}
+
 // GetShoppingLists
 // returns a list of all shopping lists (name, notes, author, etc...)
 func GetShoppingLists(db *sql.DB) (shoppingLists []types.ShoppingListSpec, err error) {
@@ -96,24 +133,9 @@ func GetShoppingListItem(db *sql.DB, itemId string) (item types.ShoppingItemSpec
 // CreateShoppingList
 // creates a shopping list for adding items to
 func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppingListInserted types.ShoppingListSpec, err error) {
-	if len(shoppingList.Name) == 0 || len(shoppingList.Name) > 30 || shoppingList.Name == "" {
-		return shoppingListInserted, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
-	}
-	if shoppingList.Notes != "" && len(shoppingList.Notes) > 100 {
-		return shoppingListInserted, errors.New("Unable to save shopping list notes, as they are too long")
-	}
-	if len(shoppingList.Author) == 0 || shoppingList.Author == "" {
-		return shoppingListInserted, errors.New("No shopping list author has been provided")
-	}
-	user, err := users.GetUserById(db, shoppingList.Author, false)
-	if err != nil || user.Id == "" {
-		return shoppingListInserted, errors.New("Unable to find author for shopping list")
-	}
-	if shoppingList.TemplateId != "" {
-		list, err := GetShoppingList(db, shoppingList.TemplateId)
-		if err != nil || list.Id == "" {
-			return shoppingListInserted, errors.New("Unable to find list to use as template from provided id")
-		}
+	valid, err := ValidateShoppingList(db, shoppingList)
+	if !valid || err != nil {
+		return shoppingListInserted, err
 	}
 
 	shoppingList.AuthorLast = shoppingList.Author
@@ -135,6 +157,7 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppi
 		return shoppingListInserted, err
 	}
 
+	// if using other list as a template
 	shoppingListItems, err := GetShoppingListItems(db, shoppingList.TemplateId)
 	if err != nil {
 		return shoppingListInserted, errors.New("Failed to fetch items from shopping list")
@@ -174,7 +197,7 @@ func DeleteShoppingList(db *sql.DB, listId string) (err error) {
 		return errors.New("Failed to remove all items from list")
 	}
 
-	sqlStatement := `delete from shopping_item where id = $1;`
+	sqlStatement := `delete from shopping_list where id = $1`
 	_, err = db.Query(sqlStatement, listId)
 	return err
 }
@@ -182,15 +205,9 @@ func DeleteShoppingList(db *sql.DB, listId string) (err error) {
 // AddItemToList
 // adds a new item
 func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (itemInserted types.ShoppingItemSpec, err error) {
-	if len(item.Name) == 0 || len(item.Name) > 30 || item.Name == "" {
-		return itemInserted, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
-	}
-	if item.Notes != "" && len(item.Notes) > 40 {
-		return itemInserted, errors.New("Unable to save shopping list notes, as they are too long")
-	}
-	user, err := users.GetUserById(db, item.Author, false)
-	if err != nil || user.Id == "" {
-		return itemInserted, errors.New("Unable to find author for shopping list")
+	valid, err := ValidateShoppingListItem(db, item)
+	if !valid || err != nil {
+		return itemInserted, err
 	}
 
 	item.AuthorLast = item.Author

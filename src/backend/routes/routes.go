@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"fmt"
+	"log"
 
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/src/backend/groups"
@@ -422,7 +422,6 @@ func GetShoppingList(db *sql.DB) http.HandlerFunc {
 		id := vars["id"]
 
 		shoppingList, err := shoppinglist.GetShoppingList(db, id)
-		fmt.Println(err)
 		if err == nil && shoppingList.Id != "" {
 			response = "Fetched the shopping lists"
 			code = 200
@@ -445,7 +444,6 @@ func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 		code := 500
 
 		shoppingLists, err := shoppinglist.GetShoppingLists(db)
-		fmt.Println(err)
 		if err == nil {
 			response = "Fetched the shopping lists"
 			code = 200
@@ -470,12 +468,10 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 		var shoppingList types.ShoppingListSpec
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &shoppingList)
-		fmt.Println(shoppingList)
 
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingList.Author = id
 		shoppingListInserted, err := shoppinglist.CreateShoppingList(db, shoppingList)
-		fmt.Println(shoppingListInserted, err)
 		if err == nil && errId == nil {
 			code = 200
 			response = "Successfully created the shopping list"
@@ -504,6 +500,7 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 		listId := vars["id"]
 
 		err := shoppinglist.DeleteShoppingList(db, listId)
+		log.Println(err)
 		if err == nil {
 			code = 200
 			response = "Successfully deleted the shopping list"
@@ -556,7 +553,6 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 		id := vars["id"]
 
 		shoppingListItem, err := shoppinglist.GetShoppingListItem(db, id)
-		fmt.Println(err)
 		if err == nil && shoppingListItem.Id != "" {
 			response = "Fetched the shopping list item"
 			code = 200
@@ -581,7 +577,6 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 		var shoppingItem types.ShoppingItemSpec
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &shoppingItem)
-		fmt.Println(shoppingItem)
 
 		vars := mux.Vars(r)
 		listId := vars["id"]
@@ -589,7 +584,6 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingItem.Author = id
 		shoppingItemInserted, err := shoppinglist.AddItemToList(db, listId, shoppingItem)
-		fmt.Println(shoppingItemInserted, err)
 		if err == nil && errId == nil {
 			code = 200
 			response = "Successfully created the shopping list item"

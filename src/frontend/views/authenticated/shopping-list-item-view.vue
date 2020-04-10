@@ -33,7 +33,7 @@
             <b-numberinput v-model="quantity" size="is-medium">
             </b-numberinput>
           </b-field>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, regular)">Update</b-button>
+          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, regular)" disabled>Update</b-button>
           <b-button type="is-danger" size="is-medium" rounded native-type="submit" @click="DeleteShoppingListItem(shoppingListId, id)">Delete</b-button>
         </div>
       </section>
@@ -44,6 +44,7 @@
 <script>
 import common from '@/frontend/common/common'
 import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
+import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
   name: 'shopping-item-view',
@@ -59,7 +60,7 @@ export default {
     }
   },
   methods: {
-    PostShoppingListItem (listId, name, notes, price, regular) {
+    UpdateShoppingListItem (listId, name, notes, price, regular) {
       if (notes === '') {
         notes = undefined
       }
@@ -67,7 +68,7 @@ export default {
         price = undefined
       }
 
-      shoppinglist.PostShoppingListItem(listId, name, notes, price, regular).then(resp => {
+      shoppinglist.UpdateShoppingListItem(listId, name, notes, price, regular).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' || typeof item.id === 'undefined') {
           this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
@@ -75,7 +76,26 @@ export default {
           common.DisplayFailureToast('Unable to find created shopping item')
         }
       }).catch(err => {
-        common.DisplayFailureToast(`Failed to add shopping list item - ${err.response.data.metadata.response}`)
+        common.DisplayFailureToast('Failed to add shopping list item' + ' - ' + err.response.data.metadata.response)
+      })
+    },
+    DeleteShoppingListItem (listId, itemId) {
+      Dialog.confirm({
+        title: 'Delete item',
+        message: 'Are you sure that you wish to delete this shopping list item?',
+        confirmText: 'Delete item',
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: () => {
+          shoppinglist.DeleteShoppingListItem(listId, itemId).then(resp => {
+            common.DisplaySuccessToast(resp.data.metadata.response)
+            setTimeout(() => {
+              this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
+            }, 1 * 1000)
+          }).catch(err => {
+            common.DisplayFailureToast('Failed to delete shopping list item' + ' - ' + err.response.data.metadata.response)
+          })
+        }
       })
     }
   },

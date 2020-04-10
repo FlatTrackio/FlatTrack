@@ -37,7 +37,7 @@
         <div v-if="notes != '' || notesFromEmpty || editing">
           <div v-if="editing">
             <b-field>
-              <b-input maxlength="100" :type="notes.length > 30 ? 'textarea' : 'text'" v-model="notes" class="subtitle is-3"></b-input>
+              <b-input maxlength="100" type="textarea" v-model="notes" class="subtitle is-3"></b-input>
             </b-field>
           </div>
           <div v-else>
@@ -77,11 +77,13 @@
         <shoppinglistTable :listId="id" :items="list"/>
         <br/>
         <p>
-          <b>Total items</b>: {{ list.length }}
+          <b>Total items</b>: {{ obtainedCount }}/{{ list.length }}
+          <br/>
+          <b>Total price</b>: ${{ totalPrice }}
         </p>
-
         <br/>
         <br/>
+        <b-button type="is-info" @click="MarkListAsCompleted(id)">Mark as completed</b-button>
         <b-button type="is-danger" @click="DeleteShoppingList(id)">Delete list</b-button>
       </section>
     </div>
@@ -110,6 +112,26 @@ export default {
       creationTimestamp: 0,
       modificationTimestamp: 0,
       list: []
+    }
+  },
+  computed: {
+    obtainedCount () {
+      var obtained = 0
+      for (var item in this.list) {
+        if (item.obtained === true) {
+          obtained += 1
+        }
+      }
+      return obtained
+    },
+    totalPrice () {
+      var totalPrice = 0
+      var list = this.list
+      for (var item in list) {
+        console.log(list[item].price, list[item].quantity)
+        totalPrice += list[item].price * list[item].quantity
+      }
+      return totalPrice
     }
   },
   components: {
@@ -151,7 +173,7 @@ export default {
               this.$router.push({ name: 'Shopping list' })
             }, 1 * 1000)
           }).catch(err => {
-            common.DisplayFailureToast('Failed to delete the shopping list' + `<br/>${err.response.data.metadata.response}`)
+            common.DisplayFailureToast('Failed to delete the shopping list' + '<br/>' + err.response.data.metadata.response)
           })
         }
       })

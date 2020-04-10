@@ -230,9 +230,7 @@ func CheckUserPassword(db *sql.DB, email string, password string) (matches bool,
 	if err != nil {
 		return matches, err
 	}
-	fmt.Println(user.Password)
 	passwordHashed := common.HashSHA512(password)
-	fmt.Println(passwordHashed)
 	return user.Password == passwordHashed, err
 }
 
