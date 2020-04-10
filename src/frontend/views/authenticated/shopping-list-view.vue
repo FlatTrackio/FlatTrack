@@ -18,7 +18,7 @@
               </div>
             </div>
             <div v-else>
-              <h1 class="title is-1 display-is-editable" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
+              <h1 class="title is-1 display-is-editable title-sticky" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
             </div>
           </div>
         </nav>
@@ -112,7 +112,7 @@
           <br/>
         </section>
         <br/>
-        <p>
+        <p class="subtitle is-4">
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br/>
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 }}%)
@@ -177,7 +177,6 @@ export default {
           }
         }
       }
-
       currentPrice = Math.round(currentPrice * 100) / 100
       return currentPrice
     },
@@ -228,7 +227,7 @@ export default {
     DeleteShoppingList (id) {
       Dialog.confirm({
         title: 'Delete shopping list',
-        message: 'Are you sure that you wish to delete this shopping list?',
+        message: 'Are you sure that you wish to delete this shopping list?' + '<br/>' + 'This action cannot be undone.',
         confirmText: 'Delete shopping list',
         type: 'is-danger',
         hasIcon: true,

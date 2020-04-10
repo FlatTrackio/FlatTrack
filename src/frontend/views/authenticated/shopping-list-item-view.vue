@@ -125,7 +125,7 @@ export default {
     DeleteShoppingListItem (listId, itemId) {
       Dialog.confirm({
         title: 'Delete item',
-        message: 'Are you sure that you wish to delete this shopping list item?',
+        message: 'Are you sure that you wish to delete this shopping list item?' + '<br/>' + 'This action cannot be undone.',
         confirmText: 'Delete item',
         type: 'is-danger',
         hasIcon: true,
