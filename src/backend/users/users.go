@@ -25,7 +25,7 @@ import (
 
 // ValidateUser
 // given a UserSpec, return if it's valid
-func ValidateUser(db *sql.DB, user types.UserSpec) (valid bool, err error) {
+func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (valid bool, err error) {
 	if len(user.Names) == 0 || len(user.Names) > 60 || user.Names == "" {
 		return false, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
 	}
@@ -43,7 +43,9 @@ func ValidateUser(db *sql.DB, user types.UserSpec) (valid bool, err error) {
 		}
 	}
 
-	if common.RegexMatchPassword(user.Password) == false || user.Password == "" {
+	// TODO add birthday validation (year must be at least -15)
+
+	if (common.RegexMatchPassword(user.Password) == false || user.Password == "") && allowEmptyPassword == false {
 		return false, errors.New("Unable to use the provided password, as it is either empty of invalid")
 	}
 	if user.PhoneNumber != "" && common.RegexMatchPhoneNumber(user.PhoneNumber) == false {
@@ -56,7 +58,7 @@ func ValidateUser(db *sql.DB, user types.UserSpec) (valid bool, err error) {
 // CreateUser
 // given a UserSpec, create a user
 func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, err error) {
-	validUser, err := ValidateUser(db, user)
+	validUser, err := ValidateUser(db, user, false)
 	if !validUser || err != nil {
 		return userInserted, err
 	}
@@ -352,7 +354,7 @@ func GetProfile(db *sql.DB, r *http.Request) (user types.UserSpec, err error) {
 // PatchProfile
 // patches the profile of a user account
 func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
-	existingUserAccount, err := GetUserById(db, id, false)
+	existingUserAccount, err := GetUserById(db, id, true)
 	if err != nil || existingUserAccount.Id == "" {
 		return userAccountPatched, errors.New("Failed to find user account")
 	}
@@ -360,11 +362,15 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	if err != nil {
 		return userAccountPatched, errors.New("Failed to update fields in the user account")
 	}
-	valid, err := ValidateUser(db, userAccount)
+	noUpdatePassword := userAccount.Password == existingUserAccount.Password
+	valid, err := ValidateUser(db, userAccount, noUpdatePassword)
 	if !valid || err != nil {
 		return existingUserAccount, err
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
+	if noUpdatePassword == true {
+		passwordHashed = userAccount.Password
+	}
 
 	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $6
                          returning *`

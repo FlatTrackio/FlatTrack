@@ -35,8 +35,7 @@
             </b-input>
           </b-field>
           <b-field label="Price">
-            <b-numberinput v-model="price" size="is-medium">
-            </b-numberinput>
+            <b-input type="number" step="0.1" placeholder="0.00" v-model="price" size="is-medium"></b-input>
           </b-field>
           <b-field label="Quantity">
             <b-numberinput v-model="quantity" size="is-medium">

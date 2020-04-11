@@ -60,7 +60,7 @@
             placeholder="Click to select birthday"
             icon="calendar-today"
             trap-focus>
-            </b-datepicker>
+          </b-datepicker>
         </b-field>
         <br/>
 
@@ -79,7 +79,7 @@
                    >
           </b-input>
         </b-field>
-        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchProfile(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday)">Update profile</b-button>
+        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday)">Update profile</b-button>
       </section>
     </div>
   </div>
@@ -122,11 +122,13 @@ export default {
         this.creationTimestamp = resp.data.spec.creationTimestamp
       })
     },
-    PatchProfile (names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday) {
-      if (password !== passwordConfirm || password === '') {
-        common.DisplayFailureToast('Unable to use password as they either do not match or are empty')
+    PatchProfile (names, email, phoneNumber, password, passwordConfirm, jsBirthday) {
+      if (password !== passwordConfirm) {
+        common.DisplayFailureToast('Unable to use password as they either do not match')
         return
       }
+      var birthday = Number(moment(jsBirthday).format('X')) || 0
+      console.log(names, email, phoneNumber, password, passwordConfirm, birthday, jsBirthday)
       profile.PatchProfile(names, email, phoneNumber, birthday, password).then(resp => {
         if (resp.data.spec.id === '') {
           common.DisplayFailureToast('Failed to update profile')
