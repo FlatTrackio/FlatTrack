@@ -55,8 +55,8 @@
           size="is-medium">
         </b-icon>
 
-        <h3 class="title is-4">Your account</h3>
-        <p class="subtitle is-6">Note: your account will be set up as Administrator</p>
+        <h3 class="title is-4">Your profile</h3>
+        <p class="subtitle is-6">Note: your account profile will be set up as Administrator</p>
         <b-field label="Name">
           <b-input type="text"
                    v-model="names"
@@ -71,6 +71,25 @@
                    required>
           </b-input>
         </b-field>
+        <b-field label="Phone number">
+          <b-input type="tel"
+                   v-model="phoneNumber"
+                   maxlength="30">
+          </b-input>
+        </b-field>
+
+        <b-field label="Birthday">
+          <b-datepicker
+            v-model="jsBirthday"
+            :max-date="maxDate"
+            :show-week-numbers="true"
+            :focused-date="focusedDate"
+            placeholder="Click to select birthday"
+            icon="calendar-today"
+            trap-focus>
+          </b-datepicker>
+        </b-field>
+        <br/>
         <b-field label="Password">
           <b-input type="password"
                    v-model="password"
@@ -80,10 +99,18 @@
                    required>
           </b-input>
         </b-field>
+        <b-field label="Confirm password">
+          <b-input type="password"
+                   v-model="passwordConfirm"
+                   password-reveal
+                   maxlength="70"
+                   >
+          </b-input>
+        </b-field>
         <br/>
         <br/>
 
-        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="Register({ language, timezone, flatName, user: { names, email, password } })">Setup</b-button>
+        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="Register({ language, timezone, flatName, user: { names, email, password, passwordConfirm, jsBirthday, phoneNumber } })">Setup</b-button>
       </div>
       <br/>
       <p>FlatTrack version {{ flatTrackVersion }}</p>
@@ -98,17 +125,25 @@ import registration from '@/frontend/requests/public/registration'
 import apiroot from '@/frontend/requests/public/apiroot'
 import common from '@/frontend/common/common'
 import { LoadingProgrammatic as Loading } from 'buefy'
+import moment from 'moment'
 
 export default {
   name: 'setup',
   data () {
+    const today = new Date()
+    const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDay())
+
     return {
       flatTrackVersion: '0.0.0',
       language: 'English',
       timezone: 'Pacific/Auckland',
+      jsBirthday: maxDate,
+      passwordConfirm: '',
       flatName: null,
       names: null,
       email: null,
+      phoneNumber: null,
+      birthday: null,
       password: null
     }
   },
@@ -117,6 +152,12 @@ export default {
   },
   methods: {
     Register: (form) => {
+      if (form.user.password !== form.user.passwordConfirm) {
+        common.DisplayFailureToast('Error passwords do not match')
+        return
+      }
+      form.user.birthday = Number(moment(form.user.jsBirthday).format('X')) || 0
+
       const loadingComponent = Loading.open({
         container: null
       })

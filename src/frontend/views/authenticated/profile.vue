@@ -100,7 +100,7 @@ export default {
       maxDate: maxDate,
       focusedDate: maxDate,
       passwordConfirm: '',
-      jsBirthday: new Date(),
+      jsBirthday: maxDate,
       names: '',
       email: '',
       phoneNumber: '',
@@ -128,7 +128,6 @@ export default {
         return
       }
       var birthday = Number(moment(jsBirthday).format('X')) || 0
-      console.log(names, email, phoneNumber, password, passwordConfirm, birthday, jsBirthday)
       profile.PatchProfile(names, email, phoneNumber, birthday, password).then(resp => {
         if (resp.data.spec.id === '') {
           common.DisplayFailureToast('Failed to update profile')
