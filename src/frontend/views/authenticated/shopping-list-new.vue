@@ -28,6 +28,9 @@
           <b-field label="Use another list as a template (optional)" v-if="lists.length > 0">
             <b-select placeholder="Template a preview list" v-model="listTemplate">
               <option
+                value="">
+              </option>
+              <option
                 v-for="list in lists"
                 :value="list.id"
                 :key="list.id">
@@ -35,8 +38,11 @@
                 </option>
             </b-select>
           </b-field>
+          <div class="field" v-if="listTemplate !== '' && typeof listTemplate !== 'undefined'">
+            <b-checkbox v-model="templateListFromOnlyUnobtained">Create list only from unobtained items in template list</b-checkbox>
+          </div>
           <br/>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewShoppingList(name, notes, listTemplate)">Create</b-button>
+          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewShoppingList(name, notes, listTemplate, templateListFromOnlyUnobtained)">Create</b-button>
         </div>
       </section>
     </div>
@@ -54,16 +60,17 @@ export default {
       name: '',
       notes: '',
       listTemplate: '',
+      templateListOnlyFromUnobtained: false,
       lists: []
     }
   },
   methods: {
-    PostNewShoppingList (name, notes, listTemplate) {
+    PostNewShoppingList (name, notes, listTemplate, templateListFromOnlyUnobtained) {
       console.log(name, notes, listTemplate)
       if (notes === '') {
         notes = undefined
       }
-      shoppinglist.PostShoppingList(name, notes, listTemplate).then(resp => {
+      shoppinglist.PostShoppingList(name, notes, listTemplate, templateListFromOnlyUnobtained).then(resp => {
         var list = resp.data.spec
         if (list.id !== '' || typeof list.id === 'undefined') {
           this.$router.push({ path: `/apps/shopping-list/list/${list.id}` })

@@ -25,7 +25,7 @@ function GetShoppingList (id) {
 
 // PostShoppingList
 // given a name and optional notes, create a shopping list
-function PostShoppingList (name, notes, templateId) {
+function PostShoppingList (name, notes, templateId, notObtained) {
   return Request({
     url: '/api/apps/shoppinglist/lists',
     method: 'POST',
@@ -33,6 +33,9 @@ function PostShoppingList (name, notes, templateId) {
       name,
       notes,
       templateId
+    },
+    params: {
+      notObtained
     }
   })
 }

@@ -103,7 +103,7 @@ func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingList
 
 // GetShoppingListItems
 // returns a list of items on a shopping list
-func GetShoppingListItems(db *sql.DB, listId string) (items []types.ShoppingItemSpec, err error) {
+func GetShoppingListItems(db *sql.DB, listId string, itemSelector types.ShoppingItemSelector) (items []types.ShoppingItemSpec, err error) {
 	sqlStatement := `select * from shopping_item where listId = $1 order by tag`
 	rows, err := db.Query(sqlStatement, listId)
 	if err != nil {
@@ -115,6 +115,11 @@ func GetShoppingListItems(db *sql.DB, listId string) (items []types.ShoppingItem
 		item, err := ShoppingItemObjectFromRows(rows)
 		if err != nil {
 			return items, err
+		}
+		if itemSelector.NotObtained == true {
+			if item.Obtained == true {
+				continue
+			}
 		}
 		items = append(items, item)
 	}
@@ -137,7 +142,7 @@ func GetShoppingListItem(db *sql.DB, itemId string) (item types.ShoppingItemSpec
 
 // CreateShoppingList
 // creates a shopping list for adding items to
-func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppingListInserted types.ShoppingListSpec, err error) {
+func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, itemSelector types.ShoppingItemSelector) (shoppingListInserted types.ShoppingListSpec, err error) {
 	valid, err := ValidateShoppingList(db, shoppingList)
 	if !valid || err != nil {
 		return shoppingListInserted, err
@@ -163,7 +168,7 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (shoppi
 	}
 
 	// if using other list as a template
-	shoppingListItems, err := GetShoppingListItems(db, shoppingList.TemplateId)
+	shoppingListItems, err := GetShoppingListItems(db, shoppingList.TemplateId, itemSelector)
 	if err != nil {
 		return shoppingListInserted, errors.New("Failed to fetch items from shopping list")
 	}
