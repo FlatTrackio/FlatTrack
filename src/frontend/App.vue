@@ -121,4 +121,10 @@ html {
     width: 380px;
     margin: auto;
 }
+
+@media (max-width : 870px) {
+    .form-width {
+        width: calc(100% - 25px);
+    }
+}
 </style>

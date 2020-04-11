@@ -57,8 +57,8 @@
           <b-datepicker
             v-model="jsBirthday"
             show-week-number
-            inline
             :max-date="maxDate"
+            :show-week-numbers="true"
             :focused-date="focusedDate"
             placeholder="Click to select birthday"
             icon="calendar-today"
