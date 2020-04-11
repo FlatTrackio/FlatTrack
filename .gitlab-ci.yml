@@ -3,6 +3,8 @@ stages:
 
 variables:
   ARCH_DEFAULT: "amd64"
+  APP_BUILD_VERSION: 0.0.0
+  APP_BUILD_MODE: development
 
 .docker-build-pre-script: &docker-build-pre-script |
   set -x
@@ -21,10 +23,10 @@ variables:
 .docker-build: &docker-build |
   set -x
   ARCH_TAGGABLE_NAME="$(echo $ARCH | sed -e 's,/,,g')"
-  if [ ! "$ARCH" = "$ARCH_DEFAULT" ]; then
+  if [[ ! "$ARCH" = "$ARCH_DEFAULT" ]]; then
     PRINT_ARCH="-$ARCH_TAGGABLE_NAME"
   fi
-  if [ -n "$CI_COMMIT_TAG" ]; then APP_BUILD_VERSION="$CI_COMMIT_TAG"; APP_BUILD_MODE=production; DOCKER_EXTRA_DESTINATION="-t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG$PRINT_ARCH"; fi
+  if [[ -n "$CI_COMMIT_TAG" ]]; then APP_BUILD_VERSION="$CI_COMMIT_TAG"; APP_BUILD_MODE=production; DOCKER_EXTRA_DESTINATION="-t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG$PRINT_ARCH"; fi
   docker buildx build --build-arg APP_BUILD_VERSION="$APP_BUILD_VERSION" --build-arg APP_BUILD_DATE="$(date -u +%Y-%m-%d_%I:%M:%S%p)" --build-arg APP_BUILD_HASH=$(git rev-parse --short HEAD)" --build-arg APP_BUILD_MODE="$APP_BUILD_MODE" --platform linux/$ARCH -f $CI_PROJECT_DIR/Dockerfile --push -t $CI_REGISTRY_IMAGE:latest$PRINT_ARCH $DOCKER_EXTRA_DESTINATION $CI_PROJECT_DIR
 
 build-armv7:
@@ -39,8 +41,6 @@ build-armv7:
     DOCKER_HOST: tcp://docker:2375/
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
-    APP_BUILD_VERSION: 0.0.0
-    APP_BUILD_MODE: development
   before_script:
     - *docker-build-pre-script
   script:
@@ -56,8 +56,6 @@ build-amd64:
     DOCKER_HOST: tcp://docker:2375/
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
-    APP_BUILD_VERSION: 0.0.0
-    APP_BUILD_MODE: development
   before_script:
     - *docker-build-pre-script
   script:
