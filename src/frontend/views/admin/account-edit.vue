@@ -15,6 +15,7 @@
           <b-input type="text"
                    v-model="names"
                    maxlength="60"
+                   placeholder="Enter your flatmate's name"
                    required>
           </b-input>
         </b-field>
@@ -23,6 +24,7 @@
           <b-input type="email"
                    v-model="email"
                    maxlength="70"
+                   placeholder="Enter your flatmate's email"
                    required>
           </b-input>
         </b-field>
@@ -47,8 +49,8 @@
         <b-field label="Phone number">
           <b-input type="tel"
                    v-model="phoneNumber"
-                   maxlength="30"
-                   >
+                   placeholder="Enter your flatmate's phone number"
+                   maxlength="30">
           </b-input>
         </b-field>
 
@@ -68,6 +70,7 @@
                    v-model="password"
                    password-reveal
                    maxlength="70"
+                   placeholder="Enter a password for your flatmate"
                    required>
           </b-input>
         </b-field>
@@ -77,6 +80,7 @@
                    v-model="passwordConfirm"
                    password-reveal
                    maxlength="70"
+                   placeholder="Confirm a password for your flatmate"
                    required>
           </b-input>
         </b-field>
@@ -100,15 +104,15 @@ export default {
   data () {
     return {
       id: this.$route.params.id,
-      names: '',
-      email: '',
-      phoneNumber: '',
+      names: null,
+      email: null,
+      phoneNumber: null,
       birthday: 0,
       groups: [],
-      password: '',
-      passwordConfirm: '',
+      password: null,
+      passwordConfirm: null,
       availableGroups: [],
-      jsBirthday: new Date(),
+      jsBirthday: null,
       groupsFull: []
     }
   },

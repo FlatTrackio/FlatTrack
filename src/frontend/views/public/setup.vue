@@ -47,6 +47,7 @@
           <b-input type="text"
                    v-model="flatName"
                    maxlength="20"
+                   placeholder="Enter what your flat is referred to as"
                    required>
           </b-input>
         </b-field>
@@ -57,10 +58,11 @@
 
         <h3 class="title is-4">Your profile</h3>
         <p class="subtitle is-6">Note: your account profile will be set up as Administrator</p>
-        <b-field label="Name">
+        <b-field label="Name(s)">
           <b-input type="text"
                    v-model="names"
                    maxlength="70"
+                   placeholder="Enter your name(s)"
                    required>
           </b-input>
         </b-field>
@@ -68,12 +70,14 @@
           <b-input type="email"
                    v-model="email"
                    maxlength="70"
+                   placeholder="Enter your email address"
                    required>
           </b-input>
         </b-field>
         <b-field label="Phone number">
           <b-input type="tel"
                    v-model="phoneNumber"
+                   placeholder="Enter your phone number"
                    maxlength="30">
           </b-input>
         </b-field>
@@ -95,6 +99,7 @@
                    v-model="password"
                    password-reveal
                    maxlength="70"
+                   placeholder="Enter a password"
                    @keyup.enter.native="Register({ language, timezone, flatName, user: { names, email, password } })"
                    required>
           </b-input>
@@ -103,8 +108,8 @@
           <b-input type="password"
                    v-model="passwordConfirm"
                    password-reveal
-                   maxlength="70"
-                   >
+                   placeholder="Confirm your password"
+                   maxlength="70">
           </b-input>
         </b-field>
         <br/>
@@ -113,7 +118,7 @@
         <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="Register({ language, timezone, flatName, user: { names, email, password, passwordConfirm, jsBirthday, phoneNumber } })">Setup</b-button>
       </div>
       <br/>
-      <p>FlatTrack version {{ flatTrackVersion }}</p>
+      <p>FlatTrack version {{ flatTrackVersion || '0.0.0' }}</p>
     </section>
   </div>
 </div>
@@ -137,7 +142,7 @@ export default {
       flatTrackVersion: '0.0.0',
       language: 'English',
       timezone: 'Pacific/Auckland',
-      jsBirthday: maxDate,
+      jsBirthday: null,
       passwordConfirm: '',
       flatName: null,
       names: null,

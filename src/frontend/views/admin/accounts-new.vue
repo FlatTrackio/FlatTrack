@@ -15,6 +15,7 @@
           <b-input type="text"
                    v-model="names"
                    maxlength="60"
+                   placeholder="Enter your flatmate's name"
                    required>
           </b-input>
         </b-field>
@@ -23,6 +24,7 @@
           <b-input type="email"
                    v-model="email"
                    maxlength="70"
+                   placeholder="Enter your flatmate's email"
                    required>
           </b-input>
         </b-field>
@@ -44,9 +46,11 @@
         </section>
         <br/>
 
+        <!-- TODO remove fields once inviting via email is available -->
         <b-field label="Phone number">
           <b-input type="tel"
                    v-model="phoneNumber"
+                   placeholder="Enter your flatmate's phone number"
                    maxlength="30"
                    >
           </b-input>
@@ -55,11 +59,13 @@
         <b-field label="Birthday">
           <b-datepicker
             v-model="jsBirthday"
-            show-week-number
+            :max-date="maxDate"
+            :show-week-numbers="true"
+            :focused-date="focusedDate"
             placeholder="Click to select birthday"
             icon="calendar-today"
             trap-focus>
-            </b-datepicker>
+          </b-datepicker>
         </b-field>
         <br/>
 
@@ -68,6 +74,7 @@
                    v-model="password"
                    password-reveal
                    maxlength="70"
+                   placeholder="Enter a password for your flatmate"
                    required>
           </b-input>
         </b-field>
@@ -77,10 +84,13 @@
                    v-model="passwordConfirm"
                    password-reveal
                    maxlength="70"
+                   placeholder="Confirm a password for your flatmate"
                    required>
           </b-input>
         </b-field>
-        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewUser(names, email, phoneNumber, birthday, groups, password, passwordConfirm, jsBirthday, groupsFull)">Create user account</b-button>
+
+        <!-- TODO become invite via email button -->
+        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewUser(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">Create user account</b-button>
       </section>
     </div>
   </div>
@@ -95,16 +105,20 @@ import moment from 'moment'
 export default {
   name: 'new account',
   data () {
+    const today = new Date()
+    const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDay())
+
     return {
-      names: '',
-      email: '',
-      phoneNumber: '',
+      focusedDate: maxDate,
+      maxDate: maxDate,
+      names: null,
+      email: null,
+      phoneNumber: null,
       birthday: 0,
-      groups: [],
-      password: '',
-      passwordConfirm: '',
+      password: null,
+      passwordConfirm: null,
       availableGroups: [],
-      jsBirthday: new Date(),
+      jsBirthday: null,
       groupsFull: []
     }
   },
@@ -115,6 +129,7 @@ export default {
     GetAvailableGroups () {
       groups.GetGroups().then(resp => {
         this.availableGroups = resp.data.list
+        this.groups = resp.data.list
         resp.data.list.map(group => {
           if (group.defaultGroup === true) {
             this.groupsFull = [...this.groupsFull, group]
@@ -133,16 +148,19 @@ export default {
           .indexOf(text.toLowerCase()) >= 0
       })
     },
-    PostNewUser (names, email, phoneNumber, birthday, groups, password, passwordConfirm, jsBirthday, groupsFull) {
+    PostNewUser (names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull) {
       if (password !== passwordConfirm && password !== '') {
         common.DisplayFailureToast('Passwords do not match')
       }
       birthday = moment(jsBirthday).format('X')
+      var groups = []
       groupsFull.map(group => {
-        groups = [...groups, group.name]
+        if (group === '' || group.name === '') {
+          return
+        }
+        groups.push(group.name)
       })
       console.log({ names, email, phoneNumber, birthday, groups, password, passwordConfirm, jsBirthday, groupsFull })
-      console.log({ adminFlatmates })
       adminFlatmates.PostFlatmate({ names, email, phoneNumber, birthday, groups, password }).then(resp => {
         common.DisplaySuccessToast('Created user account')
         setTimeout(() => {

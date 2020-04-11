@@ -100,7 +100,7 @@ export default {
       maxDate: maxDate,
       focusedDate: maxDate,
       passwordConfirm: '',
-      jsBirthday: maxDate,
+      jsBirthday: null,
       names: '',
       email: '',
       phoneNumber: '',
