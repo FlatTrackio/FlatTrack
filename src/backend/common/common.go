@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"time"
 )
 
 var (
@@ -144,6 +145,15 @@ func RegexMatchPassword(password string) bool {
 func RegexMatchPhoneNumber(phoneNumber string) bool {
 	re := regexp.MustCompile(`^(?:(?:\(?(?:00|\+)([1-4]\d\d|[1-9]\d?)\)?)?[\-\.\ \\\/]?)?((?:\(?\d{1,}\)?[\-\.\ \\\/]?){0,})(?:[\-\.\ \\\/]?(?:#|ext\.?|extension|x)[\-\.\ \\\/]?(\d+))?$`)
 	return re.MatchString(phoneNumber)
+}
+
+// ValidateBirthday
+// return where a birthday timestamp is valid
+// validation requirements is (current year - 15)
+func ValidateBirthday(timestamp int64) bool {
+	dateNow := time.Now()
+	timestampParsed := time.Unix(timestamp, 0)
+	return timestampParsed.Year() - dateNow.Year() >= 15
 }
 
 // HashSHA512

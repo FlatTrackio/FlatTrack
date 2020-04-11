@@ -43,7 +43,9 @@ func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (val
 		}
 	}
 
-	// TODO add birthday validation (year must be at least -15)
+	if (common.ValidateBirthday(int64(user.Birthday) * 1000) == false) {
+		return false, errors.New("Unable to use the provided birthday, your birthday year must not be within the last 15 years")
+	}
 
 	if (common.RegexMatchPassword(user.Password) == false || user.Password == "") && allowEmptyPassword == false {
 		return false, errors.New("Unable to use the provided password, as it is either empty of invalid")
