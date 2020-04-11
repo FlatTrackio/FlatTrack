@@ -4,19 +4,26 @@ stages:
 variables:
   ARCH_DEFAULT: "amd64"
 
-.docker-build: &docker-build |
-  docker buildx build \
-  --build-arg APP_BUILD_VERSION="$APP_BUILD_VERSION" \
-  --build-arg APP_BUILD_DATE="$(date -u +%Y-%m-%d_%I:%M:%S%p)" \
-  --build-arg APP_BUILD_HASH=$(git rev-parse --short HEAD)" \
-  --build-arg APP_BUILD_MODE="$APP_BUILD_MODE" \
-  --platform linux/$ARCH \
-  -f $CI_PROJECT_DIR/Dockerfile \
-  --push \
-  -t $CI_REGISTRY_IMAGE:latest$PRINT_ARCH \
-  $DOCKER_EXTRA_DESTINATION \
-  $CI_PROJECT_DIR
+.docker-build-pre-script: &docker-build-pre-script |
+  set -x
+  if ! docker info &>/dev/null; then
+    if [ -z "$DOCKER_HOST" -a "$KUBERNETES_PORT" ]; then
+      export DOCKER_HOST='tcp://localhost:2375'
+    fi
+  fi
+  mkdir -p $HOME/.docker/cli-plugins
+  wget -O $HOME/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
+  chmod +x $HOME/.docker/cli-plugins/docker-buildx 
+  docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+  docker buildx create --use --name builder
+  docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
+.docker-build: &docker-build |
+  set -x
+  ARCH_TAGGABLE_NAME="$(echo $ARCH | sed -e 's,/,,g')"
+  if [ ! "$ARCH" = "$ARCH_DEFAULT" ]; then PRINT_ARCH="-$ARCH_TAGGABLE_NAME" fi
+  if [ -n "$CI_COMMIT_TAG" ]; then APP_BUILD_VERSION="$CI_COMMIT_TAG"; APP_BUILD_MODE=production; DOCKER_EXTRA_DESTINATION="-t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG$PRINT_ARCH"; fi
+  docker buildx build --build-arg APP_BUILD_VERSION="$APP_BUILD_VERSION" --build-arg APP_BUILD_DATE="$(date -u +%Y-%m-%d_%I:%M:%S%p)" --build-arg APP_BUILD_HASH=$(git rev-parse --short HEAD)" --build-arg APP_BUILD_MODE="$APP_BUILD_MODE" --platform linux/$ARCH -f $CI_PROJECT_DIR/Dockerfile --push -t $CI_REGISTRY_IMAGE:latest$PRINT_ARCH $DOCKER_EXTRA_DESTINATION $CI_PROJECT_DIR
 
 build-armv7:
   stage: build
@@ -33,25 +40,8 @@ build-armv7:
     APP_BUILD_VERSION: 0.0.0
     APP_BUILD_MODE: development
   before_script:
-    - set -x
-    - |
-      if ! docker info &>/dev/null; then
-        if [ -z "$DOCKER_HOST" -a "$KUBERNETES_PORT" ]; then
-          export DOCKER_HOST='tcp://localhost:2375'
-        fi
-      fi
-    - |
-      mkdir -p $HOME/.docker/cli-plugins
-      wget -O $HOME/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
-      chmod +x $HOME/.docker/cli-plugins/docker-buildx 
-      docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-      docker buildx create --use --name builder
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - *docker-build-pre-script
   script:
-    - set -x
-    - ARCH_TAGGABLE_NAME="$(echo $ARCH | sed -e 's,/,,g')"
-    - if [ ! "$ARCH" = "$ARCH_DEFAULT" ]; then PRINT_ARCH="-$ARCH_TAGGABLE_NAME" fi
-    - if [ -n "$CI_COMMIT_TAG" ]; then APP_BUILD_VERSION="$CI_COMMIT_TAG"; APP_BUILD_MODE=production; DOCKER_EXTRA_DESTINATION="-t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG$PRINT_ARCH"; fi
     - *docker-build
 
 build-amd64:
@@ -67,24 +57,7 @@ build-amd64:
     APP_BUILD_VERSION: 0.0.0
     APP_BUILD_MODE: development
   before_script:
-    - set -x
-    - |
-      if ! docker info &>/dev/null; then
-        if [ -z "$DOCKER_HOST" -a "$KUBERNETES_PORT" ]; then
-          export DOCKER_HOST='tcp://localhost:2375'
-        fi
-      fi
-    - |
-      mkdir -p $HOME/.docker/cli-plugins
-      wget -O $HOME/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
-      chmod +x $HOME/.docker/cli-plugins/docker-buildx 
-      docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-      docker buildx create --use --name builder
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - *docker-build-pre-script
   script:
-    - set -x
-    - ARCH_TAGGABLE_NAME="$(echo $ARCH | sed -e 's,/,,g')"
-    - if [ ! "$ARCH" = "$ARCH_DEFAULT" ]; then PRINT_ARCH="-$ARCH_TAGGABLE_NAME"; fi
-    - if [ -n "$CI_COMMIT_TAG" ]; then APP_BUILD_VERSION="$CI_COMMIT_TAG"; APP_BUILD_MODE=production; DOCKER_EXTRA_DESTINATION="-t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG$PRINT_ARCH"; fi
     - *docker-build
 
