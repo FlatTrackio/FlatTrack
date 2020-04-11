@@ -152,7 +152,7 @@ export default {
       if (password !== passwordConfirm && password !== '') {
         common.DisplayFailureToast('Passwords do not match')
       }
-      birthday = moment(jsBirthday).format('X')
+      birthday = Number(moment(jsBirthday).format('X'))
       var groups = []
       groupsFull.map(group => {
         if (group === '' || group.name === '') {

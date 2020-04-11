@@ -60,6 +60,9 @@
                   <div v-if="member.email">
                     Email: <a :href="`mailto:${member.email}`">{{ member.email }}</a><br/>
                   </div>
+                  <div v-if="member.birthday && member.birthday !== 0">
+                    Birthday: {{ TimestampToCalendar(member.birthday) }}<br/>
+                  </div>
                 </div>
               </div>
             </div>

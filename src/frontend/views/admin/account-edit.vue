@@ -5,7 +5,7 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
               <li><router-link to="/admin/accounts">Accounts</router-link></li>
-              <li class="is-active"><router-link to="/admin/accounts/new">New account</router-link></li>
+              <li class="is-active"><router-link to="/admin/accounts/new">Edit account</router-link></li>
             </ul>
         </nav>
         <h1 class="title is-1">Edit account</h1>
@@ -57,11 +57,13 @@
         <b-field label="Birthday">
           <b-datepicker
             v-model="jsBirthday"
-            show-week-number
+            :max-date="maxDate"
+            :show-week-numbers="true"
+            :focused-date="focusedDate"
             placeholder="Click to select birthday"
             icon="calendar-today"
             trap-focus>
-            </b-datepicker>
+          </b-datepicker>
         </b-field>
         <br/>
 
@@ -102,7 +104,11 @@ import { DialogProgrammatic as Dialog } from 'buefy'
 export default {
   name: 'new account',
   data () {
+    var today = new Date()
+    var maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getYear())
+
     return {
+      maxDate: maxDate,
       id: this.$route.params.id,
       names: null,
       email: null,
@@ -149,6 +155,7 @@ export default {
         this.phoneNumber = user.phoneNumber
         this.birthday = user.birthday
         this.groups = user.groups
+        this.jsBirthday = typeof this.birthday !== 'undefined' ? new Date(this.birthday * 1000) : null
       }).catch(err => {
         console.log({ err })
         common.DisplayFailureToast('Failed to fetch user account' + err.response.data.metadata.response)
