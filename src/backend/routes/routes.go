@@ -186,21 +186,39 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 		response := "Failed to fetch user account"
 
 		user, err := users.GetProfile(db, r)
-		if err != nil || user.Id == "" {
-			code = 404
-			response = "Failed to find user"
-			JSONresp := types.JSONMessageResponse{
-				Metadata: types.JSONResponseMetadata{
-					Response: response,
-				},
-				Spec: types.UserSpec{},
-			}
-			JSONResponse(r, w, code, JSONresp)
-			return
-		}
-		if err == nil {
+		if err == nil && user.Id != "" {
 			code = 200
 			response = "Fetched user account"
+		} else {
+			code = 404
+			response = "Failed to find your profile"
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: user,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PatchProfile
+// patches a user account their id from their JWT
+func PatchProfile(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to patch the user account"
+
+		var userAccount types.UserSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &userAccount)
+
+		id, errId := users.GetIdFromJWT(db, r)
+		userAccountPatched, err := users.PatchProfile(db, id, userAccount)
+		if err == nil && errId == nil && userAccountPatched.Id != "" {
+			code = 200
+			response = "Successfully patched the user account"
 		} else {
 			code = 400
 			response = err.Error()
@@ -209,7 +227,7 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
 			},
-			Spec: user,
+			Spec: userAccountPatched,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}

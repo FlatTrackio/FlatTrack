@@ -27,7 +27,6 @@
         </div>
         <br />
 
-        <!-- TODO migrate to a selection instead of a view like in admin flatmates -->
         <b-field grouped group-multiline>
           <div class="control" v-for="group in groups" v-bind:key="group">
             <b-taglist attached>
@@ -48,15 +47,13 @@
         <b-field label="Phone number">
           <b-input type="tel"
                    v-model="phoneNumber"
-                   maxlength="30"
-                   >
+                   maxlength="30">
           </b-input>
         </b-field>
 
         <b-field label="Birthday">
           <b-datepicker
             v-model="jsBirthday"
-            show-week-number
             :max-date="maxDate"
             :show-week-numbers="true"
             :focused-date="focusedDate"
@@ -71,8 +68,7 @@
           <b-input type="password"
                    v-model="password"
                    password-reveal
-                   maxlength="70"
-                   >
+                   maxlength="70">
           </b-input>
         </b-field>
         <b-field label="Confirm password">
@@ -83,13 +79,14 @@
                    >
           </b-input>
         </b-field>
-        <b-button type="is-success" size="is-medium" rounded disabled native-type="submit" @click="UpdateProfile(email, phoneNumber, birthday, password, passwordConfirm, jsBirthday)">Update profile</b-button>
+        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchProfile(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday)">Update profile</b-button>
       </section>
     </div>
   </div>
 </template>
 
 <script>
+import moment from 'moment'
 import common from '@/frontend/common/common'
 import profile from '@/frontend/requests/authenticated/profile'
 
@@ -102,11 +99,14 @@ export default {
     return {
       maxDate: maxDate,
       focusedDate: maxDate,
+      passwordConfirm: '',
+      jsBirthday: new Date(),
       names: '',
       email: '',
       phoneNumber: '',
       groups: [],
       password: '',
+      birthday: 0,
       creationTimestamp: ''
     }
   },
@@ -114,12 +114,28 @@ export default {
     GetProfile () {
       profile.GetProfile().then(resp => {
         this.names = resp.data.spec.names
+        this.birthday = resp.data.spec.birthday || moment().format('X')
+        this.jsBirthday = new Date(this.birthday * 1000)
+        this.phoneNumber = resp.data.spec.phoneNumber
         this.groups = resp.data.spec.groups
         this.email = resp.data.spec.email
         this.creationTimestamp = resp.data.spec.creationTimestamp
       })
     },
-    UpdateProfile () {
+    PatchProfile (names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday) {
+      if (password !== passwordConfirm || password === '') {
+        common.DisplayFailureToast('Unable to use password as they either do not match or are empty')
+        return
+      }
+      profile.PatchProfile(names, email, phoneNumber, birthday, password).then(resp => {
+        if (resp.data.spec.id === '') {
+          common.DisplayFailureToast('Failed to update profile')
+          return
+        }
+        common.DisplaySuccessToast('Successfully updated your profile')
+      }).catch(err => {
+        common.DisplayFailureToast('Failed to update profile' + '<br/>' + err.response.data.metadata.response)
+      })
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)

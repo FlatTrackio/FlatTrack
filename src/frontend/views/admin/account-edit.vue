@@ -56,7 +56,6 @@
           <b-datepicker
             v-model="jsBirthday"
             show-week-number
-            inline
             placeholder="Click to select birthday"
             icon="calendar-today"
             trap-focus>
@@ -154,6 +153,7 @@ export default {
     UpdateUserAccount (names, email, phoneNumber, birthday, groups, password, passwordConfirm, jsBirthday, groupsFull) {
       if (password !== passwordConfirm && password !== '') {
         common.DisplayFailureToast('Passwords do not match')
+        return
       }
       birthday = moment(jsBirthday).format('X')
       groupsFull.map(group => {

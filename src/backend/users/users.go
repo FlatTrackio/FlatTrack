@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/imdario/mergo"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/groups"
@@ -47,10 +49,6 @@ func ValidateUser(db *sql.DB, user types.UserSpec) (valid bool, err error) {
 	if user.PhoneNumber != "" && common.RegexMatchPhoneNumber(user.PhoneNumber) == false {
 		return false, errors.New("Unable to use the provided phone number")
 	}
-	localUser, err := GetUserByEmail(db, user.Email, false)
-	if localUser.Email == user.Email || err != nil {
-		return false, errors.New("User account already exists")
-	}
 
 	return true, err
 }
@@ -61,6 +59,10 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 	validUser, err := ValidateUser(db, user)
 	if !validUser || err != nil {
 		return userInserted, err
+	}
+	localUser, err := GetUserByEmail(db, user.Email, false)
+	if localUser.Email == user.Email || err != nil {
+		return userInserted, errors.New("User account already exists")
 	}
 	user.Password = common.HashSHA512(user.Password)
 
@@ -345,4 +347,36 @@ func GetProfile(db *sql.DB, r *http.Request) (user types.UserSpec, err error) {
 
 	user, err = GetUserById(db, id, false)
 	return user, err
+}
+
+// PatchProfile
+// patches the profile of a user account
+func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
+	existingUserAccount, err := GetUserById(db, id, false)
+	if err != nil || existingUserAccount.Id == "" {
+		return userAccountPatched, errors.New("Failed to find user account")
+	}
+	err = mergo.Merge(&userAccount, existingUserAccount)
+	if err != nil {
+		return userAccountPatched, errors.New("Failed to update fields in the user account")
+	}
+	valid, err := ValidateUser(db, userAccount)
+	if !valid || err != nil {
+		return existingUserAccount, err
+	}
+	passwordHashed := common.HashSHA512(userAccount.Password)
+
+	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $6
+                         returning *`
+	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, id)
+	if err != nil {
+		// TODO add roll back, if there's failure
+		return userAccountPatched, err
+	}
+	rows.Next()
+	userAccountPatched, err = UserObjectFromRows(rows)
+	if err != nil || userAccountPatched.Id == "" {
+		return userAccountPatched, errors.New("Failed to create shopping list")
+	}
+	return userAccountPatched, err
 }

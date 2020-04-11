@@ -14,13 +14,20 @@ function GetProfile () {
   })
 }
 
-// PostProfile
+// PatchProfile
 // updates the profile of the authenticated account
-function PostProfile (id) {
+function PatchProfile (names, email, phoneNumber, birthday, password) {
   return Request({
     url: `/api/user/profile`,
-    method: 'POST'
+    method: 'PATCH',
+    data: {
+      names,
+      email,
+      phoneNumber,
+      birthday,
+      password
+    }
   })
 }
 
-export default { GetProfile, PostProfile }
+export default { GetProfile, PatchProfile }

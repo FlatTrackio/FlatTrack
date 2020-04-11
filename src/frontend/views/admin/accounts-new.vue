@@ -56,7 +56,6 @@
           <b-datepicker
             v-model="jsBirthday"
             show-week-number
-            inline
             placeholder="Click to select birthday"
             icon="calendar-today"
             trap-focus>

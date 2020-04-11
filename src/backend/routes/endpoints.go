@@ -78,6 +78,11 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			HttpMethod:   http.MethodGet,
 		},
 		{
+			EndpointPath: endpointPrefix + "/user/profile",
+			HandlerFunc:  HTTPuseMiddleware(PatchProfile(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodPatch,
+		},
+		{
 			EndpointPath: endpointPrefix + "/users",
 			HandlerFunc:  HTTPuseMiddleware(GetAllUsers(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
