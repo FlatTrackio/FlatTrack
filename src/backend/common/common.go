@@ -124,9 +124,8 @@ func RegexMatchName(name string) bool {
 // RegexMatchEmail
 // regex check for valid email address string
 func RegexMatchEmail(email string) bool {
-	// TODO find better regex; emails like xxyyzz@aa.coop won't match
-	matches, _ := regexp.MatchString(`^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$`, email)
-	return matches
+	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+	return re.MatchString(email)
 }
 
 // RegexMatchPassword
@@ -143,8 +142,8 @@ func RegexMatchPassword(password string) bool {
 // RegexMatchPhoneNumber
 // regex check for valid phonenumber
 func RegexMatchPhoneNumber(phoneNumber string) bool {
-	matches, _ := regexp.MatchString(`^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$`, phoneNumber)
-	return matches
+	re := regexp.MustCompile(`^(?:(?:\(?(?:00|\+)([1-4]\d\d|[1-9]\d?)\)?)?[\-\.\ \\\/]?)?((?:\(?\d{1,}\)?[\-\.\ \\\/]?){0,})(?:[\-\.\ \\\/]?(?:#|ext\.?|extension|x)[\-\.\ \\\/]?(\d+))?$`)
+	return re.MatchString(phoneNumber)
 }
 
 // HashSHA512

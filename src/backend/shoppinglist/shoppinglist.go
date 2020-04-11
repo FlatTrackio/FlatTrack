@@ -390,7 +390,7 @@ func GetListItemCount(db *sql.DB, listId string) (count int, err error) {
 // GetShoppingListTags
 // returns a list of tags used in items across lists
 func GetShoppingListTags(db *sql.DB) (tags []string, err error) {
-	sqlStatement := `select distinct tag from shopping_item`
+	sqlStatement := `select distinct tag from shopping_item order by tag`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		return tags, err

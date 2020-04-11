@@ -113,7 +113,7 @@
         <p class="subtitle is-4">
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br/>
-          <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 }}%)
+          <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
         </p>
         <b-button type="is-info" @click="PatchShoppingListCompleted(id, !completed)">Mark as {{ completed === false ? 'completed' : 'uncompleted' }}</b-button>
         <b-button type="is-danger" @click="DeleteShoppingList(id)">Delete list</b-button>
