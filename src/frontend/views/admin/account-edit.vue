@@ -131,7 +131,7 @@ export default {
         this.availableGroups = resp.data.list
         resp.data.list.map(group => {
           if (group.defaultGroup === true) {
-            this.groupsFull = [...this.groupsFull, group]
+            this.groupsFull.push(group)
           }
         })
       }).catch(err => {
@@ -155,10 +155,16 @@ export default {
         this.phoneNumber = user.phoneNumber
         this.birthday = user.birthday
         this.groups = user.groups
+        this.groupsFull = []
+        this.availableGroups.map(group => {
+          if (this.groups.includes(group.name)) {
+            this.groupsFull.push(group)
+          }
+        })
         this.jsBirthday = typeof this.birthday !== 'undefined' ? new Date(this.birthday * 1000) : null
       }).catch(err => {
         console.log({ err })
-        common.DisplayFailureToast('Failed to fetch user account' + err.response.data.metadata.response)
+        common.DisplayFailureToast('Failed to fetch user account' + '<br/>' + (err.response.data.metadata.response || err))
       })
     },
     UpdateUserAccount (names, email, phoneNumber, birthday, groups, password, passwordConfirm, jsBirthday, groupsFull) {
@@ -176,7 +182,7 @@ export default {
           this.$router.push({ name: 'Admin accounts' })
         }, 1 * 1000)
       }).catch(err => {
-        common.DisplayFailureToast('Failed to create user account' + `<br/>${err.response.data.metadata.response}`)
+        common.DisplayFailureToast('Failed to create user account' + '<br/>' + (err.response.data.metadata.response || err))
       })
     },
     DeleteUserAccount (id) {
@@ -193,7 +199,7 @@ export default {
               this.$router.push({ name: 'Admin accounts' })
             }, 1 * 1000)
           }).catch(err => {
-            common.DisplayFailureToast('Failed to delete user account' + `<br/>${err.response.data.metadata.response}`)
+            common.DisplayFailureToast('Failed to delete user account' + '<br/>' + (err.response.data.metadata.response || err))
           })
         }
       })
