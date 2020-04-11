@@ -35,26 +35,6 @@ variables:
 .docker-build: &docker-build |
   docker buildx build --build-arg APP_BUILD_VERSION="$APP_BUILD_VERSION" --build-arg APP_BUILD_DATE="$(date -u +%Y-%m-%d_%I:%M:%S%p)" --build-arg APP_BUILD_HASH="$(git rev-parse --short HEAD)" --build-arg APP_BUILD_MODE="$APP_BUILD_MODE" --platform linux/$ARCH -f $CI_PROJECT_DIR/Dockerfile --push -t $CI_REGISTRY_IMAGE:latest$PRINT_ARCH $DOCKER_EXTRA_DESTINATION $CI_PROJECT_DIR
 
-build-armv7:
-  stage: build
-  image: docker:stable
-  services:
-    - docker:stable-dind
-  only:
-    - tags
-  variables:
-    ARCH: "arm/v7"
-    DOCKER_HOST: tcp://docker:2375/
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-  before_script:
-    - *docker-build-pre-script
-  script:
-    - *docker-build-taggable-name
-    - *docker-build
-  expect:
-    - tags
-
 build-amd64:
   stage: build
   image: docker:stable
@@ -91,3 +71,22 @@ build-amd64-release:
     - *docker-build
   only:
     - tags
+
+build-armv7-release:
+  stage: build
+  image: docker:stable
+  services:
+    - docker:stable-dind
+  only:
+    - tags
+  variables:
+    ARCH: "arm/v7"
+    DOCKER_HOST: tcp://docker:2375/
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - *docker-build-pre-script
+  script:
+    - *docker-build-taggable-name
+    - *docker-pre-build-release-version
+    - *docker-build
