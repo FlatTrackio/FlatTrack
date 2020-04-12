@@ -26,6 +26,7 @@
           </b-field>
           <b-button rounded native-type="submit" @click="postLogin(email, password)">Login</b-button>
           <b-button tag="a" href="forgot-password" rounded type="is-warning">Forgot Password</b-button>
+          <!-- TODO add FlatTrack version and links -->
         </section>
       </div>
     </div>
@@ -70,7 +71,7 @@ export default {
           loadingComponent.close()
           Toast.open({
             duration: 10000,
-            message: 'Hmmm, something went wrong with the login. Email or password is incorrect. Please try again.',
+            message: err.response.data.metadata.response,
             position: 'is-bottom',
             type: 'is-danger'
           })

@@ -153,7 +153,7 @@ func RegexMatchPhoneNumber(phoneNumber string) bool {
 func ValidateBirthday(timestamp int64) bool {
 	dateNow := time.Now()
 	timestampParsed := time.Unix(timestamp, 0)
-	return timestampParsed.Year() - dateNow.Year() >= 15
+	return timestampParsed.Year()-dateNow.Year() >= 15
 }
 
 // HashSHA512

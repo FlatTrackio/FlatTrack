@@ -43,7 +43,7 @@ func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (val
 		}
 	}
 
-	if user.Birthday != 0 && (common.ValidateBirthday(int64(user.Birthday) * 1000) == false) {
+	if user.Birthday != 0 && (common.ValidateBirthday(int64(user.Birthday)*1000) == false) {
 		return false, errors.New("Unable to use the provided birthday, your birthday year must not be within the last 15 years")
 	}
 
@@ -59,16 +59,26 @@ func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (val
 
 // CreateUser
 // given a UserSpec, create a user
-func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, err error) {
-	validUser, err := ValidateUser(db, user, false)
+func CreateUser(db *sql.DB, user types.UserSpec, requireValidation bool) (userInserted types.UserSpec, err error) {
+	var userCreationSecretInserted types.UserCreationSecretSpec
+
+	validUser, err := ValidateUser(db, user, true)
 	if !validUser || err != nil {
 		return userInserted, err
 	}
 	localUser, err := GetUserByEmail(db, user.Email, false)
-	if localUser.Email == user.Email || err != nil {
-		return userInserted, errors.New("User account already exists")
+	if err == nil || localUser.Id != "" {
+		return userInserted, err
 	}
-	user.Password = common.HashSHA512(user.Password)
+	if localUser.Email == user.Email {
+		return userInserted, errors.New("Email address is already taken")
+	}
+	if user.Password != "" {
+		user.Password = common.HashSHA512(user.Password)
+	}
+	if requireValidation == false {
+		user.Registered = true
+	}
 
 	sqlStatement := `insert into users (names, email, password, phonenumber, birthday, contractAgreement, disabled, registered)
                          values ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -96,6 +106,16 @@ func CreateUser(db *sql.DB, user types.UserSpec) (userInserted types.UserSpec, e
 	}
 	userInserted.Groups = user.Groups
 	userInserted.Password = ""
+	if requireValidation == true {
+		userCreationSecretInserted, err = CreateUserCreationSecret(db, userInserted.Id)
+		if err != nil {
+			return userInserted, err
+		}
+		if userCreationSecretInserted.Id == "" {
+			return userInserted, errors.New("Failed to created a user creation secret")
+		}
+	}
+
 	return userInserted, err
 }
 
@@ -204,6 +224,9 @@ func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.
 	if err != nil {
 		return user, err
 	}
+	if user.Id == "" {
+		return user, errors.New("Failed to find user")
+	}
 	groups, err := groups.GetGroupNamesOfUserById(db, user.Id)
 	if err != nil {
 		return user, err
@@ -228,6 +251,12 @@ func DeleteUserById(db *sql.DB, id string) (err error) {
 			return err
 		}
 	}
+
+	err = DeleteUserCreationSecretByUserId(db, id)
+	if err != nil {
+		return err
+	}
+
 	sqlStatement := `update users set names = '(Deleted User)', email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
 	_, err = db.Query(sqlStatement, id)
 	return err
@@ -356,6 +385,7 @@ func GetProfile(db *sql.DB, r *http.Request) (user types.UserSpec, err error) {
 // PatchProfile
 // patches the profile of a user account
 func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
+	// TODO ensure that an account can't change their address to someone else's
 	existingUserAccount, err := GetUserById(db, id, true)
 	if err != nil || existingUserAccount.Id == "" {
 		return userAccountPatched, errors.New("Failed to find user account")
@@ -374,9 +404,9 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 		passwordHashed = userAccount.Password
 	}
 
-	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $6
+	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, disabled = $7, registered = $8, lastLogin = $9, authNonce = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $11
                          returning *`
-	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, id)
+	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce, id)
 	if err != nil {
 		// TODO add roll back, if there's failure
 		return userAccountPatched, err
@@ -395,4 +425,117 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	userAccountPatched.Groups = userAccount.Groups
 	userAccountPatched.Password = ""
 	return userAccountPatched, err
+}
+
+// UserCreationSecretsFromRows
+// constructs a UserCreationSecretSpec from rows
+func UserCreationSecretsFromRows(rows *sql.Rows) (creationSecret types.UserCreationSecretSpec, err error) {
+	rows.Scan(&creationSecret.Id, &creationSecret.UserId, &creationSecret.Secret, &creationSecret.Valid, creationSecret.CreationTimestamp, &creationSecret.ModificationTimestamp, &creationSecret.DeletionTimestamp)
+	err = rows.Err()
+	return creationSecret, err
+}
+
+// GetAllUserCreationSecrets
+// returns all UserCreationSecrets from the database
+func GetAllUserCreationSecrets(db *sql.DB) (creationSecrets []types.UserCreationSecretSpec, err error) {
+	sqlStatement := `select * from user_creation_secret`
+	rows, err := db.Query(sqlStatement)
+	if err != nil {
+		return creationSecrets, err
+	}
+	for rows.Next() {
+		creationSecret, err := UserCreationSecretsFromRows(rows)
+		if err != nil {
+			return creationSecrets, errors.New("Failed to list user creation secrets")
+		}
+		creationSecrets = append(creationSecrets, creationSecret)
+	}
+	return creationSecrets, err
+}
+
+// GetUserCreationSecret
+// returns a UserCreationSecret by it's id from the database
+func GetUserCreationSecret(db *sql.DB, id string) (creationSecret types.UserCreationSecretSpec, err error) {
+	sqlStatement := `select * from user_creation_secret where id = $1`
+	rows, err := db.Query(sqlStatement, id)
+	if err != nil {
+		return creationSecret, err
+	}
+	defer rows.Close()
+	rows.Next()
+	creationSecret, err = UserCreationSecretsFromRows(rows)
+	return creationSecret, err
+}
+
+// CreateUserCreationSecret
+// creates a user creation secret for account confirming
+func CreateUserCreationSecret(db *sql.DB, userId string) (userCreationSecretInserted types.UserCreationSecretSpec, err error) {
+	sqlStatement := `insert into user_creation_secret (userId)
+                         values ($1)
+                         returning *`
+	rows, err := db.Query(sqlStatement, userId)
+	if err != nil {
+		return userCreationSecretInserted, err
+	}
+	defer rows.Close()
+	rows.Next()
+	userCreationSecretInserted, err = UserCreationSecretsFromRows(rows)
+	return userCreationSecretInserted, err
+}
+
+// DeleteUserCreationSecret
+// deletes the acccount creation secret, after it's been used
+func DeleteUserCreationSecret(db *sql.DB, id string) (err error) {
+	sqlStatement := `delete from user_creation_secret where id = $1`
+	_, err = db.Query(sqlStatement, id)
+	return err
+}
+
+// DeleteUserCreationSecretByUserId
+// deletes the acccount creation secret by userid, after it's been used
+func DeleteUserCreationSecretByUserId(db *sql.DB, userId string) (err error) {
+	sqlStatement := `delete from user_creation_secret where userId = $1`
+	_, err = db.Query(sqlStatement, userId)
+	return err
+}
+
+// ConfirmUserAccount
+// confirms the user account
+func ConfirmUserAccount(db *sql.DB, id string, secret string, user types.UserSpec) (tokenString string, err error) {
+	if user.Password == "" {
+		return tokenString, errors.New("Unable to confirm account, a password must be provided to complete registration")
+	}
+	userCreationSecret, err := GetUserCreationSecret(db, id)
+	if err != nil {
+		return tokenString, err
+	}
+	if userCreationSecret.Id == "" {
+		return tokenString, errors.New("Unable to find account confirmation secret")
+	}
+	if secret != userCreationSecret.Secret {
+		return tokenString, errors.New("Unable to confirm account, as the secret doesn't match")
+	}
+	userInDB, err := GetUserById(db, userCreationSecret.UserId, false)
+	if err != nil {
+		return tokenString, err
+	}
+
+	userAccountPatch := types.UserSpec{
+		Names: user.Names,
+		Email: user.Email,
+		Password: user.Password,
+		Birthday: user.Birthday,
+		PhoneNumber: user.PhoneNumber,
+		Registered: true,
+	}
+	userConfirmed, err := PatchProfile(db, userCreationSecret.UserId, userAccountPatch)
+	if err != nil {
+		return tokenString, err
+	}
+	if userConfirmed.Id == "" || userConfirmed.Registered == false {
+		return tokenString, errors.New("Failed to patch profile")
+	}
+	err = DeleteUserCreationSecret(db, id)
+
+	return GenerateJWTauthToken(db, userInDB.Id, userInDB.AuthNonce)
 }

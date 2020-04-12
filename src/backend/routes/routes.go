@@ -10,6 +10,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io/ioutil"
+	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -115,7 +116,7 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 		body, err := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &user)
 
-		userAccount, err := users.CreateUser(db, user)
+		userAccount, err := users.CreateUser(db, user, user.Password == "")
 		if err == nil {
 			code = 200
 			response = "Created user account"
@@ -305,11 +306,16 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 
 		userInDB, err := users.GetUserByEmail(db, user.Email, false)
 		if err != nil || userInDB.Id == "" {
-			response = "Failed to find user"
+			response = "Unable to find the account"
+			code = 404
+		}
+		if userInDB.Id != "" && userInDB.Registered == false {
+			response = "Account not yet registered"
+			code = 403
 		}
 		// Check password locally, fall back to remote if incorrect
 		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
-		if err == nil && matches == true {
+		if err == nil && matches == true && code == 401 {
 			jwtToken, _ = users.GenerateJWTauthToken(db, userInDB.Id, userInDB.AuthNonce)
 			response = "Successfully authenticated user"
 			code = 200
@@ -898,6 +904,86 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 			Spec: group,
 		}
 		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetUserConfirms
+// returns a list of account confirms
+func GetUserConfirms(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch user account creation secrets"
+		code := 500
+
+		creationSecrets, err := users.GetAllUserCreationSecrets(db)
+		if err == nil {
+			response = "Fetched the user account creation secrets"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			List: creationSecrets,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetUserConfirm
+// returns an account confirm by id
+func GetUserConfirm(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch user account creation secret"
+		code := 500
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		creationSecret, err := users.GetUserCreationSecret(db, id)
+		if err == nil && creationSecret.Id != "" {
+			response = "Fetched the user account creation secret"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: creationSecret,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PostUserConfirm
+// confirm a user account
+func PostUserConfirm(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to confirm account"
+		code := 500
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		secret := r.FormValue("secret")
+
+		var user types.UserSpec
+		body, errUnmarshal := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &user)
+
+		tokenString, err := users.ConfirmUserAccount(db, id, secret, user)
+		log.Println(err)
+		if err == nil && errUnmarshal == nil {
+			response = "Confirmed the account"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Data: tokenString,
+		}
+		JSONResponse(r, w, code, JSONresp)
+
 	}
 }
 

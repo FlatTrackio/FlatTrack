@@ -46,38 +46,40 @@
         </section>
         <br/>
 
-        <!-- TODO remove fields once inviting via email is available -->
-        <b-field label="Phone number">
-          <b-input type="tel"
-                   v-model="phoneNumber"
-                   placeholder="Enter your flatmate's phone number"
-                   maxlength="30"
-                   >
-          </b-input>
-        </b-field>
+        <div class="field">
+          <b-checkbox v-model="setOnlyRequiredFields">Allow your flatmate to set their password, phone number, and birthday</b-checkbox>
+        </div>
+        <div v-if="!setOnlyRequiredFields">
+          <b-field label="Phone number">
+            <b-input type="tel"
+                     v-model="phoneNumber"
+                     placeholder="Enter your flatmate's phone number"
+                     maxlength="30">
+            </b-input>
+          </b-field>
 
-        <b-field label="Birthday">
-          <b-datepicker
-            v-model="jsBirthday"
-            :max-date="maxDate"
-            :show-week-numbers="true"
-            :focused-date="focusedDate"
-            placeholder="Click to select birthday"
-            icon="calendar-today"
-            trap-focus>
-          </b-datepicker>
-        </b-field>
-        <br/>
+          <b-field label="Birthday">
+            <b-datepicker
+              v-model="jsBirthday"
+              :max-date="maxDate"
+              :show-week-numbers="true"
+              :focused-date="focusedDate"
+              placeholder="Click to select birthday"
+              icon="calendar-today"
+              trap-focus>
+            </b-datepicker>
+          </b-field>
+          <br/>
 
-        <b-field label="Password">
-          <b-input type="password"
-                   v-model="password"
-                   password-reveal
-                   maxlength="70"
-                   placeholder="Enter a password for your flatmate"
-                   required>
-          </b-input>
-        </b-field>
+          <b-field label="Password">
+            <b-input type="password"
+                     v-model="password"
+                     password-reveal
+                     maxlength="70"
+                     placeholder="Enter a password for your flatmate"
+                     required>
+            </b-input>
+          </b-field>
 
         <b-field label="Confirm password">
           <b-input type="password"
@@ -88,6 +90,7 @@
                    required>
           </b-input>
         </b-field>
+        </div>
 
         <!-- TODO become invite via email button -->
         <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewUser(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">Create user account</b-button>
@@ -111,6 +114,7 @@ export default {
     return {
       focusedDate: maxDate,
       maxDate: maxDate,
+      setOnlyRequiredFields: true,
       names: null,
       email: null,
       phoneNumber: null,
@@ -164,7 +168,11 @@ export default {
       adminFlatmates.PostFlatmate({ names, email, phoneNumber, birthday, groups, password }).then(resp => {
         common.DisplaySuccessToast('Created user account')
         setTimeout(() => {
-          this.$router.push({ name: 'Admin accounts' })
+          if (this.setOnlyRequiredFields === true) {
+            this.$router.push({ name: 'Admin accounts' })
+          } else {
+            this.$router.push({ path: '/admin/' })
+          }
         }, 1.5 * 1000)
       }).catch(err => {
         common.DisplayFailureToast('Failed to create user account' + `<br/>${err.response.data.metadata.response}`)

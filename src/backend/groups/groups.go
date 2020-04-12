@@ -183,4 +183,3 @@ func UpdateUserGroups(db *sql.DB, userId string, groups []string) (complete bool
 	}
 	return true, err
 }
-

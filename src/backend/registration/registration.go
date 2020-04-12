@@ -36,7 +36,7 @@ func Register(db *sql.DB, registration types.Registration) (successful bool, jwt
 	}
 	registration.User.Groups = defaultInitalizationGroups
 	registration.User.Registered = true
-	user, err := users.CreateUser(db, registration.User)
+	user, err := users.CreateUser(db, registration.User, false)
 	if err != nil || user.Id == "" {
 		return successful, jwt, err
 	}

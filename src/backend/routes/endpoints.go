@@ -63,6 +63,16 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			HttpMethod:   http.MethodDelete,
 		},
 		{
+			EndpointPath: endpointPrefix + "/admin/useraccountconfirms",
+			HandlerFunc:  HTTPuseMiddleware(GetUserConfirms(db), HTTPvalidateJWT(db), HTTPcheckGroupFromId(db, "admin")),
+			HttpMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: endpointPrefix + "/admin/useraccountconfirms/{id}",
+			HandlerFunc:  HTTPuseMiddleware(GetUserConfirm(db), HTTPvalidateJWT(db), HTTPcheckGroupFromId(db, "admin")),
+			HttpMethod:   http.MethodGet,
+		},
+		{
 			EndpointPath: endpointPrefix + "/user/auth",
 			HandlerFunc:  UserAuthValidate(db),
 			HttpMethod:   http.MethodGet,
@@ -70,6 +80,11 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 		{
 			EndpointPath: endpointPrefix + "/user/auth",
 			HandlerFunc:  UserAuth(db),
+			HttpMethod:   http.MethodPost,
+		},
+		{
+			EndpointPath: endpointPrefix + "/user/confirm/{id}",
+			HandlerFunc:  PostUserConfirm(db),
 			HttpMethod:   http.MethodPost,
 		},
 		{

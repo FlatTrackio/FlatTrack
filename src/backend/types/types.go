@@ -115,6 +115,16 @@ type ShoppingItemSelector struct {
 	NotObtained bool `json:"notObtained"`
 }
 
+type UserCreationSecretSpec struct {
+	Id                    string `json:"id"`
+	UserId                string `json:"userId"`
+	Secret                string `json:"secret"`
+	Valid                 bool   `json:"valid"`
+	CreationTimestamp     int    `json:"creationTimestamp"`
+	ModificationTimestamp int    `json:"modificationTimestamp"`
+	DeletionTimestamp     int    `json:"deletionTimestamp"`
+}
+
 // FlatName
 // the name of the flat
 type FlatName struct {
