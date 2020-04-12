@@ -13,12 +13,11 @@
         <div class="card">
           <div class="card-content">
             <div class="media">
-              <div class="media-left">
-                <figure class="image is-48x48">
-                  <img src="https://bulma.io/images/placeholders/96x96.png" alt="Placeholder image">
-                </figure>
-              </div>
               <div class="media-content">
+                <figure class="image is-128x128">
+                  <img src="https://bulma.io/images/placeholders/256x256.png" alt="Placeholder image">
+                </figure>
+                <br/>
                 <p class="title is-4">{{ names }}</p>
                 <p class="subtitle is-6">Joined {{ TimestampToCalendar(creationTimestamp) }}</p>
               </div>
@@ -37,6 +36,15 @@
         </b-field>
         <br />
 
+        <b-field label="Name(s)">
+          <b-input type="text"
+                   v-model="names"
+                   maxlength="60"
+                   placeholder="Enter your name(s)"
+                   required>
+          </b-input>
+        </b-field>
+
         <b-field label="Email">
           <b-input type="email"
                    v-model="email"
@@ -47,6 +55,7 @@
         <b-field label="Phone number">
           <b-input type="tel"
                    v-model="phoneNumber"
+                   placeholder="Enter your phone number"
                    maxlength="30">
           </b-input>
         </b-field>
@@ -68,6 +77,7 @@
           <b-input type="password"
                    v-model="password"
                    password-reveal
+                   placeholder="Enter to update your password"
                    maxlength="70">
           </b-input>
         </b-field>
@@ -75,6 +85,7 @@
           <b-input type="password"
                    v-model="passwordConfirm"
                    password-reveal
+                   placeholder="Confirm to update your password"
                    maxlength="70"
                    >
           </b-input>

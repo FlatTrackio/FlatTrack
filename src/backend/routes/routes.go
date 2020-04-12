@@ -147,6 +147,7 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		userId := vars["id"]
 
+		// TODO disallow admins to remove their own admin group access
 		userAccountPatched, err := users.PatchProfile(db, userId, userAccount)
 		if err == nil && userAccountPatched.Id != "" {
 			code = 200
