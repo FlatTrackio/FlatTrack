@@ -133,6 +133,38 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// PatchUser
+// patches a user account by their id
+func PatchUser(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to patch the user account"
+
+		var userAccount types.UserSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &userAccount)
+
+		vars := mux.Vars(r)
+		userId := vars["id"]
+
+		userAccountPatched, err := users.PatchProfile(db, userId, userAccount)
+		if err == nil && userAccountPatched.Id != "" {
+			code = 200
+			response = "Successfully patched the user account"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: userAccountPatched,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // DeleteUser
 // delete a user
 func DeleteUser(db *sql.DB) http.HandlerFunc {

@@ -15,6 +15,23 @@ function PostFlatmate (form) {
   })
 }
 
+// PatchFlatmate
+// patche a user account
+function PatchFlatmate (id, names, email, phoneNumber, birthday, groups, password) {
+  return Request({
+    url: `/api/admin/users/${id}`,
+    method: 'PATCH',
+    data: {
+      names,
+      email,
+      phoneNumber,
+      birthday,
+      groups,
+      password
+    }
+  })
+}
+
 // DeleteFlatmate
 // removes a user account by id
 function DeleteFlatmate (id) {
@@ -24,4 +41,4 @@ function DeleteFlatmate (id) {
   })
 }
 
-export default { PostFlatmate, DeleteFlatmate }
+export default { PostFlatmate, PatchFlatmate, DeleteFlatmate }

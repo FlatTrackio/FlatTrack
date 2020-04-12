@@ -86,7 +86,7 @@
                    required>
           </b-input>
         </b-field>
-        <b-button type="is-success" size="is-medium" rounded disabled native-type="submit" @click="UpdateUserAccount(names, email, phoneNumber, birthday, groups, password, passwordConfirm, jsBirthday, groupsFull)">Update user account</b-button>
+        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchUserAccount(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">Update user account</b-button>
         <b-button type="is-danger" size="is-medium" rounded native-type="submit" @click="DeleteUserAccount(id)">Delete user account</b-button>
       </section>
     </div>
@@ -167,17 +167,21 @@ export default {
         common.DisplayFailureToast('Failed to fetch user account' + '<br/>' + (err.response.data.metadata.response || err))
       })
     },
-    UpdateUserAccount (names, email, phoneNumber, birthday, groups, password, passwordConfirm, jsBirthday, groupsFull) {
-      if (password !== passwordConfirm && password !== '') {
+    PatchUserAccount (names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull) {
+      if (password !== passwordConfirm && password !== null && typeof password !== 'undefined') {
         common.DisplayFailureToast('Passwords do not match')
         return
       }
-      birthday = moment(jsBirthday).format('X')
+      birthday = Number(moment(jsBirthday).format('X'))
+      var groups = []
       groupsFull.map(group => {
-        groups = [...groups, group.name]
+        if (group === '' || group.name === '') {
+          return
+        }
+        groups.push(group.name)
       })
-      adminFlatmates.PostFlatmate({ names, email, phoneNumber, birthday, groups, password }).then(resp => {
-        common.DisplaySuccessToast('Created user account')
+      adminFlatmates.PatchFlatmate(this.id, names, email, phoneNumber, birthday, groups, password).then(resp => {
+        common.DisplaySuccessToast('Updated user account')
         setTimeout(() => {
           this.$router.push({ name: 'Admin accounts' })
         }, 1 * 1000)

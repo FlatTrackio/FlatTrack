@@ -8,6 +8,7 @@ package groups
 import (
 	"database/sql"
 
+	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
@@ -22,7 +23,7 @@ func AddUserToGroup(db *sql.DB, userId string, groupId string) (err error) {
 // RemoveUserToGroup
 // given a userId and a groupId, removes a user from a group
 func RemoveUserFromGroup(db *sql.DB, userId string, groupId string) (err error) {
-	sqlStatement := `update user_to_groups set deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where userid = $1 and groupid = $2`
+	sqlStatement := `delete from user_to_groups where userid = $1 and groupid = $2`
 	_, err = db.Query(sqlStatement, userId, groupId)
 	return err
 }
@@ -151,3 +152,35 @@ func GetDefaultGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 	}
 	return groups, err
 }
+
+// UpdateUserGroups
+// manages a user account's groups according to what's provided
+func UpdateUserGroups(db *sql.DB, userId string, groups []string) (complete bool, err error) {
+	allGroups, err := GetAllGroups(db)
+	if err != nil {
+		return false, err
+	}
+	for _, group := range allGroups {
+		inGroup, err := CheckUserInGroup(db, userId, group.Name)
+		if err != nil {
+			return false, err
+		}
+		shouldBeInGroup := common.StringInStringSlice(group.Name, groups)
+		groupFull, err := GetGroupByName(db, group.Name)
+		if inGroup == true && shouldBeInGroup == false {
+			err = RemoveUserFromGroup(db, userId, groupFull.Id)
+			if err != nil {
+				return false, err
+			}
+		} else if inGroup == false && shouldBeInGroup == true {
+			err = AddUserToGroup(db, userId, groupFull.Id)
+			if err != nil {
+				return false, err
+			}
+		} else {
+			continue
+		}
+	}
+	return true, err
+}
+

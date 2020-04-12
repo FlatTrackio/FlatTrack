@@ -164,3 +164,14 @@ func HashSHA512(input string) (output string) {
 	sha512_hash := hex.EncodeToString(hasher.Sum(nil))
 	return sha512_hash
 }
+
+// StringInStringSlice
+// given a list of string and an input string, return if the input string is in the list of strings
+func StringInStringSlice(input string, list []string) bool {
+	for _, item := range list {
+		if item == input {
+			return true
+		}
+	}
+	return false
+}

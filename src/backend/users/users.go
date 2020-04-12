@@ -386,5 +386,13 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	if err != nil || userAccountPatched.Id == "" {
 		return userAccountPatched, errors.New("Failed to create shopping list")
 	}
+
+	updatedGroups, err := groups.UpdateUserGroups(db, id, userAccount.Groups)
+	if updatedGroups == false || err != nil {
+		return existingUserAccount, err
+	}
+
+	userAccountPatched.Groups = userAccount.Groups
+	userAccountPatched.Password = ""
 	return userAccountPatched, err
 }
