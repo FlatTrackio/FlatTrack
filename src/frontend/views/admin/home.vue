@@ -8,17 +8,16 @@
             <li class="is-active"><router-link to="/admin">Admin</router-link></li>
             </ul>
         </nav>
-        <h1 class="title is-1">Admin</h1>
+        <h1 class="title is-1">Admin apps</h1>
         <p class="subtitle is-3">Manage FlatTrack</p>
         <p></p>
         <br>
-        <!-- TODO make into iterative list -->
         <!-- TODO add icons to the left sides of cards -->
-        <div class="tile is-ancestor pointer-cursor-on-hover">
-          <div class="tile is-parent" @click="goToApp('/admin/accounts')">
+        <div class="tile is-ancestor pointer-cursor-on-hover" v-for="app in apps" v-bind:key="app">
+          <div class="tile is-parent" @click="goToApp(app.ref)">
             <div class="tile is-child box">
-              <p class="title">Flatmates</p>
-              <p>Manage your flatmates</p>
+              <p class="title is-2">{{ app.name }}</p>
+              <p class="subtitle is-4">{{ app.description }}</p>
             </div>
           </div>
         </div>
@@ -30,6 +29,17 @@
 <script>
 export default {
   name: 'Admin home',
+  data () {
+    return {
+      apps: [
+        {
+          name: 'Flatmates',
+          description: 'Manage your flatmates',
+          ref: '/admin/accounts'
+        }
+      ]
+    }
+  },
   methods: {
     goToApp (ref) {
       this.$router.push({ path: ref })

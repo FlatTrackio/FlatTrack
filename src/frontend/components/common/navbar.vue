@@ -29,7 +29,7 @@
               </b-menu-list>
               <b-menu-list label="Admin" v-if="canUserAccountAdmin">
                 <b-menu-item icon="account-group" label="Flatmates" tag="router-link" to="/admin/accounts"></b-menu-item>
-                <b-menu-item icon="settings" label="Admin" tag="router-link" to="/admin"></b-menu-item>
+                <b-menu-item icon="settings" label="Admin apps" tag="router-link" to="/admin"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Help">
                 <b-menu-item icon="open-in-new" label="FlatTrack help" tag="a" target="_blank" href="https://flattrack.io/help" disabled></b-menu-item>

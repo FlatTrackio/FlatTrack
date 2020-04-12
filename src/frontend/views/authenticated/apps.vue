@@ -12,21 +12,12 @@
         <p class="subtitle is-3">Manage your flat</p>
         <p></p>
         <br>
-        <!-- TODO make into iterative list -->
         <!-- TODO add icons to the left sides of cards -->
-        <div class="tile is-ancestor pointer-cursor-on-hover">
-          <div class="tile is-parent" @click="goToApp('/apps/shopping-list')">
+        <div class="tile is-ancestor pointer-cursor-on-hover" v-for="app in apps" v-bind:key="app">
+          <div class="tile is-parent" @click="goToApp(app.ref)">
             <div class="tile is-child box">
-              <p class="title">Shopping list</p>
-              <p>Manage a flat-wide shopping list for all to contribute to</p>
-            </div>
-          </div>
-        </div>
-        <div class="tile is-ancestor pointer-cursor-on-hover">
-          <div class="tile is-parent" @click="goToApp('/apps/flatmates')">
-            <div class="tile is-child box">
-              <p class="title">Flatmates</p>
-              <p>View your flatmates and their contact details</p>
+              <p class="title is-2">{{ app.name }}</p>
+              <p class="subtitle is-4">{{ app.description }}</p>
             </div>
           </div>
         </div>
@@ -38,6 +29,22 @@
 <script>
 export default {
   name: 'Apps',
+  data () {
+    return {
+      apps: [
+        {
+          name: 'Shopping list',
+          description: 'Manage a flat-wide shopping list for all to contribute to',
+          ref: '/apps/shopping-list'
+        },
+        {
+          name: 'Flatmates',
+          description: 'View your flatmates and their contact details',
+          ref: '/apps/flatmates'
+        }
+      ]
+    }
+  },
   methods: {
     goToApp (ref) {
       this.$router.push({ path: ref })
