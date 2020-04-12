@@ -23,7 +23,7 @@ export default {
     return {
       onMobile: false,
       displayNavigationBar: true,
-      publicPages: window.location.pathname === '/login' || window.location.pathname === '/setup'
+      publicPages: window.location.pathname === '/login' || window.location.pathname === '/setup' || (window.location.pathname.split('/')[1] === 'useraccountconfirm' && typeof window.location.pathname.split('/')[2] !== 'undefined')
     }
   },
   created () {

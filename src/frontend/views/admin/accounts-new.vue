@@ -40,8 +40,7 @@
               ellipsis
               icon="label"
               placeholder="Select groups"
-              @typing="GetFilteredGroups"
-              >
+              @typing="GetFilteredGroups">
           </b-field>
         </section>
         <br/>
@@ -90,6 +89,10 @@
                    required>
           </b-input>
         </b-field>
+        </div>
+        <div v-else>
+          <p class="subtitle is-6"><b>Please note:</b> email account verification does not work yet, however QR code verfication does. If this in an inconvenience, uncheck the checkbox above to fill all fields out for the new account.</p>
+          <br/>
         </div>
 
         <!-- TODO become invite via email button -->
@@ -155,8 +158,9 @@ export default {
     PostNewUser (names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull) {
       if (password !== passwordConfirm && password !== '') {
         common.DisplayFailureToast('Passwords do not match')
+        return
       }
-      birthday = Number(moment(jsBirthday).format('X'))
+      birthday = Number(moment(jsBirthday).format('X')) || 0
       var groups = []
       groupsFull.map(group => {
         if (group === '' || group.name === '') {
@@ -164,7 +168,6 @@ export default {
         }
         groups.push(group.name)
       })
-      console.log({ names, email, phoneNumber, birthday, groups, password, passwordConfirm, jsBirthday, groupsFull })
       adminFlatmates.PostFlatmate({ names, email, phoneNumber, birthday, groups, password }).then(resp => {
         common.DisplaySuccessToast('Created user account')
         setTimeout(() => {

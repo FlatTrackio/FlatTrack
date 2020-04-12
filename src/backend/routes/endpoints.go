@@ -84,6 +84,11 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 		},
 		{
 			EndpointPath: endpointPrefix + "/user/confirm/{id}",
+			HandlerFunc:  GetUserConfirmValid(db),
+			HttpMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: endpointPrefix + "/user/confirm/{id}",
 			HandlerFunc:  PostUserConfirm(db),
 			HttpMethod:   http.MethodPost,
 		},

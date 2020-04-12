@@ -3,12 +3,26 @@ import cani from '@/frontend/requests/authenticated/can-i'
 import login from '@/frontend/requests/public/login'
 import registration from '@/frontend/requests/public/registration'
 
-function checkForAuthToken (to, from, next) {
+// requireAuthToken
+// given an no auth token redirect to the login page
+function requireAuthToken (to, from, next) {
   var authToken = common.GetAuthToken()
   if (typeof authToken === 'undefined' || authToken === null || authToken === '') {
     next('/login')
+    return
   }
   next()
+}
+
+// requireNoAuthToken
+// given an auth token, redirect to the home page
+function requireNoAuthToken (to, from, next) {
+  var authToken = common.GetAuthToken()
+  if (typeof authToken === 'undefined' || authToken === null || authToken === '') {
+    next()
+    return
+  }
+  window.location.href = '/'
 }
 
 function checkForAdminGroup (to, from, next) {
@@ -29,7 +43,7 @@ export default [
     name: 'Home',
     component: () => import('@/frontend/views/authenticated/home.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -37,7 +51,7 @@ export default [
     name: 'Unknown Page',
     component: () => import('@/frontend/views/global/unknown-page.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -45,7 +59,7 @@ export default [
     name: 'My Flat',
     component: () => import('@/frontend/views/authenticated/flat.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -53,7 +67,7 @@ export default [
     name: 'Profile',
     component: () => import('@/frontend/views/authenticated/profile.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -61,7 +75,7 @@ export default [
     name: 'Apps',
     component: () => import('@/frontend/views/authenticated/apps.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -69,7 +83,7 @@ export default [
     name: 'My Flatmates',
     component: () => import('@/frontend/views/authenticated/flatmates.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -77,7 +91,7 @@ export default [
     name: 'Shopping list',
     component: () => import('@/frontend/views/authenticated/shopping-list.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -85,7 +99,7 @@ export default [
     name: 'New shopping list',
     component: () => import('@/frontend/views/authenticated/shopping-list-new.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -94,7 +108,7 @@ export default [
       name: 'Shopping list'
     },
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -102,7 +116,7 @@ export default [
     name: 'View shopping list',
     component: () => import('@/frontend/views/authenticated/shopping-list-view.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -110,7 +124,7 @@ export default [
     name: 'New shopping list item',
     component: () => import('@/frontend/views/authenticated/shopping-list-item-new.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -118,7 +132,7 @@ export default [
     name: 'View shopping list item',
     component: () => import('@/frontend/views/authenticated/shopping-list-item-view.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -126,7 +140,7 @@ export default [
     name: 'Admin home',
     component: () => import('@/frontend/views/admin/home.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
       checkForAdminGroup(to, from, next)
     }
   },
@@ -135,7 +149,7 @@ export default [
     name: 'Admin accounts',
     component: () => import('@/frontend/views/admin/accounts.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
       checkForAdminGroup(to, from, next)
     }
   },
@@ -144,7 +158,7 @@ export default [
     name: 'Admin new account',
     component: () => import('@/frontend/views/admin/accounts-new.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
       checkForAdminGroup(to, from, next)
     }
   },
@@ -154,7 +168,7 @@ export default [
       name: 'Admin accounts'
     },
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
     }
   },
   {
@@ -162,7 +176,7 @@ export default [
     name: 'View user account',
     component: () => import('@/frontend/views/admin/account-edit.vue'),
     beforeEnter: (to, from, next) => {
-      checkForAuthToken(to, from, next)
+      requireAuthToken(to, from, next)
       checkForAdminGroup(to, from, next)
     }
   },
@@ -234,6 +248,14 @@ export default [
       }).catch(() => {
         next()
       })
+    }
+  },
+  {
+    path: '/useraccountconfirm/:id',
+    name: 'User account confirm',
+    component: () => import('@/frontend/views/public/useraccountconfirm.vue'),
+    beforeEnter: (to, from, next) => {
+      requireNoAuthToken(to, from, next)
     }
   }
 ]

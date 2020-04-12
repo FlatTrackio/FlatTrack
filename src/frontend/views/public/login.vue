@@ -33,8 +33,7 @@
 </template>
 
 <script>
-import headerDisplay from '@/frontend/components/header-display'
-import { ToastProgrammatic as Toast, LoadingProgrammatic as Loading } from 'buefy'
+import { LoadingProgrammatic as Loading } from 'buefy'
 import login from '@/frontend/requests/public/login'
 import common from '@/frontend/common/common'
 
@@ -47,10 +46,10 @@ export default {
     }
   },
   components: {
-    headerDisplay
+    headerDisplay: () => import('@/frontend/components/header-display')
   },
   methods: {
-    postLogin: (email, password) => {
+    postLogin (email, password) {
       const loadingComponent = Loading.open({
         container: null
       })
@@ -64,20 +63,15 @@ export default {
           localStorage.setItem('authToken', resp.data.data)
           setTimeout(() => {
             loadingComponent.close()
-            location.href = '/'
-          }, 2000)
+            window.location.href = '/'
+          }, 2 * 1000)
         }).catch(err => {
           console.log(err)
           loadingComponent.close()
-          Toast.open({
-            duration: 10000,
-            message: err.response.data.metadata.response,
-            position: 'is-bottom',
-            type: 'is-danger'
-          })
+          common.DisplayFailureToast(err.response.data.metadata.response || err)
         })
     },
-    checkForLoginToken: () => {
+    checkForLoginToken () {
       var authToken = common.GetAuthToken()
       if (!(typeof authToken === 'undefined' || authToken === null || authToken === '')) {
         login.GetUserAuth(false).then(res => {
@@ -85,15 +79,11 @@ export default {
           const loadingComponent = Loading.open({
             container: null
           })
-          Toast.open({
-            duration: 2000,
-            message: 'You\'re still signed in, let\'s go to the home page',
-            position: 'is-bottom'
-          })
+          common.DisplaySuccessToast('You are still signed in, going to the home page...')
           setTimeout(() => {
             loadingComponent.close()
-            location.href = '/'
-          }, 2000)
+            window.location.href = '/'
+          }, 2 * 1000)
         })
       }
     }

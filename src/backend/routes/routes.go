@@ -954,6 +954,31 @@ func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// GetUserConfirmValid
+// returns if an account confirm is valid by id
+func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch user account creation secret"
+		code := 500
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		creationSecret, err := users.GetUserCreationSecret(db, id)
+		if err == nil && creationSecret.Id != "" {
+			response = "Fetched the user account creation secret"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Data: creationSecret.Id != "",
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // PostUserConfirm
 // confirm a user account
 func PostUserConfirm(db *sql.DB) http.HandlerFunc {
