@@ -16,8 +16,8 @@
         <div class="tile is-ancestor pointer-cursor-on-hover" v-for="app in apps" v-bind:key="app">
           <div class="tile is-parent" @click="goToApp(app.ref)">
             <div class="tile is-child box">
-              <p class="title is-2">{{ app.name }}</p>
-              <p class="subtitle is-4">{{ app.description }}</p>
+              <p class="title is-3">{{ app.name }}</p>
+              <p class="subtitle is-5">{{ app.description }}</p>
             </div>
           </div>
         </div>

@@ -29,8 +29,10 @@
               </p>
             </div>
           </div>
-          <div class="content" v-if="list.notes">
-            {{ list.notes }}
+          <div class="content">
+            <span v-if="list.notes">
+              {{ list.notes }}
+            </span>
             <br/>
             <br/>
             <div v-if="typeof list.count !== 'undefined' && list.count > 0">

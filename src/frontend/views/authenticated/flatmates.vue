@@ -28,8 +28,8 @@
                     </figure>
                   </div>
                   <div class="media-content">
-                    <p class="title is-3">{{ member.names }}</p>
-                    <p class="subtitle is-5">Joined {{ TimestampToCalendar(member.creationTimestamp) }}</p>
+                    <p class="title is-4">{{ member.names }}</p>
+                    <p class="subtitle is-6">Joined {{ TimestampToCalendar(member.creationTimestamp) }}</p>
                   </div>
                 </div>
                 <div class="content">
@@ -41,13 +41,13 @@
                       </b-taglist>
                     </div>
                   </b-field>
-                  <p class="subtitle is-5" v-if="member.phoneNumber">
+                  <p class="subtitle is-6" v-if="member.phoneNumber">
                     Phone: <a :href="`tel:${member.phoneNumber}`">{{ member.phoneNumber }}</a><br/>
                   </p>
-                  <p class="subtitle is-5" v-if="member.email">
+                  <p class="subtitle is-6" v-if="member.email">
                     Email: <a :href="`mailto:${member.email}`">{{ member.email }}</a><br/>
                   </p>
-                  <a class="subtitle is-5" v-if="member.birthday && member.birthday !== 0">
+                  <a class="subtitle is-6" v-if="member.birthday && member.birthday !== 0">
                     Birthday: {{ TimestampToCalendar(member.birthday) }}<br/>
                   </a>
                   <b-tag size="is-medium" type="is-danger" v-if="member.registered !== true">Has not registered</b-tag>

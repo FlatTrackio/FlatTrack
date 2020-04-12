@@ -22,13 +22,13 @@
         </div>
         <div v-else>
           <h1 class="title is-1 display-is-editable title-sticky pointer-cursor-on-hover" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
-          <p>
+          <p class="subtitle is-5">
             Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
+            <span v-if="creationTimestamp !== modificationTimestamp">
+              <br/>
+              Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
+            </span>
           </p>
-          <p v-if="creationTimestamp !== modificationTimestamp">
-            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
-          </p>
-          <br/>
           <b-tag type="is-info" v-if="completed">Completed</b-tag>
           <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
         </div>
@@ -47,6 +47,7 @@
           <div v-else>
             <div class="notification">
               <div class="content">
+                <label class="label">Notes</label>
                 <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="editing = true">
                   {{ notes }}
                 </p>
