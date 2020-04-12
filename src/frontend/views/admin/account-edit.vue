@@ -12,16 +12,19 @@
         <p class="subtitle is-3">Edit an existing user account</p>
 
         <div v-if="registered !== true">
-          <div class="notification is-white">
+          <div class="notification is-warning">
             <p class="subtitle is-6">This account doesn't appear to be registered</p>
-            <b-button @click="showRegistrationCompletionDetails = !showRegistrationCompletionDetails">{{ showRegistrationCompletionDetails === false ? 'Show' : 'Hide' }} registration completion details</b-button>
-            <div class="notification" v-if="showRegistrationCompletionDetails === true">
-              <div class="content">
-                <qrcode-vue :value="windowOrigin + '/useraccountconfirm/' + userAccountConfirmId + '?secret=' + userAccountConfirmSecret" :size="300" level="H"></qrcode-vue>
-                <br/>
-                <p>
-                  Have your flatmate scan the above QR code, or <a type="is-text" @click="CopyRegistrationLink">click here</a> to copy the registration link for you to send to your flatmate
-                </p>
+            <b-button @click="showRegistrationCompletionDetails = !showRegistrationCompletionDetails">{{ showRegistrationCompletionDetails === false ? 'Show' : 'Hide' }} registration details</b-button>
+            <div v-if="showRegistrationCompletionDetails === true">
+              <br/>
+              <div class="notification">
+                <div class="content">
+                  <qrcode-vue :value="windowOrigin + '/useraccountconfirm/' + userAccountConfirmId + '?secret=' + userAccountConfirmSecret" :size="200" level="H"></qrcode-vue>
+                  <br/>
+                  <p>
+                    Have your flatmate scan the QR code above, or <a type="is-text" @click="CopyRegistrationLink">click here</a> to copy the registration link for you to send to your flatmate
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -237,7 +240,7 @@ export default {
     },
     CopyRegistrationLink () {
       var registrationLink = `${window.location.origin}/useraccountconfirm/${this.userAccountConfirmId}?secret=${this.userAccountConfirmSecret}`
-      window.prompt('Copy the following link with [Ctrl+C, enter]', registrationLink)
+      window.prompt('Copy the following link', registrationLink)
     }
   },
   async beforeMount () {
