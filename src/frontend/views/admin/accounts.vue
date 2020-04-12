@@ -63,6 +63,7 @@
                   <div v-if="member.birthday && member.birthday !== 0">
                     Birthday: {{ TimestampToCalendar(member.birthday) }}<br/>
                   </div>
+                  <b-tag type="is-danger" v-if="member.registered !== true">Has not registered</b-tag>
                 </div>
               </div>
             </div>

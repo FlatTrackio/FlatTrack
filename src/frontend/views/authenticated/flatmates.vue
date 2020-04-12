@@ -47,6 +47,7 @@
                   <div v-if="member.email">
                     Email: <a :href="`mailto:${member.email}`">{{ member.email }}</a><br/>
                   </div>
+                  <b-tag type="is-danger" v-if="member.registered !== true">Has not registered</b-tag>
                 </div>
               </div>
             </div>

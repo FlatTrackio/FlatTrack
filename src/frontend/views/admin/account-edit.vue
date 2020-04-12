@@ -11,6 +11,23 @@
         <h1 class="title is-1">Edit account</h1>
         <p class="subtitle is-3">Edit an existing user account</p>
 
+        <div v-if="registered !== true">
+          <div class="notification is-white">
+            <p class="subtitle is-6">This account doesn't appear to be registered</p>
+            <b-button @click="showRegistrationCompletionDetails = !showRegistrationCompletionDetails">{{ showRegistrationCompletionDetails === false ? 'Show' : 'Hide' }} registration completion details</b-button>
+            <div class="notification" v-if="showRegistrationCompletionDetails === true">
+              <div class="content">
+                <qrcode-vue :value="windowOrigin + '/useraccountconfirm/' + userAccountConfirmId + '?secret=' + userAccountConfirmSecret" :size="300" level="H"></qrcode-vue>
+                <br/>
+                <p>
+                  Have your flatmate scan the above QR code, or <a type="is-text" @click="CopyRegistrationLink">click here</a> to copy the registration link for you to send to your flatmate
+                </p>
+              </div>
+            </div>
+          </div>
+          <br/>
+        </div>
+
         <b-field label="Names">
           <b-input type="text"
                    v-model="names"
@@ -106,21 +123,30 @@ export default {
   data () {
     var today = new Date()
     var maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getYear())
+    var windowOrigin = window.location.origin
 
     return {
+      windowOrigin: windowOrigin,
       maxDate: maxDate,
+      showRegistrationCompletionDetails: false,
+      userAccountConfirmId: null,
+      userAccountConfirmSecret: null,
       id: this.$route.params.id,
       names: null,
       email: null,
       phoneNumber: null,
       birthday: 0,
       groups: [],
+      registered: null,
       password: null,
       passwordConfirm: null,
       availableGroups: [],
       jsBirthday: null,
       groupsFull: []
     }
+  },
+  components: {
+    QrcodeVue: () => import('qrcode.vue')
   },
   methods: {
     TimestampToCalendar (timestamp) {
@@ -154,6 +180,7 @@ export default {
         this.email = user.email
         this.phoneNumber = user.phoneNumber
         this.birthday = user.birthday
+        this.registered = user.registered
         this.groups = user.groups
         this.groupsFull = []
         this.availableGroups.map(group => {
@@ -207,11 +234,27 @@ export default {
           })
         }
       })
+    },
+    CopyRegistrationLink () {
+      var registrationLink = `${window.location.origin}/useraccountconfirm/${this.userAccountConfirmId}?secret=${this.userAccountConfirmSecret}`
+      window.prompt('Copy the following link with [Ctrl+C, enter]', registrationLink)
     }
   },
   async beforeMount () {
     this.GetAvailableGroups()
     this.GetUserAccount()
+    if (this.registered !== true) {
+      adminFlatmates.GetUserAccountConfirms().then(resp => {
+        var confirmsList = resp.data.list
+        for (var confirmItem in confirmsList) {
+          if (confirmsList[confirmItem].userId !== this.id) {
+            continue
+          }
+          this.userAccountConfirmId = confirmsList[confirmItem].id
+          this.userAccountConfirmSecret = confirmsList[confirmItem].secret
+        }
+      })
+    }
   }
 }
 </script>

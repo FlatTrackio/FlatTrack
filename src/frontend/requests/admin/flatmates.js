@@ -41,4 +41,13 @@ function DeleteFlatmate (id) {
   })
 }
 
-export default { PostFlatmate, PatchFlatmate, DeleteFlatmate }
+// GetUserAccountConfirms
+// returns a list of confirm tokens and secrets
+function GetUserAccountConfirms () {
+  return Request({
+    url: `/api/admin/useraccountconfirms`,
+    method: 'GET'
+  })
+}
+
+export default { PostFlatmate, PatchFlatmate, DeleteFlatmate, GetUserAccountConfirms }
