@@ -18,8 +18,8 @@
                   <img src="https://bulma.io/images/placeholders/256x256.png" alt="Placeholder image">
                 </figure>
                 <br/>
-                <p class="title is-4">{{ names }}</p>
-                <p class="subtitle is-6">Joined {{ TimestampToCalendar(creationTimestamp) }}</p>
+                <p class="title is-3">{{ names }}</p>
+                <p class="subtitle is-5">Joined {{ TimestampToCalendar(creationTimestamp) }}</p>
               </div>
             </div>
           </div>
@@ -29,8 +29,8 @@
         <b-field grouped group-multiline>
           <div class="control" v-for="group in groups" v-bind:key="group">
             <b-taglist attached>
-              <b-tag type="is-dark">is</b-tag>
-              <b-tag type="is-info">{{ group }}</b-tag>
+              <b-tag size="is-medium" type="is-dark">is</b-tag>
+              <b-tag size="is-medium" type="is-info">{{ group }}</b-tag>
             </b-taglist>
           </div>
         </b-field>
@@ -41,6 +41,8 @@
                    v-model="names"
                    maxlength="60"
                    placeholder="Enter your name(s)"
+                   icon="textbox"
+                   size="is-medium"
                    required>
           </b-input>
         </b-field>
@@ -49,6 +51,8 @@
           <b-input type="email"
                    v-model="email"
                    maxlength="70"
+                   icon="email"
+                   size="is-medium"
                    required>
           </b-input>
         </b-field>
@@ -56,6 +60,8 @@
           <b-input type="tel"
                    v-model="phoneNumber"
                    placeholder="Enter your phone number"
+                   icon="phone"
+                   size="is-medium"
                    maxlength="30">
           </b-input>
         </b-field>
@@ -67,7 +73,8 @@
             :show-week-numbers="true"
             :focused-date="focusedDate"
             placeholder="Click to select birthday"
-            icon="calendar-today"
+            icon="cake-variant"
+            size="is-medium"
             trap-focus>
           </b-datepicker>
         </b-field>
@@ -78,6 +85,8 @@
                    v-model="password"
                    password-reveal
                    placeholder="Enter to update your password"
+                   icon="textbox-password"
+                   size="is-medium"
                    maxlength="70">
           </b-input>
         </b-field>
@@ -87,7 +96,8 @@
                    password-reveal
                    placeholder="Confirm to update your password"
                    maxlength="70"
-                   >
+                   size="is-medium"
+                   icon="textbox-password">
           </b-input>
         </b-field>
         <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday)">Update profile</b-button>
@@ -125,8 +135,9 @@ export default {
     GetProfile () {
       profile.GetProfile().then(resp => {
         this.names = resp.data.spec.names
-        this.birthday = resp.data.spec.birthday || moment().format('X')
-        this.jsBirthday = new Date(this.birthday * 1000)
+        this.birthday = resp.data.spec.birthday || null
+        this.jsBirthday = this.birthday !== null ? new Date(this.birthday * 1000) : null
+        this.focusedDate = this.jsBirthday
         this.phoneNumber = resp.data.spec.phoneNumber
         this.groups = resp.data.spec.groups
         this.email = resp.data.spec.email

@@ -54,16 +54,16 @@
                       </b-taglist>
                     </div>
                   </b-field>
-                  <div v-if="member.phoneNumber">
+                  <p class="subtitle is-6" v-if="member.phoneNumber">
                     Phone: <a :href="`tel:${member.phoneNumber}`">{{ member.phoneNumber }}</a><br/>
-                  </div>
-                  <div v-if="member.email">
+                  </p>
+                  <p class="subtitle is-6" v-if="member.email">
                     Email: <a :href="`mailto:${member.email}`">{{ member.email }}</a><br/>
-                  </div>
-                  <div v-if="member.birthday && member.birthday !== 0">
+                  </p>
+                  <a class="subtitle is-6" v-if="member.birthday && member.birthday !== 0">
                     Birthday: {{ TimestampToCalendar(member.birthday) }}<br/>
-                  </div>
-                  <b-tag type="is-danger" v-if="member.registered !== true">Has not registered</b-tag>
+                  </a>
+                  <b-tag size="is-medium" type="is-danger" v-if="member.registered !== true">Has not registered</b-tag>
                 </div>
               </div>
             </div>

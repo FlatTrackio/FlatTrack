@@ -19,33 +19,51 @@
           </p>
           <br/>
           <b-field label="Name">
-            <b-input type="text"
-                     v-model="name"
-                     size="is-medium"
-                     maxlength="30"
-                     required>
+            <b-input
+              type="text"
+              v-model="name"
+              size="is-medium"
+              maxlength="30"
+              icon="email"
+              required>
             </b-input>
           </b-field>
           <b-field label="Notes">
-            <b-input type="textarea"
-                     v-model="notes"
-                     size="is-medium"
-                     maxlength="100"
-                     >
+            <b-input
+              type="text"
+              v-model="notes"
+              size="is-medium"
+              maxlength="100"
+              icon="text">
             </b-input>
           </b-field>
           <b-field label="Price">
-            <b-input type="number" step="0.1" placeholder="0.00" v-model="price" size="is-medium"></b-input>
+            <b-input
+              type="number"
+              step="0.1"
+              placeholder="0.00"
+              v-model="price"
+              icon="currency-usd"
+              size="is-medium">
+            </b-input>
           </b-field>
           <b-field label="Quantity">
-            <b-numberinput v-model="quantity" size="is-medium">
+            <b-numberinput
+              v-model="quantity"
+              size="is-medium"
+              icon="numeric">
             </b-numberinput>
           </b-field>
           <div>
             <label class="label">Tag</label>
             <b-field>
               <p class="control">
-                <b-input type="text" v-model="tag" size="is-medium"></b-input>
+                <b-input
+                  type="text"
+                  v-model="tag"
+                  icon="tag"
+                  size="is-medium">
+                </b-input>
               </p>
               <p class="control" v-if="tags.length > 0">
                 <b-dropdown>

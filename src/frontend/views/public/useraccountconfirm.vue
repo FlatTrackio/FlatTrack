@@ -17,47 +17,62 @@
           <!-- TODO explain better -->
         </b-message>
         <div v-if="idValid === true && typeof secret !== 'undefined' && secret !== ''">
-          <b-field label="Phone number">
-            <b-input type="tel"
-                     v-model="phoneNumber"
-                     placeholder="Enter your flatmate's phone number"
-                     maxlength="30">
+          <b-field label="Phone number*">
+            <b-input
+              type="tel"
+              v-model="phoneNumber"
+              placeholder="Enter your phone number"
+              icon="phone"
+              size="is-medium"
+              maxlength="30">
             </b-input>
           </b-field>
 
-          <b-field label="Birthday">
+          <b-field label="Birthday*">
             <b-datepicker
               v-model="jsBirthday"
               :max-date="maxDate"
               :show-week-numbers="true"
               :focused-date="focusedDate"
               placeholder="Click to select birthday"
-              icon="calendar-today"
+              icon="cake-variant"
+              size="is-medium"
               trap-focus>
             </b-datepicker>
           </b-field>
           <br/>
 
           <b-field label="Password">
-            <b-input type="password"
-                     v-model="password"
-                     password-reveal
-                     maxlength="70"
-                     placeholder="Enter a password for your flatmate"
-                     required>
+            <b-input
+              type="password"
+              v-model="password"
+              password-reveal
+              maxlength="70"
+              placeholder="Enter your password"
+              icon="textbox-password"
+              size="is-medium"
+              required>
             </b-input>
           </b-field>
 
           <b-field label="Confirm password">
-            <b-input type="password"
-                     v-model="passwordConfirm"
-                     password-reveal
-                     maxlength="70"
-                     placeholder="Confirm a password for your flatmate"
-                     required>
+            <b-input
+              type="password"
+              v-model="passwordConfirm"
+              password-reveal
+              maxlength="70"
+              placeholder="Confirm your password"
+              icon="textbox-password"
+              size="is-medium"
+              required>
             </b-input>
           </b-field>
           <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostUserConfirm(id, secret, phoneNumber, password, passwordConfirm, jsBirthday)">Confirm my account</b-button>
+          <br/>
+          <br/>
+          <p class="subtitle is-6">
+            * optional
+          </p>
         </div>
       </section>
     </div>
@@ -78,7 +93,7 @@ export default {
 
     return {
       idValid: false,
-      jsBirthday: maxDate,
+      jsBirthday: null,
       id: this.$route.params.id,
       secret: this.$route.query.secret,
       phoneNumber: null,

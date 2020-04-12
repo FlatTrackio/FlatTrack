@@ -3,29 +3,49 @@
       <headerDisplay/>
       <div class="container">
         <section class="section form-width">
-          <h1 class="title">Login</h1>
-          <p class="subtitle">
+          <h1 class="title is-1">Login</h1>
+          <p class="subtitle is-3">
               Welcome to FlatTrack, please login.
           </p>
           <b-field label="Email">
-              <b-input type="email"
-                  v-model="email"
-                  maxlength="70"
-                  autofocus
-                  required>
+            <b-input
+              type="email"
+              v-model="email"
+              maxlength="70"
+              autofocus
+              @keyup.enter.native="postLogin(email, password)"
+              size="is-medium"
+              icon="email"
+              required>
               </b-input>
           </b-field>
           <b-field label="Password">
-              <b-input type="password"
-                  v-model="password"
-                  password-reveal
-                  maxlength="70"
-                  @keyup.enter.native="postLogin(email, password)"
-                  required>
-              </b-input>
+            <b-input
+              type="password"
+              v-model="password"
+              password-reveal
+              maxlength="70"
+              @keyup.enter.native="postLogin(email, password)"
+              size="is-medium"
+              icon="textbox-password"
+              required>
+            </b-input>
           </b-field>
-          <b-button rounded native-type="submit" @click="postLogin(email, password)">Login</b-button>
-          <b-button tag="a" href="forgot-password" rounded type="is-warning">Forgot Password</b-button>
+          <b-button
+            rounded
+            native-type="submit"
+            size="is-medium"
+            @click="postLogin(email, password)">
+            Login
+          </b-button>
+          <b-button
+            tag="a"
+            href="forgot-password"
+            rounded
+            size="is-medium"
+            type="is-warning">
+            Forgot Password
+          </b-button>
           <!-- TODO add FlatTrack version and links -->
         </section>
       </div>

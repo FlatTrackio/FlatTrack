@@ -22,6 +22,8 @@
             v-model="language"
             autofocus
             required
+            icon="web"
+            size="is-medium"
             expanded>
             <option value="English">English</option>
           </b-select>
@@ -32,6 +34,8 @@
             v-model="timezone"
             autofocus
             required
+            icon="map-clock"
+            size="is-medium"
             expanded>
             <option value="Pacific/Auckland">Pacific/Auckland</option>
           </b-select>
@@ -48,6 +52,8 @@
                    v-model="flatName"
                    maxlength="20"
                    placeholder="Enter what your flat is referred to as"
+                   icon="textbox"
+                   size="is-medium"
                    required>
           </b-input>
         </b-field>
@@ -63,6 +69,8 @@
                    v-model="names"
                    maxlength="70"
                    placeholder="Enter your name(s)"
+                   icon="textbox"
+                   size="is-medium"
                    required>
           </b-input>
         </b-field>
@@ -71,25 +79,30 @@
                    v-model="email"
                    maxlength="70"
                    placeholder="Enter your email address"
+                   icon="email"
+                   size="is-medium"
                    required>
           </b-input>
         </b-field>
-        <b-field label="Phone number">
+        <b-field label="Phone number*">
           <b-input type="tel"
                    v-model="phoneNumber"
                    placeholder="Enter your phone number"
+                   icon="phone"
+                   size="is-medium"
                    maxlength="30">
           </b-input>
         </b-field>
 
-        <b-field label="Birthday">
+        <b-field label="Birthday*">
           <b-datepicker
             v-model="jsBirthday"
             :max-date="maxDate"
             :show-week-numbers="true"
             :focused-date="focusedDate"
             placeholder="Click to select birthday"
-            icon="calendar-today"
+            icon="cake-variant"
+            size="is-medium"
             trap-focus>
           </b-datepicker>
         </b-field>
@@ -100,7 +113,8 @@
                    password-reveal
                    maxlength="70"
                    placeholder="Enter a password"
-                   @keyup.enter.native="Register({ language, timezone, flatName, user: { names, email, password } })"
+                   icon="textbox-password"
+                   size="is-medium"
                    required>
           </b-input>
         </b-field>
@@ -109,14 +123,16 @@
                    v-model="passwordConfirm"
                    password-reveal
                    placeholder="Confirm your password"
+                   icon="textbox-password"
+                   @keyup.enter.native="Register({ language, timezone, flatName, user: { names, email, password } })"
+                   size="is-medium"
                    maxlength="70">
           </b-input>
         </b-field>
-        <br/>
-        <br/>
-
         <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="Register({ language, timezone, flatName, user: { names, email, password, passwordConfirm, jsBirthday, phoneNumber } })">Setup</b-button>
       </div>
+      <br/>
+      <p>* optional</p>
       <br/>
       <p>FlatTrack version {{ flatTrackVersion || '0.0.0' }}</p>
     </section>

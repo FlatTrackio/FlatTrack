@@ -12,21 +12,26 @@
           <h1 class="title is-1">New shopping list</h1>
           <p class="subtitle is-3">Start a new list for your next shop</p>
           <b-field label="Name">
-            <b-input type="text"
-                     v-model="name"
-                     maxlength="30"
-                     required>
+            <b-input
+              type="text"
+              v-model="name"
+              maxlength="30"
+              icon="textbox"
+              size="is-medium"
+              required>
             </b-input>
           </b-field>
           <b-field label="Notes">
-            <b-input type="textarea"
-                     v-model="notes"
-                     maxlength="100"
-                     >
+            <b-input
+              type="text"
+              size="is-medium"
+              v-model="notes"
+              icon="text"
+              maxlength="100">
             </b-input>
           </b-field>
           <b-field label="Use another list as a template (optional)" v-if="lists.length > 0">
-            <b-select placeholder="Template a preview list" v-model="listTemplate">
+            <b-select placeholder="Template a preview list" v-model="listTemplate" icon="content-copy">
               <option
                 value="">
               </option>

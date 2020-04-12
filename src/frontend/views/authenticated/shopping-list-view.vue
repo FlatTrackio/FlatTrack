@@ -8,21 +8,20 @@
             <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">{{ name || 'Unnamed list' }}</router-link></li>
           </ul>
         </nav>
-        <nav class="level">
-          <div class="level-left">
-            <div v-if="editing">
-              <div class="field">
-                <div class="control is-clearfix">
-                  <input type="text" autocomplete="on" class="input title is-1" v-model="name"/>
-                </div>
-              </div>
-            </div>
-            <div v-else>
-              <h1 class="title is-1 display-is-editable title-sticky" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
-            </div>
-          </div>
-        </nav>
-        <div v-if="!editing">
+        <div v-if="editing">
+          <b-field label="Name">
+            <b-input
+              type="text"
+              icon="format-title"
+              size="is-medium"
+              v-model="name"
+              required>
+            </b-input>
+          </b-field>
+          <br/>
+        </div>
+        <div v-else>
+          <h1 class="title is-1 display-is-editable title-sticky pointer-cursor-on-hover" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
           <p>
             Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
           </p>
@@ -30,21 +29,25 @@
             Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
           </p>
           <br/>
-        </div>
-        <div>
           <b-tag type="is-info" v-if="completed">Completed</b-tag>
           <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
         </div>
         <div v-if="notes != '' || notesFromEmpty || editing">
           <div v-if="editing">
-            <b-field>
-              <b-input size="is-medium" maxlength="100" type="textarea" v-model="notes" class="subtitle is-3"></b-input>
+            <b-field label="Notes">
+              <b-input
+                icon="text"
+                size="is-medium"
+                maxlength="100"
+                type="text"
+                v-model="notes">
+              </b-input>
             </b-field>
           </div>
           <div v-else>
             <div class="notification">
               <div class="content">
-                <p class="display-is-editable subtitle is-4" @click="editing = true">
+                <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="editing = true">
                   {{ notes }}
                 </p>
               </div>

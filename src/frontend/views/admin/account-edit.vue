@@ -36,6 +36,8 @@
                    v-model="names"
                    maxlength="60"
                    placeholder="Enter your flatmate's name"
+                   icon="textbox"
+                   size="is-medium"
                    required>
           </b-input>
         </b-field>
@@ -45,6 +47,8 @@
                    v-model="email"
                    maxlength="70"
                    placeholder="Enter your flatmate's email"
+                   icon="email"
+                   size="is-medium"
                    required>
           </b-input>
         </b-field>
@@ -58,8 +62,9 @@
               autocomplete
               open-on-focus
               ellipsis
-              icon="label"
+              icon="account-group"
               placeholder="Select groups"
+              size="is-medium"
               @typing="GetFilteredGroups"
               >
           </b-field>
@@ -70,6 +75,8 @@
           <b-input type="tel"
                    v-model="phoneNumber"
                    placeholder="Enter your flatmate's phone number"
+                   icon="phone"
+                   size="is-medium"
                    maxlength="30">
           </b-input>
         </b-field>
@@ -81,7 +88,8 @@
             :show-week-numbers="true"
             :focused-date="focusedDate"
             placeholder="Click to select birthday"
-            icon="calendar-today"
+            icon="cake-variant"
+            size="is-medium"
             trap-focus>
           </b-datepicker>
         </b-field>
@@ -93,6 +101,8 @@
                    password-reveal
                    maxlength="70"
                    placeholder="Enter a password for your flatmate"
+                   icon="textbox-password"
+                   size="is-medium"
                    required>
           </b-input>
         </b-field>
@@ -103,6 +113,8 @@
                    password-reveal
                    maxlength="70"
                    placeholder="Confirm a password for your flatmate"
+                   icon="textbox-password"
+                   size="is-medium"
                    required>
           </b-input>
         </b-field>
