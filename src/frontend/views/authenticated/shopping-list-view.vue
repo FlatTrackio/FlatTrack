@@ -14,6 +14,7 @@
               type="text"
               icon="format-title"
               size="is-medium"
+              @keyup.enter.native="notesFromEmpty = false; editing = false; PatchShoppingList(name, notes)"
               v-model="name"
               required>
             </b-input>
@@ -40,6 +41,7 @@
                 size="is-medium"
                 maxlength="100"
                 type="text"
+                @keyup.enter.native="notesFromEmpty = false; editing = false; PatchShoppingList(name, notes)"
                 v-model="notes">
               </b-input>
             </b-field>
@@ -200,6 +202,9 @@ export default {
       this.$router.push({ path: ref })
     },
     GetShoppingList () {
+      if (this.editing === true) {
+        return
+      }
       var id = this.id
       shoppinglist.GetShoppingList(id).then(resp => {
         this.name = resp.data.spec.name
@@ -279,7 +284,10 @@ export default {
     this.GetShoppingListItems()
   },
   created () {
-    window.setInterval(() => this.GetShoppingListItems(), 3 * 1000)
+    window.setInterval(() => {
+      this.GetShoppingList()
+      this.GetShoppingListItems()
+    }, 3 * 1000)
   }
 }
 </script>
