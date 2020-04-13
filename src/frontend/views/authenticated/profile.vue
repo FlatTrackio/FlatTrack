@@ -29,8 +29,8 @@
         <b-field grouped group-multiline>
           <div class="control" v-for="group in groups" v-bind:key="group">
             <b-taglist attached>
-              <b-tag size="is-medium" type="is-dark">is</b-tag>
-              <b-tag size="is-medium" type="is-info">{{ group }}</b-tag>
+              <b-tag type="is-dark">is</b-tag>
+              <b-tag type="is-info">{{ group }}</b-tag>
             </b-taglist>
           </div>
         </b-field>

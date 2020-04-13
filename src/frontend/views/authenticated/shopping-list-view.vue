@@ -27,7 +27,7 @@
             Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
             <span v-if="creationTimestamp !== modificationTimestamp">
               <br/>
-              Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
+              Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast"> {{ authorLastNames }} </router-link>
             </span>
           </p>
           <b-tag type="is-info" v-if="completed">Completed</b-tag>
@@ -97,7 +97,7 @@
                         <span v-if="typeof item.price !== 'undefined' && item.price !== 0"> (${{ item.price }}) </span>
                         <b v-if="item.quantity > 1">x{{ item.quantity }}</b>
                         <b-icon
-                          v-if="item.price === 0"
+                          v-if="typeof item.price === 'undefined' || item.price === 0"
                           icon="currency-usd-off"
                           size="is-small">
                         </b-icon>
@@ -139,6 +139,7 @@ export default {
   name: 'Shopping List',
   data () {
     return {
+      intervalLoop: null,
       editing: false,
       notesFromEmpty: false,
       authorNames: '',
@@ -283,11 +284,14 @@ export default {
     this.GetShoppingList()
     this.GetShoppingListItems()
   },
-  created () {
-    window.setInterval(() => {
+  async created () {
+    this.intervalLoop = window.setInterval(() => {
       this.GetShoppingList()
       this.GetShoppingListItems()
     }, 3 * 1000)
+  },
+  beforeDestroy () {
+    window.clearInterval(this.intervalLoop)
   }
 }
 </script>
@@ -295,6 +299,7 @@ export default {
 <style scoped>
 .display-is-editable:hover {
     text-decoration: underline dotted;
+    -webkit-transition: width 0.5s ease-in;
 }
 .card-content-list {
     background-color: transparent;

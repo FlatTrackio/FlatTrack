@@ -15,7 +15,7 @@
             Added {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
           </p>
           <p v-if="creationTimestamp !== modificationTimestamp">
-            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorLastNames }} </router-link>
+            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast"> {{ authorLastNames }} </router-link>
           </p>
           <br/>
           <b-field label="Name">
@@ -122,6 +122,7 @@ export default {
         price = undefined
       }
 
+      price = Number(price)
       shoppinglist.PatchShoppingListItem(listId, itemId, name, notes, price, quantity, tag).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' && typeof item.id !== 'undefined') {

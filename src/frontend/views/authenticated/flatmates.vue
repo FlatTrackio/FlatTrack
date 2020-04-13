@@ -36,8 +36,8 @@
                   <b-field grouped group-multiline>
                     <div class="control" v-for="group in member.groups" v-bind:key="group">
                       <b-taglist attached>
-                        <b-tag size="is-medium" type="is-dark">is</b-tag>
-                        <b-tag size="is-medium" type="is-info">{{ group }}</b-tag>
+                        <b-tag type="is-dark">is</b-tag>
+                        <b-tag type="is-info">{{ group }}</b-tag>
                       </b-taglist>
                     </div>
                   </b-field>
@@ -50,7 +50,7 @@
                   <a class="subtitle is-6" v-if="member.birthday && member.birthday !== 0">
                     Birthday: {{ TimestampToCalendar(member.birthday) }}<br/>
                   </a>
-                  <b-tag size="is-medium" type="is-danger" v-if="member.registered !== true">Has not registered</b-tag>
+                  <b-tag type="is-danger" v-if="member.registered !== true">Has not registered</b-tag>
                 </div>
               </div>
             </div>
