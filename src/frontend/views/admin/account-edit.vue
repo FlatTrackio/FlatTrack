@@ -31,7 +31,7 @@
           <br/>
         </div>
 
-        <b-field label="Names">
+        <b-field label="Name(s)">
           <b-input type="text"
                    v-model="names"
                    maxlength="60"
