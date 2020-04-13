@@ -22,7 +22,7 @@
         </div>
         <div v-else>
           <h1 class="title is-1 display-is-editable title-sticky pointer-cursor-on-hover" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
-          <p class="subtitle is-5">
+          <p class="subtitle is-6">
             Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
             <span v-if="creationTimestamp !== modificationTimestamp">
               <br/>
@@ -92,8 +92,8 @@
                     <div class="block">
                       <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">
                         {{ item.name }}
-                        <b v-if="item.quantity > 1">x{{ item.quantity }}</b>
                         <span v-if="typeof item.price !== 'undefined' && item.price !== 0"> (${{ item.price }}) </span>
+                        <b v-if="item.quantity > 1">x{{ item.quantity }}</b>
                         <b-icon
                           v-if="item.price === 0"
                           icon="currency-usd-off"
@@ -128,6 +128,7 @@
 
 <script>
 import common from '@/frontend/common/common'
+import shoppinglistCommon from '@/frontend/common/shoppinglist'
 import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
 import flatmates from '@/frontend/requests/authenticated/flatmates'
 import { DialogProgrammatic as Dialog } from 'buefy'
@@ -255,39 +256,30 @@ export default {
         common.DisplayFailureToast('Failed to patch the obtained field of this item' + '<br/>' + err.response.data.metadata.response)
       })
     },
+    GetShoppingListItems () {
+      shoppinglist.GetShoppingListItems(this.id).then(resp => {
+        var responseList = resp.data.list
+        this.totalItems = responseList === null ? 0 : responseList.length
+        if (this.list === null) {
+          this.list = []
+        }
+
+        var restructuredList = shoppinglistCommon.RestructureShoppingListToTags(responseList)
+        if (restructuredList !== this.list) {
+          this.list = restructuredList
+        }
+      })
+    },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
     }
   },
   async beforeMount () {
     this.GetShoppingList()
-    shoppinglist.GetShoppingListItems(this.id).then(resp => {
-      var responseList = resp.data.list
-      this.totalItems = responseList === null ? 0 : responseList.length
-      if (this.list === null) {
-        this.list = []
-      }
-
-      // restructure be be organised by tag
-      var currentTag = ''
-      for (var item in responseList) {
-        if (currentTag !== responseList[item].tag) {
-          currentTag = responseList[item].tag
-          var newItem = {
-            tag: currentTag || 'Untagged',
-            items: [responseList[item]]
-          }
-
-          this.list = [...this.list, newItem]
-        } else {
-          var currentListPosition = this.list.length - 1
-          var currentSubListItems = this.list[currentListPosition].items
-
-          this.list[currentListPosition].items = [...currentSubListItems, responseList[item]]
-        }
-      }
-      console.log(this.list)
-    })
+    this.GetShoppingListItems()
+  },
+  created () {
+    window.setInterval(() => this.GetShoppingListItems(), 3 * 1000)
   }
 }
 </script>
