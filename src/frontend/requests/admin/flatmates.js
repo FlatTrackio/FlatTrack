@@ -43,10 +43,13 @@ function DeleteFlatmate (id) {
 
 // GetUserAccountConfirms
 // returns a list of confirm tokens and secrets
-function GetUserAccountConfirms () {
+function GetUserAccountConfirms (userId) {
   return Request({
     url: `/api/admin/useraccountconfirms`,
-    method: 'GET'
+    method: 'GET',
+    params: {
+      userId
+    }
   })
 }
 

@@ -914,7 +914,12 @@ func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 		response := "Failed to fetch user account creation secrets"
 		code := 500
 
-		creationSecrets, err := users.GetAllUserCreationSecrets(db)
+		userIdSelector := r.FormValue("userId")
+		userCreationSecretSelector := types.UserCreationSecretSelector{
+			UserId: userIdSelector,
+		}
+
+		creationSecrets, err := users.GetAllUserCreationSecrets(db, userCreationSecretSelector)
 		if err == nil {
 			response = "Fetched the user account creation secrets"
 			code = 200

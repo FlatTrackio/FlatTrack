@@ -125,6 +125,10 @@ type UserCreationSecretSpec struct {
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
 }
 
+type UserCreationSecretSelector struct {
+	UserId string `json:"userId"`
+}
+
 // FlatName
 // the name of the flat
 type FlatName struct {

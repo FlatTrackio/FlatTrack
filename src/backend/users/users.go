@@ -437,7 +437,7 @@ func UserCreationSecretsFromRows(rows *sql.Rows) (creationSecret types.UserCreat
 
 // GetAllUserCreationSecrets
 // returns all UserCreationSecrets from the database
-func GetAllUserCreationSecrets(db *sql.DB) (creationSecrets []types.UserCreationSecretSpec, err error) {
+func GetAllUserCreationSecrets(db *sql.DB, secretsSelector types.UserCreationSecretSelector) (creationSecrets []types.UserCreationSecretSpec, err error) {
 	sqlStatement := `select * from user_creation_secret`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
@@ -447,6 +447,18 @@ func GetAllUserCreationSecrets(db *sql.DB) (creationSecrets []types.UserCreation
 		creationSecret, err := UserCreationSecretsFromRows(rows)
 		if err != nil {
 			return creationSecrets, errors.New("Failed to list user creation secrets")
+		}
+		if secretsSelector.UserId != "" {
+			userExists, err := UserAccountExists(db, secretsSelector.UserId)
+			if err != nil {
+				return creationSecrets, err
+			}
+			if userExists == false {
+				return creationSecrets, errors.New("Unable to find user account")
+			}
+			if creationSecret.UserId != secretsSelector.UserId {
+				continue
+			}
 		}
 		creationSecrets = append(creationSecrets, creationSecret)
 	}
@@ -538,4 +550,20 @@ func ConfirmUserAccount(db *sql.DB, id string, secret string, user types.UserSpe
 	err = DeleteUserCreationSecret(db, id)
 
 	return GenerateJWTauthToken(db, userInDB.Id, userInDB.AuthNonce)
+}
+
+// UserAccountExists
+// returns bool if user account exists
+func UserAccountExists(db *sql.DB, id string) (exists bool, err error) {
+	sqlStatement := `select id from users where id = $1`
+	rows, err := db.Query(sqlStatement, id)
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+	rows.Next()
+	var userIdFromDB string
+	rows.Scan(&userIdFromDB)
+	err = rows.Err()
+	return userIdFromDB == id, err
 }

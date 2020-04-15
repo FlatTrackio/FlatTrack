@@ -259,7 +259,7 @@ export default {
     this.GetAvailableGroups()
     this.GetUserAccount()
     if (this.registered !== true) {
-      adminFlatmates.GetUserAccountConfirms().then(resp => {
+      adminFlatmates.GetUserAccountConfirms(this.id).then(resp => {
         var confirmsList = resp.data.list
         for (var confirmItem in confirmsList) {
           if (confirmsList[confirmItem].userId !== this.id) {
