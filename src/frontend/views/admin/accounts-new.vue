@@ -54,7 +54,7 @@
           <b-checkbox v-model="setOnlyRequiredFields">Allow your flatmate to set their password, phone number, and birthday</b-checkbox>
         </div>
         <div v-if="!setOnlyRequiredFields">
-          <b-field label="Phone number">
+          <b-field label="Phone number*">
             <b-input type="tel"
                      v-model="phoneNumber"
                      placeholder="Enter your flatmate's phone number"
@@ -64,7 +64,7 @@
             </b-input>
           </b-field>
 
-          <b-field label="Birthday">
+          <b-field label="Birthday*">
             <b-datepicker
               v-model="jsBirthday"
               :max-date="maxDate"
@@ -109,6 +109,10 @@
 
         <!-- TODO become invite via email button -->
         <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewUser(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">Create user account</b-button>
+        <div v-if="setOnlyRequiredFields == false">
+          <br/>
+          <p>* optional</p>
+        </div>
       </section>
     </div>
   </div>
