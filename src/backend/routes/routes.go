@@ -1056,15 +1056,17 @@ func HTTPvalidateJWT(db *sql.DB) func(http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// HTTPcheckGroupFromId
+// HTTPcheckGroupsFromId
 // middleware for checking if a route can be accessed given a Id and groupId
-func HTTPcheckGroupFromId(db *sql.DB, group string) func(http.HandlerFunc) http.HandlerFunc {
+func HTTPcheckGroupsFromId(db *sql.DB, groupsAllowed ...string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			id, errId := users.GetIdFromJWT(db, r)
-			if userInGroup, err := groups.CheckUserInGroup(db, id, group); userInGroup == true && err == nil && err == errId {
-				h.ServeHTTP(w, r)
-				return
+			for _, group := range groupsAllowed {
+				if userInGroup, err := groups.CheckUserInGroup(db, id, group); userInGroup == true && err == nil && err == errId {
+					h.ServeHTTP(w, r)
+					return
+				}
 			}
 			JSONResponse(r, w, 403, types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{

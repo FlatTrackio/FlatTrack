@@ -29,7 +29,7 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/settings/flatName",
-			HandlerFunc:  HTTPuseMiddleware(SetSettingsFlatName(db), HTTPvalidateJWT(db), HTTPcheckGroupFromId(db, "admin")),
+			HandlerFunc:  HTTPuseMiddleware(SetSettingsFlatName(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
 			HttpMethod:   http.MethodPost,
 		},
 		{
@@ -39,37 +39,37 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/users",
-			HandlerFunc:  HTTPuseMiddleware(GetAllUsers(db), HTTPvalidateJWT(db), HTTPcheckGroupFromId(db, "admin")),
+			HandlerFunc:  HTTPuseMiddleware(GetAllUsers(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
 			HttpMethod:   http.MethodGet,
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/users/{id}",
-			HandlerFunc:  HTTPuseMiddleware(GetUser(db), HTTPvalidateJWT(db), HTTPcheckGroupFromId(db, "admin")),
+			HandlerFunc:  HTTPuseMiddleware(GetUser(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
 			HttpMethod:   http.MethodGet,
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/users",
-			HandlerFunc:  HTTPuseMiddleware(PostUser(db), HTTPvalidateJWT(db), HTTPcheckGroupFromId(db, "admin")),
+			HandlerFunc:  HTTPuseMiddleware(PostUser(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
 			HttpMethod:   http.MethodPost,
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/users/{id}",
-			HandlerFunc:  HTTPuseMiddleware(PatchUser(db), HTTPvalidateJWT(db), HTTPcheckGroupFromId(db, "admin")),
+			HandlerFunc:  HTTPuseMiddleware(PatchUser(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
 			HttpMethod:   http.MethodPatch,
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/users/{id}",
-			HandlerFunc:  HTTPuseMiddleware(DeleteUser(db), HTTPvalidateJWT(db), HTTPcheckGroupFromId(db, "admin")),
+			HandlerFunc:  HTTPuseMiddleware(DeleteUser(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
 			HttpMethod:   http.MethodDelete,
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/useraccountconfirms",
-			HandlerFunc:  HTTPuseMiddleware(GetUserConfirms(db), HTTPvalidateJWT(db), HTTPcheckGroupFromId(db, "admin")),
+			HandlerFunc:  HTTPuseMiddleware(GetUserConfirms(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
 			HttpMethod:   http.MethodGet,
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/useraccountconfirms/{id}",
-			HandlerFunc:  HTTPuseMiddleware(GetUserConfirm(db), HTTPvalidateJWT(db), HTTPcheckGroupFromId(db, "admin")),
+			HandlerFunc:  HTTPuseMiddleware(GetUserConfirm(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
 			HttpMethod:   http.MethodGet,
 		},
 		{
@@ -94,7 +94,7 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 		},
 		{
 			EndpointPath: endpointPrefix + "/user/can-i/group/{name}",
-			HandlerFunc:  UserCanIgroup(db),
+			HandlerFunc:  HTTPuseMiddleware(UserCanIgroup(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
 		},
 		{
