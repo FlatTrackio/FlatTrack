@@ -68,7 +68,6 @@ export default {
     },
     GetFlatmateName (id) {
       flatmates.GetFlatmate(id).then(resp => {
-        console.log({ resp })
         return resp.data.spec.names
       }).catch(err => {
         common.DisplayFailureToast('Failed to fetch user account' + `<br/>${err.response.data.metadata.response}`)

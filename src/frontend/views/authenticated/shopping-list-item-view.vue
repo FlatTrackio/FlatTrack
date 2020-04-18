@@ -176,7 +176,6 @@ export default {
       this.modificationTimestamp = item.modificationTimestamp
       return flatmates.GetFlatmate(item.author)
     }).then(resp => {
-      console.log({ resp })
       this.authorNames = resp.data.spec.names
       return flatmates.GetFlatmate(this.authorLast)
     }).then(resp => {

@@ -107,7 +107,6 @@ export default {
         params.id = this.idQuery
       }
       params.notSelf = true
-      console.log(params)
       flatmates.GetAllFlatmates(params).then(resp => {
         this.members = resp.data.list
       }).catch(err => {

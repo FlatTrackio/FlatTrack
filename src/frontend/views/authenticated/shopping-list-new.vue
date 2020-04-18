@@ -71,7 +71,6 @@ export default {
   },
   methods: {
     PostNewShoppingList (name, notes, listTemplate, templateListFromOnlyUnobtained) {
-      console.log(name, notes, listTemplate)
       if (notes === '') {
         notes = undefined
       }
