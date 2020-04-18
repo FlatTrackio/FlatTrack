@@ -1,6 +1,6 @@
 stages:
-  - build
   - test
+  - build
 
 variables:
   ARCH_DEFAULT: "amd64"
@@ -104,7 +104,7 @@ test_backend_e2e:
   services:
     - postgres:12.2-alpine
   before_script:
-    - apk add git
+    - apk add git gcc
     - go get github.com/onsi/ginkgo/ginkgo
     - go get github.com/onsi/gomega/...
     - go build -o flattrack src/backend/main.go
