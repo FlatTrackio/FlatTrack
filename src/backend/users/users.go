@@ -76,7 +76,7 @@ func CreateUser(db *sql.DB, user types.UserSpec, requireValidation bool) (userIn
 	if user.Password != "" {
 		user.Password = common.HashSHA512(user.Password)
 	}
-	if requireValidation == false {
+	if allowEmptyPassword == false {
 		user.Registered = true
 	}
 
@@ -106,7 +106,7 @@ func CreateUser(db *sql.DB, user types.UserSpec, requireValidation bool) (userIn
 	}
 	userInserted.Groups = user.Groups
 	userInserted.Password = ""
-	if requireValidation == true {
+	if allowEmptyPassword == true {
 		userCreationSecretInserted, err = CreateUserCreationSecret(db, userInserted.Id)
 		if err != nil {
 			return userInserted, err

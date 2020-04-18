@@ -124,20 +124,21 @@ func RegexMatchName(name string) bool {
 
 // RegexMatchEmail
 // regex check for valid email address string
+// must also be <= 70
 func RegexMatchEmail(email string) bool {
 	re := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-	return re.MatchString(email)
+	return re.MatchString(email) && len(email) <= 70
 }
 
 // RegexMatchPassword
 // regex check for valid password
 // rules:
-// - 10+ characters
+// - 10 - 70 characters
 // - at least one lowercase character
 // - at least one uppercase character
 func RegexMatchPassword(password string) bool {
 	matches, _ := regexp.MatchString(`^([a-z]*)([A-Z]*).{10,}$`, password)
-	return matches
+	return matches && len(password) <= 70
 }
 
 // RegexMatchPhoneNumber

@@ -94,10 +94,152 @@ var _ = Describe("API e2e tests", func() {
 		Expect(userAccount.Email).To(Equal(firstUserAccount.Email), "User account email must equal user account email from list")
 		Expect(userAccount.Email).ToNot(Equal(""), "User account email must not be empty")
 	})
+
+	It("should allow the creation of new user accounts", func() {
+		accounts := []types.UserSpec{
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.com",
+				Password: "Password123!",
+				Groups:   []string{"flatmember"},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.com",
+				Password: "Password123!",
+				Groups:   []string{"flatmember", "admin"},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.coop",
+				Password: "Password123!",
+				Groups:   []string{"flatmember", "admin"},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "us.er1@example.coop",
+				Password: "Password123!",
+				Groups:   []string{"flatmember", "admin"},
+			},
+		}
+		for _, account := range accounts {
+			accountData, err := json.Marshal(account)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+			By("creating a user accounts")
+			apiEndpoint := "api/admin/users"
+			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountData)
+			Expect(err).To(BeNil(), "API should not return error")
+			Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			userAccountJSON, err := json.Marshal(userAccountResponse)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+			var userAccount types.UserSpec
+			json.Unmarshal(userAccountJSON, &userAccount)
+
+			By("checking the results")
+			Expect(userAccount.Id).ToNot(Equal(""), "User account Id must not be empty")
+			Expect(userAccount.Names).To(Equal(account.Names), "User account names must match what was posted")
+			Expect(userAccount.Password).To(Equal(""), "User account password must return an empty string")
+
+			By("deleting the account")
+			apiEndpoint = "api/admin/users/" + userAccount.Id
+			resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountData)
+			Expect(err).To(BeNil(), "API should not return error")
+			Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		}
+	})
+
+	It("should disallow invalid fields for creating an account", func() {
+		By("preparing accounts")
+		accounts := []types.UserSpec{
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.com",
+				Password: "Password",
+				Groups:   []string{"flatmember"},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1example.com",
+				Password: "Password123!",
+				Groups:   []string{"flatmember"},
+			},
+			{
+				Names:    "",
+				Email:    "user1@example.com",
+				Password: "Password123!",
+				Groups:   []string{"flatmember"},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.com",
+				Password: "Password123!",
+			},
+			{
+				Names:    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+				Email:    "user1@example.com",
+				Password: "Password123!",
+				Groups:   []string{"flatmember"},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx@example.com",
+				Password: "Password123!",
+				Groups:   []string{"flatmember"},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.com",
+				Password: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+				Groups:   []string{"flatmember"},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.com",
+				Password: "Password123!",
+				Groups:   []string{""},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.com",
+				Password: "Password123!",
+				Groups:   []string{"non existent group"},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.com",
+				Password: "test",
+				Groups:   []string{"flatmember"},
+			},
+		}
+
+		for _, account := range accounts {
+			accountData, err := json.Marshal(account)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+			By("creating a user accounts")
+			apiEndpoint := "api/admin/users"
+			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountData)
+			Expect(err).To(BeNil(), "API should return error")
+			Expect(resp.StatusCode).To(Equal(400), "API must have return code of 400")
+			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			userAccountJSON, err := json.Marshal(userAccountResponse)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+			var userAccount types.UserSpec
+			json.Unmarshal(userAccountJSON, &userAccount)
+
+			By("checking the results")
+			Expect(userAccount.Id).To(Equal(""), "User account Id must be empty")
+			if userAccount.Names != "" {
+				Expect(userAccount.Names).To(Equal(account.Names), "User account names must match what was posted")
+			}
+		}
+	})
 })
 
-func httpRequestWithHeader(verb string, url string, data interface{}) (resp *http.Response, err error) {
-	req, err := http.NewRequest(verb, url, bytes.NewBuffer([]byte(fmt.Sprintf("%v", data))))
+func httpRequestWithHeader(verb string, url string, data []byte) (resp *http.Response, err error) {
+	req, err := http.NewRequest(verb, url, bytes.NewBuffer(data))
 	req.Header.Set("Authorization", "bearer "+jwtToken)
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}
