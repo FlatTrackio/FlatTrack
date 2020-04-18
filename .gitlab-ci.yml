@@ -101,6 +101,7 @@ test_backend_e2e:
   image: golang:1.13.10-alpine3.11
   variables:
     APP_DB_HOST: postgres
+    CGO_ENABLED: false
   services:
     - postgres:12.2-alpine
   before_script:
