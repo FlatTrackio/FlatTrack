@@ -1,10 +1,14 @@
 stages:
   - build
+  - test
 
 variables:
   ARCH_DEFAULT: "amd64"
   APP_BUILD_VERSION: 0.0.0
   APP_BUILD_MODE: development
+  POSTGRES_DB: flattrack
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
 
 .docker-build-pre-script: &docker-build-pre-script |
   set -x
@@ -91,3 +95,20 @@ build-armv7-release:
     - *docker-build-taggable-name
     - *docker-pre-build-release-version
     - *docker-build
+
+test_backend_e2e:
+  stage: test
+  image: golang:1.13.10-alpine3.11
+  variables:
+    APP_DB_HOST: postgres
+  services:
+    - postgres:12.2-alpine
+  before_script:
+    - apk add git
+    - go get github.com/onsi/ginkgo/ginkgo
+    - go get github.com/onsi/gomega/...
+    - go build -o flattrack src/backend/main.go
+    - ./flattrack &
+  script:
+    - ginkgo test/backend/e2e
+

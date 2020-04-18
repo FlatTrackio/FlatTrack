@@ -4,26 +4,67 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
+	"gitlab.com/flattrack/flattrack/src/backend/database"
+	"gitlab.com/flattrack/flattrack/src/backend/migrations"
+	"gitlab.com/flattrack/flattrack/src/backend/registration"
 	"gitlab.com/flattrack/flattrack/src/backend/routes"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
-
-/*
-  note:
-    due to the current lack of a client library and/or testing frame work, e2e test currently require an already set up instance
-*/
 
 var jwtToken string
 
 var _ = Describe("API e2e tests", func() {
 	apiServer := common.GetEnvOrDefault("APP_HOST", "http://localhost:8080")
 	jwtToken = os.Getenv("APP_TEST_JWT")
+
+	cwd, _ := os.Getwd()
+	os.Setenv("APP_DB_MIGRATIONS_PATH", fmt.Sprintf("%v/../../../migrations", cwd))
+
+	regstrationForm := types.Registration{
+		Timezone: "Pacific/Auckland",
+		FlatName: "My flat",
+		Language: "en_US",
+		User: types.UserSpec{
+			Names:    "Admin account",
+			Email:    "adminaccount@example.com",
+			Password: "Password123!",
+			Groups:   []string{"flatmember", "admin"},
+		},
+	}
+
+	// _ = godotenv.Load(".env")
+	db, err := database.DB(common.GetDBusername(), common.GetDBpassword(), common.GetDBhost(), common.GetDBdatabase())
+	if err != nil {
+		log.Fatalln(err)
+		return
+	}
+
+	BeforeSuite(func() {
+		err = migrations.Reset(db)
+		Expect(err).To(BeNil(), "failed to reset migrations")
+		err = migrations.Migrate(db)
+		Expect(err).To(BeNil(), "failed to migrate")
+
+		registered, jwt, err := registration.Register(db, regstrationForm)
+
+		Expect(err).To(BeNil(), "failed to register the instance")
+		Expect(jwt).ToNot(Equal(""), "failed to register the instance")
+		Expect(registered).To(Equal(true), "failed to register the instance")
+
+		jwtToken = jwt
+	})
+
+	AfterSuite(func() {
+		err = migrations.Reset(db)
+		Expect(err).To(BeNil(), "failed to reset migrations")
+	})
 
 	It("should reach root of API endpoint", func() {
 		By("fetching from API's root")
