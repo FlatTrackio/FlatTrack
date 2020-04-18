@@ -95,7 +95,7 @@ var _ = Describe("API e2e tests", func() {
 		Expect(userAccount.Email).ToNot(Equal(""), "User account email must not be empty")
 	})
 
-	It("should allow the creation of new user accounts", func() {
+	It("should allow the creation of valid user accounts", func() {
 		accounts := []types.UserSpec{
 			{
 				Names:    "Joe Bloggs",
@@ -199,6 +199,12 @@ var _ = Describe("API e2e tests", func() {
 				Email:    "user1@example.com",
 				Password: "Password123!",
 				Groups:   []string{""},
+			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.com",
+				Password: "Password123!",
+				Groups:   []string{"flatmember", "non existent group"},
 			},
 			{
 				Names:    "Joe Bloggs",
