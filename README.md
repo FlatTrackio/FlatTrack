@@ -19,11 +19,10 @@
 
 ## Features
 - Fluid, friendly, and modern mobile-first design
-- Compatible with most database types
 
 ### Sections
+- Shopping List
 - Tasks (WIP - no progress)
-- Shopping List (WIP)
 - Noticeboard (WIP - no progress)
 - Shared Calendar (WIP - no progress)
 - Recipes (WIP - no progress)
@@ -34,8 +33,9 @@
 - [golang](https://golang.org) - backend
 - [vuejs](https://vuejs.org) - frontend
 - [gorilla/mux](https://github.com/gorilla/mux) - HTTP multiplexer
-- [bulma](https://bulma.io/) / [buefy](https://buefy.org/) - CSS framework
+- [bulma](https://bulma.io/) + [buefy](https://buefy.org/) - CSS framework
 - [axios](https://github.com/axios/axios) - client-side HTTP request library
+- [ginkgo & gomega](https://onsi.github.io/ginkgo/) - tests
 
 ## Getting started
 Various options are available for running a FlatTrack instance:
@@ -43,12 +43,12 @@ Various options are available for running a FlatTrack instance:
 - [Self-hosted Kubernetes](#) (recommended)
 - [Self-hosted Docker-Compose](#)
 - [Self-hosted Docker](#)
-- [Plain server](#)
+- [Self-hosted plain server](#)
 
 ## Development
 For beginning development, please refer to the [development documentation](docs/DEVELOPMENT.org)
 
 ## License
-Copyright 2018-2019 Caleb Woodbine.  
+Copyright 2019-2020 Caleb Woodbine.  
 This project is licensed under the [AGPL-3.0](http://www.gnu.org/licenses/agpl-3.0.html) and is [Free Software](https://www.gnu.org/philosophy/free-sw.en.html).  
 This program comes with absolutely no warranty.  

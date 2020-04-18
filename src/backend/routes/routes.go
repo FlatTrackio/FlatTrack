@@ -316,7 +316,7 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 		// Check password locally, fall back to remote if incorrect
 		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
 		if err == nil && matches == true && code == 401 {
-			jwtToken, _ = users.GenerateJWTauthToken(db, userInDB.Id, userInDB.AuthNonce)
+			jwtToken, _ = users.GenerateJWTauthToken(db, userInDB.Id, userInDB.AuthNonce, 0)
 			response = "Successfully authenticated user"
 			code = 200
 		}

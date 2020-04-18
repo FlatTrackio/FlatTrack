@@ -59,10 +59,10 @@ func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (val
 
 // CreateUser
 // given a UserSpec, create a user
-func CreateUser(db *sql.DB, user types.UserSpec, requireValidation bool) (userInserted types.UserSpec, err error) {
+func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userInserted types.UserSpec, err error) {
 	var userCreationSecretInserted types.UserCreationSecretSpec
 
-	validUser, err := ValidateUser(db, user, true)
+	validUser, err := ValidateUser(db, user, allowEmptyPassword)
 	if !validUser || err != nil {
 		return userInserted, err
 	}
@@ -275,12 +275,15 @@ func CheckUserPassword(db *sql.DB, email string, password string) (matches bool,
 
 // GenerateJWTauthToken
 // given an email, return a usable JWT token
-func GenerateJWTauthToken(db *sql.DB, id string, authNonce string) (tokenString string, err error) {
+func GenerateJWTauthToken(db *sql.DB, id string, authNonce string, expiresIn time.Duration) (tokenString string, err error) {
+	if expiresIn == 0 {
+		expiresIn = 24 * 5
+	}
 	secret, err := system.GetJWTsecret(db)
 	if err != nil {
 		return "", err
 	}
-	expirationTime := time.Now().Add(time.Hour * 24 * 5)
+	expirationTime := time.Now().Add(time.Hour * expiresIn)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, types.JWTclaim{
 		Id:        id,
 		AuthNonce: authNonce,
@@ -533,12 +536,12 @@ func ConfirmUserAccount(db *sql.DB, id string, secret string, user types.UserSpe
 	}
 
 	userAccountPatch := types.UserSpec{
-		Names: user.Names,
-		Email: user.Email,
-		Password: user.Password,
-		Birthday: user.Birthday,
+		Names:       user.Names,
+		Email:       user.Email,
+		Password:    user.Password,
+		Birthday:    user.Birthday,
 		PhoneNumber: user.PhoneNumber,
-		Registered: true,
+		Registered:  true,
 	}
 	userConfirmed, err := PatchProfile(db, userCreationSecret.UserId, userAccountPatch)
 	if err != nil {
@@ -549,7 +552,7 @@ func ConfirmUserAccount(db *sql.DB, id string, secret string, user types.UserSpe
 	}
 	err = DeleteUserCreationSecret(db, id)
 
-	return GenerateJWTauthToken(db, userInDB.Id, userInDB.AuthNonce)
+	return GenerateJWTauthToken(db, userInDB.Id, userInDB.AuthNonce, 0)
 }
 
 // UserAccountExists
