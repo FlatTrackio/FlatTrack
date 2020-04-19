@@ -160,7 +160,7 @@ export default {
         common.DisplayFailureToast('Unable to use password as they either do not match')
         return
       }
-      var birthday = jsBirthday.getTime() / 1000 || 0
+      var birthday = new Date(jsBirthday || 0).getTime() / 1000 || 0
       profile.PatchProfile(names, email, phoneNumber, birthday, password).then(resp => {
         if (resp.data.spec.id === '') {
           common.DisplayFailureToast('Failed to update profile')

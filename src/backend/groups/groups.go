@@ -16,7 +16,8 @@ import (
 // given a userId and a groupId, adds a user to a group
 func AddUserToGroup(db *sql.DB, userId string, groupId string) (err error) {
 	sqlStatement := `insert into user_to_groups (userid, groupid) values ($1, $2)`
-	_, err = db.Query(sqlStatement, userId, groupId)
+	rows, err := db.Query(sqlStatement, userId, groupId)
+	defer rows.Close()
 	return err
 }
 
@@ -24,7 +25,8 @@ func AddUserToGroup(db *sql.DB, userId string, groupId string) (err error) {
 // given a userId and a groupId, removes a user from a group
 func RemoveUserFromGroup(db *sql.DB, userId string, groupId string) (err error) {
 	sqlStatement := `delete from user_to_groups where userid = $1 and groupid = $2`
-	_, err = db.Query(sqlStatement, userId, groupId)
+	rows, err := db.Query(sqlStatement, userId, groupId)
+	defer rows.Close()
 	return err
 }
 

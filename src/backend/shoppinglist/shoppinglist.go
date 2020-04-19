@@ -257,7 +257,8 @@ func DeleteShoppingList(db *sql.DB, listId string) (err error) {
 	}
 
 	sqlStatement := `delete from shopping_list where id = $1`
-	_, err = db.Query(sqlStatement, listId)
+	rows, err := db.Query(sqlStatement, listId)
+	defer rows.Close()
 	return err
 }
 
@@ -350,7 +351,8 @@ func ShoppingItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, er
 // given an item id, remove it
 func RemoveItemFromList(db *sql.DB, itemId string, listId string) (err error) {
 	sqlStatement := `delete from shopping_item where id = $1 and listId = $2`
-	_, err = db.Query(sqlStatement, itemId, listId)
+	rows, err := db.Query(sqlStatement, itemId, listId)
+	defer rows.Close()
 	return err
 }
 
@@ -358,7 +360,8 @@ func RemoveItemFromList(db *sql.DB, itemId string, listId string) (err error) {
 // given an item id, remove all items
 func RemoveAllItemsFromList(db *sql.DB, listId string) (err error) {
 	sqlStatement := `delete from shopping_item where listId = $1`
-	_, err = db.Query(sqlStatement, listId)
+	rows, err := db.Query(sqlStatement, listId)
+	defer rows.Close()
 	return err
 }
 

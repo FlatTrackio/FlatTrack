@@ -177,7 +177,7 @@ export default {
         common.DisplayFailureToast('Passwords do not match')
         return
       }
-      birthday = jsBirthday.getTime() / 1000 || 0
+      birthday = new Date(jsBirthday || 0).getTime() / 1000 || 0
 
       var groups = []
       groupsFull.map(group => {

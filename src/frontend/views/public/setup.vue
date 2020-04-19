@@ -195,7 +195,8 @@ export default {
         common.DisplayFailureToast('Error passwords do not match')
         return
       }
-      form.user.birthday = form.user.jsBirthday.getTime() / 1000 || 0
+
+      form.user.birthday = new Date(form.user.jsBirthday || 0).getTime() / 1000 || 0
 
       const loadingComponent = Loading.open({
         container: null

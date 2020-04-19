@@ -545,6 +545,65 @@ var _ = Describe("API e2e tests", func() {
 
 	})
 
+	It("should disallow a deleted account to log in", func() {
+		account := types.UserSpec{
+			Names: "Joe Bloggs",
+			Email: "user123@example.com",
+			Password: "Password123!",
+			PhoneNumber: "64200000000",
+			Birthday: 43200,
+			Groups: []string{"flatmember"},
+		}
+		accountData, err := json.Marshal(account)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		By("creating a user accounts")
+		apiEndpoint := "api/admin/users"
+		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountData, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountJSON, err := json.Marshal(userAccountResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var userAccount types.UserSpec
+		json.Unmarshal(userAccountJSON, &userAccount)
+
+		By("checking the response")
+		Expect(userAccount.Id).ToNot(Equal(""), "User account Id must not be empty")
+		Expect(userAccount.Names).To(Equal(account.Names), "User account names must match what was posted")
+		Expect(userAccount.Password).To(Equal(""), "User account password must return an empty string")
+
+		By("logging in")
+		apiEndpoint = "api/user/auth"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountData, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
+
+		By("checking validation of the token")
+		apiEndpoint = "api/user/auth"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		userAccountLoginValid := routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+		Expect(userAccountLoginValid).To(Equal(true), "JWT should be valid")
+
+		By("deleting the account")
+		apiEndpoint = "api/admin/users/" + userAccount.Id
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+
+		By("checking validation of the token")
+		apiEndpoint = "api/user/auth"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(401), "API must have return code of 401")
+		userAccountLoginValid = routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+		Expect(userAccountLoginValid).To(Equal(false), "JWT should be valid")
+	})
+
 	It("should disallow non-existent confirms", func() {
 		confirmsIds := []string{
 			"a",
@@ -604,10 +663,10 @@ var _ = Describe("API e2e tests", func() {
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
 		userAccountLoginValid := routes.GetHTTPresponseBodyContents(resp).Data
-		Expect(userAccountLoginValid).To(Equal(true), "JWT is valid")
+		Expect(userAccountLoginValid).To(Equal(true), "JWT should be valid")
 	})
 
-	It("should return the profile of the same account", func() {
+	It("should return the profile of the same account and allow patching of an account", func() {
 		account := types.UserSpec{
 			Names: "Joe Bloggs",
 			Email: "user123@example.com",
@@ -659,6 +718,38 @@ var _ = Describe("API e2e tests", func() {
 		Expect(profile.Email).To(Equal(userAccount.Email), "profile email does not match account email")
 		Expect(profile.PhoneNumber).To(Equal(userAccount.PhoneNumber), "profile phoneNumber does not match account phoneNumber")
 		Expect(profile.Birthday).To(Equal(userAccount.Birthday), "profile birthday does not match account birthday")
+
+		By("patching the profile")
+		apiEndpoint = "api/user/profile"
+		profilePatch := types.UserSpec{
+			Id: "aaaaaaa",
+			Names: "Jonno bloggo",
+			Email: "user2@example.com",
+			Password: "Password1234!",
+			PhoneNumber: "+64200000001",
+			Birthday: 432001,
+		}
+		profilePatchData, err := json.Marshal(profilePatch)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		profileResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+		profileJSON, err = json.Marshal(profileResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		profile = types.UserSpec{}
+		json.Unmarshal(profileJSON, &profile)
+		Expect(profile.Id).To(Equal(account.Id), "profile id does not match account id")
+		Expect(profile.Names).To(Equal(profilePatch.Names), "profile names does not match profilePatch names")
+		Expect(profile.Email).To(Equal(profilePatch.Email), "profile email does not match profilePatch email")
+		Expect(profile.PhoneNumber).To(Equal(profilePatch.PhoneNumber), "profile phoneNumber does not match profilePatch phoneNumber")
+		Expect(profile.Birthday).To(Equal(profilePatch.Birthday), "profile birthday does not match profilePatch birthday")
+
+		By("getting a new JWT using new credentials")
+		apiEndpoint = "api/user/auth"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
 
 		By("deleting the account")
 		apiEndpoint = "api/admin/users/" + userAccount.Id

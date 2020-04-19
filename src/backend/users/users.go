@@ -257,7 +257,8 @@ func DeleteUserById(db *sql.DB, id string) (err error) {
 	}
 
 	sqlStatement := `update users set names = '(Deleted User)', email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
-	_, err = db.Query(sqlStatement, id)
+	rows, err := db.Query(sqlStatement, id)
+	defer rows.Close()
 	return err
 }
 
@@ -321,7 +322,7 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 
 	reqClaims := token.Claims.(*types.JWTclaim)
 	user, err := GetUserById(db, reqClaims.Id, true)
-	if err != nil || user.Id == "" {
+	if err != nil || user.Id == "" || user.DeletionTimestamp != 0 {
 		return false, errors.New("Unable to find the user account which the authentication token belongs to")
 	}
 
@@ -336,7 +337,8 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 // updates the authNonce to invalidate auth tokens
 func InvalidateAllAuthTokens(db *sql.DB, id string) (err error) {
 	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid where id = $1`
-	_, err = db.Query(sqlStatement, id)
+	rows, err := db.Query(sqlStatement, id)
+	defer rows.Close()
 	return err
 }
 
@@ -501,7 +503,8 @@ func CreateUserCreationSecret(db *sql.DB, userId string) (userCreationSecretInse
 // deletes the acccount creation secret, after it's been used
 func DeleteUserCreationSecret(db *sql.DB, id string) (err error) {
 	sqlStatement := `delete from user_creation_secret where id = $1`
-	_, err = db.Query(sqlStatement, id)
+	rows, err := db.Query(sqlStatement, id)
+	defer rows.Close()
 	return err
 }
 
@@ -509,7 +512,8 @@ func DeleteUserCreationSecret(db *sql.DB, id string) (err error) {
 // deletes the acccount creation secret by userid, after it's been used
 func DeleteUserCreationSecretByUserId(db *sql.DB, userId string) (err error) {
 	sqlStatement := `delete from user_creation_secret where userId = $1`
-	_, err = db.Query(sqlStatement, userId)
+	rows, err := db.Query(sqlStatement, userId)
+	defer rows.Close()
 	return err
 }
 

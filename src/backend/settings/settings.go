@@ -27,7 +27,8 @@ func SetFlatName(db *sql.DB, flatName string) (err error) {
 		return errors.New("Unable to set the flat name as it is either invalid, too short, or too long")
 	}
 	sqlStatement := `update settings set value = $1 where name = $2;`
-	_, err = db.Query(sqlStatement, flatName, "flatName")
+	rows, err := db.Query(sqlStatement, flatName, "flatName")
+	defer rows.Close()
 	return err
 }
 
@@ -50,7 +51,8 @@ func GetTimezone(db *sql.DB) (timezone string, err error) {
 // given a timezone, set the timezone of the FlatTrack instance
 func SetTimezone(db *sql.DB, timezone string) (err error) {
 	sqlStatement := `update settings set value = $1 where name = 'timezone';`
-	_, err = db.Query(sqlStatement, timezone)
+	rows, err := db.Query(sqlStatement, timezone)
+	defer rows.Close()
 	return err
 }
 
@@ -73,6 +75,7 @@ func GetLanguage(db *sql.DB) (language string, err error) {
 // given a language, set the language of the FlatTrack instance
 func SetLanguage(db *sql.DB, language string) (err error) {
 	sqlStatement := `update settings set value = $1 where name = 'language';`
-	_, err = db.Query(sqlStatement, language)
+	rows, err := db.Query(sqlStatement, language)
+	defer rows.Close()
 	return err
 }

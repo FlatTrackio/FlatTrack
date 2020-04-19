@@ -28,7 +28,8 @@ func GetHasInitialized(db *sql.DB) (initialized string, err error) {
 // set if the FlatTrack instance has been initialized
 func SetHasInitialized(db *sql.DB) (err error) {
 	sqlStatement := `update system set value = 'true' where name = 'initialized'`
-	_, err = db.Query(sqlStatement)
+	rows, err := db.Query(sqlStatement)
+	defer rows.Close()
 	return err
 }
 
