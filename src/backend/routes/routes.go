@@ -964,7 +964,7 @@ func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch user account creation secret"
-		code := 500
+		code := 404
 
 		vars := mux.Vars(r)
 		id := vars["id"]
