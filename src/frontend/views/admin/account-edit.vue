@@ -130,7 +130,6 @@ import common from '@/frontend/common/common'
 import groups from '@/frontend/requests/authenticated/groups'
 import flatmates from '@/frontend/requests/authenticated/flatmates'
 import adminFlatmates from '@/frontend/requests/admin/flatmates'
-import moment from 'moment'
 import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
@@ -138,11 +137,13 @@ export default {
   data () {
     var today = new Date()
     var maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getYear())
+    var minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getYear())
     var windowOrigin = window.location.origin
 
     return {
       windowOrigin: windowOrigin,
       maxDate: maxDate,
+      minDate: minDate,
       showRegistrationCompletionDetails: false,
       userAccountConfirmId: null,
       userAccountConfirmSecret: null,
@@ -214,7 +215,8 @@ export default {
         common.DisplayFailureToast('Passwords do not match')
         return
       }
-      birthday = Number(moment(jsBirthday).format('X'))
+      birthday = jsBirthday.getTime() / 1000 || 0
+
       var groups = []
       groupsFull.map(group => {
         if (group === '' || group.name === '') {

@@ -70,6 +70,7 @@
           <b-datepicker
             v-model="jsBirthday"
             :max-date="maxDate"
+            :min-date="minDate"
             :show-week-numbers="true"
             :focused-date="focusedDate"
             placeholder="Click to select birthday"
@@ -81,33 +82,41 @@
         <br/>
 
         <b-field label="Password">
-          <b-input type="password"
-                   v-model="password"
-                   password-reveal
-                   placeholder="Enter to update your password"
-                   icon="textbox-password"
-                   size="is-medium"
-                   maxlength="70">
+          <b-input
+            type="password"
+            v-model="password"
+            password-reveal
+            placeholder="Enter to update your password"
+            icon="textbox-password"
+            size="is-medium"
+            maxlength="70">
           </b-input>
         </b-field>
         <b-field label="Confirm password">
-          <b-input type="password"
-                   v-model="passwordConfirm"
-                   password-reveal
-                   placeholder="Confirm to update your password"
-                   maxlength="70"
-                   size="is-medium"
-                   icon="textbox-password">
+          <b-input
+            type="password"
+            v-model="passwordConfirm"
+            password-reveal
+            placeholder="Confirm to update your password"
+            maxlength="70"
+            size="is-medium"
+            icon="textbox-password">
           </b-input>
         </b-field>
-        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday)">Update profile</b-button>
+        <b-button
+          type="is-success"
+          size="is-medium"
+          rounded
+          native-type="submit"
+          @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday)">
+          Update profile
+        </b-button>
       </section>
     </div>
   </div>
 </template>
 
 <script>
-import moment from 'moment'
 import common from '@/frontend/common/common'
 import profile from '@/frontend/requests/authenticated/profile'
 
@@ -116,9 +125,11 @@ export default {
   data () {
     const today = new Date()
     const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDate())
+    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())
 
     return {
       maxDate: maxDate,
+      minDate: minDate,
       focusedDate: maxDate,
       passwordConfirm: '',
       jsBirthday: null,
@@ -149,7 +160,7 @@ export default {
         common.DisplayFailureToast('Unable to use password as they either do not match')
         return
       }
-      var birthday = Number(moment(jsBirthday).format('X')) || 0
+      var birthday = jsBirthday.getTime() / 1000 || 0
       profile.PatchProfile(names, email, phoneNumber, birthday, password).then(resp => {
         if (resp.data.spec.id === '') {
           common.DisplayFailureToast('Failed to update profile')

@@ -111,5 +111,5 @@ test_backend_e2e:
     - go build -o flattrack src/backend/main.go
     - ./flattrack &
   script:
-    - ginkgo test/backend/e2e
+    - ginkgo --randomizeAllSpecs test/backend/e2e
 

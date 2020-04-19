@@ -150,11 +150,13 @@ func RegexMatchPhoneNumber(phoneNumber string) bool {
 
 // ValidateBirthday
 // return where a birthday timestamp is valid
-// validation requirements is (current year - 15)
+// validation requirements is between 100 and 15 years ago
 func ValidateBirthday(timestamp int64) bool {
 	dateNow := time.Now()
 	timestampParsed := time.Unix(timestamp, 0)
-	return timestampParsed.Year()-dateNow.Year() >= 15
+	above15yearsAgo := dateNow.Year()-timestampParsed.Year() >= 15
+	below100yearsAgo := dateNow.Year()-timestampParsed.Year() <= 100
+	return above15yearsAgo && below100yearsAgo
 }
 
 // HashSHA512

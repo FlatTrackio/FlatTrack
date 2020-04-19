@@ -61,6 +61,10 @@
         <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; PatchShoppingList(name, notes) }" v-if="editing">Done</b-button>
         <br/>
         <br/>
+        <label class="label">Search for items</label>
+        <b-field>
+          <b-input size="is-medium" placeholder="Search items" type="search"></b-input>
+        </b-field>
         <div>
           <section>
             <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/new')">

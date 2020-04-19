@@ -122,17 +122,18 @@
 import common from '@/frontend/common/common'
 import groups from '@/frontend/requests/authenticated/groups'
 import adminFlatmates from '@/frontend/requests/admin/flatmates'
-import moment from 'moment'
 
 export default {
   name: 'new account',
   data () {
     const today = new Date()
     const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDay())
+    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDay())
 
     return {
       focusedDate: maxDate,
       maxDate: maxDate,
+      minDate: minDate,
       setOnlyRequiredFields: true,
       names: null,
       email: null,
@@ -176,7 +177,8 @@ export default {
         common.DisplayFailureToast('Passwords do not match')
         return
       }
-      birthday = Number(moment(jsBirthday).format('X')) || 0
+      birthday = jsBirthday.getTime() / 1000 || 0
+
       var groups = []
       groupsFull.map(group => {
         if (group === '' || group.name === '') {
