@@ -191,6 +191,11 @@ var _ = Describe("API e2e tests", func() {
 				Groups:      []string{"flatmember", "admin"},
 				PhoneNumber: "64-20-000-000",
 			},
+			{
+				Names:    "Joe Bloggs",
+				Email:    "user1@example.com",
+				Groups:   []string{"flatmember"},
+			},
 		}
 		for _, account := range accounts {
 			accountData, err := json.Marshal(account)
@@ -437,6 +442,97 @@ var _ = Describe("API e2e tests", func() {
 			Expect(err).To(BeNil(), "API should not return error")
 			Expect(resp.StatusCode).To(Equal(404), "API must have return code of 404")
 		}
+	})
+
+	It("should create account confirms when a password is not provided and allow it to be confirmed", func() {
+		account := types.UserSpec{
+			Names: "Joe Bloggs",
+			Email: "user1@example.com",
+			Groups: []string{"flatmember"},
+		}
+
+		accountData, err := json.Marshal(account)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		By("creating a user accounts")
+		apiEndpoint := "api/admin/users"
+		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountData)
+		Expect(err).To(BeNil(), "API should not return error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountJSON, err := json.Marshal(userAccountResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var userAccount types.UserSpec
+		json.Unmarshal(userAccountJSON, &userAccount)
+
+		By("checking the results")
+		Expect(userAccount.Id).ToNot(Equal(""), "User account Id must not be empty")
+		Expect(userAccount.Names).To(Equal(account.Names), "User account names must match what was posted")
+		Expect(userAccount.Password).To(Equal(""), "User account password must return an empty string")
+
+		By("list user account confirms")
+		apiEndpoint = "api/admin/useraccountconfirms"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v?userId=%v", apiServer, apiEndpoint, userAccount.Id), nil)
+		Expect(err).To(BeNil(), "API should not return error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		confirmsListResponse := routes.GetHTTPresponseBodyContents(resp).List
+		confirmsListJSON, err := json.Marshal(confirmsListResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var confirmsList []types.UserCreationSecretSpec
+		json.Unmarshal(confirmsListJSON, &confirmsList)
+		Expect(len(confirmsList) > 0).To(Equal(true), "must contain at least one confirm")
+
+		By("fetching the user account confirm")
+		apiEndpoint = "api/admin/useraccountconfirms/" + confirmsList[0].Id
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil)
+		Expect(err).To(BeNil(), "API should not return error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		confirmResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		confirmJSON, err := json.Marshal(confirmResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var confirm types.UserCreationSecretSpec
+		json.Unmarshal(confirmJSON, &confirm)
+		Expect(confirm.Id).ToNot(Equal(""), "confirm id must not be empty")
+		Expect(confirm.UserId).ToNot(Equal(""), "confirm userid must not be empty")
+		Expect(confirm.Secret).ToNot(Equal(""), "confirm secret must not be empty")
+		Expect(confirm.Valid).To(Equal(true), "confirm valid must be true")
+
+		By("fetching the user account confirm")
+		apiEndpoint = "api/user/confirm/" + confirm.Id + "?secret=" + confirm.Secret
+		confirmUserAccount := types.UserSpec{
+			Password: "Password123!",
+		}
+		confirmUserAccountJSON, err := json.Marshal(confirmUserAccount)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), confirmUserAccountJSON)
+		Expect(err).To(BeNil(), "API should not return error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+
+		By("fetching the user account confirm to check for it to be unavailable")
+		apiEndpoint = "api/admin/useraccountconfirms/" + confirmsList[0].Id
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil)
+		Expect(err).To(BeNil(), "API should not return error")
+		Expect(resp.StatusCode).To(Equal(404), "API must have return code of 200")
+
+		By("fetching the user account to check if it's been registered")
+		apiEndpoint = "api/admin/users/" + userAccount.Id
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountData)
+		Expect(err).To(BeNil(), "API should not return error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountJSON, err = json.Marshal(userAccountResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var userAccountRegistered types.UserSpec
+		json.Unmarshal(userAccountJSON, &userAccountRegistered)
+		Expect(userAccountRegistered.Id).ToNot(Equal(""), "user account id must not be empty")
+		Expect(userAccountRegistered.Registered).To(Equal(true), "account must be registered")
+
+		By("deleting the account")
+		apiEndpoint = "api/admin/users/" + userAccount.Id
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountData)
+		Expect(err).To(BeNil(), "API should not return error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+
 	})
 })
 
