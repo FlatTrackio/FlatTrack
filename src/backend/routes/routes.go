@@ -117,7 +117,7 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &user)
 
 		userAccount, err := users.CreateUser(db, user, user.Password == "")
-		if err == nil {
+		if err == nil && userAccount.Id != "" {
 			code = 200
 			response = "Created user account"
 		} else {
