@@ -218,6 +218,7 @@ func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.
 	if err != nil {
 		return user, err
 	}
+	defer rows.Close()
 	rows.Next()
 	user, err = UserObjectFromRows(rows)
 	if err != nil {
@@ -415,6 +416,7 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 		// TODO add roll back, if there's failure
 		return userAccountPatched, err
 	}
+	defer rows.Close()
 	rows.Next()
 	userAccountPatched, err = UserObjectFromRows(rows)
 	if err != nil || userAccountPatched.Id == "" {
@@ -447,6 +449,7 @@ func GetAllUserCreationSecrets(db *sql.DB, secretsSelector types.UserCreationSec
 	if err != nil {
 		return creationSecrets, err
 	}
+	defer rows.Close()
 	for rows.Next() {
 		creationSecret, err := UserCreationSecretsFromRows(rows)
 		if err != nil {
