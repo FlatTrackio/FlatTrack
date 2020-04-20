@@ -104,7 +104,7 @@ func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingList
 // GetShoppingListItems
 // returns a list of items on a shopping list
 func GetShoppingListItems(db *sql.DB, listId string, itemSelector types.ShoppingItemSelector) (items []types.ShoppingItemSpec, err error) {
-	sqlStatement := `select * from shopping_item where listId = $1 order by tag`
+	sqlStatement := `select * from shopping_item where listId = $1 order by tag, name`
 	rows, err := db.Query(sqlStatement, listId)
 	if err != nil {
 		return items, err

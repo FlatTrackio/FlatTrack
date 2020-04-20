@@ -289,9 +289,16 @@ export default {
     this.GetShoppingListItems()
   },
   async created () {
+    var lastCreated = new Date()
     this.intervalLoop = window.setInterval(() => {
       this.GetShoppingList()
       this.GetShoppingListItems()
+
+      var now = new Date()
+      var timePassed = (now.getTime() / 1000) - (lastCreated.getTime() / 1000)
+      if (timePassed >= 3600 / 4) {
+        window.clearInterval(this.intervalLoop)
+      }
     }, 3 * 1000)
   },
   beforeDestroy () {

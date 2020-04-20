@@ -22,7 +22,7 @@
                     </b-icon>
                   </div>
                   <div class="media-content">
-                    <p class="title is-3">Add a new list</p>
+                    <p class="title is-4">Add a new list</p>
                   </div>
                 </div>
               </div>
