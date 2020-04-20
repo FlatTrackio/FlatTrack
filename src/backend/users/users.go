@@ -38,7 +38,7 @@ func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (val
 	for _, groupItem := range user.Groups {
 		group, err := groups.GetGroupByName(db, groupItem)
 		if err != nil || group.Id == "" {
-			return false, errors.New(fmt.Sprintf("Unable to use the provide group '%v' as it is invalid", groupItem))
+			return false, errors.New(fmt.Sprintf("Unable to use the provided group '%v' as it is invalid", groupItem))
 		}
 	}
 
@@ -96,7 +96,7 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
 	for _, groupItem := range user.Groups {
 		group, err := groups.GetGroupByName(db, groupItem)
 		if err != nil || group.Id == "" {
-			return userInserted, errors.New(fmt.Sprintf("Unable to use the provide group '%v' as it is invalid", groupItem))
+			return userInserted, errors.New(fmt.Sprintf("Unable to use the provided group '%v' as it is invalid", groupItem))
 		}
 		err = groups.AddUserToGroup(db, userInserted.Id, group.Id)
 		if err != nil {

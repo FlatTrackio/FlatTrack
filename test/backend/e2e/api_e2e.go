@@ -221,7 +221,7 @@ var _ = Describe("API e2e tests", func() {
 
 			By("deleting the account")
 			apiEndpoint = "api/admin/users/" + userAccount.Id
-			resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+			resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
 			Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
 		}
@@ -420,7 +420,7 @@ var _ = Describe("API e2e tests", func() {
 
 			By("deleting the account")
 			apiEndpoint = "api/admin/users/" + userAccount.Id
-			resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+			resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
 			Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
 		}
@@ -539,7 +539,7 @@ var _ = Describe("API e2e tests", func() {
 
 		By("deleting the account")
 		apiEndpoint = "api/admin/users/" + userAccount.Id
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
 
@@ -753,7 +753,7 @@ var _ = Describe("API e2e tests", func() {
 
 		By("deleting the account")
 		apiEndpoint = "api/admin/users/" + userAccount.Id
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
 	})
@@ -816,7 +816,7 @@ var _ = Describe("API e2e tests", func() {
 
 		By("deleting the account")
 		apiEndpoint = "api/admin/users/" + userAccount.Id
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
 
@@ -833,6 +833,217 @@ var _ = Describe("API e2e tests", func() {
 
 		By("checking the response")
 		Expect(len(userAccounts)).To(Equal(1), "invalid amount of users")
+	})
+
+	It("should return a user by their id", func() {
+		By("creating a user account")
+		account := types.UserSpec{
+			Names: "Joe Bloggs",
+			Email: "user123@example.com",
+			Password: "Password123!",
+			PhoneNumber: "64200000000",
+			Birthday: 43200,
+			Groups: []string{"flatmember"},
+		}
+		accountBytes, err := json.Marshal(account)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		apiEndpoint := "api/admin/users"
+		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountBytes, err := json.Marshal(userAccountResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var userAccount types.UserSpec
+		json.Unmarshal(userAccountBytes, &userAccount)
+
+		By("checking the response")
+		Expect(userAccount.Id).ToNot(Equal(""), "User account Id must not be empty")
+
+		By("fetch the user account by the account's id")
+		apiEndpoint = "api/admin/users/" + userAccount.Id
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountBytes, err = json.Marshal(userAccountResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		userAccount = types.UserSpec{}
+		json.Unmarshal(userAccountBytes, &userAccount)
+
+		By("checking the response")
+		Expect(userAccount.Id).ToNot(Equal(""), "User account Id must not empty")
+		Expect(userAccount.Names).To(Equal(account.Names), "User account Names must be equal to account Names")
+		Expect(userAccount.Email).To(Equal(account.Email), "User account Email must be equal to account Email")
+		Expect(userAccount.PhoneNumber).To(Equal(account.PhoneNumber), "User account PhoneNumber must be equal to account PhoneNumber")
+		Expect(userAccount.Birthday).To(Equal(account.Birthday), "User account PhoneNumber must be equal to account PhoneNumber")
+		Expect(userAccount.Groups).To(Equal(account.Groups), "User account Groups must be equal to account Groups")
+
+		By("deleting the account")
+		apiEndpoint = "api/admin/users/" + userAccount.Id
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+	})
+
+	It("should fail to list non-existent user accounts", func() {
+		ids := []string{
+			"aa",
+			"234fasdsad",
+			"----------asd",
+			",,,,,,,,,,,,",
+			"0-93jr9-q23nfiunq398nr3948n5q3c3",
+			"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+		}
+
+		By("fetch the user account by the account's id")
+		for _, id := range ids {
+			apiEndpoint := "api/admin/users/" + id
+			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			Expect(err).To(BeNil(), "Request should not return an error")
+			Expect(resp.StatusCode).To(Equal(404), "API must have return code of 404")
+		}
+	})
+
+	It("should list groups and include the default groups", func() {
+		apiEndpoint := "api/groups"
+		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		groupsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		groupsBytes, err := json.Marshal(groupsResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var groups []types.GroupSpec
+		json.Unmarshal(groupsBytes, &groups)
+
+		Expect(len(groups) >= 2).To(Equal(true), "There must be at least two groups")
+
+		for _, groupItem := range groups {
+			apiEndpoint := "api/groups/" + groupItem.Id
+			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			Expect(err).To(BeNil(), "Request should not return an error")
+			Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+			groupResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			groupBytes, err := json.Marshal(groupResponse)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+			var group types.GroupSpec
+			json.Unmarshal(groupBytes, &group)
+
+			Expect(groupItem.Id).To(Equal(group.Id), "GroupItem Id must match Group Id")
+			Expect(groupItem.Name).To(Equal(group.Name), "GroupItem Name must match Group Name")
+			Expect(groupItem.DefaultGroup).To(Equal(group.DefaultGroup), "GroupItem DefaultGroup must match Group DefaultGroup")
+			Expect(groupItem.Description).To(Equal(group.Description), "GroupItem Description must match Group Description")
+		}
+	})
+
+	It("should fail to list groups which don't exist", func() {
+		ids := []string{
+			"aa",
+			"234fasdsad",
+			"----------asd",
+			",,,,,,,,,,,,",
+			"0-93jr9-q23nfiunq398nr3948n5q3c3",
+			"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+		}
+
+		By("fetch the user account by the account's id")
+		for _, id := range ids {
+			apiEndpoint := "api/groups/" + id
+			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			Expect(err).To(BeNil(), "Request should not return an error")
+			Expect(resp.StatusCode).To(Equal(404), "API must have return code of 404")
+		}
+	})
+
+	It("should have the correct account groups for user account checking", func() {
+		accounts := []types.UserSpec{
+			{
+				Names:       "Joe Bloggs",
+				Email:       "user1@example.com",
+				Password:    "Password123!",
+				Groups:      []string{"flatmember", "admin"},
+			},
+			{
+				Names:       "Joe Bloggs 2",
+				Email:       "user2@example.com",
+				Password:    "Password123!",
+				Groups:      []string{"flatmember"},
+			},
+		}
+
+		By("fetching all groups")
+		apiEndpoint := "api/groups"
+		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+		groupsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		groupsBytes, err := json.Marshal(groupsResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var groups []types.GroupSpec
+		json.Unmarshal(groupsBytes, &groups)
+
+		for _, account := range accounts {
+			accountBytes, err := json.Marshal(account)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+			By("creating a user account")
+			apiEndpoint := "api/admin/users"
+			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+			Expect(err).To(BeNil(), "Request should not return an error")
+			Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			userAccountJSON, err := json.Marshal(userAccountResponse)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+			var userAccount types.UserSpec
+			json.Unmarshal(userAccountJSON, &userAccount)
+
+			By("checking the response")
+			Expect(userAccount.Id).ToNot(Equal(""), "User account Id must not be empty")
+
+			By("creating fetching user accounts")
+			apiEndpoint = "api/admin/users/" + userAccount.Id
+			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			Expect(err).To(BeNil(), "Request should not return an error")
+			Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+			userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+			userAccountJSON, err = json.Marshal(userAccountResponse)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+			userAccount = types.UserSpec{}
+			json.Unmarshal(userAccountJSON, &userAccount)
+
+			By("logging in as the new user account")
+			apiEndpoint = "api/user/auth"
+			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+			Expect(err).To(BeNil(), "Request should not return an error")
+			Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+			jwt := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+			Expect(jwt).ToNot(Equal(""), "JWT in response must not be empty")
+
+			defer func() {
+				By("deleting the account")
+				apiEndpoint = "api/admin/users/" + userAccount.Id
+				resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+				Expect(err).To(BeNil(), "Request should not return an error")
+				Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+			}()
+
+			for _, groupItem := range groups {
+				expectGroup := false
+				for _, accountGroup := range account.Groups {
+					if groupItem.Name == accountGroup {
+						expectGroup = true
+					}
+				}
+				By("ensuring user account is or is not in a group")
+				apiEndpoint := "api/user/can-i/group/" + groupItem.Name
+				resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, jwt)
+				Expect(err).To(BeNil(), "Request should not return an error")
+				Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
+				canIgroupResponse := routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+				Expect(canIgroupResponse).To(Equal(expectGroup), "Group was expected for this user account", account.Names, account.Groups, groupItem.Name, expectGroup)
+			}
+		}
 	})
 })
 

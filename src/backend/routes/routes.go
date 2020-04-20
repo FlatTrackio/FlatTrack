@@ -375,7 +375,7 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
 			},
-			Spec: userIsInGroup,
+			Data: userIsInGroup,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}
@@ -887,7 +887,7 @@ func GetAllGroups(db *sql.DB) http.HandlerFunc {
 func GetGroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch groups"
-		code := 500
+		code := 404
 
 		vars := mux.Vars(r)
 		id := vars["id"]

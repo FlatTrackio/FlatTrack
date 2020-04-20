@@ -30,6 +30,14 @@ func RemoveUserFromGroup(db *sql.DB, userId string, groupId string) (err error) 
 	return err
 }
 
+// GroupObjectFromRows
+// constructs a group object from database rows
+func GroupObjectFromRows(rows *sql.Rows) (group types.GroupSpec, err error) {
+	rows.Scan(&group.Id, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp)
+	err = rows.Err()
+	return group, err
+}
+
 // GetAllGroups
 // returns a list of all groups
 func GetAllGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
@@ -41,8 +49,7 @@ func GetAllGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 	defer rows.Close()
 	for rows.Next() {
 		var group types.GroupSpec
-		rows.Scan(&group.Id, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp)
-		err = rows.Err()
+		group, err = GroupObjectFromRows(rows)
 		if err != nil {
 			return groups, err
 		}
@@ -54,30 +61,28 @@ func GetAllGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 // GetGroupByName
 // given a group name, return the group
 func GetGroupByName(db *sql.DB, name string) (group types.GroupSpec, err error) {
-	sqlStatement := `select id, name, defaultGroup from groups where name = $1`
+	sqlStatement := `select * from groups where name = $1`
 	rows, err := db.Query(sqlStatement, name)
 	if err != nil {
 		return group, err
 	}
 	defer rows.Close()
-	for rows.Next() {
-		rows.Scan(&group.Id, &group.Name, &group.DefaultGroup)
-	}
+	rows.Next()
+	group, err = GroupObjectFromRows(rows)
 	return group, err
 }
 
 // GetGroupById
 // given a group id, return the group
 func GetGroupById(db *sql.DB, id string) (group types.GroupSpec, err error) {
-	sqlStatement := `select id, name, defaultGroup from groups where id = $1`
+	sqlStatement := `select * from groups where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
 		return group, err
 	}
 	defer rows.Close()
-	for rows.Next() {
-		rows.Scan(&group.Id, &group.Name, &group.DefaultGroup)
-	}
+	rows.Next()
+	group, err = GroupObjectFromRows(rows)
 	return group, err
 }
 
@@ -145,8 +150,7 @@ func GetDefaultGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 	defer rows.Close()
 	for rows.Next() {
 		var group types.GroupSpec
-		rows.Scan(&group.Id, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp)
-		err = rows.Err()
+		group, err = GroupObjectFromRows(rows)
 		if err != nil {
 			return groups, err
 		}

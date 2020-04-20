@@ -27,7 +27,7 @@ function requireNoAuthToken (to, from, next) {
 
 function checkForAdminGroup (to, from, next) {
   cani.GetCanIgroup('admin').then(resp => {
-    if (resp.data.spec === true) {
+    if (resp.data.data === true) {
       next()
     } else {
       next(from.path)

@@ -77,7 +77,7 @@ export default {
     },
     CanIadmin () {
       cani.GetCanIgroup('admin').then(resp => {
-        this.canUserAccountAdmin = resp.data.spec
+        this.canUserAccountAdmin = resp.data.data
       })
     }
   },
