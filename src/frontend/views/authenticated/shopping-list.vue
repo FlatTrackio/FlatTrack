@@ -24,6 +24,9 @@
                   <div class="media-content">
                     <p class="title is-4">Add a new list</p>
                   </div>
+                  <div class="media-right">
+                    <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                  </div>
                 </div>
               </div>
             </div>

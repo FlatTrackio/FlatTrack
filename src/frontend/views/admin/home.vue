@@ -13,13 +13,25 @@
         <p></p>
         <br>
         <!-- TODO add icons to the left sides of cards -->
-        <div class="tile is-ancestor pointer-cursor-on-hover" v-for="app in apps" v-bind:key="app">
-          <div class="tile is-parent" @click="goToApp(app.ref)">
-            <div class="tile is-child box">
-              <p class="title is-3">{{ app.name }}</p>
-              <p class="subtitle is-5">{{ app.description }}</p>
+        <div v-for="app in apps" v-bind:key="app" >
+          <div class="card pointer-cursor-on-hover" @click="goToApp(app.ref)">
+            <div class="card-content">
+              <div class="media">
+                <div class="media-left">
+                </div>
+                <div class="media-content">
+                  <p class="title is-3">{{ app.name }}</p>
+                  <p class="subtitle is-5">{{ app.description }}</p>
+                </div>
+                <div class="media-right">
+                  <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                </div>
+              </div>
+            </div>
+            <div class="content">
             </div>
           </div>
+          <br />
         </div>
       </section>
     </div>

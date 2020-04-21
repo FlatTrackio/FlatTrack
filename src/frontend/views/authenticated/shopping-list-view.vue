@@ -79,6 +79,9 @@
                   <div class="media-content">
                     <p class="subtitle is-4">Add a new item</p>
                   </div>
+                  <div class="media-right">
+                    <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                  </div>
                 </div>
               </div>
             </div>
@@ -113,6 +116,9 @@
                       </p>
                     </div>
                   </div>
+                  <div class="media-right">
+                    <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                  </div>
                 </div>
               </div>
             </div>
@@ -125,8 +131,8 @@
           <br/>
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
         </p>
-        <b-button type="is-info" @click="PatchShoppingListCompleted(id, !completed)">Mark as {{ completed === false ? 'completed' : 'uncompleted' }}</b-button>
-        <b-button type="is-danger" @click="DeleteShoppingList(id)">Delete list</b-button>
+        <b-button type="is-success" size="is-medium" rounded @click="PatchShoppingListCompleted(id, !completed)">Mark as {{ completed === false ? 'completed' : 'uncompleted' }}</b-button>
+        <b-button type="is-danger" size="is-medium" rounded @click="DeleteShoppingList(id)">Delete list</b-button>
       </section>
     </div>
   </div>

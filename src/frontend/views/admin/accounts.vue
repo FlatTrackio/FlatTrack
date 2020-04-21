@@ -24,6 +24,9 @@
                   <div class="media-content">
                     <p class="title is-4">Add a new flatmate</p>
                   </div>
+                  <div class="media-right">
+                    <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                  </div>
                 </div>
               </div>
             </div>
@@ -43,6 +46,9 @@
                   <div class="media-content">
                     <p class="title is-4">{{ member.names }}</p>
                     <p class="subtitle is-6">Joined {{ TimestampToCalendar(member.creationTimestamp) }}</p>
+                  </div>
+                  <div class="media-right">
+                    <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
                   </div>
                 </div>
                 <div class="content">

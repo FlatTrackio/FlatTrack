@@ -28,6 +28,9 @@
                 </span>
               </p>
             </div>
+            <div class="media-right">
+              <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+            </div>
           </div>
           <div class="content">
             <span v-if="list.notes !== '' && typeof list.notes !== 'undefined'">
