@@ -78,7 +78,7 @@
           </div>
           <br/>
           <br/>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag)">Update</b-button>
+          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag)">Update</b-button>
           <b-button type="is-danger" size="is-medium" rounded native-type="submit" @click="DeleteShoppingListItem(shoppingListId, id)">Delete</b-button>
         </div>
       </section>
@@ -114,7 +114,7 @@ export default {
     }
   },
   methods: {
-    PatchShoppingListItem (listId, itemId, name, notes, price, quantity, tag) {
+    UpdateShoppingListItem (listId, itemId, name, notes, price, quantity, tag, obtained) {
       if (notes === '') {
         notes = undefined
       }
@@ -123,7 +123,7 @@ export default {
       }
 
       price = Number(price)
-      shoppinglist.PatchShoppingListItem(listId, itemId, name, notes, price, quantity, tag).then(resp => {
+      shoppinglist.UpdateShoppingListItem(listId, itemId, name, notes, price, quantity, tag, obtained).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' && typeof item.id !== 'undefined') {
           common.DisplaySuccessToast('Updated item successfully')
@@ -170,6 +170,7 @@ export default {
       this.price = item.price
       this.quantity = item.quantity
       this.tag = item.tag
+      this.obtained = item.obtained
       this.author = item.author
       this.authorLast = item.authorLast
       this.creationTimestamp = item.creationTimestamp

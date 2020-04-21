@@ -16,11 +16,28 @@ function PostFlatmate (form) {
 }
 
 // PatchFlatmate
-// patche a user account
+// patches a user account
 function PatchFlatmate (id, names, email, phoneNumber, birthday, groups, password) {
   return Request({
     url: `/api/admin/users/${id}`,
     method: 'PATCH',
+    data: {
+      names,
+      email,
+      phoneNumber,
+      birthday,
+      groups,
+      password
+    }
+  })
+}
+
+// PatchFlatmate
+// updates a user account
+function UpdateFlatmate (id, names, email, phoneNumber, birthday, groups, password) {
+  return Request({
+    url: `/api/admin/users/${id}`,
+    method: 'PUT',
     data: {
       names,
       email,

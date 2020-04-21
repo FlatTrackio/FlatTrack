@@ -53,6 +53,20 @@ function PatchShoppingList (id, name, notes) {
   })
 }
 
+// UpdateShoppingList
+// given a name and optional notes, patch a shopping list
+function UpdateShoppingList (id, name, notes, completed) {
+  return Request({
+    url: `/api/apps/shoppinglist/lists/${id}`,
+    method: 'PUT',
+    data: {
+      name,
+      notes,
+      completed
+    }
+  })
+}
+
 // PatchShoppingListCompleted
 // given a bool, patch a shopping list's completed field
 function PatchShoppingListCompleted (id, completed) {
@@ -109,7 +123,7 @@ function PostShoppingListItem (id, name, notes, price, quantity, tag) {
 }
 
 // PatchShoppingListItem
-// adds to the shopping list
+// patches the shopping list item
 function PatchShoppingListItem (listId, itemId, name, notes, price, quantity, tag) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
@@ -120,6 +134,23 @@ function PatchShoppingListItem (listId, itemId, name, notes, price, quantity, ta
       price,
       quantity,
       tag
+    }
+  })
+}
+
+// UpdateShoppingListItem
+// updates the shopping list item
+function UpdateShoppingListItem (listId, itemId, name, notes, price, quantity, tag, obtained) {
+  return Request({
+    url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
+    method: 'PUT',
+    data: {
+      name,
+      notes,
+      price,
+      quantity,
+      tag,
+      obtained
     }
   })
 }
@@ -152,4 +183,4 @@ function GetShoppingListItemTags () {
   })
 }
 
-export default { GetShoppingLists, GetShoppingList, PostShoppingList, PatchShoppingList, PatchShoppingListCompleted, DeleteShoppingList, GetShoppingListItems, GetShoppingListItem, PostShoppingListItem, DeleteShoppingListItem, GetShoppingListItemTags, PatchShoppingListItem, PatchShoppingListItemObtained }
+export default { GetShoppingLists, GetShoppingList, PostShoppingList, PatchShoppingList, UpdateShoppingList, PatchShoppingListCompleted, DeleteShoppingList, GetShoppingListItems, GetShoppingListItem, PostShoppingListItem, DeleteShoppingListItem, GetShoppingListItemTags, PatchShoppingListItem, UpdateShoppingListItem, PatchShoppingListItemObtained }

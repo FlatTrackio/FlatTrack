@@ -14,7 +14,7 @@
               type="text"
               icon="format-title"
               size="is-medium"
-              @keyup.enter.native="notesFromEmpty = false; editing = false; PatchShoppingList(name, notes)"
+              @keyup.enter.native="notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed)"
               v-model="name"
               required>
             </b-input>
@@ -41,7 +41,7 @@
                 size="is-medium"
                 maxlength="100"
                 type="text"
-                @keyup.enter.native="notesFromEmpty = false; editing = false; PatchShoppingList(name, notes)"
+                @keyup.enter.native="notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes)"
                 v-model="notes">
               </b-input>
             </b-field>
@@ -58,7 +58,7 @@
           </div>
         </div>
         <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true }" v-if="!editing && notes.length == 0">Add notes</b-button>
-        <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; PatchShoppingList(name, notes) }" v-if="editing">Done</b-button>
+        <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed) }" v-if="editing">Done</b-button>
         <br/>
         <br/>
         <label class="label">Search for items</label>
@@ -229,9 +229,9 @@ export default {
         common.DisplayFailureToast('Error loading the shopping list' + '<br/>' + err.response.data.metadata.response)
       })
     },
-    PatchShoppingList (name, notes) {
+    UpdateShoppingList (name, notes, completed) {
       var id = this.id
-      shoppinglist.PatchShoppingList(id, name, notes).catch(err => {
+      shoppinglist.UpdateShoppingList(id, name, notes, completed).catch(err => {
         common.DisplayFailureToast('Failed to update shopping list' + '<br/>' + err.response.data.metadata.response)
       })
     },
@@ -250,6 +250,7 @@ export default {
         type: 'is-danger',
         hasIcon: true,
         onConfirm: () => {
+          window.clearInterval(this.intervalLoop)
           shoppinglist.DeleteShoppingList(id).then(resp => {
             common.DisplaySuccessToast('Deleted the shopping list')
             setTimeout(() => {

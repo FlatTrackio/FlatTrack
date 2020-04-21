@@ -433,6 +433,41 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	return userAccountPatched, err
 }
 
+// UpdatProfile
+// updates the profile of a user account
+func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
+	// TODO ensure that an account can't change their address to someone else's
+	valid, err := ValidateUser(db, userAccount, true)
+	if !valid || err != nil {
+		return userAccountUpdated, err
+	}
+	passwordHashed := common.HashSHA512(userAccount.Password)
+	passwordHashed = userAccount.Password
+
+	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, disabled = $7, registered = $8, lastLogin = $9, authNonce = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $11
+                         returning *`
+	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce, id)
+	if err != nil {
+		// TODO add roll back, if there's failure
+		return userAccountUpdated, err
+	}
+	defer rows.Close()
+	rows.Next()
+	userAccountUpdated, err = UserObjectFromRows(rows)
+	if err != nil || userAccountUpdated.Id == "" {
+		return userAccountUpdated, errors.New("Failed to create shopping list")
+	}
+
+	updatedGroups, err := groups.UpdateUserGroups(db, id, userAccount.Groups)
+	if updatedGroups == false || err != nil {
+		return userAccountUpdated, err
+	}
+
+	userAccountUpdated.Groups = userAccount.Groups
+	userAccountUpdated.Password = ""
+	return userAccountUpdated, err
+}
+
 // UserCreationSecretsFromRows
 // constructs a UserCreationSecretSpec from rows
 func UserCreationSecretsFromRows(rows *sql.Rows) (creationSecret types.UserCreationSecretSpec, err error) {

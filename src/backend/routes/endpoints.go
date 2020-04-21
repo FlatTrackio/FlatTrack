@@ -59,6 +59,11 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/users/{id}",
+			HandlerFunc:  HTTPuseMiddleware(PatchUser(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
+			HttpMethod:   http.MethodPut,
+		},
+		{
+			EndpointPath: endpointPrefix + "/admin/users/{id}",
 			HandlerFunc:  HTTPuseMiddleware(DeleteUser(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
 			HttpMethod:   http.MethodDelete,
 		},
@@ -96,6 +101,11 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			EndpointPath: endpointPrefix + "/user/profile",
 			HandlerFunc:  HTTPuseMiddleware(GetProfile(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: endpointPrefix + "/user/profile",
+			HandlerFunc:  HTTPuseMiddleware(PatchProfile(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodPut,
 		},
 		{
 			EndpointPath: endpointPrefix + "/user/profile",
@@ -143,6 +153,11 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			HttpMethod:   http.MethodPatch,
 		},
 		{
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{id}",
+			HandlerFunc:  HTTPuseMiddleware(PutShoppingList(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodPut,
+		},
+		{
 			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{id}/completed",
 			HandlerFunc:  HTTPuseMiddleware(PatchShoppingListCompleted(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodPatch,
@@ -176,6 +191,11 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{.*}/items/{id}",
 			HandlerFunc:  HTTPuseMiddleware(PatchShoppingListItem(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodPatch,
+		},
+		{
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{.*}/items/{id}",
+			HandlerFunc:  HTTPuseMiddleware(PutShoppingListItem(db), HTTPvalidateJWT(db)),
+			HttpMethod:   http.MethodPut,
 		},
 		{
 			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{.*}/items/{id}/obtained",

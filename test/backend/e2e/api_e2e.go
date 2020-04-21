@@ -114,7 +114,7 @@ var _ = Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(200), "API must have return code of 200")
-		allUserAccountsResponse := routes.GetHTTPresponseBodyContents(resp).List //.([]interface{})//.([]types.UserSpec)
+		allUserAccountsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		allUserAccountsJSON, err := json.Marshal(allUserAccountsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
 		var allUserAccounts []types.UserSpec

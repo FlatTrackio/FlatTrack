@@ -134,6 +134,39 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// PutUser
+// updates a user account by their id
+func PutUser(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to updat the user account"
+
+		var userAccount types.UserSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &userAccount)
+
+		vars := mux.Vars(r)
+		userId := vars["id"]
+
+		// TODO disallow admins to remove their own admin group access
+		userAccountUpdated, err := users.UpdateProfile(db, userId, userAccount)
+		if err == nil && userAccountUpdated.Id != "" {
+			code = 200
+			response = "Successfully updated the user account"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: userAccountUpdated,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // PatchUser
 // patches a user account by their id
 func PatchUser(db *sql.DB) http.HandlerFunc {
@@ -596,6 +629,40 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// PutShoppingList
+// updates an existing shopping list
+func PutShoppingList(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to update the shopping list"
+
+		var shoppingList types.ShoppingListSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &shoppingList)
+
+		vars := mux.Vars(r)
+		listId := vars["id"]
+
+		id, errId := users.GetIdFromJWT(db, r)
+		shoppingList.AuthorLast = id
+		shoppingListUpdated, err := shoppinglist.UpdateShoppingList(db, listId, shoppingList)
+		if err == nil && errId == nil && shoppingListUpdated.Id != "" {
+			code = 200
+			response = "Successfully updated the shopping list"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: shoppingListUpdated,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // DeleteShoppingList
 // delete a new shopping list by it's id
 func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
@@ -771,6 +838,40 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Spec: patchedItem,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PutShoppingListItem
+// updates an item in a shopping list
+func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to update the shopping list item"
+
+		var shoppingItem types.ShoppingItemSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &shoppingItem)
+
+		vars := mux.Vars(r)
+		itemId := vars["id"]
+
+		id, errId := users.GetIdFromJWT(db, r)
+		shoppingItem.AuthorLast = id
+		updatedItem, err := shoppinglist.UpdateItem(db, itemId, shoppingItem)
+		if err == nil && errId == nil {
+			code = 200
+			response = "Successfully updated the shopping list item"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: updatedItem,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}

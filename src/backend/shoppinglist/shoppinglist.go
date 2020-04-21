@@ -12,7 +12,6 @@ import (
 	"github.com/imdario/mergo"
 
 	"gitlab.com/flattrack/flattrack/src/backend/types"
-	"gitlab.com/flattrack/flattrack/src/backend/users"
 )
 
 func ValidateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (valid bool, err error) {
@@ -21,13 +20,6 @@ func ValidateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (vali
 	}
 	if shoppingList.Notes != "" && len(shoppingList.Notes) > 100 {
 		return valid, errors.New("Unable to save shopping list notes, as they are too long")
-	}
-	if len(shoppingList.Author) == 0 || shoppingList.Author == "" {
-		return valid, errors.New("No shopping list author has been provided")
-	}
-	user, err := users.GetUserById(db, shoppingList.Author, false)
-	if err != nil || user.Id == "" {
-		return valid, errors.New("Unable to find author for shopping list")
 	}
 	if shoppingList.TemplateId != "" {
 		list, err := GetShoppingList(db, shoppingList.TemplateId)
@@ -47,10 +39,6 @@ func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bo
 	}
 	if item.Quantity == 0 {
 		return valid, errors.New("Item quanity must be greater than zero")
-	}
-	user, err := users.GetUserById(db, item.Author, false)
-	if err != nil || user.Id == "" {
-		return valid, errors.New("Unable to find author for shopping list")
 	}
 	return true, err
 }
@@ -222,6 +210,28 @@ func PatchShoppingList(db *sql.DB, listId string, shoppingList types.ShoppingLis
 	return shoppingListPatched, err
 }
 
+// UpdateShoppingList
+// updates a shopping list
+func UpdateShoppingList(db *sql.DB, listId string, shoppingList types.ShoppingListSpec) (shoppingListUpdated types.ShoppingListSpec, err error) {
+	valid, err := ValidateShoppingList(db, shoppingList)
+	if !valid || err != nil {
+		return shoppingListUpdated, err
+	}
+
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $5
+                         returning *`
+	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listId)
+	if err != nil {
+		return shoppingListUpdated, err
+	}
+	rows.Next()
+	shoppingListUpdated, err = ShoppingListObjectFromRows(rows)
+	if err != nil || shoppingListUpdated.Id == "" {
+		return shoppingListUpdated, errors.New("Failed to create shopping list")
+	}
+	return shoppingListUpdated, err
+}
+
 // SetListCompleted
 // updates the list's completed field
 func SetListCompleted(db *sql.DB, listId string, completed bool) (list types.ShoppingListSpec, err error) {
@@ -319,6 +329,29 @@ func PatchItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemPatc
 		}
 	}
 	return itemPatched, err
+}
+
+// UpdateItem
+// patches a shopping item
+func UpdateItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemUpdated types.ShoppingItemSpec, err error) {
+	valid, err := ValidateShoppingListItem(db, item)
+	if !valid || err != nil {
+		return itemUpdated, err
+	}
+
+	sqlStatement := `update shopping_item set name = $2, price = $3, quantity = $4, notes = $5, authorLast = $6, tag = $7, obtained = $8, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1 returning *`
+	rows, err := db.Query(sqlStatement, itemId, item.Name, item.Price, item.Quantity, item.Notes, item.AuthorLast, item.Tag, item.Obtained)
+	if err != nil {
+		return itemUpdated, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		itemUpdated, err = ShoppingItemObjectFromRows(rows)
+		if err != nil {
+			return itemUpdated, err
+		}
+	}
+	return itemUpdated, err
 }
 
 // SetItemObtained
