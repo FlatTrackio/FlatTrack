@@ -18,6 +18,7 @@
             <div class="card-content">
               <div class="media">
                 <div class="media-left">
+                  <b-icon :icon="app.icon" size="is-medium"></b-icon>
                 </div>
                 <div class="media-content">
                   <p class="title is-3">{{ app.name }}</p>
@@ -46,7 +47,8 @@ export default {
       apps: [
         {
           name: 'Flatmates',
-          description: 'Manage your flatmates',
+          description: 'Manage your flatmates accounts',
+          icon: 'account-group',
           ref: '/admin/accounts'
         }
       ]

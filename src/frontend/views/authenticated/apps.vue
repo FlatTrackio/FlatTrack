@@ -2,12 +2,6 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
-            <ul>
-            <li><router-link to="/">Home</router-link></li>
-            <li class="is-active"><router-link to="/apps">Apps</router-link></li>
-            </ul>
-        </nav>
         <h1 class="title is-1">Apps</h1>
         <p class="subtitle is-3">Manage your flat</p>
         <p></p>
@@ -18,6 +12,7 @@
             <div class="card-content">
               <div class="media">
                 <div class="media-left">
+                  <b-icon :icon="app.icon" size="is-medium"></b-icon>
                 </div>
                 <div class="media-content">
                   <p class="title is-3">{{ app.name }}</p>
@@ -47,11 +42,13 @@ export default {
         {
           name: 'Shopping list',
           description: 'Manage a flat-wide shopping list for all to contribute to',
+          icon: 'format-list-checks',
           ref: '/apps/shopping-list'
         },
         {
           name: 'Flatmates',
           description: 'View your flatmates and their contact details',
+          icon: 'account-group',
           ref: '/apps/flatmates'
         }
       ]

@@ -82,6 +82,12 @@
           <div class="card">
             <div class="card-content">
               <div class="media">
+                <div class="media-left">
+                  <b-icon
+                    icon="account-cancel"
+                    size="is-medium">
+                  </b-icon>
+                </div>
                 <div class="media-content">
                   <p class="title is-3">No flatmates added</p>
                 </div>

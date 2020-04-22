@@ -63,6 +63,12 @@
           <div class="card">
             <div class="card-content">
               <div class="media">
+                <div class="media-left">
+                  <b-icon
+                    icon="account-question"
+                    size="is-medium">
+                  </b-icon>
+                </div>
                 <div class="media-content">
                   <p class="title is-3">No flatmates found</p>
                 </div>

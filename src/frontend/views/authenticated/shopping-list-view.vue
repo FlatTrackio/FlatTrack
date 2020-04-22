@@ -88,7 +88,7 @@
           </section>
         </div>
         <br/>
-        <section v-for="itemTag in list" v-bind:key="itemTag">
+        <section v-for="itemTag in listItems" v-bind:key="itemTag">
           <p class="title is-5">{{ itemTag.tag }}</p>
           <div v-for="item in itemTag.items" v-bind:key="item">
             <div class="card">
@@ -152,6 +152,7 @@ export default {
       intervalLoop: null,
       editing: false,
       notesFromEmpty: false,
+      itemSearch: '',
       authorNames: '',
       authorLastNames: '',
       totalItems: 0,
@@ -167,6 +168,9 @@ export default {
     }
   },
   computed: {
+    listItems () {
+      return this.list
+    },
     obtainedCount () {
       var obtained = 0
       var list = this.list
@@ -289,6 +293,22 @@ export default {
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
+    },
+    LoopStart () {
+      var lastCreated = new Date()
+      this.intervalLoop = window.setInterval(() => {
+        this.GetShoppingList()
+        this.GetShoppingListItems()
+
+        var now = new Date()
+        var timePassed = (now.getTime() / 1000) - (lastCreated.getTime() / 1000)
+        if (timePassed >= 3600 / 4) {
+          window.clearInterval(this.intervalLoop)
+        }
+      }, 3 * 1000)
+    },
+    LoopStop () {
+      window.clearInterval(this.intervalLoop)
     }
   },
   async beforeMount () {
@@ -296,20 +316,10 @@ export default {
     this.GetShoppingListItems()
   },
   async created () {
-    var lastCreated = new Date()
-    this.intervalLoop = window.setInterval(() => {
-      this.GetShoppingList()
-      this.GetShoppingListItems()
-
-      var now = new Date()
-      var timePassed = (now.getTime() / 1000) - (lastCreated.getTime() / 1000)
-      if (timePassed >= 3600 / 4) {
-        window.clearInterval(this.intervalLoop)
-      }
-    }, 3 * 1000)
+    this.LoopStart()
   },
   beforeDestroy () {
-    window.clearInterval(this.intervalLoop)
+    this.LoopStop()
   }
 }
 </script>

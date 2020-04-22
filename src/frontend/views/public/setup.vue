@@ -52,7 +52,7 @@
             type="text"
             v-model="flatName"
             maxlength="20"
-            placeholder="Enter what your flat is referred to as"
+            placeholder="Enter your flat's name"
             icon="textbox"
             size="is-medium"
             required>
