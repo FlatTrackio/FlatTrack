@@ -14,10 +14,6 @@
             <div class="media-content">
               <div class="display-items-on-the-same-line">
                 <p class="title is-4">{{ list.name }}</p>
-                <div>
-                  <b-tag type="is-info" v-if="list.completed">Completed</b-tag>
-                  <b-tag type="is-warning" v-if="!list.completed">Uncompleted</b-tag>
-                </div>
               </div>
               <p class="subtitle is-6">
                 <span v-if="list.creationTimestamp == list.modificationTimestamp">
@@ -33,6 +29,11 @@
             </div>
           </div>
           <div class="content">
+            <div>
+              <b-tag type="is-info" v-if="list.completed">Completed</b-tag>
+              <b-tag type="is-warning" v-if="!list.completed">Uncompleted</b-tag>
+            </div>
+            <br/>
             <span v-if="list.notes !== '' && typeof list.notes !== 'undefined'">
               {{ list.notes }}
               <br/>

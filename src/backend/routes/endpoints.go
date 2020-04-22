@@ -104,7 +104,7 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 		},
 		{
 			EndpointPath: endpointPrefix + "/user/profile",
-			HandlerFunc:  HTTPuseMiddleware(PatchProfile(db), HTTPvalidateJWT(db)),
+			HandlerFunc:  HTTPuseMiddleware(PutProfile(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodPut,
 		},
 		{

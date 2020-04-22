@@ -41,7 +41,7 @@ export default {
       apps: [
         {
           name: 'Shopping list',
-          description: 'Manage a flat-wide shopping list for all to contribute to',
+          description: 'Create and manage lists to use for your next shop',
           icon: 'format-list-checks',
           ref: '/apps/shopping-list'
         },

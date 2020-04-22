@@ -109,7 +109,7 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 // create a user
 func PostUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := 400
 		response := "Failed to create user account"
 
 		var user types.UserSpec
@@ -121,7 +121,6 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 			code = 200
 			response = "Created user account"
 		} else {
-			code = 400
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -265,6 +264,36 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Spec: user,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PutProfile
+// Update a user account their id from their JWT
+func PutProfile(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := 500
+		response := "Failed to patch the user account"
+
+		var userAccount types.UserSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &userAccount)
+
+		id, errId := users.GetIdFromJWT(db, r)
+		userAccountPatched, err := users.UpdateProfile(db, id, userAccount)
+		if err == nil && errId == nil && userAccountPatched.Id != "" {
+			code = 200
+			response = "Successfully patched the user account"
+		} else {
+			code = 400
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: userAccountPatched,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}
@@ -599,7 +628,7 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 // patches an existing shopping list
 func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := 400
 		response := "Failed to patch the shopping list"
 
 		var shoppingList types.ShoppingListSpec
@@ -616,7 +645,6 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 			code = 200
 			response = "Successfully patched the shopping list"
 		} else {
-			code = 400
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{

@@ -35,11 +35,18 @@ func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (val
 	if len(user.Groups) == 0 {
 		return false, errors.New("No groups provided; please select at least one group")
 	}
+	groupsIncludeFlatmember := false
 	for _, groupItem := range user.Groups {
+		if groupItem == "flatmember" {
+			groupsIncludeFlatmember = true
+		}
 		group, err := groups.GetGroupByName(db, groupItem)
 		if err != nil || group.Id == "" {
 			return false, errors.New(fmt.Sprintf("Unable to use the provided group '%v' as it is invalid", groupItem))
 		}
+	}
+	if groupsIncludeFlatmember == false {
+		return false, errors.New("User account must be in the flatmember group")
 	}
 
 	if user.Birthday != 0 && (common.ValidateBirthday(user.Birthday) == false) {
