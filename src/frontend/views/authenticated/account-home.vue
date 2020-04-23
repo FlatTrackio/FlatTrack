@@ -58,8 +58,14 @@ export default {
         {
           name: 'Profile',
           description: 'Manage your general information',
-          icon: 'account',
+          icon: 'account-circle',
           ref: '/account/profile'
+        },
+        {
+          name: 'Security',
+          description: 'Manage your account security',
+          icon: 'lock-question',
+          ref: '/account/security'
         }
       ]
     }

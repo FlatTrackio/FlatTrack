@@ -36,6 +36,7 @@
                 <b-menu-item icon="phone" label="Contact admin" tag="router-link" to="/apps/flatmates?group=admin"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Account">
+                <b-menu-item icon="account-circle" label="Profile" tag="router-link" to="/account/profile"></b-menu-item>
                 <b-menu-item icon="account" label="My Account" tag="router-link" to="/account"></b-menu-item>
                 <b-menu-item icon="exit-to-app" label="Sign out" @click="signOut"></b-menu-item>
               </b-menu-list>

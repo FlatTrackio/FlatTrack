@@ -5,81 +5,35 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
               <li><router-link to="/account">My account</router-link></li>
-              <li class="is-active"><router-link to="/account/profile">Profile</router-link></li>
+              <li class="is-active"><router-link to="/account/security">Security</router-link></li>
             </ul>
         </nav>
-        <h1 class="title is-1">Profile</h1>
-        <p class="subtitle is-3">Manage your account</p>
-        <div class="card">
-          <div class="card-content">
-            <div class="media">
-              <div class="media-content">
-                <figure class="image is-128x128">
-                  <img src="https://bulma.io/images/placeholders/256x256.png" alt="Placeholder image">
-                </figure>
-                <br/>
-                <p class="title is-3">{{ names }}</p>
-                <p class="subtitle is-5">Joined {{ TimestampToCalendar(creationTimestamp) }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <br />
-
-        <b-field grouped group-multiline>
-          <div class="control" v-for="group in groups" v-bind:key="group">
-            <b-taglist attached>
-              <b-tag type="is-dark">is</b-tag>
-              <b-tag type="is-info">{{ group }}</b-tag>
-            </b-taglist>
-          </div>
-        </b-field>
-        <br />
-
-        <b-field label="Name(s)">
-          <b-input type="text"
-                   v-model="names"
-                   maxlength="60"
-                   placeholder="Enter your name(s)"
-                   icon="textbox"
-                   size="is-medium"
-                   required>
-          </b-input>
-        </b-field>
-
-        <b-field label="Email">
-          <b-input type="email"
-                   v-model="email"
-                   maxlength="70"
-                   icon="email"
-                   size="is-medium"
-                   required>
-          </b-input>
-        </b-field>
-        <b-field label="Phone number">
-          <b-input type="tel"
-                   v-model="phoneNumber"
-                   placeholder="Enter your phone number"
-                   icon="phone"
-                   size="is-medium"
-                   maxlength="30">
-          </b-input>
-        </b-field>
-
-        <b-field label="Birthday">
-          <b-datepicker
-            v-model="jsBirthday"
-            :max-date="maxDate"
-            :min-date="minDate"
-            :show-week-numbers="true"
-            :focused-date="focusedDate"
-            placeholder="Click to select birthday"
-            icon="cake-variant"
-            size="is-medium"
-            trap-focus>
-          </b-datepicker>
-        </b-field>
+        <h1 class="title is-1">Security</h1>
+        <p class="subtitle is-3">Manage your account's security</p>
         <br/>
+        <h1 class="title is-3">Password<h1/>
+        <b-field label="Password">
+          <b-input
+            type="password"
+            v-model="password"
+            password-reveal
+            placeholder="Enter to update your password"
+            icon="textbox-password"
+            size="is-medium"
+            maxlength="70">
+          </b-input>
+        </b-field>
+        <b-field label="Confirm password">
+          <b-input
+            type="password"
+            v-model="passwordConfirm"
+            password-reveal
+            placeholder="Confirm to update your password"
+            maxlength="70"
+            size="is-medium"
+            icon="textbox-password">
+          </b-input>
+        </b-field>
         <b-button
           type="is-success"
           size="is-medium"
@@ -88,6 +42,13 @@
           @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday)">
           Update profile
         </b-button>
+
+        <br/>
+        <br/>
+        <h1 class="title is-3">Two-factor authentication</h1>
+        <div class="field">
+          <b-checkbox size="is-medium">OTP</b-checkbox>
+        </div>
       </section>
     </div>
   </div>
