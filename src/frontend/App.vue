@@ -16,6 +16,7 @@
 <script>
 import Vue from 'vue'
 import Component from 'vue-class-component'
+import themes from '@/frontend/common/theme'
 
 export default {
   name: 'App',
@@ -25,6 +26,9 @@ export default {
       displayNavigationBar: true,
       publicPages: window.location.pathname === '/login' || window.location.pathname === '/setup' || (window.location.pathname.split('/')[1] === 'useraccountconfirm' && typeof window.location.pathname.split('/')[2] !== 'undefined')
     }
+  },
+  async beforeMount () {
+    themes.SetThemeDefault()
   },
   created () {
     this.adjustForMobile()

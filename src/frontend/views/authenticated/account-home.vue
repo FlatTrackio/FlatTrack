@@ -27,12 +27,29 @@
           </div>
           <br />
         </div>
+        <div class="card pointer-cursor-on-hover" v-if="typeof CurrentTheme === 'object'" disabled>
+          <div class="card-content">
+            <div class="media">
+              <div class="media-left">
+                <b-icon :icon="CurrentTheme.icon" size="is-medium"></b-icon>
+              </div>
+              <div class="media-content">
+                <p class="title is-3">Current theme</p>
+                <p class="subtitle is-5">{{ CurrentTheme.name }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="content">
+          </div>
+        </div>
       </section>
     </div>
   </div>
 </template>
 
 <script>
+import theme from '@/frontend/common/theme'
+
 export default {
   name: 'Account home',
   data () {
@@ -50,6 +67,11 @@ export default {
   methods: {
     goToApp (ref) {
       this.$router.push({ path: ref })
+    }
+  },
+  computed: {
+    CurrentTheme () {
+      return theme.GetTheme()
     }
   }
 }

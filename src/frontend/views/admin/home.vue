@@ -28,24 +28,6 @@
           </div>
           <br />
         </div>
-        <div class="card pointer-cursor-on-hover" @click="goToApp(app.ref)">
-          <div class="card-content">
-            <div class="media">
-              <div class="media-left">
-                <b-icon :icon="app.icon" size="is-medium"></b-icon>
-              </div>
-              <div class="media-content">
-                <p class="title is-3">{{ app.name }}</p>
-                <p class="subtitle is-5">{{ app.description }}</p>
-              </div>
-              <div class="media-right">
-                <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
-              </div>
-            </div>
-          </div>
-          <div class="content">
-          </div>
-        </div>
       </section>
     </div>
   </div>
