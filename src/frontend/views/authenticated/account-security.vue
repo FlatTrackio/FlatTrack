@@ -40,14 +40,41 @@
           rounded
           native-type="submit"
           @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday)">
-          Update profile
+          Update password
         </b-button>
 
         <br/>
         <br/>
         <h1 class="title is-3">Two-factor authentication</h1>
         <div class="field">
-          <b-checkbox size="is-medium">OTP</b-checkbox>
+          <b-checkbox
+            :type="otpIsEnabled === true ? 'is-success' : 'is-warning'"
+            size="is-medium"
+            :indeterminate="otpEnable"
+            disabled
+            v-model="otpEnable">
+            OTP
+          </b-checkbox>
+        </div>
+        <div v-if="otpEnable">
+          <qrcode-vue :value="''" :size="200" level="H"></qrcode-vue>
+          <br/>
+          <b-field label="Confirm your OTP code">
+            <b-input
+              type="number"
+              placeholder="Enter your OTP code from your phone"
+              maxlength="6"
+              size="is-medium"
+              icon="qrcode">
+            </b-input>
+          </b-field>
+          <b-button
+            type="is-success"
+            size="is-medium"
+            rounded
+            native-type="submit">
+            Enable
+          </b-button>
         </div>
       </section>
     </div>
@@ -59,7 +86,7 @@ import common from '@/frontend/common/common'
 import profile from '@/frontend/requests/authenticated/profile'
 
 export default {
-  name: 'profile',
+  name: 'account security',
   data () {
     const today = new Date()
     const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDate())
@@ -70,6 +97,8 @@ export default {
       minDate: minDate,
       focusedDate: maxDate,
       passwordConfirm: '',
+      otpEnable: false,
+      otpIsEnabled: false,
       jsBirthday: null,
       names: '',
       email: '',
@@ -113,8 +142,8 @@ export default {
       return common.TimestampToCalendar(timestamp)
     }
   },
-  async beforeMount () {
-    this.GetProfile()
+  components: {
+    QrcodeVue: () => import('qrcode.vue')
   }
 }
 </script>
