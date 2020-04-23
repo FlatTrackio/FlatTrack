@@ -70,10 +70,10 @@
                   </b-icon>
                 </div>
                 <div class="media-content">
-                  <p class="title is-3">No flatmates found</p>
+                  <p class="title is-4">No flatmates found</p>
                 </div>
               </div>
-              <p class="content subtitle is-5">
+              <p class="content subtitle is-6">
                 Either you haven't added any flatmates, or you are trying to search or filter for flatmates and none could be found.
               </p>
             </div>

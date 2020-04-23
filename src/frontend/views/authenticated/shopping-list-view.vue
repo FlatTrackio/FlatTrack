@@ -63,7 +63,7 @@
         <br/>
         <label class="label">Search for items</label>
         <b-field>
-          <b-input size="is-medium" placeholder="Search items" type="search"></b-input>
+          <b-input size="is-medium" placeholder="Item name" type="search" v-model="itemSearch"></b-input>
         </b-field>
         <div>
           <section>
@@ -88,44 +88,69 @@
           </section>
         </div>
         <br/>
-        <section v-for="itemTag in listItems" v-bind:key="itemTag">
-          <p class="title is-5">{{ itemTag.tag }}</p>
-          <div v-for="item in itemTag.items" v-bind:key="item">
-            <div class="card">
-              <div class="card-content card-content-list">
-                <div class="media">
-                  <div class="media-left" @click="PatchItemObtained(item.id, !item.obtained)">
-                    <b-checkbox size="is-medium" v-model="item.obtained"></b-checkbox>
-                  </div>
-                  <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/item/' + item.id)">
-                    <div class="block">
-                      <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">
-                        {{ item.name }}
-                        <span v-if="typeof item.price !== 'undefined' && item.price !== 0"> (${{ item.price }}) </span>
-                        <b v-if="item.quantity > 1">x{{ item.quantity }}</b>
-                        <b-icon
-                          v-if="typeof item.price === 'undefined' || item.price === 0"
-                          icon="currency-usd-off"
-                          size="is-small">
-                        </b-icon>
-                        <b-icon
-                          v-if="item.notes.length > 0"
-                          icon="note-text-outline"
-                          size="is-small">
-                        </b-icon>
-                      </p>
+        <div v-if="listItems.length > 0">
+          <section v-for="itemTag in listItems" v-bind:key="itemTag">
+            <p class="title is-5">{{ itemTag.tag }}</p>
+            <transition-group
+              name="staggered-fade"
+              tag="div"
+              v-bind:css="false"
+              v-on:enter="ItemAppear"
+              v-on:leave="ItemDisappear">
+              <div v-for="item in itemTag.items" v-bind:key="item">
+                <div class="card">
+                  <div class="card-content card-content-list">
+                    <div class="media">
+                      <div class="media-left" @click="PatchItemObtained(item.id, !item.obtained)">
+                        <b-checkbox size="is-medium" v-model="item.obtained"></b-checkbox>
+                      </div>
+                      <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/item/' + item.id)">
+                        <div class="block">
+                          <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">
+                            {{ item.name }}
+                            <span v-if="typeof item.price !== 'undefined' && item.price !== 0"> (${{ item.price }}) </span>
+                            <b v-if="item.quantity > 1">x{{ item.quantity }}</b>
+                            <b-icon
+                              v-if="typeof item.price === 'undefined' || item.price === 0"
+                              icon="currency-usd-off"
+                              size="is-small">
+                            </b-icon>
+                            <b-icon
+                              v-if="item.notes.length > 0"
+                              icon="note-text-outline"
+                              size="is-small">
+                            </b-icon>
+                          </p>
+                        </div>
+                      </div>
+                      <div class="media-right">
+                        <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                      </div>
                     </div>
                   </div>
-                  <div class="media-right">
-                    <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
-                  </div>
+                </div>
+              </div>
+              <br/>
+            </transition-group>
+            <br/>
+          </section>
+        </div>
+        <div v-else>
+          <div class="card">
+            <div class="card-content card-content-list">
+              <div class="media">
+                <div class="media-left" @click="PatchItemObtained(item.id, !item.obtained)">
+                  <b-icon icon="cart-remove" size="is-medium" type="is-midgray"></b-icon>
+                </div>
+                <div class="media-content">
+                  <p class="subtitle is-4" v-if="itemSearch === ''">No items added yet.</p>
+                  <p class="subtitle is-4" v-if="itemSearch !== ''">No items found.</p>
                 </div>
               </div>
             </div>
           </div>
           <br/>
-        </section>
-        <br/>
+        </div>
         <p class="subtitle is-4">
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br/>
@@ -169,7 +194,10 @@ export default {
   },
   computed: {
     listItems () {
-      return this.list
+      var vm = this
+      return this.RestructureShoppingListToTags(this.list.filter((item) => {
+        return item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
+      }))
     },
     obtainedCount () {
       var obtained = 0
@@ -215,6 +243,9 @@ export default {
   methods: {
     goToRef (ref) {
       this.$router.push({ path: ref })
+    },
+    RestructureShoppingListToTags (list) {
+      return shoppinglistCommon.RestructureShoppingListToTags(list)
     },
     GetShoppingList () {
       if (this.editing === true) {
@@ -285,11 +316,28 @@ export default {
           this.list = []
         }
 
-        var restructuredList = shoppinglistCommon.RestructureShoppingListToTags(responseList)
-        if (restructuredList !== this.list) {
-          this.list = restructuredList
-        }
+        this.list = responseList || []
       })
+    },
+    ItemAppear (el, done) {
+      var delay = el.dataset.index * 150
+      setTimeout(function () {
+        Velocity(
+          el,
+          { opacity: 1, height: '1.6em' },
+          { complete: done }
+        )
+      }, delay)
+    },
+    ItemDisappear (el, done) {
+      var delay = el.dataset.index * 150
+      setTimeout(function () {
+        Velocity(
+          el,
+          { opacity: 0, height: 0 },
+          { complete: done }
+        )
+      }, delay)
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)

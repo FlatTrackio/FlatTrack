@@ -190,9 +190,9 @@ export default {
         common.DisplaySuccessToast('Created user account')
         setTimeout(() => {
           if (this.setOnlyRequiredFields === true) {
-            this.$router.push({ name: 'Admin accounts' })
+            this.$router.push({ path: '/admin/accounts/edit/' + resp.data.spec.id })
           } else {
-            this.$router.push({ path: '/admin/' })
+            this.$router.push({ name: 'Admin accounts' })
           }
         }, 1.5 * 1000)
       }).catch(err => {
