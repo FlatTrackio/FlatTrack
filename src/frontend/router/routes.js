@@ -63,9 +63,17 @@ export default [
     }
   },
   {
-    path: '/profile',
+    path: '/account',
+    name: 'Account',
+    component: () => import('@/frontend/views/authenticated/account-home.vue'),
+    beforeEnter: (to, from, next) => {
+      requireAuthToken(to, from, next)
+    }
+  },
+  {
+    path: '/account/profile',
     name: 'Profile',
-    component: () => import('@/frontend/views/authenticated/profile.vue'),
+    component: () => import('@/frontend/views/authenticated/account-profile.vue'),
     beforeEnter: (to, from, next) => {
       requireAuthToken(to, from, next)
     }

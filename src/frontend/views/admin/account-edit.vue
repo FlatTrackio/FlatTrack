@@ -102,8 +102,7 @@
                    maxlength="70"
                    placeholder="Enter a password for your flatmate"
                    icon="textbox-password"
-                   size="is-medium"
-                   required>
+                   size="is-medium">
           </b-input>
         </b-field>
 
@@ -114,8 +113,7 @@
                    maxlength="70"
                    placeholder="Confirm a password for your flatmate"
                    icon="textbox-password"
-                   size="is-medium"
-                   required>
+                   size="is-medium">
           </b-input>
         </b-field>
         <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchUserAccount(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">Update user account</b-button>

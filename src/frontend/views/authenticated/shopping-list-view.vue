@@ -201,7 +201,7 @@ export default {
     },
     obtainedCount () {
       var obtained = 0
-      var list = this.list
+      var list = this.RestructureShoppingListToTags(this.list)
       for (var itemTag in list) {
         for (var item in list[itemTag].items) {
           if (list[itemTag].items[item].obtained === true) {
@@ -213,7 +213,7 @@ export default {
     },
     currentPrice () {
       var currentPrice = 0
-      var list = this.list
+      var list = this.RestructureShoppingListToTags(this.list)
       for (var itemTag in list) {
         for (var item in list[itemTag].items) {
           var itemInList = list[itemTag].items[item]
@@ -228,7 +228,7 @@ export default {
     },
     totalPrice () {
       var totalPrice = 0
-      var list = this.list
+      var list = this.RestructureShoppingListToTags(this.list)
       for (var itemTag in list) {
         for (var item in list[itemTag].items) {
           var itemInList = list[itemTag].items[item]

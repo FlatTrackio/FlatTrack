@@ -2,12 +2,6 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
-            <ul>
-            <li><router-link to="/">Home</router-link></li>
-            <li class="is-active"><router-link to="/admin">Admin</router-link></li>
-            </ul>
-        </nav>
         <h1 class="title is-1">Admin apps</h1>
         <p class="subtitle is-3">Manage FlatTrack</p>
         <p></p>
@@ -33,6 +27,24 @@
             </div>
           </div>
           <br />
+        </div>
+        <div class="card pointer-cursor-on-hover" @click="goToApp(app.ref)">
+          <div class="card-content">
+            <div class="media">
+              <div class="media-left">
+                <b-icon :icon="app.icon" size="is-medium"></b-icon>
+              </div>
+              <div class="media-content">
+                <p class="title is-3">{{ app.name }}</p>
+                <p class="subtitle is-5">{{ app.description }}</p>
+              </div>
+              <div class="media-right">
+                <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+              </div>
+            </div>
+          </div>
+          <div class="content">
+          </div>
         </div>
       </section>
     </div>
