@@ -18,6 +18,7 @@
                    placeholder="Enter your flatmate's name"
                    icon="textbox"
                    size="is-medium"
+                   autofocus
                    required>
           </b-input>
         </b-field>

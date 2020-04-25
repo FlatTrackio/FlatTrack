@@ -331,6 +331,8 @@ func PatchItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemPatc
 			return itemPatched, err
 		}
 	}
+
+	_, err = PatchShoppingList(db, itemPatched.ListId, types.ShoppingListSpec{})
 	return itemPatched, err
 }
 
@@ -354,6 +356,8 @@ func UpdateItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemUpd
 			return itemUpdated, err
 		}
 	}
+
+	PatchShoppingList(db, itemUpdated.ListId, types.ShoppingListSpec{})
 	return itemUpdated, err
 }
 
@@ -372,6 +376,8 @@ func SetItemObtained(db *sql.DB, itemId string, obtained bool) (item types.Shopp
 			return item, err
 		}
 	}
+
+	PatchShoppingList(db, item.ListId, types.ShoppingListSpec{})
 	return item, err
 }
 
