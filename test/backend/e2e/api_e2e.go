@@ -1171,7 +1171,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should create a shopping list", func() {
-		log.Println(0)
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
 		}
@@ -1213,7 +1212,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should patch a shopping list", func() {
-		log.Println(1)
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
 		}
@@ -1275,7 +1273,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should update a shopping list", func() {
-		log.Println(2)
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
 		}
@@ -1340,7 +1337,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should not allow invalid shopping list properties", func() {
-		log.Println(3)
 		shoppingLists := []types.ShoppingListSpec{
 			{
 				Name: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
@@ -1378,7 +1374,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should allow adding items to a list", func() {
-		log.Println(4)
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
 		}
@@ -1481,7 +1476,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should disallow adding items to a non-existent list", func() {
-		log.Println(5)
 		By("creating items on the list")
 		newShoppingListItems := []types.ShoppingItemSpec{
 			{
@@ -1532,7 +1526,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should not allow adding of invalid items to a shopping list", func() {
-		log.Println(6)
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
 		}
@@ -1630,7 +1623,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should allow updating of shopping list items", func() {
-		log.Println(7)
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
 		}
@@ -1743,7 +1735,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should allow patching of shopping list items", func() {
-		log.Println(8)
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
 		}
@@ -1847,7 +1838,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should return a list of tags", func() {
-		log.Println(9)
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
 		}
@@ -1954,7 +1944,6 @@ var _ = Describe("API e2e tests", func() {
 	})
 
 	It("should allow templating of a shopping list", func() {
-		log.Println(10)
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
 		}
@@ -2085,6 +2074,12 @@ var _ = Describe("API e2e tests", func() {
 
 		By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api must have return code of 200")
+
+		By("deleting the template shopping list")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListTemplatedCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(200), "api must have return code of 200")
