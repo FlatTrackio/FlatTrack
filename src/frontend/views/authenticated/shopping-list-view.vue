@@ -22,7 +22,12 @@
           <br/>
         </div>
         <div v-else>
-          <h1 class="title is-1 display-is-editable title-sticky pointer-cursor-on-hover" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
+          <h1 class="title is-1 is-marginless display-is-editable title-sticky pointer-cursor-on-hover" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
+          <br/>
+          <b-tag type="is-info" v-if="completed">Completed</b-tag>
+          <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
+          <br/>
+          <br/>
           <p class="subtitle is-6">
             Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
             <span v-if="creationTimestamp !== modificationTimestamp">
@@ -30,8 +35,6 @@
               Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast"> {{ authorLastNames }} </router-link>
             </span>
           </p>
-          <b-tag type="is-info" v-if="completed">Completed</b-tag>
-          <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
         </div>
         <div v-if="notes != '' || notesFromEmpty || editing">
           <div v-if="editing">
@@ -47,6 +50,7 @@
             </b-field>
           </div>
           <div v-else>
+            <br/>
             <div class="notification">
               <div class="content">
                 <label class="label">Notes</label>
@@ -63,7 +67,7 @@
         <br/>
         <label class="label">Search for items</label>
         <b-field>
-          <b-input size="is-medium" placeholder="Item name" type="search" v-model="itemSearch"></b-input>
+          <b-input size="is-medium" placeholder="Item name" type="search" v-model="itemSearch" ref="search" v-on:keyup.ctrl.66="FocusSearchBox"></b-input>
         </b-field>
         <div>
           <section>
@@ -90,7 +94,12 @@
         <br/>
         <div v-if="listItems.length > 0">
           <section v-for="itemTag in listItems" v-bind:key="itemTag">
-            <p class="title is-5">{{ itemTag.tag }}</p>
+            <p class="title is-5">
+              {{ itemTag.tag }} - {{ itemTag.items.length || 0 }} item(s)
+              <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
+                (${{ itemTag.price }})
+              </span>
+            </p>
             <transition-group
               name="staggered-fade"
               tag="div"
@@ -106,10 +115,10 @@
                       </div>
                       <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/item/' + item.id)">
                         <div class="block">
-                          <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4">
+                          <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4 is-marginless">
                             {{ item.name }}
                             <span v-if="typeof item.price !== 'undefined' && item.price !== 0"> (${{ item.price }}) </span>
-                            <b v-if="item.quantity > 1">x{{ item.quantity }}</b>
+                            <b v-if="item.quantity > 1">x{{ item.quantity }} </b>
                             <b-icon
                               v-if="typeof item.price === 'undefined' || item.price === 0"
                               icon="currency-usd-off"
@@ -121,9 +130,15 @@
                               size="is-small">
                             </b-icon>
                           </p>
+                          <span>
+                            <p class="subtitle is-6">
+                              <i>{{ item.notes }}</i>
+                            </p>
+                          </span>
                         </div>
                       </div>
                       <div class="media-right">
+                        <b-button type="is-danger" icon-right="delete" v-if="deviceIsMobile === false" @click="DeleteShoppingListItem(item.listId, item.id)" />
                         <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
                       </div>
                     </div>
@@ -181,6 +196,7 @@ export default {
       authorNames: '',
       authorLastNames: '',
       totalItems: 0,
+      deviceIsMobile: false,
       id: this.$route.params.id,
       name: '',
       notes: '',
@@ -243,6 +259,9 @@ export default {
   methods: {
     goToRef (ref) {
       this.$router.push({ path: ref })
+    },
+    FocusSearchBox () {
+      this.$refs.search.$el.focus()
     },
     RestructureShoppingListToTags (list) {
       return shoppinglistCommon.RestructureShoppingListToTags(list)
@@ -319,6 +338,22 @@ export default {
         this.list = responseList || []
       })
     },
+    DeleteShoppingListItem (listId, itemId) {
+      Dialog.confirm({
+        title: 'Delete item',
+        message: 'Are you sure that you wish to delete this shopping list item?' + '<br/>' + 'This action cannot be undone.',
+        confirmText: 'Delete item',
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: () => {
+          shoppinglist.DeleteShoppingListItem(listId, itemId).then(resp => {
+            common.DisplaySuccessToast(resp.data.metadata.response)
+          }).catch(err => {
+            common.DisplayFailureToast('Failed to delete shopping list item' + ' - ' + err.response.data.metadata.response)
+          })
+        }
+      })
+    },
     ItemAppear (el, done) {
       var delay = el.dataset.index * 150
       setTimeout(function () {
@@ -345,6 +380,11 @@ export default {
     LoopStart () {
       var lastCreated = new Date()
       this.intervalLoop = window.setInterval(() => {
+        if (shoppinglistCommon.GetShoppingListAutoRefresh() !== true) {
+          this.LoopStop()
+          return
+        }
+
         this.GetShoppingList()
         this.GetShoppingListItems()
 
@@ -357,6 +397,9 @@ export default {
     },
     LoopStop () {
       window.clearInterval(this.intervalLoop)
+    },
+    AdjustForMobile () {
+      this.deviceIsMobile = common.DeviceIsMobile()
     }
   },
   async beforeMount () {
@@ -365,6 +408,7 @@ export default {
   },
   async created () {
     this.LoopStart()
+    window.addEventListener('resize', this.AdjustForMobile.bind(this))
   },
   beforeDestroy () {
     this.LoopStop()

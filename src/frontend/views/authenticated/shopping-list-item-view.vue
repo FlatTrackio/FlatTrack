@@ -33,14 +33,14 @@
               type="text"
               v-model="notes"
               size="is-medium"
-              maxlength="100"
+              maxlength="40"
               icon="text">
             </b-input>
           </b-field>
           <b-field label="Price">
             <b-input
               type="number"
-              step="0.1"
+              step="0.01"
               placeholder="0.00"
               v-model="price"
               icon="currency-usd"

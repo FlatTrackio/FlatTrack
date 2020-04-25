@@ -27,7 +27,7 @@
               v-model="notes"
               size="is-medium"
               icon="text"
-              maxlength="100">
+              maxlength="40">
             </b-input>
           </b-field>
           <b-field label="Price">
