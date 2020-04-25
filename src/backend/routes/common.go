@@ -18,6 +18,7 @@ import (
 	"github.com/ddo/go-vue-handler"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
@@ -89,7 +90,11 @@ func HandleWebserver(db *sql.DB) {
 	}
 
 	router.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)
-	// TODO implement /metrics for prometheus
+	go func() {
+		http.Handle("/metrics", promhttp.Handler())
+		log.Println("Metrics listening on :2112")
+		http.ListenAndServe(":2112", nil)
+	}()
 	// TODO implement /healthz for healthiness checks
 	// TODO implement /readyz for readiness checks
 	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
@@ -112,6 +117,6 @@ func HandleWebserver(db *sql.DB) {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	log.Println("listening on", port)
+	log.Println("HTTP listening on", port)
 	log.Fatal(srv.ListenAndServe())
 }

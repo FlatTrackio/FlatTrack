@@ -15,6 +15,7 @@ require (
 	github.com/lib/pq v1.3.0
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
+	github.com/prometheus/client_golang v0.9.3-0.20190127221311-3c4408c8b829
 	github.com/rs/cors v1.7.0
 	github.com/satori/go.uuid v1.2.0
 )

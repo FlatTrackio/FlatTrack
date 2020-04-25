@@ -37,6 +37,9 @@ func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bo
 	if item.Notes != "" && len(item.Notes) > 40 {
 		return valid, errors.New("Unable to save shopping list notes, as they are too long")
 	}
+	if item.Tag != "" && len(item.Tag) == 0 || len(item.Tag) > 30 {
+		return valid, errors.New("Unable to use the provided tag, as it is either empty or too long or too short")
+	}
 	if item.Quantity == 0 {
 		return valid, errors.New("Item quanity must be greater than zero")
 	}

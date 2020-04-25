@@ -74,7 +74,7 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
 	}
 	localUser, err := GetUserByEmail(db, user.Email, false)
 	if err == nil || localUser.Id != "" {
-		return userInserted, err
+		return userInserted, errors.New("Email address is unable to be used")
 	}
 	if localUser.Email == user.Email {
 		return userInserted, errors.New("Email address is already taken")
