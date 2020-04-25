@@ -64,7 +64,6 @@
         <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true }" v-if="!editing && notes.length == 0">Add notes</b-button>
         <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed) }" v-if="editing">Done</b-button>
         <br/>
-        <br/>
         <label class="label">Search for items</label>
         <b-field>
           <b-input size="is-medium" placeholder="Item name" type="search" v-model="itemSearch" ref="search" v-on:keyup.ctrl.66="FocusSearchBox"></b-input>
@@ -197,6 +196,7 @@ export default {
       authorLastNames: '',
       totalItems: 0,
       deviceIsMobile: false,
+      loopCreated: new Date(),
       id: this.$route.params.id,
       name: '',
       notes: '',
@@ -335,7 +335,9 @@ export default {
           this.list = []
         }
 
-        this.list = responseList || []
+        if (responseList !== this.list) {
+          this.list = responseList || []
+        }
       })
     },
     DeleteShoppingListItem (listId, itemId) {
@@ -378,7 +380,6 @@ export default {
       return common.TimestampToCalendar(timestamp)
     },
     LoopStart () {
-      var lastCreated = new Date()
       this.intervalLoop = window.setInterval(() => {
         if (shoppinglistCommon.GetShoppingListAutoRefresh() !== true) {
           this.LoopStop()
@@ -389,7 +390,7 @@ export default {
         this.GetShoppingListItems()
 
         var now = new Date()
-        var timePassed = (now.getTime() / 1000) - (lastCreated.getTime() / 1000)
+        var timePassed = (now.getTime() / 1000) - (this.loopCreated.getTime() / 1000)
         if (timePassed >= 3600 / 4) {
           window.clearInterval(this.intervalLoop)
         }
@@ -409,6 +410,9 @@ export default {
   async created () {
     this.LoopStart()
     window.addEventListener('resize', this.AdjustForMobile.bind(this))
+    window.addEventListener('focus', () => {
+      this.loopCreated = new Date()
+    })
   },
   beforeDestroy () {
     this.LoopStop()
