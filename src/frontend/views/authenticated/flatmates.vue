@@ -10,11 +10,11 @@
         </nav>
         <h1 class="title is-1">Flatmates</h1>
         <p class="subtitle is-3">
-          <span v-if="typeof groupQuery === 'undefined'">
+          <span v-if="typeof GroupQuery === 'undefined'">
             Get to know your flatmates
           </span>
           <span v-else>
-            Listing flatmates, filtering by the group {{ groupQuery }}
+            Listing flatmates, filtering by the group {{ GroupQuery }}
           </span>
         </p>
         <div v-if="members && members.length">
@@ -94,23 +94,27 @@ export default {
   data () {
     return {
       members: [],
-      idQuery: undefined,
-      groupQuery: undefined,
       emojiSmile: emoji.get('smile')
     }
   },
   async beforeMount () {
-    this.idQuery = this.$route.query.id
-    this.groupQuery = this.$route.query.group
     this.FetchAllFlatmates()
+  },
+  computed: {
+    GroupQuery () {
+      return this.$route.query.group
+    },
+    IdQuery () {
+      return this.$route.query.id
+    }
   },
   methods: {
     FetchAllFlatmates () {
       var params = {}
-      if (typeof this.groupQuery !== 'undefined') {
-        params.group = this.groupQuery
-      } else if (typeof this.idQuery !== 'undefined') {
-        params.id = this.idQuery
+      if (typeof this.GroupQuery !== 'undefined') {
+        params.group = this.GroupQuery
+      } else if (typeof this.IdQuery !== 'undefined') {
+        params.id = this.IdQuery
       }
       params.notSelf = true
       flatmates.GetAllFlatmates(params).then(resp => {
@@ -121,6 +125,11 @@ export default {
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
+    }
+  },
+  watch: {
+    GroupQuery () {
+      this.FetchAllFlatmates()
     }
   }
 }
