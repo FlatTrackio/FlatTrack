@@ -408,6 +408,7 @@ export default {
     this.GetShoppingListItems()
   },
   async created () {
+    this.AdjustForMobile()
     this.LoopStart()
     window.addEventListener('resize', this.AdjustForMobile.bind(this))
     window.addEventListener('focus', () => {
