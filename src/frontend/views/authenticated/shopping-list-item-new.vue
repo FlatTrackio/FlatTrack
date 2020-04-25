@@ -17,7 +17,8 @@
               v-model="name"
               size="is-medium"
               maxlength="30"
-              icon="email"
+              icon="text"
+              autofocus
               required>
             </b-input>
           </b-field>

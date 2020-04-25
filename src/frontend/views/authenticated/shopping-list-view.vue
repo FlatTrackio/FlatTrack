@@ -62,7 +62,10 @@
           </div>
         </div>
         <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true }" v-if="!editing && notes.length == 0">Add notes</b-button>
-        <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed) }" v-if="editing">Done</b-button>
+        <div v-if="editing">
+          <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed) }">Done</b-button>
+          <br/>
+        </div>
         <br/>
         <label class="label">Search for items</label>
         <b-field>
@@ -337,6 +340,7 @@ export default {
 
         if (responseList !== this.list) {
           this.list = responseList || []
+          shoppinglistCommon.WriteShoppingListToCache(this.id, this.list)
         }
       })
     },
@@ -404,6 +408,7 @@ export default {
     }
   },
   async beforeMount () {
+    this.list = shoppinglistCommon.GetShoppingListFromCache(this.id) || []
     this.GetShoppingList()
     this.GetShoppingListItems()
   },

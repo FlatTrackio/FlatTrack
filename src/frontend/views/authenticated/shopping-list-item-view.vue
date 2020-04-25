@@ -24,7 +24,7 @@
               v-model="name"
               size="is-medium"
               maxlength="30"
-              icon="email"
+              icon="text"
               required>
             </b-input>
           </b-field>
