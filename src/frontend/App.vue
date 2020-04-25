@@ -123,6 +123,14 @@ html {
     cursor: pointer;
 }
 
+.card:hover {
+    background-color: #f5f5f5;
+}
+
+.card:active {
+    background-color: #d8d8d8;
+}
+
 .form-width {
     width: 380px;
     margin: auto;
