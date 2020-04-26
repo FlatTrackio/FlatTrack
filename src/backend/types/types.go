@@ -111,6 +111,11 @@ type ShoppingItemSpec struct {
 	DeletionTimestamp     int     `json:"deletionTimestamp"`
 }
 
+type ShoppingItemOptions struct {
+	Selector ShoppingItemSelector `json:"Selector"`
+	SortBy string `json:"sortBy"`
+}
+
 type ShoppingItemSelector struct {
 	NotObtained bool `json:"notObtained"`
 }

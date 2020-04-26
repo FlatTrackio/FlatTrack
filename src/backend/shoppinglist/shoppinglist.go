@@ -94,8 +94,11 @@ func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingList
 
 // GetShoppingListItems
 // returns a list of items on a shopping list
-func GetShoppingListItems(db *sql.DB, listId string, itemSelector types.ShoppingItemSelector) (items []types.ShoppingItemSpec, err error) {
+func GetShoppingListItems(db *sql.DB, listId string, options types.ShoppingItemOptions) (items []types.ShoppingItemSpec, err error) {
 	sqlStatement := `select * from shopping_item where listId = $1 order by tag, name`
+	if options.SortBy == "price" {
+		sqlStatement = `select * from shopping_item where listId = $1 order by price desc, name asc`
+	}
 	rows, err := db.Query(sqlStatement, listId)
 	if err != nil {
 		return items, err
@@ -107,7 +110,7 @@ func GetShoppingListItems(db *sql.DB, listId string, itemSelector types.Shopping
 		if err != nil {
 			return items, err
 		}
-		if itemSelector.NotObtained == true {
+		if options.Selector.NotObtained == true {
 			if item.Obtained == true {
 				continue
 			}
@@ -133,7 +136,7 @@ func GetShoppingListItem(db *sql.DB, itemId string) (item types.ShoppingItemSpec
 
 // CreateShoppingList
 // creates a shopping list for adding items to
-func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, itemSelector types.ShoppingItemSelector) (shoppingListInserted types.ShoppingListSpec, err error) {
+func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, options types.ShoppingItemOptions) (shoppingListInserted types.ShoppingListSpec, err error) {
 	valid, err := ValidateShoppingList(db, shoppingList)
 	if !valid || err != nil {
 		return shoppingListInserted, err
@@ -159,7 +162,7 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, itemSel
 	}
 
 	// if using other list as a template
-	shoppingListItems, err := GetShoppingListItems(db, shoppingList.TemplateId, itemSelector)
+	shoppingListItems, err := GetShoppingListItems(db, shoppingList.TemplateId, options)
 	if err != nil {
 		return shoppingListInserted, errors.New("Failed to fetch items from shopping list")
 	}

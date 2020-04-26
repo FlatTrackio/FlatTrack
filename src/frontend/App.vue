@@ -82,7 +82,6 @@ $link: hsl(217, 71%, 53%);
 $link-invert: $black;
 $link-focus-border: $primary;
 $breadcrumb-item-color: $link;
-$footer-padding: 10px;
 
 @import "~bulma";
 @import "~buefy/src/scss/buefy";

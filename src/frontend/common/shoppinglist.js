@@ -32,7 +32,8 @@ function RestructureShoppingListToTags (responseList) {
 // GetShoppingListFromCache
 // given an id returns a list if available
 function GetShoppingListFromCache (id) {
-  return JSON.parse(localStorage.getItem(`shoppinglist.list.${id}.items`) || [])
+  var items = localStorage.getItem(`shoppinglist.list.${id}.items`)
+  return JSON.parse(items || [])
 }
 
 // WriteShoppingListToCache
@@ -41,10 +42,41 @@ function WriteShoppingListToCache (id, items) {
   localStorage.setItem(`shoppinglist.list.${id}.items`, JSON.stringify(items || []))
 }
 
-// GetShoppingListAutoRefresh
-// returns if the shopping list should be auto refresh
+// DeleteShoppingListFromCache
+// given an id deletes a cached list
+function DeleteShoppingListFromCache (id, items) {
+  localStorage.removeItem(`shoppinglist.list.${id}.items`)
+}
+
+// returns if the shopping list should auto refresh
 function GetShoppingListAutoRefresh () {
   return localStorage.getItem('shoppinglist.autorefresh') || true
 }
 
-export default { RestructureShoppingListToTags, GetShoppingListAutoRefresh, GetShoppingListFromCache, WriteShoppingListToCache }
+// WriteShoppingListAutoRefresh
+// writes if the shopping list should auto refresh
+function WriteShoppingListAutoRefresh (autorefresh) {
+  return localStorage.setItem('shoppinglist.autorefresh', autorefresh)
+}
+
+// GetShoppingListSortBy
+// returns how the shopping list should sort by
+function GetShoppingListSortBy () {
+  return localStorage.getItem('shoppinglist.sortBy') || 'tags'
+}
+
+// WriteShoppingListSortBy
+// writes how the shopping list should sort by
+function WriteShoppingListSortBy (sortBy) {
+  return localStorage.setItem('shoppinglist.sortBy', sortBy)
+}
+
+export default {
+  RestructureShoppingListToTags,
+  GetShoppingListAutoRefresh,
+  GetShoppingListFromCache,
+  WriteShoppingListToCache,
+  DeleteShoppingListFromCache,
+  GetShoppingListSortBy,
+  WriteShoppingListSortBy
+}

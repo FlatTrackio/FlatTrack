@@ -75,6 +75,18 @@ function DeviceIsMobile () {
   return window.innerWidth <= 870
 }
 
+// GetFlatnameFromCache
+// returns the flatname
+function GetFlatnameFromCache () {
+  return localStorage.getItem('flatname')
+}
+
+// WriteFlatnameToCache
+// sets the flatname in the cache
+function WriteFlatnameToCache (name) {
+  localStorage.setItem('flatname', name)
+}
+
 export default {
   GetAuthToken,
   DeleteAuthToken,
@@ -82,5 +94,7 @@ export default {
   DisplayFailureToast,
   SignoutDialog,
   TimestampToCalendar,
-  DeviceIsMobile
+  DeviceIsMobile,
+  GetFlatnameFromCache,
+  WriteFlatnameToCache
 }

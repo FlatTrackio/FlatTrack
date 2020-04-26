@@ -69,7 +69,13 @@
         <br/>
         <label class="label">Search for items</label>
         <b-field>
-          <b-input size="is-medium" placeholder="Item name" type="search" v-model="itemSearch" ref="search" v-on:keyup.ctrl.66="FocusSearchBox"></b-input>
+          <b-input icon="magnify" size="is-medium" placeholder="Item name" type="search" v-model="itemSearch" ref="search" v-on:keyup.ctrl.66="FocusSearchBox"></b-input>
+          <p class="control">
+            <b-select placeholder="Sort by" icon="sort" v-model="sortBy" size="is-medium" expanded>
+              <option value="tags">Tags</option>
+              <option value="price">Price</option>
+            </b-select>
+          </p>
         </b-field>
         <div>
           <section>
@@ -95,62 +101,40 @@
         </div>
         <br/>
         <div v-if="listItems.length > 0">
-          <section v-for="itemTag in listItems" v-bind:key="itemTag">
-            <p class="title is-5">
-              {{ itemTag.tag }} - {{ itemTag.items.length || 0 }} item(s)
-              <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
-                (${{ itemTag.price }})
-              </span>
-            </p>
-            <transition-group
-              name="staggered-fade"
-              tag="div"
-              v-bind:css="false"
-              v-on:enter="ItemAppear"
-              v-on:leave="ItemDisappear">
-              <div v-for="(item, index) in itemTag.items" v-bind:key="item">
-                <div class="card" :id="itemTag.id">
-                  <div class="card-content card-content-list">
-                    <div class="media">
-                      <div class="media-left" @click="PatchItemObtained(item.id, !item.obtained)">
-                        <b-checkbox size="is-medium" v-model="item.obtained"></b-checkbox>
-                      </div>
-                      <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/item/' + item.id)">
-                        <div class="block">
-                          <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4 is-marginless">
-                            {{ item.name }}
-                            <span v-if="typeof item.price !== 'undefined' && item.price !== 0"> (${{ item.price }}) </span>
-                            <b v-if="item.quantity > 1">x{{ item.quantity }} </b>
-                            <b-icon
-                              v-if="typeof item.price === 'undefined' || item.price === 0"
-                              icon="currency-usd-off"
-                              size="is-small">
-                            </b-icon>
-                            <b-icon
-                              v-if="item.notes.length > 0"
-                              icon="note-text-outline"
-                              size="is-small">
-                            </b-icon>
-                          </p>
-                          <span>
-                            <p class="subtitle is-6">
-                              <i>{{ item.notes }}</i>
-                            </p>
-                          </span>
-                        </div>
-                      </div>
-                      <div class="media-right">
-                        <b-button type="is-danger" icon-right="delete" v-if="deviceIsMobile === false" @click="DeleteShoppingListItem(item.listId, item.id, index)" />
-                        <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
-                      </div>
-                    </div>
-                  </div>
+          <div v-if="sortBy === 'tags'">
+            <section v-for="itemTag in listItems" v-bind:key="itemTag">
+              <p class="title is-5">
+                {{ itemTag.tag }}
+                <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
+                  (${{ itemTag.price }})
+                </span>
+              </p>
+              <transition-group
+                name="staggered-fade"
+                tag="div"
+                v-bind:css="false"
+                v-on:enter="ItemAppear"
+                v-on:leave="ItemDisappear">
+                <div v-for="(item, index) in itemTag.items" v-bind:key="item">
+                  <itemCard :list="list" :item="item" :index="index" :listId="id"/>
                 </div>
-              </div>
+                <br/>
+              </transition-group>
+              <section>
+                <br/>
+                <p>
+                  {{ itemTag.items.length || 0 }} item(s)
+                </p>
+              </section>
               <br/>
-            </transition-group>
-            <br/>
-          </section>
+            </section>
+          </div>
+          <div v-if="sortBy === 'price'">
+            <div v-for="(item, index) in list" v-bind:key="item">
+              <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true"/>
+            </div>
+          </div>
+          <br/>
         </div>
         <div v-else>
           <div class="card">
@@ -198,8 +182,8 @@ export default {
       authorNames: '',
       authorLastNames: '',
       totalItems: 0,
-      deviceIsMobile: false,
       loopCreated: new Date(),
+      sortBy: shoppinglistCommon.GetShoppingListSortBy(),
       id: this.$route.params.id,
       name: '',
       notes: '',
@@ -210,6 +194,9 @@ export default {
       modificationTimestamp: 0,
       list: []
     }
+  },
+  components: {
+    itemCard: () => import('@/frontend/components/authenticated/shopping-list-item-card-view.vue')
   },
   computed: {
     listItems () {
@@ -316,6 +303,7 @@ export default {
           window.clearInterval(this.intervalLoop)
           shoppinglist.DeleteShoppingList(id).then(resp => {
             common.DisplaySuccessToast('Deleted the shopping list')
+            shoppinglistCommon.DeleteShoppingListFromCache(id)
             setTimeout(() => {
               this.$router.push({ name: 'Shopping list' })
             }, 1 * 1000)
@@ -325,13 +313,12 @@ export default {
         }
       })
     },
-    PatchItemObtained (itemId, obtained) {
-      shoppinglist.PatchShoppingListItemObtained(this.id, itemId, obtained).catch(err => {
-        common.DisplayFailureToast('Failed to patch the obtained field of this item' + '<br/>' + err.response.data.metadata.response)
-      })
-    },
     GetShoppingListItems () {
-      shoppinglist.GetShoppingListItems(this.id).then(resp => {
+      var sortBy
+      if (this.sortBy === 'price') {
+        sortBy = this.sortBy
+      }
+      shoppinglist.GetShoppingListItems(this.id, sortBy).then(resp => {
         var responseList = resp.data.list
         this.totalItems = responseList === null ? 0 : responseList.length
         if (this.list === null) {
@@ -341,23 +328,6 @@ export default {
         if (responseList !== this.list) {
           this.list = responseList || []
           shoppinglistCommon.WriteShoppingListToCache(this.id, this.list)
-        }
-      })
-    },
-    DeleteShoppingListItem (listId, itemId, index) {
-      Dialog.confirm({
-        title: 'Delete item',
-        message: 'Are you sure that you wish to delete this shopping list item?' + '<br/>' + 'This action cannot be undone.',
-        confirmText: 'Delete item',
-        type: 'is-danger',
-        hasIcon: true,
-        onConfirm: () => {
-          shoppinglist.DeleteShoppingListItem(listId, itemId).then(resp => {
-            common.DisplaySuccessToast(resp.data.metadata.response)
-            this.list.splice(index, 1)
-          }).catch(err => {
-            common.DisplayFailureToast('Failed to delete shopping list item' + ' - ' + err.response.data.metadata.response)
-          })
         }
       })
     },
@@ -403,9 +373,11 @@ export default {
     },
     LoopStop () {
       window.clearInterval(this.intervalLoop)
-    },
-    AdjustForMobile () {
-      this.deviceIsMobile = common.DeviceIsMobile()
+    }
+  },
+  watch: {
+    sortBy () {
+      shoppinglistCommon.WriteShoppingListSortBy(this.sortBy)
     }
   },
   async beforeMount () {
@@ -414,9 +386,7 @@ export default {
     this.GetShoppingListItems()
   },
   async created () {
-    this.AdjustForMobile()
     this.LoopStart()
-    window.addEventListener('resize', this.AdjustForMobile.bind(this))
     window.addEventListener('focus', () => {
       this.loopCreated = new Date()
     })

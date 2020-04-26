@@ -600,13 +600,15 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &shoppingList)
 
-		selectors := types.ShoppingItemSelector{
-			NotObtained: r.FormValue("notObtained") == "true",
+		options := types.ShoppingItemOptions{
+			Selector: types.ShoppingItemSelector{
+				NotObtained: r.FormValue("notObtained") == "true",
+			},
 		}
 
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingList.Author = id
-		shoppingListInserted, err := shoppinglist.CreateShoppingList(db, shoppingList, selectors)
+		shoppingListInserted, err := shoppinglist.CreateShoppingList(db, shoppingList, options)
 		if err == nil && errId == nil {
 			code = 200
 			response = "Successfully created the shopping list"
@@ -728,8 +730,12 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		id := vars["id"]
 
+		options := types.ShoppingItemOptions{
+			SortBy: r.FormValue("sortBy"),
+		}
+
 		// TODO add item selectors for this endpoint
-		shoppingListItems, err := shoppinglist.GetShoppingListItems(db, id, types.ShoppingItemSelector{})
+		shoppingListItems, err := shoppinglist.GetShoppingListItems(db, id, options)
 		if err == nil {
 			response = "Fetched the shopping list items"
 			code = 200

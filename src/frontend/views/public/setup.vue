@@ -148,8 +148,6 @@
       </div>
       <br/>
       <p>* optional</p>
-      <br/>
-      <p>FlatTrack version {{ flatTrackVersion || '0.0.0' }}</p>
     </section>
   </div>
 </div>
@@ -170,7 +168,6 @@ export default {
     const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDay())
 
     return {
-      flatTrackVersion: '0.0.0',
       language: 'English',
       timezone: 'Pacific/Auckland',
       maxDate: maxDate,
@@ -217,15 +214,7 @@ export default {
         loadingComponent.close()
         common.DisplayFailureToast(err.response.data.metadata.response)
       })
-    },
-    GetAPIversion () {
-      apiroot.GetAPIroot().then(resp => {
-        this.flatTrackVersion = resp.data.metadata.version
-      })
     }
-  },
-  async beforeMount () {
-    this.GetAPIversion()
   }
 }
 </script>
