@@ -22,7 +22,7 @@
           <br/>
         </div>
         <div v-else>
-          <h1 class="title is-1 is-marginless display-is-editable title-sticky pointer-cursor-on-hover" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
+          <h1 class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
           <br/>
           <b-tag type="is-info" v-if="completed">Completed</b-tag>
           <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
@@ -108,8 +108,8 @@
               v-bind:css="false"
               v-on:enter="ItemAppear"
               v-on:leave="ItemDisappear">
-              <div v-for="item in itemTag.items" v-bind:key="item">
-                <div class="card">
+              <div v-for="(item, index) in itemTag.items" v-bind:key="item">
+                <div class="card" :id="itemTag.id">
                   <div class="card-content card-content-list">
                     <div class="media">
                       <div class="media-left" @click="PatchItemObtained(item.id, !item.obtained)">
@@ -140,7 +140,7 @@
                         </div>
                       </div>
                       <div class="media-right">
-                        <b-button type="is-danger" icon-right="delete" v-if="deviceIsMobile === false" @click="DeleteShoppingListItem(item.listId, item.id)" />
+                        <b-button type="is-danger" icon-right="delete" v-if="deviceIsMobile === false" @click="DeleteShoppingListItem(item.listId, item.id, index)" />
                         <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
                       </div>
                     </div>
@@ -344,7 +344,7 @@ export default {
         }
       })
     },
-    DeleteShoppingListItem (listId, itemId) {
+    DeleteShoppingListItem (listId, itemId, index) {
       Dialog.confirm({
         title: 'Delete item',
         message: 'Are you sure that you wish to delete this shopping list item?' + '<br/>' + 'This action cannot be undone.',
@@ -354,6 +354,7 @@ export default {
         onConfirm: () => {
           shoppinglist.DeleteShoppingListItem(listId, itemId).then(resp => {
             common.DisplaySuccessToast(resp.data.metadata.response)
+            this.list.splice(index, 1)
           }).catch(err => {
             common.DisplayFailureToast('Failed to delete shopping list item' + ' - ' + err.response.data.metadata.response)
           })

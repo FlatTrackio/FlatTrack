@@ -124,11 +124,11 @@ html {
 }
 
 .card:hover {
-    background-color: #f5f5f5;
+    background-color: #fbfbfb;
 }
 
 .card:active {
-    background-color: #d8d8d8;
+    background-color: #f1f0f0;
 }
 
 .form-width {
