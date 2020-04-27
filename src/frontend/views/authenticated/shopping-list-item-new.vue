@@ -72,7 +72,14 @@
           </div>
           <br/>
           <br/>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostShoppingListItem(shoppingListId, name, notes, price, quantity, tag)">Add</b-button>
+          <b-button
+            type="is-success"
+            size="is-medium"
+            icon-left="plus"
+            native-type="submit"
+            @click="PostShoppingListItem(shoppingListId, name, notes, price, quantity, tag)">
+            Add
+          </b-button>
         </div>
       </section>
     </div>
