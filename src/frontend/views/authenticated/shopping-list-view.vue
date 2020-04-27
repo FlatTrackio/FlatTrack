@@ -14,7 +14,9 @@
               type="text"
               icon="format-title"
               size="is-medium"
+              :autofocus="autofocusOn === 'name'"
               @keyup.enter.native="notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed)"
+              @keyup.esc.native="editing = false"
               v-model="name"
               required>
             </b-input>
@@ -22,11 +24,7 @@
           <br/>
         </div>
         <div v-else>
-          <h1 class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="editing = !editing">{{ name || 'Unnamed list' }}</h1>
-          <br/>
-          <b-tag type="is-info" v-if="completed">Completed</b-tag>
-          <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
-          <br/>
+          <h1 class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="autofocusOn = 'name'; editing = !editing">{{ name || 'Unnamed list' }}</h1>
           <br/>
           <p class="subtitle is-6">
             Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
@@ -44,7 +42,9 @@
                 size="is-medium"
                 maxlength="100"
                 type="text"
+                :autofocus="autofocusOn === 'notes'"
                 @keyup.enter.native="notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes)"
+                @keyup.esc.native="editing = false"
                 v-model="notes">
               </b-input>
             </b-field>
@@ -54,16 +54,16 @@
             <div class="notification">
               <div class="content">
                 <label class="label">Notes</label>
-                <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="editing = true">
+                <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="autofocusOn = 'notes'; editing = true">
                   {{ notes }}
                 </p>
               </div>
             </div>
           </div>
         </div>
-        <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true }" v-if="!editing && notes.length == 0">Add notes</b-button>
+        <b-button type="is-text" @click="() => { notesFromEmpty = true; autofocusOn = 'notes'; editing = true }" v-if="!editing && notes.length == 0">Add notes</b-button>
         <div v-if="editing">
-          <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed) }">Done</b-button>
+          <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; autofocusOn = ''; UpdateShoppingList(name, notes, completed) }">Done</b-button>
           <br/>
         </div>
         <br/>
@@ -106,7 +106,7 @@
               <p class="title is-5">
                 {{ itemTag.tag }}
                 <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
-                  (${{ itemTag.price }})
+                  (${{ itemTag.price.toFixed(2) }})
                 </span>
               </p>
               <transition-group
@@ -152,13 +152,25 @@
           </div>
           <br/>
         </div>
+        <floatingAddButton :path="'/apps/shopping-list/list/' + id + '/new'"/>
         <p class="subtitle is-4">
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br/>
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
         </p>
-        <b-button type="is-success" size="is-medium" rounded @click="PatchShoppingListCompleted(id, !completed)">Mark as {{ completed === false ? 'completed' : 'uncompleted' }}</b-button>
-        <b-button type="is-danger" size="is-medium" rounded @click="DeleteShoppingList(id)">Delete list</b-button>
+        <b-button
+          :icon-left="completed === false ? 'checkbox-blank-outline' : 'check-box-outline'"
+          type="is-success"
+          size="is-medium"
+          @click="PatchShoppingListCompleted(id, !completed)">
+          {{ completed === false ? 'Completed' : 'Uncompleted' }}
+        </b-button>
+        <b-button
+          icon-left="delete"
+          type="is-danger"
+          size="is-medium"
+          @click="DeleteShoppingList(id)">
+        </b-button>
       </section>
     </div>
   </div>
@@ -184,6 +196,7 @@ export default {
       totalItems: 0,
       loopCreated: new Date(),
       sortBy: shoppinglistCommon.GetShoppingListSortBy(),
+      autofocusOn: '',
       id: this.$route.params.id,
       name: '',
       notes: '',
@@ -196,7 +209,8 @@ export default {
     }
   },
   components: {
-    itemCard: () => import('@/frontend/components/authenticated/shopping-list-item-card-view.vue')
+    itemCard: () => import('@/frontend/components/authenticated/shopping-list-item-card-view.vue'),
+    floatingAddButton: () => import('@/frontend/components/common/floating-add-button.vue')
   },
   computed: {
     listItems () {

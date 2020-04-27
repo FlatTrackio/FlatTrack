@@ -98,6 +98,7 @@
             </div>
           </div>
         </div>
+        <floatingAddButton path="/admin/accounts/new"/>
       </section>
     </div>
   </div>
@@ -120,6 +121,9 @@ export default {
   async beforeMount () {
     this.groupQuery = this.$route.query.group
     this.FetchAllFlatmates()
+  },
+  components: {
+    floatingAddButton: () => import('@/frontend/components/common/floating-add-button.vue')
   },
   methods: {
     goToRef (ref) {

@@ -5,7 +5,7 @@
       <section class="section">
         <h1 class="title is-1">Confirm your account</h1>
         <p class="subtitle is-3">
-          Last few things to do before continuing to FlatTrack
+          Final things to complete your sign up
         </p>
 
         <b-message type="is-danger" has-icon v-if="(typeof id === 'undefined' || id === '') || idValid !== true">
@@ -67,7 +67,14 @@
               required>
             </b-input>
           </b-field>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostUserConfirm(id, secret, phoneNumber, password, passwordConfirm, jsBirthday)">Confirm my account</b-button>
+          <b-button
+            type="is-success"
+            size="is-medium"
+            icon-left="check"
+            native-type="submit"
+            @click="PostUserConfirm(id, secret, phoneNumber, password, passwordConfirm, jsBirthday)">
+            Confirm my account
+          </b-button>
           <br/>
           <br/>
           <p class="subtitle is-6">
@@ -125,6 +132,9 @@ export default {
           loadingComponent.close()
           window.location.href = '/'
         }, 2 * 1000)
+      }).catch(() => {
+        loadingComponent.close()
+        common.DisplayFailureToast('Unable to find token to sign in with after confirming account. Please contact an administrator')
       })
     }
   },

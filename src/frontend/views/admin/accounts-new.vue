@@ -109,7 +109,14 @@
         </div>
 
         <!-- TODO become invite via email button -->
-        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewUser(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">Create user account</b-button>
+        <b-button
+          type="is-success"
+          size="is-medium"
+          icon-left="plus"
+          native-type="submit"
+          @click="PostNewUser(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">
+          Create user account
+        </b-button>
         <div v-if="setOnlyRequiredFields == false">
           <br/>
           <p>* optional</p>

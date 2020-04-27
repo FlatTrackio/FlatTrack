@@ -37,7 +37,7 @@
         <b-button
           type="is-success"
           size="is-medium"
-          rounded
+          icon-left="delta"
           native-type="submit"
           @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday)">
           Update password

@@ -39,7 +39,7 @@
             </div>
           </div>
           <div class="media-right">
-            <b-button type="is-danger" icon-right="delete" v-if="deviceIsMobile === false" @click="DeleteShoppingListItem(listId, item.id, index)" />
+            <b-button type="is-danger" icon-right="delete" v-if="deviceIsMobile === false" @click="DeleteShoppingListItem(item.id, index)" />
             <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
           </div>
         </div>

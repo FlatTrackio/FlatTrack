@@ -32,6 +32,7 @@
             </div>
           </section>
         </div>
+        <floatingAddButton path="/apps/shopping-list/new"/>
         <br/>
         <div v-if="lists.length > 0">
           <shoppingListCardView :list="list" :authors="authors" v-for="list in lists" v-bind:key="list" />
@@ -56,7 +57,8 @@ export default {
     }
   },
   components: {
-    shoppingListCardView: () => import('@/frontend/components/authenticated/shopping-list-card-view.vue')
+    shoppingListCardView: () => import('@/frontend/components/authenticated/shopping-list-card-view.vue'),
+    floatingAddButton: () => import('@/frontend/components/common/floating-add-button.vue')
   },
   methods: {
     goToRef (ref) {

@@ -140,7 +140,7 @@
         <b-button
           type="is-success"
           size="is-medium"
-          rounded
+          icon-left="check"
           native-type="submit"
           @click="Register({ language, timezone, flatName, user: { names, email, password, passwordConfirm, jsBirthday, phoneNumber } })">
           Setup

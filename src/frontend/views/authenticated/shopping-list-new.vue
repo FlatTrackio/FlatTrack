@@ -47,7 +47,14 @@
             <b-checkbox v-model="templateListFromOnlyUnobtained">Create list only from unobtained items in template list</b-checkbox>
           </div>
           <br/>
-          <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PostNewShoppingList(name, notes, listTemplate, templateListFromOnlyUnobtained)">Create</b-button>
+          <b-button
+            icon-left="plus"
+            type="is-success"
+            size="is-medium"
+            native-type="submit"
+            @click="PostNewShoppingList(name, notes, listTemplate, templateListFromOnlyUnobtained)">
+            Create
+          </b-button>
         </div>
       </section>
     </div>

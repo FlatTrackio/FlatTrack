@@ -116,8 +116,21 @@
                    size="is-medium">
           </b-input>
         </b-field>
-        <b-button type="is-success" size="is-medium" rounded native-type="submit" @click="PatchUserAccount(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">Update user account</b-button>
-        <b-button type="is-danger" size="is-medium" rounded native-type="submit" @click="DeleteUserAccount(id)">Delete user account</b-button>
+        <b-button
+          type="is-success"
+          size="is-medium"
+          icon-left="delta"
+          native-type="submit"
+          @click="PatchUserAccount(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">
+          Update user account
+        </b-button>
+        <b-button
+          type="is-danger"
+          size="is-medium"
+          icon-left="delete"
+          native-type="submit"
+          @click="DeleteUserAccount(id)">
+        </b-button>
       </section>
     </div>
   </div>

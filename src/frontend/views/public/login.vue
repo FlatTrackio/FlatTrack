@@ -32,7 +32,7 @@
             </b-input>
           </b-field>
           <b-button
-            rounded
+            icon-left="login"
             native-type="submit"
             size="is-medium"
             @click="postLogin(email, password)">
@@ -41,7 +41,7 @@
           <b-button
             tag="a"
             href="forgot-password"
-            rounded
+            icon-left="lifebuoy"
             size="is-medium"
             type="is-warning">
             Forgot Password
