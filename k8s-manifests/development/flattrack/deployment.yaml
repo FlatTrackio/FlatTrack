@@ -12,8 +12,14 @@ spec:
     metadata:
       labels:
         app: flattrack
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "2112"
+        prometheus.io/scrape: "true"
     spec:
       automountServiceAccountToken: false
+      imagePullSecrets:
+      - name: flattrack-registry
       containers:
       - name: flattrack
         image: registry.gitlab.com/flattrack/flattrack:latest
@@ -28,6 +34,7 @@ spec:
         imagePullPolicy: IfNotPresent
         ports:
           - containerPort: 8080
+          - containerPort: 2112
         env:
           - name: TZ
             value: "Pacific/Auckland"
@@ -51,4 +58,11 @@ spec:
             port: 8080
           initialDelaySeconds: 1
           periodSeconds: 20
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "250m"
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
 

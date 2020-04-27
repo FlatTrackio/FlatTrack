@@ -3,9 +3,14 @@ kind: Service
 metadata:
   name: flattrack
   namespace: flattrack-dev
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/scheme: http
+    prometheus.io/port: "2112"
 spec:
   ports:
-  - port: 8080
+  - name: http
+    port: 8080
     targetPort: 8080
   type: NodePort
   selector:

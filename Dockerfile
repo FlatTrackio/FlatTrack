@@ -29,7 +29,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build \
   -o flattrack \
   src/backend/main.go
 
-FROM alpine:3.10
+FROM scratch
 WORKDIR /app
 ENV PATH=/app
 COPY --from=ui /app/dist /app/dist
