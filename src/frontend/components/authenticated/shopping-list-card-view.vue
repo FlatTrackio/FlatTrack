@@ -35,7 +35,9 @@
             </div>
             <br/>
             <span v-if="list.notes !== '' && typeof list.notes !== 'undefined'">
-              {{ list.notes }}
+              <i>
+                {{ list.notes }}
+              </i>
               <br/>
               <br/>
             </span>

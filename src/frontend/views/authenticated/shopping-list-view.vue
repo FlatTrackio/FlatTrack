@@ -55,7 +55,9 @@
               <div class="content">
                 <label class="label">Notes</label>
                 <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="autofocusOn = 'notes'; editing = true">
-                  {{ notes }}
+                  <i>
+                    {{ notes }}
+                  </i>
                 </p>
               </div>
             </div>
