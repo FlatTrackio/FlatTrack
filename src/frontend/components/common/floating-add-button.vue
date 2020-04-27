@@ -22,16 +22,17 @@ export default {
 }
 </script>
 
-<style>
+<style scope>
 .floating-add-button {
     display: block;
     position: fixed;
     bottom: 0;
     right: 0;
     margin-bottom: 50px;
+    z-index: 100;
 }
 
 .floating-add-button-colour {
-    background-color: #a9e2f2;
+    background-color: #448aff;
 }
 </style>
