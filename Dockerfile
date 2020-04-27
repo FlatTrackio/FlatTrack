@@ -18,6 +18,10 @@ COPY src /app/src
 COPY go.* /app/
 RUN adduser -D user
 # TODO build the version, git hash, and build date into the binary from build-args or env
+ARG APP_BUILD_VERSION="0.0.0"
+ARG APP_BUILD_HASH="???"
+ARG APP_BUILD_DATE="???"
+ARG APP_BUILD_MODE="development"
 RUN CGO_ENABLED=0 GOOS=linux go build \
   -a \
   -installsuffix cgo \
