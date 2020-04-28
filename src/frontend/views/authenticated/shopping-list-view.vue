@@ -61,7 +61,7 @@
           <br/>
         </div>
         <br/>
-        <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block" v-model="itemDisplayState">
+        <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block is-marginless" v-model="itemDisplayState">
           <b-tab-item icon="" label="All"></b-tab-item>
           <b-tab-item icon="playlist-remove" label="Unobtained"></b-tab-item>
           <b-tab-item icon="playlist-check" label="Obtained"></b-tab-item>

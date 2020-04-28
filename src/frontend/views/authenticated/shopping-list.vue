@@ -11,7 +11,7 @@
         <h1 class="title is-1">Shopping list</h1>
         <p class="subtitle is-3">Manage your weekly shop</p>
         <div>
-          <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block" v-model="listDisplayState">
+          <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block is-marginless" v-model="listDisplayState">
             <b-tab-item icon="" label="All"></b-tab-item>
             <b-tab-item icon="playlist-remove" label="Uncompleted"></b-tab-item>
             <b-tab-item icon="playlist-check" label="Completed"></b-tab-item>
