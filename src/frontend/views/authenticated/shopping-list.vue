@@ -11,7 +11,7 @@
         <h1 class="title is-1">Shopping list</h1>
         <p class="subtitle is-3">Manage your weekly shop</p>
         <div>
-          <b-tabs position="is-centered" class="block" v-model="listDisplayState">
+          <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block" v-model="listDisplayState">
             <b-tab-item icon="" label="All"></b-tab-item>
             <b-tab-item icon="playlist-remove" label="Uncompleted"></b-tab-item>
             <b-tab-item icon="playlist-check" label="Completed"></b-tab-item>
@@ -59,7 +59,8 @@ export default {
     return {
       lists: [],
       authors: {},
-      listDisplayState: 0
+      listDisplayState: 0,
+      deviceIsMobile: false
     }
   },
   components: {
@@ -69,7 +70,6 @@ export default {
   computed: {
     listsFiltered () {
       return this.lists.filter((item) => {
-        console.log(this.listDisplayState, item.completed)
         if (this.listDisplayState === 1 && item.completed === false) {
           return item
         } else if (this.listDisplayState === 2 && item.completed === true) {
@@ -98,10 +98,17 @@ export default {
         common.DisplayFailureToast('Failed to fetch user account' + `<br/>${err.response.data.metadata.response}`)
         return id
       })
+    },
+    CheckDeviceIsMobile () {
+      this.deviceIsMobile = common.DeviceIsMobile()
     }
   },
   async beforeMount () {
     this.GetShoppingLists()
+  },
+  async created () {
+    this.CheckDeviceIsMobile()
+    window.addEventListener('resize', this.CheckDeviceIsMobile.bind(this))
   }
 }
 </script>

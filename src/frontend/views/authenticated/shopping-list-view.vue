@@ -25,14 +25,6 @@
         </div>
         <div v-else>
           <h1 class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="autofocusOn = 'name'; editing = !editing">{{ name || 'Unnamed list' }}</h1>
-          <br/>
-          <p class="subtitle is-6">
-            Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
-            <span v-if="creationTimestamp !== modificationTimestamp">
-              <br/>
-              Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast"> {{ authorLastNames }} </router-link>
-            </span>
-          </p>
         </div>
         <div v-if="notes != '' || notesFromEmpty || editing">
           <div v-if="editing">
@@ -69,6 +61,11 @@
           <br/>
         </div>
         <br/>
+        <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block" v-model="itemDisplayState">
+          <b-tab-item icon="" label="All"></b-tab-item>
+          <b-tab-item icon="playlist-remove" label="Unobtained"></b-tab-item>
+          <b-tab-item icon="playlist-check" label="Obtained"></b-tab-item>
+        </b-tabs>
         <label class="label">Search for items</label>
         <b-field>
           <b-input icon="magnify" size="is-medium" placeholder="Item name" type="search" v-model="itemSearch" ref="search" v-on:keyup.ctrl.66="FocusSearchBox"></b-input>
@@ -102,9 +99,9 @@
           </section>
         </div>
         <br/>
-        <div v-if="listItems.length > 0">
+        <div v-if="list.length > 0">
           <div v-if="sortBy === 'tags'">
-            <section v-for="itemTag in listItems" v-bind:key="itemTag">
+            <section v-for="itemTag in listItemsFromTags" v-bind:key="itemTag">
               <p class="title is-5">
                 {{ itemTag.tag }}
                 <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
@@ -132,7 +129,7 @@
             </section>
           </div>
           <div v-if="sortBy === 'price'">
-            <div v-for="(item, index) in list" v-bind:key="item">
+            <div v-for="(item, index) in listItemsFromPrice" v-bind:key="item">
               <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true"/>
             </div>
           </div>
@@ -173,6 +170,15 @@
           size="is-medium"
           @click="DeleteShoppingList(id)">
         </b-button>
+        <br/>
+        <br/>
+        <p class="subtitle is-6">
+            Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
+            <span v-if="creationTimestamp !== modificationTimestamp">
+              <br/>
+              Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast"> {{ authorLastNames }} </router-link>
+            </span>
+        </p>
       </section>
     </div>
   </div>
@@ -199,6 +205,8 @@ export default {
       loopCreated: new Date(),
       sortBy: shoppinglistCommon.GetShoppingListSortBy(),
       autofocusOn: '',
+      itemDisplayState: 0,
+      deviceIsMobile: false,
       id: this.$route.params.id,
       name: '',
       notes: '',
@@ -215,11 +223,16 @@ export default {
     floatingAddButton: () => import('@/frontend/components/common/floating-add-button.vue')
   },
   computed: {
-    listItems () {
+    listItemsFromTags () {
       var vm = this
       return this.RestructureShoppingListToTags(this.list.filter((item) => {
-        return item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
+        return this.ItemDisplayState(item)
       }))
+    },
+    listItemsFromPrice () {
+      return this.list.filter((item) => {
+        return this.ItemDisplayState(item)
+      })
     },
     obtainedCount () {
       var obtained = 0
@@ -263,6 +276,20 @@ export default {
     }
   },
   methods: {
+    ItemByNameInList (item) {
+      var vm = this
+      return item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
+    },
+    ItemDisplayState (item) {
+      var vm = this
+      if (this.itemDisplayState === 1 && item.obtained === false) {
+        return this.ItemByNameInList(item)
+      } else if (this.itemDisplayState === 2 && item.obtained === true) {
+        return this.ItemByNameInList(item)
+      } else if (this.itemDisplayState === 0) {
+        return this.ItemByNameInList(item)
+      }
+    },
     goToRef (ref) {
       this.$router.push({ path: ref })
     },
@@ -389,6 +416,9 @@ export default {
     },
     LoopStop () {
       window.clearInterval(this.intervalLoop)
+    },
+    CheckDeviceIsMobile () {
+      this.deviceIsMobile = common.DeviceIsMobile()
     }
   },
   watch: {
@@ -402,6 +432,8 @@ export default {
     this.GetShoppingListItems()
   },
   async created () {
+    this.CheckDeviceIsMobile()
+    window.addEventListener('resize', this.CheckDeviceIsMobile.bind(this))
     this.LoopStart()
     window.addEventListener('focus', () => {
       this.loopCreated = new Date()
