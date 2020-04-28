@@ -43,7 +43,7 @@
           </div>
           <div v-else>
             <br/>
-            <div class="notification">
+            <div>
               <div class="content">
                 <label class="label">Notes</label>
                 <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="autofocusOn = 'notes'; editing = true">
@@ -205,7 +205,7 @@ export default {
       loopCreated: new Date(),
       sortBy: shoppinglistCommon.GetShoppingListSortBy(),
       autofocusOn: '',
-      itemDisplayState: 0,
+      itemDisplayState: null,
       deviceIsMobile: false,
       id: this.$route.params.id,
       name: '',
@@ -424,6 +424,10 @@ export default {
   watch: {
     sortBy () {
       shoppinglistCommon.WriteShoppingListSortBy(this.sortBy)
+    },
+    itemDisplayState () {
+      console.log(this.itemDisplayState)
+      shoppinglistCommon.WriteShoppingListObtainedFilter(this.id, this.itemDisplayState)
     }
   },
   async beforeMount () {
@@ -432,6 +436,7 @@ export default {
     this.GetShoppingListItems()
   },
   async created () {
+    this.itemDisplayState = shoppinglistCommon.GetShoppingListObtainedFilter(this.id) || 0
     this.CheckDeviceIsMobile()
     window.addEventListener('resize', this.CheckDeviceIsMobile.bind(this))
     this.LoopStart()

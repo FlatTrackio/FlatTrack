@@ -71,6 +71,18 @@ function WriteShoppingListSortBy (sortBy) {
   return localStorage.setItem('shoppinglist.sortBy', sortBy)
 }
 
+// GetShoppingListObtainedFilter
+// returns the shopping list obtained filter
+function GetShoppingListObtainedFilter (id) {
+  return Number(localStorage.getItem(`shoppinglist.list.${id}.obtainedFilter`)) || 0
+}
+
+// WriteShoppingListObtainedFilter
+// writes the shopping list obtained filter
+function WriteShoppingListObtainedFilter (id, state) {
+  return localStorage.setItem(`shoppinglist.list.${id}.obtainedFilter`, state)
+}
+
 export default {
   RestructureShoppingListToTags,
   GetShoppingListAutoRefresh,
@@ -78,5 +90,7 @@ export default {
   WriteShoppingListToCache,
   DeleteShoppingListFromCache,
   GetShoppingListSortBy,
-  WriteShoppingListSortBy
+  WriteShoppingListSortBy,
+  GetShoppingListObtainedFilter,
+  WriteShoppingListObtainedFilter
 }
