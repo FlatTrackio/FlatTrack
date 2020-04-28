@@ -11,6 +11,11 @@
         <h1 class="title is-1">Shopping list</h1>
         <p class="subtitle is-3">Manage your weekly shop</p>
         <div>
+          <b-tabs position="is-centered" class="block" v-model="listDisplayState">
+            <b-tab-item icon="" label="All"></b-tab-item>
+            <b-tab-item icon="playlist-remove" label="Uncompleted"></b-tab-item>
+            <b-tab-item icon="playlist-check" label="Completed"></b-tab-item>
+          </b-tabs>
           <section>
             <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/new')">
               <div class="card-content">
@@ -34,10 +39,10 @@
         </div>
         <floatingAddButton path="/apps/shopping-list/new"/>
         <br/>
-        <div v-if="lists.length > 0">
-          <shoppingListCardView :list="list" :authors="authors" v-for="list in lists" v-bind:key="list" />
+        <div v-if="listsFiltered.length > 0">
+          <shoppingListCardView :list="list" :authors="authors" v-for="list in listsFiltered" v-bind:key="list" />
           <br/>
-          <p>{{ lists.length }} shopping list(s)</p>
+          <p>{{ listsFiltered.length }} shopping list(s)</p>
         </div>
     </div>
   </div>
@@ -53,12 +58,27 @@ export default {
   data () {
     return {
       lists: [],
-      authors: {}
+      authors: {},
+      listDisplayState: 0
     }
   },
   components: {
     shoppingListCardView: () => import('@/frontend/components/authenticated/shopping-list-card-view.vue'),
     floatingAddButton: () => import('@/frontend/components/common/floating-add-button.vue')
+  },
+  computed: {
+    listsFiltered () {
+      return this.lists.filter((item) => {
+        console.log(this.listDisplayState, item.completed)
+        if (this.listDisplayState === 1 && item.completed === false) {
+          return item
+        } else if (this.listDisplayState === 2 && item.completed === true) {
+          return item
+        } else if (this.listDisplayState === 0) {
+          return item
+        }
+      })
+    }
   },
   methods: {
     goToRef (ref) {
