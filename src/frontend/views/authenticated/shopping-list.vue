@@ -16,6 +16,10 @@
             <b-tab-item icon="playlist-remove" label="Uncompleted"></b-tab-item>
             <b-tab-item icon="playlist-check" label="Completed"></b-tab-item>
           </b-tabs>
+          <label class="label">Search for lists</label>
+          <b-field>
+            <b-input icon="magnify" size="is-medium" placeholder="List name" type="search" v-model="listSearch" ref="search"></b-input>
+        </b-field>
           <section>
             <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/new')">
               <div class="card-content">
@@ -44,6 +48,23 @@
           <br/>
           <p>{{ listsFiltered.length }} shopping list(s)</p>
         </div>
+        <div v-else>
+          <div class="card">
+            <div class="card-content card-content-list">
+              <div class="media">
+                <div class="media-left" @click="PatchItemObtained(item.id, !item.obtained)">
+                  <b-icon icon="cart-remove" size="is-medium" type="is-midgray"></b-icon>
+                </div>
+                <div class="media-content">
+                  <p class="subtitle is-4" v-if="listSearch === '' && lists.length === 0">No lists added yet.</p>
+                  <p class="subtitle is-4" v-else-if="listSearch === '' && listDisplayState === 1 && lists.length > 0">All lists have been completed.</p>
+                  <p class="subtitle is-4" v-else-if="listSearch === '' && listDisplayState === 2 && lists.length > 0">No lists have been completed yet.</p>
+                  <p class="subtitle is-4" v-else-if="listSearch !== ''">No lists found.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
     </div>
   </div>
 </template>
@@ -60,7 +81,8 @@ export default {
       lists: [],
       authors: {},
       listDisplayState: 0,
-      deviceIsMobile: false
+      deviceIsMobile: false,
+      listSearch: ''
     }
   },
   components: {
@@ -70,13 +92,7 @@ export default {
   computed: {
     listsFiltered () {
       return this.lists.filter((item) => {
-        if (this.listDisplayState === 1 && item.completed === false) {
-          return item
-        } else if (this.listDisplayState === 2 && item.completed === true) {
-          return item
-        } else if (this.listDisplayState === 0) {
-          return item
-        }
+        return this.ListDisplayState(item)
       })
     }
   },
@@ -98,6 +114,20 @@ export default {
         common.DisplayFailureToast('Failed to fetch user account' + `<br/>${err.response.data.metadata.response}`)
         return id
       })
+    },
+    ListDisplayState (list) {
+      var vm = this
+      if (this.listDisplayState === 1 && list.completed === false) {
+        return this.ItemByNameInList(list)
+      } else if (this.listDisplayState === 2 && list.completed === true) {
+        return this.ItemByNameInList(list)
+      } else if (this.listDisplayState === 0) {
+        return this.ItemByNameInList(list)
+      }
+    },
+    ItemByNameInList (item) {
+      var vm = this
+      return item.name.toLowerCase().indexOf(vm.listSearch.toLowerCase()) !== -1
     },
     CheckDeviceIsMobile () {
       this.deviceIsMobile = common.DeviceIsMobile()

@@ -132,6 +132,7 @@
             <div v-for="(item, index) in listItemsFromPrice" v-bind:key="item">
               <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true"/>
             </div>
+            <br/>
           </div>
         </div>
         <div v-else>
@@ -150,6 +151,7 @@
               </div>
             </div>
           </div>
+          <br/>
         </div>
         <floatingAddButton :path="'/apps/shopping-list/list/' + id + '/new'"/>
         <p class="subtitle is-4">
@@ -179,6 +181,7 @@
               Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast"> {{ authorLastNames }} </router-link>
             </span>
         </p>
+        <br/>
       </section>
     </div>
   </div>
