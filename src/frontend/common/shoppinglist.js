@@ -83,6 +83,18 @@ function WriteShoppingListObtainedFilter (id, state) {
   return localStorage.setItem(`shoppinglist.list.${id}.obtainedFilter`, state)
 }
 
+// GetShoppingListSearch
+// returns the last search from the current shopping list
+function GetShoppingListSearch (id) {
+  return sessionStorage.getItem(`shoppinglist.list.${id}.search`) || ''
+}
+
+// WriteShoppingListAutoRefresh
+// writes the last search string of the current shopping list
+function WriteShoppingListSearch (id, search) {
+  return sessionStorage.setItem(`shoppinglist.list.${id}.search`, search)
+}
+
 export default {
   RestructureShoppingListToTags,
   GetShoppingListAutoRefresh,
@@ -92,5 +104,7 @@ export default {
   GetShoppingListSortBy,
   WriteShoppingListSortBy,
   GetShoppingListObtainedFilter,
-  WriteShoppingListObtainedFilter
+  WriteShoppingListObtainedFilter,
+  GetShoppingListSearch,
+  WriteShoppingListSearch
 }

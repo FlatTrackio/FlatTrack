@@ -426,12 +426,15 @@ export default {
       shoppinglistCommon.WriteShoppingListSortBy(this.sortBy)
     },
     itemDisplayState () {
-      console.log(this.itemDisplayState)
       shoppinglistCommon.WriteShoppingListObtainedFilter(this.id, this.itemDisplayState)
+    },
+    itemSearch () {
+      shoppinglistCommon.WriteShoppingListSearch(this.id, this.itemSearch)
     }
   },
   async beforeMount () {
     this.list = shoppinglistCommon.GetShoppingListFromCache(this.id) || []
+    this.itemSearch = shoppinglistCommon.GetShoppingListSearch(this.id) || ''
     this.GetShoppingList()
     this.GetShoppingListItems()
   },
