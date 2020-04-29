@@ -1,5 +1,11 @@
 <template>
   <div>
+    <div v-if="HeaderIsSticky && !editing" class="ListBar">
+      <p class="subtitle is-4">
+        <b>{{ name }}</b>
+        ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
+      </p>
+    </div>
     <div class="container">
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
@@ -24,7 +30,7 @@
           <br/>
         </div>
         <div v-else>
-          <h1 class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="autofocusOn = 'name'; editing = !editing">{{ name || 'Unnamed list' }}</h1>
+          <h1 id="ListName" class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="autofocusOn = 'name'; editing = !editing">{{ name }}</h1>
         </div>
         <div v-if="notes != '' || notesFromEmpty || editing">
           <div v-if="editing">
@@ -210,8 +216,9 @@ export default {
       autofocusOn: '',
       itemDisplayState: null,
       deviceIsMobile: false,
+      HeaderIsSticky: false,
       id: this.$route.params.id,
-      name: '',
+      name: 'Unnamed list',
       notes: '',
       author: '',
       authorLast: '',
@@ -422,6 +429,9 @@ export default {
     },
     CheckDeviceIsMobile () {
       this.deviceIsMobile = common.DeviceIsMobile()
+    },
+    ManageStickyHeader () {
+      this.HeaderIsSticky = window.pageYOffset > document.getElementById('ListName').offsetTop
     }
   },
   watch: {
@@ -445,6 +455,7 @@ export default {
     this.itemDisplayState = shoppinglistCommon.GetShoppingListObtainedFilter(this.id) || 0
     this.CheckDeviceIsMobile()
     window.addEventListener('resize', this.CheckDeviceIsMobile.bind(this))
+    window.addEventListener('scroll', this.ManageStickyHeader.bind(this))
     this.LoopStart()
     window.addEventListener('focus', () => {
       this.loopCreated = new Date()
@@ -472,5 +483,17 @@ export default {
 .obtained {
     color: #adadad;
     text-decoration: line-through;
+}
+
+.ListBar {
+    position: fixed;
+    height: auto;
+    width: 100%;
+    z-index: 20;
+    padding: 10px;
+    box-shadow: black 0px -45px 71px;
+    display: block;
+    background-color: hsla(0,0%,100%,.73);
+    backdrop-filter: blur(5px);
 }
 </style>
