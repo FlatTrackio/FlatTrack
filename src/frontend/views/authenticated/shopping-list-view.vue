@@ -99,7 +99,7 @@
           </section>
         </div>
         <br/>
-        <div v-if="list.length > 0">
+        <div v-if="listItemsFromTags.length > 0 || listItemsFromPrice > 0">
           <div v-if="sortBy === 'tags'">
             <section v-for="itemTag in listItemsFromTags" v-bind:key="itemTag">
               <p class="title is-5">
@@ -133,7 +133,6 @@
               <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true"/>
             </div>
           </div>
-          <br/>
         </div>
         <div v-else>
           <div class="card">
@@ -143,13 +142,14 @@
                   <b-icon icon="cart-remove" size="is-medium" type="is-midgray"></b-icon>
                 </div>
                 <div class="media-content">
-                  <p class="subtitle is-4" v-if="itemSearch === ''">No items added yet.</p>
-                  <p class="subtitle is-4" v-if="itemSearch !== ''">No items found.</p>
+                  <p class="subtitle is-4" v-if="itemSearch === '' && list.length === 0">No items added yet.</p>
+                  <p class="subtitle is-4" v-else-if="itemSearch === '' && itemDisplayState === 1 && list.length > 0">All items have been obtained.</p>
+                  <p class="subtitle is-4" v-else-if="itemSearch === '' && itemDisplayState === 2 && list.length > 0">No items have been obtained yet.</p>
+                  <p class="subtitle is-4" v-else-if="itemSearch !== ''">No items found.</p>
                 </div>
               </div>
             </div>
           </div>
-          <br/>
         </div>
         <floatingAddButton :path="'/apps/shopping-list/list/' + id + '/new'"/>
         <p class="subtitle is-4">
