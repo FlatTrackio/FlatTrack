@@ -1,7 +1,7 @@
 <template>
   <div class="bottombar">
     <md-bottom-bar class="md-accent bottombar-background" md-sync-route>
-      <md-bottom-bar-item to="/" exact md-label="Home" md-icon="home" exact></md-bottom-bar-item>
+      <md-bottom-bar-item to="/" exact md-label="Home" md-icon="home"></md-bottom-bar-item>
       <md-bottom-bar-item to="/apps" md-label="Apps" md-icon="apps"></md-bottom-bar-item>
       <md-bottom-bar-item to="/account" md-label="My Account" md-icon="account_box"></md-bottom-bar-item>
       <md-bottom-bar-item to="/admin" md-label="Admin" md-icon="web" v-if="canUserAccountAdmin"></md-bottom-bar-item>
