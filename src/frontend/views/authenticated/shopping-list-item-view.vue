@@ -57,19 +57,21 @@
           <div>
             <label class="label">Tag</label>
             <b-field>
-              <p class="control">
-                <b-input
-                  type="text"
-                  v-model="tag"
-                  icon="tag"
-                  size="is-medium">
-                </b-input>
-              </p>
+              <b-input
+                expanded
+                type="text"
+                v-model="tag"
+                icon="tag"
+                size="is-medium">
+              </b-input>
               <p class="control" v-if="tags.length > 0">
                 <b-dropdown>
-                  <button class="button is-primary" slot="trigger">
-                    <b-icon icon="menu-down"></b-icon>
-                  </button>
+                  <b-button
+                    icon-left="menu-down"
+                    type="is-primary"
+                    slot="trigger"
+                    size="is-medium">
+                  </b-button>
 
                   <b-dropdown-item v-for="existingTag in tags" v-bind:key="existingTag" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
                 </b-dropdown>
@@ -77,22 +79,26 @@
             </b-field>
           </div>
           <br/>
-          <br/>
-          <b-button
-            type="is-success"
-            size="is-medium"
-            icon-left="delta"
-            native-type="submit"
-            @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag)">
-            Update item
-          </b-button>
-          <b-button
-            type="is-danger"
-            size="is-medium"
-            icon-left="delete"
-            native-type="submit"
-            @click="DeleteShoppingListItem(shoppingListId, id)">
-          </b-button>
+          <b-field>
+            <b-button
+              type="is-success"
+              size="is-medium"
+              icon-left="delta"
+              native-type="submit"
+              expanded
+              @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag)">
+              Update item
+            </b-button>
+            <p class="control">
+              <b-button
+                type="is-danger"
+                size="is-medium"
+                icon-left="delete"
+                native-type="submit"
+                @click="DeleteShoppingListItem(shoppingListId, id)">
+              </b-button>
+            </p>
+          <b-field>
         </div>
       </section>
     </div>

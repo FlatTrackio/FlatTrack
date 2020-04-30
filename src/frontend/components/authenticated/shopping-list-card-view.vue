@@ -36,7 +36,7 @@
             <br/>
             <span v-if="list.notes !== '' && typeof list.notes !== 'undefined'">
               <i>
-                {{ list.notes }}
+                {{ PreviewNotes(list.notes) }}
               </i>
               <br/>
               <br/>
@@ -73,6 +73,18 @@ export default {
   methods: {
     goToRef (ref) {
       this.$router.push({ path: ref })
+    },
+    PreviewNotes (notes) {
+      if (notes.length <= 35) {
+        return notes
+      }
+      var notesBytes = notes.split('')
+      var notesBytesValid = notesBytes.filter((value, index) => {
+        if (index <= 35) {
+          return value
+        }
+      })
+      return notesBytesValid.join('') + '...'
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)

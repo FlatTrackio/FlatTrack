@@ -31,7 +31,11 @@
             </b-input>
           </b-field>
           <b-field label="Use another list as a template (optional)" v-if="lists.length > 0">
-            <b-select placeholder="Template a preview list" v-model="listTemplate" icon="content-copy">
+            <b-select
+              placeholder="Template a preview list"
+              v-model="listTemplate"
+              icon="content-copy"
+              size="is-medium">
               <option
                 value="">
               </option>

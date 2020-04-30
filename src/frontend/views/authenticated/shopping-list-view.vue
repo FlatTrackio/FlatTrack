@@ -74,7 +74,16 @@
         </b-tabs>
         <label class="label">Search for items</label>
         <b-field>
-          <b-input icon="magnify" size="is-medium" placeholder="Item name" type="search" v-model="itemSearch" ref="search" v-on:keyup.ctrl.66="FocusSearchBox"></b-input>
+          <b-input
+            icon="magnify"
+            size="is-medium"
+            placeholder="Item name"
+            type="search"
+            v-model="itemSearch"
+            ref="search"
+            v-on:keyup.ctrl.66="FocusSearchBox"
+            expanded>
+          </b-input>
           <p class="control">
             <b-select placeholder="Sort by" icon="sort" v-model="sortBy" size="is-medium" expanded>
               <option value="tags">Tags</option>
@@ -165,19 +174,24 @@
           <br/>
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
         </p>
-        <b-button
-          :icon-left="completed === false ? 'checkbox-blank-outline' : 'check-box-outline'"
-          type="is-success"
-          size="is-medium"
-          @click="PatchShoppingListCompleted(id, !completed)">
-          {{ completed === false ? 'Completed' : 'Uncompleted' }}
-        </b-button>
-        <b-button
-          icon-left="delete"
-          type="is-danger"
-          size="is-medium"
-          @click="DeleteShoppingList(id)">
-        </b-button>
+        <b-field>
+          <b-button
+            :icon-left="completed === false ? 'checkbox-blank-outline' : 'check-box-outline'"
+            type="is-success"
+            size="is-medium"
+            expanded
+            @click="PatchShoppingListCompleted(id, !completed)">
+            {{ completed === false ? 'Completed' : 'Uncompleted' }}
+          </b-button>
+          <p class="control">
+            <b-button
+              icon-left="delete"
+              type="is-danger"
+              size="is-medium"
+              @click="DeleteShoppingList(id)">
+            </b-button>
+          </p>
+        </b-field>
         <br/>
         <br/>
         <p class="subtitle is-6">
