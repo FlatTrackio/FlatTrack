@@ -10,6 +10,16 @@
         </nav>
         <h1 class="title is-1">{{ flatName }}</h1>
         <p class="subtitle is-3">About your flat</p>
+        <b-message type="is-warning">
+          This section for describing such things as, but not limited to:
+          <br/>
+          <ul style="list-style-type: disc;">
+            <li>how the flat life is</li>
+            <li>rules</li>
+            <li>regulations</li>
+            <li>culture</li>
+          </ul>
+        </b-message>
       </section>
     </div>
   </div>

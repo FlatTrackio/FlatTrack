@@ -66,7 +66,7 @@ export default {
     }
   },
   components: {
-    headerDisplay: () => import('@/frontend/components/header-display')
+    headerDisplay: () => import('@/frontend/components/common/header-display')
   },
   methods: {
     postLogin (email, password) {

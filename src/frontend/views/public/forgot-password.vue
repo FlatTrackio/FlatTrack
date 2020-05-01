@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import headerDisplay from '@/frontend/components/header-display'
+import headerDisplay from '@/frontend/components/common/header-display'
 import { ToastProgrammatic as Toast } from 'buefy'
 
 export default {

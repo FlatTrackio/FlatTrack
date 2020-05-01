@@ -109,7 +109,7 @@ export default {
     }
   },
   components: {
-    headerDisplay: () => import('@/frontend/components/header-display')
+    headerDisplay: () => import('@/frontend/components/common/header-display')
   },
   methods: {
     PostUserConfirm (id, secret, phoneNumber, password, passwordConfirm, jsBirthday) {

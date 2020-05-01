@@ -65,7 +65,7 @@
               <div class="media">
                 <div class="media-left">
                   <b-icon
-                    icon="account-question"
+                    icon="account-off"
                     size="is-medium">
                   </b-icon>
                 </div>

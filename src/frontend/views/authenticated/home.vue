@@ -3,11 +3,11 @@
     <div class="container">
       <section class="section">
         <h1 class="title is-1">Home</h1>
-        <p>
+        <b-message type="is-warning">
           This page will be a dashboard of recently added or updated things.
           <br/>
           As it's not available yet, please navigate to other pages which do things other than a message like this.
-        </p>
+        </b-message>
       </section>
     </div>
   </div>

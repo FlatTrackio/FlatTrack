@@ -9,7 +9,7 @@
             </ul>
         </nav>
         <h1 class="title is-1">Accounts</h1>
-        <p class="subtitle is-3">Manage your flatmates' accounts</p>
+        <p class="subtitle is-3">Manage the account of your flatmates</p>
         <div>
           <section>
             <div class="card pointer-cursor-on-hover" @click="goToRef('/admin/accounts/new')">
@@ -84,7 +84,7 @@
               <div class="media">
                 <div class="media-left">
                   <b-icon
-                    icon="account-cancel"
+                    icon="account-off"
                     size="is-medium">
                   </b-icon>
                 </div>

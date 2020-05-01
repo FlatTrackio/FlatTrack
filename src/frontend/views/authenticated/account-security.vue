@@ -11,7 +11,7 @@
         <h1 class="title is-1">Security</h1>
         <p class="subtitle is-3">Manage your account's security</p>
         <br/>
-        <h1 class="title is-3">Password<h1/>
+        <h1 class="title is-3">Password</h1>
         <b-field label="Password">
           <b-input
             type="password"

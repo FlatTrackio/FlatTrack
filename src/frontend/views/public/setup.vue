@@ -155,7 +155,7 @@
 </template>
 
 <script>
-import headerDisplay from '@/frontend/components/header-display.vue'
+import headerDisplay from '@/frontend/components/common/header-display.vue'
 import registration from '@/frontend/requests/public/registration'
 import apiroot from '@/frontend/requests/public/apiroot'
 import common from '@/frontend/common/common'
