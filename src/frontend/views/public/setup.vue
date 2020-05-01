@@ -133,7 +133,8 @@
             icon="textbox-password"
             @keyup.enter.native="Register({ language, timezone, flatName, user: { names, email, password } })"
             size="is-medium"
-            maxlength="70">
+            maxlength="70"
+            required>
           </b-input>
         </b-field>
 

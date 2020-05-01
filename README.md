@@ -1,16 +1,13 @@
-<a href="http://www.gnu.org/licenses/gpl-3.0.html">
-    <img src="https://img.shields.io/badge/License-GPL%20v3-blue.svg" alt="License" />
+<a href="http://www.gnu.org/licenses/agpl-3.0.html">
+    <img src="https://img.shields.io/badge/License-AGPL-3.0-blue.svg" alt="License: AGPL-3.0" />
 </a>
 <a href="https://gitlab.com/flattrack/flattrack/releases">
-    <img src="https://img.shields.io/badge/version-0.0.1-brightgreen.svg" />
-</a>
-<a href="https://gitlab.com/flattrack/flattrack/releases">
-    <img src="https://img.shields.io/badge/build-1-orange.svg" />
+    <img src="https://img.shields.io/badge/version-0.0.1-brightgreen.svg" alt="Version 0.0.1" />
 </a>
 <a href='https://ind.ie/ethical-design'>
     <img style='margin-left: auto; margin-right: auto;' alt='We practice Ethical Design' src='https://img.shields.io/badge/Ethical_Design-_▲_❤_-blue.svg'>
 </a>
-<br>
+<br/>
 <img alt="FlatTrackLogo" src="" width=100>
 
 # FlatTrack
