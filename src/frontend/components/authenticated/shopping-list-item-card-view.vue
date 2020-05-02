@@ -10,7 +10,7 @@
             <div class="block">
               <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4 is-marginless">
                 {{ item.name }}
-                <span v-if="typeof item.price !== 'undefined' && item.price !== 0"> (${{ item.price }}) </span>
+                <span v-if="typeof item.price !== 'undefined' && item.price !== 0"> (${{ item.price.toFixed(2) }}) </span>
                 <b v-if="item.quantity > 1">x{{ item.quantity }} </b>
                 <b-icon
                   v-if="typeof item.price === 'undefined' || item.price === 0"

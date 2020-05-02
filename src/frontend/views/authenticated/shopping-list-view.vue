@@ -4,6 +4,8 @@
       <p class="subtitle is-4">
         <b>{{ name }}</b>
         ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
+        <b-tag type="is-info" v-if="completed">Completed</b-tag>
+        <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
       </p>
     </div>
     <div class="container">
@@ -66,6 +68,9 @@
           <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; autofocusOn = ''; UpdateShoppingList(name, notes, completed) }">Done</b-button>
           <br/>
         </div>
+        <br/>
+        <b-tag type="is-info" v-if="completed">Completed</b-tag>
+        <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
         <br/>
         <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block is-marginless" v-model="itemDisplayState">
           <b-tab-item icon="" label="All"></b-tab-item>
@@ -192,8 +197,6 @@
             </b-button>
           </p>
         </b-field>
-        <br/>
-        <br/>
         <p class="subtitle is-6">
             Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
             <span v-if="creationTimestamp !== modificationTimestamp">
@@ -446,6 +449,9 @@ export default {
     },
     ManageStickyHeader () {
       this.HeaderIsSticky = window.pageYOffset > document.getElementById('ListName').offsetTop
+    },
+    RestartLoop () {
+      this.loopCreated = new Date()
     }
   },
   watch: {
@@ -468,15 +474,16 @@ export default {
   async created () {
     this.itemDisplayState = shoppinglistCommon.GetShoppingListObtainedFilter(this.id) || 0
     this.CheckDeviceIsMobile()
-    window.addEventListener('resize', this.CheckDeviceIsMobile.bind(this))
-    window.addEventListener('scroll', this.ManageStickyHeader.bind(this))
+    window.addEventListener('resize', this.CheckDeviceIsMobile, true)
+    window.addEventListener('scroll', this.ManageStickyHeader, true)
     this.LoopStart()
-    window.addEventListener('focus', () => {
-      this.loopCreated = new Date()
-    })
+    window.addEventListener('focus', this.RestartLoop, true)
   },
   beforeDestroy () {
     this.LoopStop()
+    window.removeEventListener('resize', this.CheckDeviceIsMobile, true)
+    window.removeEventListener('scroll', this.ManageStickyHeader, true)
+    window.removeEventListener('focus', this.RestartLoop, true)
   }
 }
 </script>
