@@ -35,6 +35,7 @@
               placeholder="Template a preview list"
               v-model="listTemplate"
               icon="content-copy"
+              expanded
               size="is-medium">
               <option
                 value="">

@@ -425,12 +425,10 @@ export default {
       return common.TimestampToCalendar(timestamp)
     },
     LoopStart () {
+      if (shoppinglistCommon.GetShoppingListAutoRefresh() !== true) {
+        return
+      }
       this.intervalLoop = window.setInterval(() => {
-        if (shoppinglistCommon.GetShoppingListAutoRefresh() !== true) {
-          this.LoopStop()
-          return
-        }
-
         this.GetShoppingList()
         // this.GetShoppingListItems()
 
@@ -448,7 +446,7 @@ export default {
       this.deviceIsMobile = common.DeviceIsMobile()
     },
     ManageStickyHeader () {
-      this.HeaderIsSticky = window.pageYOffset > document.getElementById('ListName').offsetTop
+      this.HeaderIsSticky = window.pageYOffset > document.getElementById('ListName').offsetTop + 30
     },
     RestartLoop () {
       this.loopCreated = new Date()

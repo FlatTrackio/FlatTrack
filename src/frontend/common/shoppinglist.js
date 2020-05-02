@@ -50,7 +50,7 @@ function DeleteShoppingListFromCache (id, items) {
 
 // returns if the shopping list should auto refresh
 function GetShoppingListAutoRefresh () {
-  return localStorage.getItem('shoppinglist.autorefresh') || true
+  return Boolean(localStorage.getItem('shoppinglist.autorefresh')) || true
 }
 
 // WriteShoppingListAutoRefresh

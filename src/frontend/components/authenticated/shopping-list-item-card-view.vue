@@ -17,18 +17,13 @@
                   icon="currency-usd-off"
                   size="is-small">
                 </b-icon>
-                <b-icon
-                  v-if="item.notes.length > 0"
-                  icon="note-text-outline"
-                  size="is-small">
-                </b-icon>
               </p>
               <span>
                 <p class="subtitle is-6">
                   <span v-if="displayTag === true">
                     {{ item.tag }}
                   </span>
-                  <span v-if="displayTag === true && typeof item.notes !== 'undefined' && item.notes !== ''">
+                  <span v-if="displayTag === true && typeof item.tag !== 'undefined' && typeof item.notes !== 'undefined' && item.notes !== ''">
                     -
                   </span>
                   <i>
