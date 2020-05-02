@@ -50,17 +50,13 @@ import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
 
 export default {
   name: 'shopping list item card view',
-  data () {
-    return {
-      deviceIsMobile: false
-    }
-  },
   props: {
     item: Object,
     listId: String,
     list: Object,
     index: Number,
-    displayTag: Boolean
+    displayTag: Boolean,
+    deviceIsMobile: Boolean
   },
   methods: {
     goToRef (ref) {
@@ -70,9 +66,6 @@ export default {
       shoppinglist.PatchShoppingListItemObtained(this.listId, itemId, obtained).catch(err => {
         common.DisplayFailureToast('Failed to patch the obtained field of this item' + '<br/>' + err.response.data.metadata.response)
       })
-    },
-    AdjustForMobile () {
-      this.deviceIsMobile = common.DeviceIsMobile()
     },
     DeleteShoppingListItem (itemId, index) {
       Dialog.confirm({
@@ -91,10 +84,6 @@ export default {
         }
       })
     }
-  },
-  async created () {
-    this.AdjustForMobile()
-    window.addEventListener('resize', this.AdjustForMobile.bind(this))
   }
 }
 </script>

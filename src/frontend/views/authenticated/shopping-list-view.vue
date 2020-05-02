@@ -22,7 +22,7 @@
               type="text"
               icon="format-title"
               size="is-medium"
-              :autofocus="autofocusOn === 'name'"
+              ref="name"
               @keyup.enter.native="notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed)"
               @keyup.esc.native="editing = false"
               v-model="name"
@@ -32,7 +32,7 @@
           <br/>
         </div>
         <div v-else>
-          <h1 id="ListName" class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="autofocusOn = 'name'; editing = !editing">{{ name }}</h1>
+          <h1 id="ListName" class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="editing = !editing; FocusName()">{{ name }}</h1>
         </div>
         <div v-if="notes != '' || notesFromEmpty || editing">
           <div v-if="editing">
@@ -42,7 +42,7 @@
                 size="is-medium"
                 maxlength="100"
                 type="text"
-                :autofocus="autofocusOn === 'notes'"
+                ref="notes"
                 @keyup.enter.native="notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes)"
                 @keyup.esc.native="editing = false"
                 v-model="notes">
@@ -54,7 +54,7 @@
             <div>
               <div class="content">
                 <label class="label">Notes</label>
-                <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="autofocusOn = 'notes'; editing = true">
+                <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="editing = true; FocusNotes()">
                   <i>
                     {{ notes }}
                   </i>
@@ -63,9 +63,9 @@
             </div>
           </div>
         </div>
-        <b-button type="is-text" @click="() => { notesFromEmpty = true; autofocusOn = 'notes'; editing = true }" v-if="!editing && notes.length == 0">Add notes</b-button>
+        <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true; FocusNotes() }" v-if="!editing && notes.length == 0">Add notes</b-button>
         <div v-if="editing">
-          <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; autofocusOn = ''; UpdateShoppingList(name, notes, completed) }">Done</b-button>
+          <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed) }">Done</b-button>
           <br/>
         </div>
         <br/>
@@ -119,7 +119,7 @@
           </section>
         </div>
         <br/>
-        <div v-if="listItemsFromTags.length > 0 || listItemsFromPrice > 0">
+        <div v-if="listItemsFromTags.length > 0">
           <div v-if="sortBy === 'tags'">
             <section v-for="itemTag in listItemsFromTags" v-bind:key="itemTag">
               <p class="title is-5">
@@ -135,7 +135,7 @@
                 v-on:enter="ItemAppear"
                 v-on:leave="ItemDisappear">
                 <div v-for="(item, index) in itemTag.items" v-bind:key="item">
-                  <itemCard :list="list" :item="item" :index="index" :listId="id"/>
+                  <itemCard :list="list" :item="item" :index="index" :listId="id" :deviceIsMobile="deviceIsMobile"/>
                 </div>
                 <br/>
               </transition-group>
@@ -150,8 +150,14 @@
           </div>
           <div v-if="sortBy === 'price'">
             <div v-for="(item, index) in listItemsFromPrice" v-bind:key="item">
-              <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true"/>
+              <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true" :deviceIsMobile="deviceIsMobile"/>
             </div>
+            <section>
+              <br/>
+              <p>
+                {{ listItemsFromPrice.length || 0 }} item(s)
+              </p>
+            </section>
             <br/>
           </div>
         </div>
@@ -230,7 +236,6 @@ export default {
       totalItems: 0,
       loopCreated: new Date(),
       sortBy: shoppinglistCommon.GetShoppingListSortBy(),
-      autofocusOn: '',
       itemDisplayState: null,
       deviceIsMobile: false,
       HeaderIsSticky: false,
@@ -251,7 +256,6 @@ export default {
   },
   computed: {
     listItemsFromTags () {
-      var vm = this
       return this.RestructureShoppingListToTags(this.list.filter((item) => {
         return this.ItemDisplayState(item)
       }))
@@ -430,7 +434,7 @@ export default {
       }
       this.intervalLoop = window.setInterval(() => {
         this.GetShoppingList()
-        // this.GetShoppingListItems()
+        this.GetShoppingListItems()
 
         var now = new Date()
         var timePassed = (now.getTime() / 1000) - (this.loopCreated.getTime() / 1000)
@@ -450,6 +454,12 @@ export default {
     },
     RestartLoop () {
       this.loopCreated = new Date()
+    },
+    FocusName () {
+      this.$refs.name.$el.focus()
+    },
+    FocusNotes () {
+      this.$refs.notes.$el.focus()
     }
   },
   watch: {
