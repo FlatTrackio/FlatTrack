@@ -429,7 +429,7 @@ export default {
         }
 
         this.GetShoppingList()
-        this.GetShoppingListItems()
+        // this.GetShoppingListItems()
 
         var now = new Date()
         var timePassed = (now.getTime() / 1000) - (this.loopCreated.getTime() / 1000)
