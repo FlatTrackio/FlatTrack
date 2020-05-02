@@ -14,7 +14,7 @@ function RestructureShoppingListToTags (responseList) {
       var newItem = {
         tag: currentTag || 'Untagged',
         items: [responseList[item]],
-        price: responseList[item].price || 0
+        price: responseList[item].price * responseList[item].quantity || 0
       }
 
       list = [...list, newItem]
@@ -23,7 +23,7 @@ function RestructureShoppingListToTags (responseList) {
       var currentSubListItems = list[currentListPosition].items
 
       list[currentListPosition].items = [...currentSubListItems, responseList[item]]
-      list[currentListPosition].price += (responseList[item].price || 0)
+      list[currentListPosition].price += (responseList[item].price * responseList[item].quantity || 0)
     }
   }
   return list
