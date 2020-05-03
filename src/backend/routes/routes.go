@@ -10,7 +10,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -148,7 +147,7 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 		userId := vars["id"]
 
 		// TODO disallow admins to remove their own admin group access
-		userAccountUpdated, err := users.UpdateProfile(db, userId, userAccount)
+		userAccountUpdated, err := users.UpdateProfileAdmin(db, userId, userAccount)
 		if err == nil && userAccountUpdated.Id != "" {
 			code = 200
 			response = "Successfully updated the user account"
@@ -181,7 +180,7 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 		userId := vars["id"]
 
 		// TODO disallow admins to remove their own admin group access
-		userAccountPatched, err := users.PatchProfile(db, userId, userAccount)
+		userAccountPatched, err := users.PatchProfileAdmin(db, userId, userAccount)
 		if err == nil && userAccountPatched.Id != "" {
 			code = 200
 			response = "Successfully patched the user account"
@@ -1140,7 +1139,6 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &user)
 
 		tokenString, err := users.ConfirmUserAccount(db, id, secret, user)
-		log.Println(err)
 		if err == nil && errUnmarshal == nil {
 			response = "Confirmed the account"
 			code = 200

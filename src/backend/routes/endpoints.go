@@ -59,7 +59,7 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 		},
 		{
 			EndpointPath: endpointPrefix + "/admin/users/{id}",
-			HandlerFunc:  HTTPuseMiddleware(PatchUser(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
+			HandlerFunc:  HTTPuseMiddleware(PutUser(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromId(db, "admin")),
 			HttpMethod:   http.MethodPut,
 		},
 		{

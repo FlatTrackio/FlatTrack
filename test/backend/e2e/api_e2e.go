@@ -150,13 +150,13 @@ var _ = Describe("API e2e tests", func() {
 			},
 			{
 				Names:    "Joe Bloggs",
-				Email:    "user1@example.com",
+				Email:    "user2@example.com",
 				Password: "Password123!",
 				Groups:   []string{"flatmember", "admin"},
 			},
 			{
 				Names:    "Joe Bloggs",
-				Email:    "user1@example.coop",
+				Email:    "user3@example.coop",
 				Password: "Password123!",
 				Groups:   []string{"flatmember", "admin"},
 			},
@@ -168,35 +168,35 @@ var _ = Describe("API e2e tests", func() {
 			},
 			{
 				Names:       "Joe Bloggs",
-				Email:       "us.er1@example.coop",
+				Email:       "us.er2@example.coop",
 				Password:    "Password123!",
 				Groups:      []string{"flatmember", "admin"},
 				PhoneNumber: "020 000 0000",
 			},
 			{
 				Names:       "Joe Bloggs",
-				Email:       "us.er1@example.coop",
+				Email:       "us.er3@example.coop",
 				Password:    "Password123!",
 				Groups:      []string{"flatmember", "admin"},
 				PhoneNumber: "+64200000000",
 			},
 			{
 				Names:       "Joe Bloggs",
-				Email:       "us.er1@example.coop",
+				Email:       "us.er4@example.coop",
 				Password:    "Password123!",
 				Groups:      []string{"flatmember", "admin"},
 				PhoneNumber: "64200000000",
 			},
 			{
 				Names:       "Joe Bloggs",
-				Email:       "us.er1@example.coop",
+				Email:       "us.er5@example.coop",
 				Password:    "Password123!",
 				Groups:      []string{"flatmember", "admin"},
 				PhoneNumber: "64-20-000-000",
 			},
 			{
 				Names:  "Joe Bloggs",
-				Email:  "user1@example.com",
+				Email:  "user4@example.com",
 				Groups: []string{"flatmember"},
 			},
 		}
@@ -209,7 +209,8 @@ var _ = Describe("API e2e tests", func() {
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
 			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
-			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			response := routes.GetHTTPresponseBodyContents(resp)
+			userAccountResponse := response.Spec
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
 			var userAccount types.UserSpec
@@ -462,7 +463,8 @@ var _ = Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		response := routes.GetHTTPresponseBodyContents(resp)
+		userAccountResponse := response.Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec

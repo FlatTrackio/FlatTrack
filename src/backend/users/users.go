@@ -93,22 +93,15 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
 	if err != nil {
 		return userInserted, err
 	}
-	for rows.Next() {
-		userInserted, err = UserObjectFromRows(rows)
-		if err != nil {
-			return userInserted, err
-		}
+	rows.Next()
+	userInserted, err = UserObjectFromRows(rows)
+	if err != nil {
+		return userInserted, err
 	}
 
-	for _, groupItem := range user.Groups {
-		group, err := groups.GetGroupByName(db, groupItem)
-		if err != nil || group.Id == "" {
-			return userInserted, errors.New(fmt.Sprintf("Unable to use the provided group '%v' as it is invalid", groupItem))
-		}
-		err = groups.AddUserToGroup(db, userInserted.Id, group.Id)
-		if err != nil {
-			return userInserted, errors.New("Unable to add user account to the group")
-		}
+	updatedGroups, err := groups.UpdateUserGroups(db, userInserted.Id, user.Groups)
+	if updatedGroups == false || err != nil {
+		return userInserted, err
 	}
 	userInserted.Groups = user.Groups
 	userInserted.Password = ""
@@ -421,6 +414,52 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 		passwordHashed = userAccount.Password
 	}
 
+	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $7
+                         returning *`
+	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, id)
+	if err != nil {
+		// TODO add roll back, if there's failure
+		return userAccountPatched, err
+	}
+	defer rows.Close()
+	rows.Next()
+	userAccountPatched, err = UserObjectFromRows(rows)
+	if err != nil || userAccountPatched.Id == "" {
+		return userAccountPatched, errors.New("Failed to patch user account")
+	}
+
+	userAccountPatched.Groups = existingUserAccount.Groups
+	userAccountPatched.Password = ""
+	return userAccountPatched, err
+}
+
+// PatchProfileAdmin
+// patches a profile with all fields
+func PatchProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
+	existingUserAccount, err := GetUserById(db, id, true)
+	if err != nil || existingUserAccount.Id == "" {
+		return userAccountPatched, errors.New("Failed to find user account")
+	}
+	if userAccount.Email != "" && userAccount.Email != existingUserAccount.Email {
+		localUser, err := GetUserByEmail(db, userAccount.Email, false)
+		if err == nil || localUser.Id != "" {
+			return userAccountPatched, errors.New("Email address is unable to be used")
+		}
+	}
+	err = mergo.Merge(&userAccount, existingUserAccount)
+	if err != nil {
+		return userAccountPatched, errors.New("Failed to update fields in the user account")
+	}
+	noUpdatePassword := userAccount.Password == existingUserAccount.Password
+	valid, err := ValidateUser(db, userAccount, noUpdatePassword)
+	if !valid || err != nil {
+		return existingUserAccount, err
+	}
+	passwordHashed := common.HashSHA512(userAccount.Password)
+	if noUpdatePassword == true {
+		passwordHashed = userAccount.Password
+	}
+
 	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, disabled = $7, registered = $8, lastLogin = $9, authNonce = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $11
                          returning *`
 	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce, id)
@@ -432,23 +471,23 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	rows.Next()
 	userAccountPatched, err = UserObjectFromRows(rows)
 	if err != nil || userAccountPatched.Id == "" {
-		return userAccountPatched, errors.New("Failed to create shopping list")
+		return userAccountPatched, errors.New("Failed to patch user account")
 	}
 
 	updatedGroups, err := groups.UpdateUserGroups(db, id, userAccount.Groups)
 	if updatedGroups == false || err != nil {
-		return existingUserAccount, err
+		return userAccountPatched, err
 	}
 
-	userAccountPatched.Groups = userAccount.Groups
 	userAccountPatched.Password = ""
+	userAccountPatched.Groups = userAccount.Groups
 	return userAccountPatched, err
 }
 
-// UpdatProfile
+// UpdateProfile
 // updates the profile of a user account
 func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
-	valid, err := ValidateUser(db, userAccount, true)
+	valid, err := ValidateUser(db, userAccount, false)
 	if !valid || err != nil {
 		return userAccountUpdated, err
 	}
@@ -463,11 +502,48 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 		}
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
-	passwordHashed = userAccount.Password
 
-	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, disabled = $7, registered = $8, lastLogin = $9, authNonce = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $11
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
                          returning *`
-	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce, id)
+	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement)
+	if err != nil {
+		// TODO add roll back, if there's failure
+		return userAccountUpdated, err
+	}
+	defer rows.Close()
+	rows.Next()
+	userAccountUpdated, err = UserObjectFromRows(rows)
+	if err != nil || userAccountUpdated.Id == "" {
+		return userAccountUpdated, errors.New("Failed to create shopping list")
+	}
+
+	userAccountUpdated.Groups = existingUserAccount.Groups
+	userAccountUpdated.Password = ""
+	return userAccountUpdated, err
+}
+
+// UpdateProfileAdmin
+// updates all fields of a profile
+func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
+	valid, err := ValidateUser(db, userAccount, false)
+	if !valid || err != nil {
+		return userAccountUpdated, err
+	}
+	existingUserAccount, err := GetUserById(db, id, true)
+	if err != nil || existingUserAccount.Id == "" {
+		return userAccountUpdated, errors.New("Failed to find user account")
+	}
+	if userAccount.Email != existingUserAccount.Email {
+		localUser, err := GetUserByEmail(db, userAccount.Email, false)
+		if err == nil || localUser.Id != "" {
+			return userAccountUpdated, errors.New("Email address is unable to be used")
+		}
+	}
+	passwordHashed := common.HashSHA512(userAccount.Password)
+
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, disabled = $8, registered = $9, lastLogin = $10, authNonce = $11, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
+                         returning *`
+	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce)
 	if err != nil {
 		// TODO add roll back, if there's failure
 		return userAccountUpdated, err
@@ -483,8 +559,8 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 	if updatedGroups == false || err != nil {
 		return userAccountUpdated, err
 	}
-
 	userAccountUpdated.Groups = userAccount.Groups
+
 	userAccountUpdated.Password = ""
 	return userAccountUpdated, err
 }
@@ -605,7 +681,7 @@ func ConfirmUserAccount(db *sql.DB, id string, secret string, user types.UserSpe
 		PhoneNumber: user.PhoneNumber,
 		Registered:  true,
 	}
-	userConfirmed, err := PatchProfile(db, userCreationSecret.UserId, userAccountPatch)
+	userConfirmed, err := PatchProfileAdmin(db, userCreationSecret.UserId, userAccountPatch)
 	if err != nil {
 		return tokenString, err
 	}
