@@ -415,7 +415,7 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	}
 
 	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $7
-                         returning *`
+                         returning id, names, email, password, phoneNumber, birthday, contractAgreement, registered, creationTimestamp, modificationTimestamp, deletionTimestamp`
 	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, id)
 	if err != nil {
 		// TODO add roll back, if there's failure
@@ -504,7 +504,7 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 	passwordHashed := common.HashSHA512(userAccount.Password)
 
 	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
-                         returning *`
+                         returning id, names, email, password, phoneNumber, birthday, contractAgreement, registered, creationTimestamp, modificationTimestamp, deletionTimestamp`
 	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement)
 	if err != nil {
 		// TODO add roll back, if there's failure
@@ -518,7 +518,6 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 	}
 
 	userAccountUpdated.Groups = existingUserAccount.Groups
-	userAccountUpdated.Password = ""
 	return userAccountUpdated, err
 }
 
