@@ -80,26 +80,30 @@
           <br/>
 
           <b-field label="Password">
-            <b-input type="password"
-                     v-model="password"
-                     password-reveal
-                     maxlength="70"
-                     placeholder="Enter a password for your flatmate"
-                     icon="textbox-password"
-                     size="is-medium"
-                     required>
+            <b-input
+              type="password"
+              v-model="password"
+              password-reveal
+              maxlength="70"
+              placeholder="Enter a password for your flatmate"
+              icon="textbox-password"
+              size="is-medium"
+              validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              required>
             </b-input>
           </b-field>
 
           <b-field label="Confirm password">
-            <b-input type="password"
-                     v-model="passwordConfirm"
-                     password-reveal
-                     maxlength="70"
-                     placeholder="Confirm a password for your flatmate"
-                     icon="textbox-password"
-                     size="is-medium"
-                     required>
+            <b-input
+              type="password"
+              v-model="passwordConfirm"
+              password-reveal
+              maxlength="70"
+              placeholder="Confirm a password for your flatmate"
+              icon="textbox-password"
+              size="is-medium"
+              validation-message="password is invalid. passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              required>
             </b-input>
           </b-field>
         </div>

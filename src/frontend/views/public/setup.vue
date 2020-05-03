@@ -121,6 +121,7 @@
             placeholder="Enter a password"
             icon="textbox-password"
             size="is-medium"
+            validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
             required>
           </b-input>
         </b-field>
@@ -134,6 +135,7 @@
             @keyup.enter.native="Register({ language, timezone, flatName, user: { names, email, password } })"
             size="is-medium"
             maxlength="70"
+            validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
             required>
           </b-input>
         </b-field>

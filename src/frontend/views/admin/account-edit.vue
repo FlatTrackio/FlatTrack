@@ -32,24 +32,26 @@
         </div>
 
         <b-field label="Name(s)">
-          <b-input type="text"
-                   v-model="names"
-                   maxlength="60"
-                   placeholder="Enter your flatmate's name"
-                   icon="textbox"
-                   size="is-medium"
-                   required>
+          <b-input
+            type="text"
+            v-model="names"
+            maxlength="60"
+            placeholder="Enter your flatmate's name"
+            icon="textbox"
+            size="is-medium"
+            required>
           </b-input>
         </b-field>
 
         <b-field label="Email">
-          <b-input type="email"
-                   v-model="email"
-                   maxlength="70"
-                   placeholder="Enter your flatmate's email"
-                   icon="email"
-                   size="is-medium"
-                   required>
+          <b-input
+            type="email"
+            v-model="email"
+            maxlength="70"
+            placeholder="Enter your flatmate's email"
+            icon="email"
+            size="is-medium"
+            required>
           </b-input>
         </b-field>
 
@@ -65,19 +67,19 @@
               icon="account-group"
               placeholder="Select groups"
               size="is-medium"
-              @typing="GetFilteredGroups"
-              >
+              @typing="GetFilteredGroups">
           </b-field>
         </section>
         <br/>
 
         <b-field label="Phone number">
-          <b-input type="tel"
-                   v-model="phoneNumber"
-                   placeholder="Enter your flatmate's phone number"
-                   icon="phone"
-                   size="is-medium"
-                   maxlength="30">
+          <b-input
+            type="tel"
+            v-model="phoneNumber"
+            placeholder="Enter your flatmate's phone number"
+            icon="phone"
+            size="is-medium"
+            maxlength="30">
           </b-input>
         </b-field>
 
@@ -96,24 +98,28 @@
         <br/>
 
         <b-field label="Password">
-          <b-input type="password"
-                   v-model="password"
-                   password-reveal
-                   maxlength="70"
-                   placeholder="Enter a password for your flatmate"
-                   icon="textbox-password"
-                   size="is-medium">
+          <b-input
+            type="password"
+            v-model="password"
+            password-reveal
+            maxlength="70"
+            placeholder="Enter a password for your flatmate"
+            icon="textbox-password"
+            validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+            size="is-medium">
           </b-input>
         </b-field>
 
         <b-field label="Confirm password">
-          <b-input type="password"
-                   v-model="passwordConfirm"
-                   password-reveal
-                   maxlength="70"
-                   placeholder="Confirm a password for your flatmate"
-                   icon="textbox-password"
-                   size="is-medium">
+          <b-input
+            type="password"
+            v-model="passwordConfirm"
+            password-reveal
+            maxlength="70"
+            placeholder="Confirm a password for your flatmate"
+            icon="textbox-password"
+            validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+            size="is-medium">
           </b-input>
         </b-field>
         <b-button
