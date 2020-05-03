@@ -177,6 +177,14 @@ func GetUser(db *sql.DB, userSelect types.UserSpec, includePassword bool) (user 
 	return user, err
 }
 
+// UserObjectFromRowsRestricted
+// construct a restricted UserSpec from database rows
+func UserObjectFromRowsRestricted(rows *sql.Rows) (user types.UserSpec, err error) {
+	rows.Scan(&user.Id, &user.Names, &user.Email, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
+	err = rows.Err()
+	return user, err
+}
+
 // UserObjectFromRows
 // construct a UserSpec from database rows
 func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
@@ -415,7 +423,7 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	}
 
 	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $7
-                         returning id, names, email, password, phoneNumber, birthday, contractAgreement, registered, creationTimestamp, modificationTimestamp, deletionTimestamp`
+                         returning id, names, email, phoneNumber, birthday, contractAgreement, disabled, registered, lastLogin, creationTimestamp, modificationTimestamp, deletionTimestamp`
 	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, id)
 	if err != nil {
 		// TODO add roll back, if there's failure
@@ -423,7 +431,7 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	}
 	defer rows.Close()
 	rows.Next()
-	userAccountPatched, err = UserObjectFromRows(rows)
+	userAccountPatched, err = UserObjectFromRowsRestricted(rows)
 	if err != nil || userAccountPatched.Id == "" {
 		return userAccountPatched, errors.New("Failed to patch user account")
 	}
@@ -504,7 +512,7 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 	passwordHashed := common.HashSHA512(userAccount.Password)
 
 	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
-                         returning id, names, email, password, phoneNumber, birthday, contractAgreement, registered, creationTimestamp, modificationTimestamp, deletionTimestamp`
+                         returning id, names, email, phoneNumber, birthday, contractAgreement, disabled, registered, lastLogin, creationTimestamp, modificationTimestamp, deletionTimestamp`
 	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement)
 	if err != nil {
 		// TODO add roll back, if there's failure
@@ -512,9 +520,9 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 	}
 	defer rows.Close()
 	rows.Next()
-	userAccountUpdated, err = UserObjectFromRows(rows)
+	userAccountUpdated, err = UserObjectFromRowsRestricted(rows)
 	if err != nil || userAccountUpdated.Id == "" {
-		return userAccountUpdated, errors.New("Failed to create shopping list")
+		return userAccountUpdated, errors.New("Failed to update profile")
 	}
 
 	userAccountUpdated.Groups = existingUserAccount.Groups
@@ -551,7 +559,7 @@ func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (user
 	rows.Next()
 	userAccountUpdated, err = UserObjectFromRows(rows)
 	if err != nil || userAccountUpdated.Id == "" {
-		return userAccountUpdated, errors.New("Failed to create shopping list")
+		return userAccountUpdated, errors.New("Failed to update profile")
 	}
 
 	updatedGroups, err := groups.UpdateUserGroups(db, id, userAccount.Groups)

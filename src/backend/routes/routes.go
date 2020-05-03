@@ -280,8 +280,8 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &userAccount)
 
 		id, errId := users.GetIdFromJWT(db, r)
-		userAccountPatched, err := users.UpdateProfile(db, id, userAccount)
-		if err == nil && errId == nil && userAccountPatched.Id != "" {
+		userAccountUpdated, err := users.UpdateProfile(db, id, userAccount)
+		if err == nil && errId == nil && userAccountUpdated.Id != "" {
 			code = 200
 			response = "Successfully patched the user account"
 		} else {
@@ -292,7 +292,7 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
 			},
-			Spec: userAccountPatched,
+			Spec: userAccountUpdated,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}
