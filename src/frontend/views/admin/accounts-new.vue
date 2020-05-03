@@ -108,7 +108,7 @@
           </b-field>
         </div>
         <div v-else>
-          <p class="subtitle is-6"><b>Please note:</b> email account verification does not work yet, however QR code verfication does. If this in an inconvenience, uncheck the checkbox above to fill all fields out for the new account.</p>
+          <p class="subtitle is-6"><b>Please note:</b> email account verification is not available yet, however QR code verfication is. If this in an inconvenience, uncheck the checkbox above to fill all fields out for the new account.</p>
           <br/>
         </div>
 

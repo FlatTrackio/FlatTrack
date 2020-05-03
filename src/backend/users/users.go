@@ -397,10 +397,15 @@ func GetProfile(db *sql.DB, r *http.Request) (user types.UserSpec, err error) {
 // PatchProfile
 // patches the profile of a user account
 func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
-	// TODO ensure that an account can't change their address to someone else's
 	existingUserAccount, err := GetUserById(db, id, true)
 	if err != nil || existingUserAccount.Id == "" {
 		return userAccountPatched, errors.New("Failed to find user account")
+	}
+	if userAccount.Email != "" && userAccount.Email != existingUserAccount.Email {
+		localUser, err := GetUserByEmail(db, userAccount.Email, false)
+		if err == nil || localUser.Id != "" {
+			return userAccountPatched, errors.New("Email address is unable to be used")
+		}
 	}
 	err = mergo.Merge(&userAccount, existingUserAccount)
 	if err != nil {
@@ -443,10 +448,19 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 // UpdatProfile
 // updates the profile of a user account
 func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
-	// TODO ensure that an account can't change their address to someone else's
 	valid, err := ValidateUser(db, userAccount, true)
 	if !valid || err != nil {
 		return userAccountUpdated, err
+	}
+	existingUserAccount, err := GetUserById(db, id, true)
+	if err != nil || existingUserAccount.Id == "" {
+		return userAccountUpdated, errors.New("Failed to find user account")
+	}
+	if userAccount.Email != existingUserAccount.Email {
+		localUser, err := GetUserByEmail(db, userAccount.Email, false)
+		if err == nil || localUser.Id != "" {
+			return userAccountUpdated, errors.New("Email address is unable to be used")
+		}
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
 	passwordHashed = userAccount.Password

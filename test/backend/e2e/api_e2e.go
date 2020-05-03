@@ -975,6 +975,93 @@ var _ = Describe("API e2e tests", func() {
 		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
 	})
 
+	It("should not allow two emails with the same email when patching a profile", func() {
+		By("creating the first user account")
+		account1 := types.UserSpec{
+			Names:       "Joe Bloggs",
+			Email:       "user123@example.com",
+			Password:    "Password123!",
+			PhoneNumber: "64200000000",
+			Birthday:    43200,
+			Groups:      []string{"flatmember"},
+		}
+		accountBytes, err := json.Marshal(account1)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		apiEndpoint := apiServerAPIprefix + "/admin/users"
+		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountBytes, err := json.Marshal(userAccountResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var userAccount1 types.UserSpec
+		json.Unmarshal(userAccountBytes, &userAccount1)
+
+		By("checking the response")
+		Expect(userAccount1.Id).ToNot(Equal(""), "User account Id must not be empty")
+
+		By("creating the first user account")
+		account2 := types.UserSpec{
+			Names:       "Bloggs Joe",
+			Email:       "joeblogblog@example.com",
+			Password:    "Password123!",
+			Groups:      []string{"flatmember"},
+		}
+		accountBytes, err = json.Marshal(account2)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		apiEndpoint = apiServerAPIprefix + "/admin/users"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountBytes, err = json.Marshal(userAccountResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var userAccount2 types.UserSpec
+		json.Unmarshal(userAccountBytes, &userAccount2)
+
+		By("checking the response")
+		Expect(userAccount2.Id).ToNot(Equal(""), "User account Id must not be empty")
+
+		By("logging in as the 2nd account")
+		apiEndpoint = apiServerAPIprefix + "/user/auth"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
+
+		By("patching the profile")
+		apiEndpoint = apiServerAPIprefix + "/user/profile"
+		profilePatch := types.UserSpec{
+			Email:       "user123@example.com",
+		}
+		profilePatchData, err := json.Marshal(profilePatch)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(400), "api have return code of 400")
+		profileResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		profileJSON, err := json.Marshal(profileResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var profile types.UserSpec
+		json.Unmarshal(profileJSON, &profile)
+		Expect(profile.Email).ToNot(Equal(profilePatch.Email), "profile email does not match profilePatch email")
+
+		By("deleting the account1")
+		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount1.Id
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+
+		By("deleting the account2")
+		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount2.Id
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+	})
+
 	It("should fail to list non-existent user accounts", func() {
 		ids := []string{
 			"aa",
