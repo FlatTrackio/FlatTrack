@@ -133,7 +133,7 @@ export default {
     shoppinglist.GetShoppingList(this.shoppingListId).then(resp => {
       var list = resp.data.spec
       this.shoppingListName = list.name
-      return shoppinglist.GetShoppingListItemTags()
+      return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
     }).then(resp => {
       this.tags = resp.data.list || []
     })

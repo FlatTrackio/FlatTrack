@@ -179,11 +179,42 @@ function DeleteShoppingListItem (listId, itemId) {
   })
 }
 
-function GetShoppingListItemTags () {
+// GetShoppingListItemTags
+// fetches all tags used in a list
+function GetShoppingListItemTags (listId) {
   return Request({
-    url: '/api/apps/shoppinglist/tags',
+    url: `/api/apps/shoppinglist/lists/${listId}/tags`,
     method: 'GET'
   })
 }
 
-export default { GetShoppingLists, GetShoppingList, PostShoppingList, PatchShoppingList, UpdateShoppingList, PatchShoppingListCompleted, DeleteShoppingList, GetShoppingListItems, GetShoppingListItem, PostShoppingListItem, DeleteShoppingListItem, GetShoppingListItemTags, PatchShoppingListItem, UpdateShoppingListItem, PatchShoppingListItemObtained }
+// UpdateShoppingListItemTag
+// updates a tag name used in a list
+function UpdateShoppingListItemTag (listId, tagName, tagNameNew) {
+  return Request({
+    url: `/api/apps/shoppinglist/lists/${listId}/tags/${tagName}`,
+    method: 'PUT',
+    data: {
+      name: tagNameNew
+    }
+  })
+}
+
+export default {
+  GetShoppingLists,
+  GetShoppingList,
+  PostShoppingList,
+  PatchShoppingList,
+  UpdateShoppingList,
+  PatchShoppingListCompleted,
+  DeleteShoppingList,
+  GetShoppingListItems,
+  GetShoppingListItem,
+  PostShoppingListItem,
+  DeleteShoppingListItem,
+  GetShoppingListItemTags,
+  UpdateShoppingListItemTag,
+  PatchShoppingListItem,
+  UpdateShoppingListItem,
+  PatchShoppingListItemObtained
+}

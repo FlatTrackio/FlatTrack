@@ -977,13 +977,68 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 }
 
 // GetShoppingListItemTags
-// responds with tags used in shopping list items
+// responds with tags used in shopping list items from a list
 func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch shopping list item tags"
 		code := 500
 
-		tags, err := shoppinglist.GetShoppingListTags(db)
+		vars := mux.Vars(r)
+		listId := vars["listId"]
+
+		tags, err := shoppinglist.GetShoppingListTags(db, listId)
+		if err == nil {
+			response = "Fetched the shopping list item tags"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			List: tags,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// UpdateShoppingListItemTag
+// updates then tag name used in shopping list items from a list
+func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to update shopping list item tag name"
+		code := 500
+
+		vars := mux.Vars(r)
+		listId := vars["listId"]
+		tag := vars["tagName"]
+
+		var tagUpdate types.ShoppingItemTag
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &tagUpdate)
+
+		tag, err := shoppinglist.UpdateShoppingListTag(db, listId, tag, tagUpdate.Name)
+		if err == nil {
+			response = "Updated the shopping list item tag name"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: tag,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetAllShoppingListItemTags
+// responds with all tags used in shopping list items
+func GetAllShoppingListItemTags(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch shopping list item tags"
+		code := 500
+
+		tags, err := shoppinglist.GetAllShoppingListTags(db)
 		if err == nil {
 			response = "Fetched the shopping list item tags"
 			code = 200

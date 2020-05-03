@@ -441,8 +441,39 @@ func GetListItemCount(db *sql.DB, listId string) (count int, err error) {
 }
 
 // GetShoppingListTags
-// returns a list of tags used in items across lists
-func GetShoppingListTags(db *sql.DB) (tags []string, err error) {
+// returns a list of tags used in items in a list
+func GetShoppingListTags(db *sql.DB, listId string) (tags []string, err error) {
+	sqlStatement := `select distinct tag from shopping_item where listId = $1 order by tag`
+	rows, err := db.Query(sqlStatement, listId)
+	if err != nil {
+		return tags, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var tag string
+		rows.Scan(&tag)
+		tags = append(tags, tag)
+	}
+	return tags, err
+}
+
+// UpdateShoppingListTags
+// updates a tag's name in a list
+func UpdateShoppingListTag(db *sql.DB, listId string, tag string, tagUpdate string) (tagNew string, err error) {
+	sqlStatement := `update shopping_item set tag = $3 where listId = $1 and tag = $2 returning tag`
+	rows, err := db.Query(sqlStatement, listId, tag, tagUpdate)
+	if err != nil {
+		return tagNew, err
+	}
+	defer rows.Close()
+	rows.Next()
+	rows.Scan(&tagNew)
+	return tagNew, err
+}
+
+// GetAllShoppingListTags
+// returns a list of all tags used in items across lists
+func GetAllShoppingListTags(db *sql.DB) (tags []string, err error) {
 	sqlStatement := `select distinct tag from shopping_item order by tag`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {

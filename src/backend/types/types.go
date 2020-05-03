@@ -120,6 +120,10 @@ type ShoppingItemSelector struct {
 	NotObtained bool `json:"notObtained"`
 }
 
+type ShoppingItemTag struct {
+	Name string `json:"name"`
+}
+
 type UserCreationSecretSpec struct {
 	Id                    string `json:"id"`
 	UserId                string `json:"userId"`

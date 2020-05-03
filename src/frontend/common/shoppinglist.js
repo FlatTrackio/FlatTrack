@@ -33,10 +33,9 @@ function RestructureShoppingListToTags (responseList) {
 // given an id returns a list if available
 function GetShoppingListFromCache (id) {
   var items = localStorage.getItem(`shoppinglist.list.${id}.items`)
-  return JSON.parse(items || [])
+  return JSON.parse(items) || []
 }
 
-// WriteShoppingListToCache
 // given an id writes a list to the cache
 function WriteShoppingListToCache (id, items) {
   localStorage.setItem(`shoppinglist.list.${id}.items`, JSON.stringify(items || []))
@@ -50,7 +49,7 @@ function DeleteShoppingListFromCache (id, items) {
 
 // returns if the shopping list should auto refresh
 function GetShoppingListAutoRefresh () {
-  return Boolean(localStorage.getItem('shoppinglist.autorefresh')) || true
+  return localStorage.getItem('shoppinglist.autorefresh')
 }
 
 // WriteShoppingListAutoRefresh

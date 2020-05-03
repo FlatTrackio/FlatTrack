@@ -200,7 +200,7 @@ export default {
       return flatmates.GetFlatmate(this.authorLast)
     }).then(resp => {
       this.authorLastNames = resp.data.spec.names
-      return shoppinglist.GetShoppingListItemTags()
+      return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
     }).then(resp => {
       this.tags = resp.data.list || []
     })

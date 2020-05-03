@@ -124,12 +124,40 @@
         <div v-if="listItemsFromTags.length > 0">
           <div v-if="sortBy === 'tags'">
             <section v-for="itemTag in listItemsFromTags" v-bind:key="itemTag">
-              <p class="title is-5">
-                {{ itemTag.tag }}
-                <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
-                  (${{ itemTag.price.toFixed(2) }})
-                </span>
-              </p>
+              <div v-if="editingTag === itemTag.tag">
+                <label class="label">Tag name</label>
+                <b-field>
+                  <b-input
+                    type="text"
+                    icon="format-title"
+                    size="is-medium"
+                    placeholder="Enter a tag name"
+                    expanded
+                    @keyup.enter.native="editingTag = ''; UpdateShoppingListItemTag(itemTag.tag, TagTmp); itemTag.tag = TagTmp; TagTmp = ''"
+                    @keyup.esc.native="editingTag = ''"
+                    v-model="TagTmp"
+                    required>
+                  </b-input>
+                  <p class="control">
+                    <b-button
+                      type="is-primary"
+                      size="is-medium"
+                      @click="editingTag = ''; UpdateShoppingListItemTag(itemTag.tag, TagTmp); itemTag.tag = TagTmp; TagTmp = ''">
+                      Save
+                    </b-button>
+                  </p>
+                </b-field>
+                <br/>
+              </div>
+              <div @click="TagTmp = itemTag.tag; editingTag = itemTag.tag" v-else>
+                <p class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover">
+                  {{ itemTag.tag }}
+                  <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
+                    (${{ itemTag.price.toFixed(2) }})
+                  </span>
+                </p>
+                <br/>
+              </div>
               <transition-group
                 name="staggered-fade"
                 tag="div"
@@ -241,6 +269,8 @@ export default {
       itemDisplayState: null,
       deviceIsMobile: false,
       HeaderIsSticky: false,
+      TagTmp: '',
+      editingTag: '',
       id: this.$route.params.id,
       name: 'Unnamed list',
       notes: '',
@@ -407,6 +437,11 @@ export default {
         }
       })
     },
+    UpdateShoppingListItemTag (tagName, tagNameNew) {
+      shoppinglist.UpdateShoppingListItemTag(this.id, tagName, tagNameNew).catch(err => {
+        common.DisplayFailureToast('Failed to update the shopping list tag' + '<br/>' + err.response.data.metadata.response)
+      })
+    },
     ItemAppear (el, done) {
       var delay = el.dataset.index * 150
       setTimeout(function () {
@@ -431,7 +466,7 @@ export default {
       return common.TimestampToCalendar(timestamp)
     },
     LoopStart () {
-      if (shoppinglistCommon.GetShoppingListAutoRefresh() !== true) {
+      if (shoppinglistCommon.GetShoppingListAutoRefresh() !== 'true') {
         return
       }
       this.intervalLoop = window.setInterval(() => {
