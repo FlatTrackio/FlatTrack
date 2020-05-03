@@ -4,8 +4,10 @@
       <p class="subtitle is-4">
         <b>{{ name }}</b>
         ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
-        <b-tag type="is-info" v-if="completed">Completed</b-tag>
-        <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
+        <span @click="PatchShoppingListCompleted(id, !completed)" class="display-is-editable pointer-cursor-on-hover">
+          <b-tag type="is-info" v-if="completed">Completed</b-tag>
+          <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
+        </span>
       </p>
     </div>
     <div class="container">

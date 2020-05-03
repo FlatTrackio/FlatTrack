@@ -758,9 +758,10 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 		code := 500
 
 		vars := mux.Vars(r)
-		id := vars["id"]
+		itemId := vars["itemId"]
+		listId := vars["listId"]
 
-		shoppingListItem, err := shoppinglist.GetShoppingListItem(db, id)
+		shoppingListItem, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
 		if err == nil && shoppingListItem.Id != "" {
 			response = "Fetched the shopping list item"
 			code = 200
@@ -856,10 +857,11 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 
 		vars := mux.Vars(r)
 		itemId := vars["id"]
+		listId := vars["listId"]
 
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingItem.AuthorLast = id
-		patchedItem, err := shoppinglist.PatchItem(db, itemId, shoppingItem)
+		patchedItem, err := shoppinglist.PatchItem(db, listId, itemId, shoppingItem)
 		if err == nil && errId == nil {
 			code = 200
 			response = "Successfully patched the shopping list item"
@@ -890,10 +892,11 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 
 		vars := mux.Vars(r)
 		itemId := vars["id"]
+		listId := vars["listId"]
 
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingItem.AuthorLast = id
-		updatedItem, err := shoppinglist.UpdateItem(db, itemId, shoppingItem)
+		updatedItem, err := shoppinglist.UpdateItem(db, listId, itemId, shoppingItem)
 		if err == nil && errId == nil {
 			code = 200
 			response = "Successfully updated the shopping list item"
@@ -924,10 +927,11 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 
 		vars := mux.Vars(r)
 		itemId := vars["id"]
+		listId := vars["listId"]
 
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingItem.AuthorLast = id
-		patchedItem, err := shoppinglist.SetItemObtained(db, itemId, shoppingItem.Obtained)
+		patchedItem, err := shoppinglist.SetItemObtained(db, listId, itemId, shoppingItem.Obtained)
 		if err == nil && errId == nil {
 			code = 200
 			response = "Successfully patched the shopping list item obtained field"

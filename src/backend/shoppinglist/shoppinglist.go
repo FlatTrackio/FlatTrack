@@ -122,9 +122,9 @@ func GetShoppingListItems(db *sql.DB, listId string, options types.ShoppingItemO
 
 // GetShoppingListItem
 // given an item id, return it's properties
-func GetShoppingListItem(db *sql.DB, itemId string) (item types.ShoppingItemSpec, err error) {
-	sqlStatement := `select * from shopping_item where id = $1`
-	rows, err := db.Query(sqlStatement, itemId)
+func GetShoppingListItem(db *sql.DB, listid, itemId string) (item types.ShoppingItemSpec, err error) {
+	sqlStatement := `select * from shopping_item where listid = $1 and id = $2`
+	rows, err := db.Query(sqlStatement, listid, itemId)
 	if err != nil {
 		return item, err
 	}
@@ -307,8 +307,8 @@ func AddItemToList(db *sql.DB, listId string, item types.ShoppingItemSpec) (item
 
 // PatchItem
 // patches a shopping item
-func PatchItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemPatched types.ShoppingItemSpec, err error) {
-	existingItem, err := GetShoppingListItem(db, itemId)
+func PatchItem(db *sql.DB, listid string, itemId string, item types.ShoppingItemSpec) (itemPatched types.ShoppingItemSpec, err error) {
+	existingItem, err := GetShoppingListItem(db, listid, itemId)
 	if err != nil || existingItem.Id == "" {
 		return itemPatched, errors.New("Failed to fetch existing shopping list")
 	}
@@ -341,14 +341,14 @@ func PatchItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemPatc
 
 // UpdateItem
 // patches a shopping item
-func UpdateItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemUpdated types.ShoppingItemSpec, err error) {
+func UpdateItem(db *sql.DB, listId string, itemId string, item types.ShoppingItemSpec) (itemUpdated types.ShoppingItemSpec, err error) {
 	valid, err := ValidateShoppingListItem(db, item)
 	if !valid || err != nil {
 		return itemUpdated, err
 	}
 
-	sqlStatement := `update shopping_item set name = $2, price = $3, quantity = $4, notes = $5, authorLast = $6, tag = $7, obtained = $8, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1 returning *`
-	rows, err := db.Query(sqlStatement, itemId, item.Name, item.Price, item.Quantity, item.Notes, item.AuthorLast, item.Tag, item.Obtained)
+	sqlStatement := `update shopping_item set name = $3, price = $4, quantity = $5, notes = $6, authorLast = $7, tag = $8, obtained = $9, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where listId = $1 and id = $2 returning *`
+	rows, err := db.Query(sqlStatement, listId, itemId, item.Name, item.Price, item.Quantity, item.Notes, item.AuthorLast, item.Tag, item.Obtained)
 	if err != nil {
 		return itemUpdated, err
 	}
@@ -366,9 +366,9 @@ func UpdateItem(db *sql.DB, itemId string, item types.ShoppingItemSpec) (itemUpd
 
 // SetItemObtained
 // updates the item's obtained field
-func SetItemObtained(db *sql.DB, itemId string, obtained bool) (item types.ShoppingItemSpec, err error) {
-	sqlStatement := `update shopping_item set obtained = $1 where id = $2 returning *`
-	rows, err := db.Query(sqlStatement, obtained, itemId)
+func SetItemObtained(db *sql.DB, listId string, itemId string, obtained bool) (item types.ShoppingItemSpec, err error) {
+	sqlStatement := `update shopping_item set obtained = $3 where listId = $2 and id = $3 returning *`
+	rows, err := db.Query(sqlStatement, listId, itemId, obtained)
 	if err != nil {
 		return item, err
 	}

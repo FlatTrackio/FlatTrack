@@ -1713,6 +1713,7 @@ var _ = Describe("API e2e tests", func() {
 			json.Unmarshal(shoppingListItemBytes, &shoppingItemUpdated)
 			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
 
+			Expect(shoppingItemUpdated.Id).ToNot(Equal(""), "shopping item id should not be nil")
 			Expect(updatedShoppingListItem.Name).To(Equal(shoppingItemUpdated.Name), "shopping item name was not updated")
 			Expect(updatedShoppingListItem.Price).To(Equal(shoppingItemUpdated.Price), "shopping item price was not updated")
 			Expect(updatedShoppingListItem.Quantity).To(Equal(shoppingItemUpdated.Quantity), "shopping item quantity was not updated")

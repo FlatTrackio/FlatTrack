@@ -178,7 +178,7 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			HttpMethod:   http.MethodGet,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{.*}/items/{id}",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{listId}/items/{itemId}",
 			HandlerFunc:  HTTPuseMiddleware(GetShoppingListItem(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodGet,
 		},
@@ -188,17 +188,17 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			HttpMethod:   http.MethodPost,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{.*}/items/{id}",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{listId}/items/{id}",
 			HandlerFunc:  HTTPuseMiddleware(PatchShoppingListItem(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodPatch,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{.*}/items/{id}",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{listId}/items/{id}",
 			HandlerFunc:  HTTPuseMiddleware(PutShoppingListItem(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodPut,
 		},
 		{
-			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{.*}/items/{id}/obtained",
+			EndpointPath: endpointPrefix + "/apps/shoppinglist/lists/{listId}/items/{id}/obtained",
 			HandlerFunc:  HTTPuseMiddleware(PatchShoppingListItemObtained(db), HTTPvalidateJWT(db)),
 			HttpMethod:   http.MethodPatch,
 		},
