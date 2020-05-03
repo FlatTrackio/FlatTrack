@@ -457,9 +457,30 @@ func GetShoppingListTags(db *sql.DB, listId string) (tags []string, err error) {
 	return tags, err
 }
 
-// UpdateShoppingListTags
+// GetShoppingListTag
+// returns a list of tags used in items in a list
+func GetShoppingListTag(db *sql.DB, listId string, tag string) (tagInDB string, err error) {
+	sqlStatement := `select tag from shopping_item where listId = $1 and tag = $2`
+	rows, err := db.Query(sqlStatement, listId, tag)
+	if err != nil {
+		return tagInDB, err
+	}
+	defer rows.Close()
+	rows.Next()
+	rows.Scan(&tagInDB)
+	return tagInDB, err
+}
+
+// UpdateShoppingListTag
 // updates a tag's name in a list
 func UpdateShoppingListTag(db *sql.DB, listId string, tag string, tagUpdate string) (tagNew string, err error) {
+	tagInDB, err := GetShoppingListTag(db, listId, tag)
+	if tagInDB == "" || err != nil {
+		return tagNew, errors.New("Unable to find tag to update")
+	}
+	if tagUpdate != "" && len(tagUpdate) == 0 || len(tagUpdate) > 30 {
+		return tagNew, errors.New("Unable to use the provided tag, as it is either empty or too long or too short")
+	}
 	sqlStatement := `update shopping_item set tag = $3 where listId = $1 and tag = $2 returning tag`
 	rows, err := db.Query(sqlStatement, listId, tag, tagUpdate)
 	if err != nil {

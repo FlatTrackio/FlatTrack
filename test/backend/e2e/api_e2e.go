@@ -2151,6 +2151,332 @@ var _ = Describe("API e2e tests", func() {
 		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
 	})
 
+	It("should only return tags from a shopping list", func() {
+		shoppingList := types.ShoppingListSpec{
+			Name: "My list",
+		}
+		shoppingListBytes, err := json.Marshal(shoppingList)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		By("creating the first shopping list")
+		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
+		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListBytes, err = json.Marshal(shoppingListResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var shoppingListCreated types.ShoppingListSpec
+		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+
+		Expect(shoppingListCreated.Id).ToNot(Equal(""), "shopping list created id must not be empty")
+		Expect(shoppingListCreated.Name).To(Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
+
+		By("listing shopping list items")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var shoppingListItems []types.ShoppingItemSpec
+		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+
+		Expect(len(shoppingListItems)).To(Equal(0), "There should be no items on the shopping list")
+
+		By("creating items on the list")
+		newShoppingListItems := []types.ShoppingItemSpec{
+			{
+				Name: "Eggs",
+				Quantity: 1,
+				Tag: "Dairy",
+			},
+			{
+				Name: "Onions",
+				Price: 2,
+				Quantity: 1,
+				Tag: "Fruits and veges",
+			},
+			{
+				Name: "Pasta",
+				Price: 0.8,
+				Quantity: 3,
+				Tag: "General",
+			},
+			{
+				Name: "Bread",
+				Price: 3.5,
+				Quantity: 4,
+				Notes: "Sourdough",
+				Tag: "General",
+			},
+			{
+				Name: "Lettuce",
+				Price: 3,
+				Quantity: 2,
+				Notes: "Not plastic bagged ones",
+				Tag: "Fruits and veges",
+			},
+		}
+
+		By("creating shopping list items")
+		for _, newShoppingListItem := range newShoppingListItems {
+			shoppingListBytes, err := json.Marshal(newShoppingListItem)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
+			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			Expect(err).To(BeNil(), "Request should not return an error")
+			shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+			var shoppingItem types.ShoppingItemSpec
+			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+			Expect(shoppingItem.ListId).To(Equal(shoppingListCreated.Id), "shopping item must belong to a list")
+			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		}
+
+		By("creating the 2nd list")
+		shoppingList2 := types.ShoppingListSpec{
+			Name: "My list 2",
+		}
+		shoppingListBytes, err = json.Marshal(shoppingList2)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		By("creating a shopping list")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		shoppingListResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListBytes, err = json.Marshal(shoppingListResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var shoppingList2Created types.ShoppingListSpec
+		json.Unmarshal(shoppingListBytes, &shoppingList2Created)
+
+		Expect(shoppingList2Created.Id).ToNot(Equal(""), "shopping list created id must not be empty")
+		Expect(shoppingList2Created.Name).To(Equal(shoppingList2.Name), "shopping list name does not match shopping list created name2")
+
+		By("listing shopping list items")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.Id + "/items"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		shoppingListItemsResponse = routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var shoppingList2Items []types.ShoppingItemSpec
+		json.Unmarshal(shoppingListItemsBytes, &shoppingList2Items)
+
+		Expect(len(shoppingListItems)).To(Equal(0), "There should be no items on the shopping list")
+
+		By("creating items on the list")
+		newShoppingList2Items := []types.ShoppingItemSpec{
+			{
+				Name: "Eggs",
+				Quantity: 1,
+				Tag: "Dairy1",
+			},
+			{
+				Name: "Oions",
+				Price: 2,
+				Quantity: 1,
+				Tag: "Fruits and veges1",
+			},
+			{
+				Name: "Pasta",
+				Price: 0.8,
+				Quantity: 3,
+				Tag: "General1",
+			},
+			{
+				Name: "Bread",
+				Price: 3.5,
+				Quantity: 4,
+				Notes: "Sourdough",
+				Tag: "General1",
+			},
+			{
+				Name: "Lettuce",
+				Price: 3,
+				Quantity: 2,
+				Notes: "Not plastic bagged ones",
+				Tag: "Fruits and veges1",
+			},
+		}
+
+		By("creating shopping list items")
+		for _, newShoppingListItem := range newShoppingList2Items {
+			shoppingListBytes, err := json.Marshal(newShoppingListItem)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.Id + "/items"
+			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			Expect(err).To(BeNil(), "Request should not return an error")
+			shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+			var shoppingItem types.ShoppingItemSpec
+			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+			Expect(shoppingItem.ListId).To(Equal(shoppingList2Created.Id), "shopping item must belong to a list")
+			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		}
+
+		By("fetching the shopping list tags")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/tags"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		shoppingListTags := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var listTags []string
+		json.Unmarshal(shoppingListTagBytes, &listTags)
+
+		Expect(len(listTags)).To(Equal(3), "invalid amount of tags")
+		containsTagsFromOtherLists := false
+		for _, tag := range listTags {
+			for _, listItems := range newShoppingList2Items {
+				if tag == listItems.Tag {
+					containsTagsFromOtherLists = true
+				}
+			}
+		}
+		Expect(containsTagsFromOtherLists).To(Equal(false), "list of tags contains tags from other lists")
+
+		By("fetching the shopping list tags")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.Id + "/tags"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		shoppingListTags = routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListTagBytes, err = json.Marshal(shoppingListTags)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var list2Tags []string
+		json.Unmarshal(shoppingListTagBytes, &list2Tags)
+
+		Expect(len(list2Tags)).To(Equal(3), "invalid amount of tags")
+		containsTagsFromOtherLists = false
+		for _, tag := range list2Tags {
+			for _, listItems := range newShoppingListItems {
+				if tag == listItems.Tag {
+					containsTagsFromOtherLists = true
+					break
+				}
+			}
+		}
+		Expect(containsTagsFromOtherLists).To(Equal(false), "list of tags contains tags from other lists")
+
+		By("deleting the shopping list")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+
+		By("deleting the 2nd shopping list")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.Id
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+	})
+
+	It("should allow updating of tags in a shopping list", func() {
+		shoppingList := types.ShoppingListSpec{
+			Name: "My list",
+		}
+		shoppingListBytes, err := json.Marshal(shoppingList)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		By("creating a shopping list")
+		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
+		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListBytes, err = json.Marshal(shoppingListResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var shoppingListCreated types.ShoppingListSpec
+		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+
+		Expect(shoppingListCreated.Id).ToNot(Equal(""), "shopping list created id must not be empty")
+		Expect(shoppingListCreated.Name).To(Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
+
+		By("listing shopping list items")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var shoppingListItems []types.ShoppingItemSpec
+		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+
+		Expect(len(shoppingListItems)).To(Equal(0), "There should be no items on the shopping list")
+
+		By("creating items on the list")
+		newShoppingListItem := types.ShoppingItemSpec{
+			Name: "Lettuce",
+			Price: 3,
+			Quantity: 2,
+			Notes: "Not plastic bagged ones",
+			Tag: "Fruits and veges",
+		}
+
+		By("creating shopping list items")
+		shoppingListItemBytes, err := json.Marshal(newShoppingListItem)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListItemBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var shoppingItem types.ShoppingItemSpec
+		json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+		Expect(shoppingItem.ListId).To(Equal(shoppingListCreated.Id), "shopping item must belong to a list")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+
+		shoppingItemTagUpdate := types.ShoppingItemTag{
+			Name: "Veges",
+		}
+		By("patching the tag")
+		shoppingItemTagBytes, err := json.Marshal(shoppingItemTagUpdate)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/tags/Fruits%20and%20veges"
+		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemTagBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+
+		By("fetching the shopping list tags")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/tags"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		shoppingListTags := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var listTags []string
+		json.Unmarshal(shoppingListTagBytes, &listTags)
+
+		var foundUpdatedTag bool
+		for _, tag := range listTags {
+			if tag == shoppingItemTagUpdate.Name {
+				foundUpdatedTag = true
+			}
+		}
+		Expect(foundUpdatedTag).To(Equal(true), "Unable to find updated tag")
+
+		By("deleting the shopping list")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+	})
+
 	It("should allow templating of a shopping list", func() {
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
