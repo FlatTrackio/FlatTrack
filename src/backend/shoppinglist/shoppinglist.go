@@ -367,7 +367,7 @@ func UpdateItem(db *sql.DB, listId string, itemId string, item types.ShoppingIte
 // SetItemObtained
 // updates the item's obtained field
 func SetItemObtained(db *sql.DB, listId string, itemId string, obtained bool) (item types.ShoppingItemSpec, err error) {
-	sqlStatement := `update shopping_item set obtained = $3 where listId = $2 and id = $3 returning *`
+	sqlStatement := `update shopping_item set obtained = $3 where listId = $1 and id = $2 returning *`
 	rows, err := db.Query(sqlStatement, listId, itemId, obtained)
 	if err != nil {
 		return item, err
