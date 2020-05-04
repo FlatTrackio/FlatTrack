@@ -466,7 +466,7 @@ export default {
       return common.TimestampToCalendar(timestamp)
     },
     LoopStart () {
-      if (shoppinglistCommon.GetShoppingListAutoRefresh() !== 'true') {
+      if (shoppinglistCommon.GetShoppingListAutoRefresh() === 'false') {
         return
       }
       this.intervalLoop = window.setInterval(() => {
