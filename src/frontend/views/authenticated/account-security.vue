@@ -11,7 +11,12 @@
         <h1 class="title is-1">Security</h1>
         <p class="subtitle is-3">Manage your account's security</p>
         <br/>
-        <h1 class="title is-3">Password</h1>
+        <div class="field has-addons">
+          <h1 class="title is-3">Password</h1>
+          <p class="control">
+            <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
+          </p>
+        </div>
         <b-field label="Password">
           <b-input
             type="password"
@@ -20,6 +25,7 @@
             placeholder="Enter to update your password"
             icon="textbox-password"
             size="is-medium"
+            pattern="^([a-z]*)([A-Z]*).{10,}$"
             maxlength="70">
           </b-input>
         </b-field>
@@ -31,6 +37,7 @@
             placeholder="Confirm to update your password"
             maxlength="70"
             size="is-medium"
+            pattern="^([a-z]*)([A-Z]*).{10,}$"
             icon="textbox-password">
           </b-input>
         </b-field>
@@ -143,7 +150,8 @@ export default {
     }
   },
   components: {
-    QrcodeVue: () => import('qrcode.vue')
+    QrcodeVue: () => import('qrcode.vue'),
+    infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
   }
 }
 </script>

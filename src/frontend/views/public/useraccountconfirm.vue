@@ -75,11 +75,6 @@
             @click="PostUserConfirm(id, secret, phoneNumber, password, passwordConfirm, jsBirthday)">
             Confirm my account
           </b-button>
-          <br/>
-          <br/>
-          <p class="subtitle is-6">
-            * optional
-          </p>
         </div>
       </section>
     </div>

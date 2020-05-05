@@ -97,7 +97,13 @@
         </b-field>
         <br/>
 
-        <b-field label="Password">
+        <div class="field has-addons">
+          <label class="label">Password</label>
+          <p class="control">
+            <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
+          </p>
+        </div>
+        <b-field>
           <b-input
             type="password"
             v-model="password"
@@ -105,6 +111,7 @@
             maxlength="70"
             placeholder="Enter a password for your flatmate"
             icon="textbox-password"
+            pattern="^([a-z]*)([A-Z]*).{10,}$"
             validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
             size="is-medium">
           </b-input>
@@ -118,6 +125,7 @@
             maxlength="70"
             placeholder="Confirm a password for your flatmate"
             icon="textbox-password"
+            pattern="^([a-z]*)([A-Z]*).{10,}$"
             validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
             size="is-medium">
           </b-input>
@@ -179,7 +187,8 @@ export default {
     }
   },
   components: {
-    QrcodeVue: () => import('qrcode.vue')
+    QrcodeVue: () => import('qrcode.vue'),
+    infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
   },
   methods: {
     TimestampToCalendar (timestamp) {

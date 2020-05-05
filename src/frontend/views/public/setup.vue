@@ -112,7 +112,13 @@
           </b-datepicker>
         </b-field>
         <br/>
-        <b-field label="Password">
+        <div class="field has-addons">
+          <label class="label">Password</label>
+          <p class="control">
+            <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
+          </p>
+        </div>
+        <b-field>
           <b-input
             type="password"
             v-model="password"
@@ -121,6 +127,7 @@
             placeholder="Enter a password"
             icon="textbox-password"
             size="is-medium"
+            pattern="^([a-z]*)([A-Z]*).{10,}$"
             validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
             required>
           </b-input>
@@ -135,6 +142,7 @@
             @keyup.enter.native="Register({ language, timezone, flatName, user: { names, email, password } })"
             size="is-medium"
             maxlength="70"
+            pattern="^([a-z]*)([A-Z]*).{10,}$"
             validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
             required>
           </b-input>
@@ -149,15 +157,12 @@
           Setup
         </b-button>
       </div>
-      <br/>
-      <p>* optional</p>
     </section>
   </div>
 </div>
 </template>
 
 <script>
-import headerDisplay from '@/frontend/components/common/header-display.vue'
 import registration from '@/frontend/requests/public/registration'
 import apiroot from '@/frontend/requests/public/apiroot'
 import common from '@/frontend/common/common'
@@ -187,7 +192,8 @@ export default {
     }
   },
   components: {
-    headerDisplay
+    headerDisplay: () => import('@/frontend/components/common/header-display.vue'),
+    infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
   },
   methods: {
     Register: (form) => {

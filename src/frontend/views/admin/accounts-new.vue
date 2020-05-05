@@ -79,6 +79,12 @@
           </b-field>
           <br/>
 
+          <div class="field has-addons">
+            <label class="label">Password</label>
+            <p class="control">
+              <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
+            </p>
+          </div>
           <b-field label="Password">
             <b-input
               type="password"
@@ -88,6 +94,7 @@
               placeholder="Enter a password for your flatmate"
               icon="textbox-password"
               size="is-medium"
+              pattern="^([a-z]*)([A-Z]*).{10,}$"
               validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
               required>
             </b-input>
@@ -102,6 +109,7 @@
               placeholder="Confirm a password for your flatmate"
               icon="textbox-password"
               size="is-medium"
+              pattern="^([a-z]*)([A-Z]*).{10,}$"
               validation-message="password is invalid. passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
               required>
             </b-input>
@@ -121,10 +129,6 @@
           @click="PostNewUser(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">
           Create user account
         </b-button>
-        <div v-if="setOnlyRequiredFields == false">
-          <br/>
-          <p>* optional</p>
-        </div>
       </section>
     </div>
   </div>
@@ -157,6 +161,9 @@ export default {
       jsBirthday: null,
       groupsFull: []
     }
+  },
+  components: {
+    infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
   },
   methods: {
     TimestampToCalendar (timestamp) {
