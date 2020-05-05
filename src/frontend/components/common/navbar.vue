@@ -52,7 +52,6 @@
 import common from '@/frontend/common/common'
 import flatInfo from '@/frontend/requests/authenticated/flatInfo'
 import cani from '@/frontend/requests/authenticated/can-i'
-import { DialogProgrammatic as Dialog, LoadingProgrammatic as Loading } from 'buefy'
 
 export default {
   name: 'navbar',

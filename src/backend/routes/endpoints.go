@@ -88,6 +88,11 @@ func GetEndpoints(endpointPrefix string, db *sql.DB) types.Endpoints {
 			HttpMethod:   http.MethodPost,
 		},
 		{
+			EndpointPath: endpointPrefix + "/user/auth/reset",
+			HandlerFunc:  UserAuthReset(db),
+			HttpMethod:   http.MethodPost,
+		},
+		{
 			EndpointPath: endpointPrefix + "/user/confirm/{id}",
 			HandlerFunc:  GetUserConfirmValid(db),
 			HttpMethod:   http.MethodGet,

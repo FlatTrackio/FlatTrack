@@ -415,6 +415,38 @@ func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// UserAuthReset
+// invalidates all JWTs
+func UserAuthReset(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to sign out all devices logged in"
+		code := 500
+
+		id, err := users.GetIdFromJWT(db, r)
+		if err != nil {
+			response = "Failed to find account"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+		err = users.GenerateNewAuthNonce(db, id)
+		if err == nil {
+			response = "Successfully signed out all devices logged in"
+			code = 200
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // UserCanIgroup
 // respond whether the current user account is in a group
 func UserCanIgroup(db *sql.DB) http.HandlerFunc {

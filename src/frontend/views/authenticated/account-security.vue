@@ -26,6 +26,7 @@
             icon="textbox-password"
             size="is-medium"
             pattern="^([a-z]*)([A-Z]*).{10,}$"
+            validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
             maxlength="70">
           </b-input>
         </b-field>
@@ -38,6 +39,7 @@
             maxlength="70"
             size="is-medium"
             pattern="^([a-z]*)([A-Z]*).{10,}$"
+            validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
             icon="textbox-password">
           </b-input>
         </b-field>
@@ -83,6 +85,17 @@
             Enable
           </b-button>
         </div>
+
+        <br/>
+        <br/>
+        <h1 class="title is-3">Sign out of all devices</h1>
+        <b-button
+          type="is-danger"
+          size="is-medium"
+          icon-left="close"
+          @click="ResetAuth">
+          Revoke access for all devices
+        </b-button>
       </section>
     </div>
   </div>
@@ -91,6 +104,7 @@
 <script>
 import common from '@/frontend/common/common'
 import profile from '@/frontend/requests/authenticated/profile'
+import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
   name: 'account security',
@@ -143,6 +157,23 @@ export default {
         common.DisplaySuccessToast('Successfully updated your profile')
       }).catch(err => {
         common.DisplayFailureToast('Failed to update profile' + '<br/>' + err.response.data.metadata.response)
+      })
+    },
+    ResetAuth () {
+      Dialog.confirm({
+        title: 'Revoke access for all devices',
+        message: 'Are you sure that you wish to sign out of all devices?' + '<br/>' + 'This action cannot be undone.',
+        confirmText: 'Sign out',
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: () => {
+          profile.PostAuthReset().then(resp => {
+            common.DisplaySuccessToast('Successfully signed out of all devices')
+            window.location.href = '/login'
+          }).catch(err => {
+            common.DisplayFailureToast('Failed to sign out of all devices' + '<br/>' + err.response.data.metadata.response)
+          })
+        }
       })
     },
     TimestampToCalendar (timestamp) {

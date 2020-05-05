@@ -30,4 +30,17 @@ function PatchProfile (names, email, phoneNumber, birthday, password) {
   })
 }
 
-export default { GetProfile, PatchProfile }
+// ResetAuth
+// revokes all JWTs
+function PostAuthReset () {
+  return Request({
+    url: `/api/user/auth/reset`,
+    method: 'POST'
+  })
+}
+
+export default {
+  GetProfile,
+  PatchProfile,
+  PostAuthReset
+}

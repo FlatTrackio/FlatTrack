@@ -694,6 +694,61 @@ var _ = Describe("API e2e tests", func() {
 		Expect(userAccountLoginValid).To(Equal(false), "JWT should be valid")
 	})
 
+	It("should disallow login in after reset auth nonce", func() {
+		account := types.UserSpec{
+			Names:       "Joe Bloggs",
+			Email:       "user123@example.com",
+			Password:    "Password123!",
+			PhoneNumber: "64200000000",
+			Birthday:    43200,
+			Groups:      []string{"flatmember"},
+		}
+		accountBytes, err := json.Marshal(account)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		By("creating a user account")
+		apiEndpoint := apiServerAPIprefix + "/admin/users"
+		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountJSON, err := json.Marshal(userAccountResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var userAccount types.UserSpec
+		json.Unmarshal(userAccountJSON, &userAccount)
+
+		By("checking the response")
+		Expect(userAccount.Id).ToNot(Equal(""), "User account Id must not be empty")
+		Expect(userAccount.Names).To(Equal(account.Names), "User account names must match what was posted")
+		Expect(userAccount.Password).To(Equal(""), "User account password must return an empty string")
+
+		By("logging in")
+		apiEndpoint = apiServerAPIprefix + "/user/auth"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
+
+		By("resetting auth")
+		apiEndpoint = apiServerAPIprefix + "/user/auth/reset"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+
+		By("checking validation of the token")
+		apiEndpoint = apiServerAPIprefix + "/user/auth"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(401), "api have return code of 401")
+
+		By("deleting the account")
+		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+	})
+
 	It("should disallow non-existent confirms", func() {
 		confirmsIds := []string{
 			"a",

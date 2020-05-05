@@ -548,9 +548,9 @@ func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (user
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
 
-	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, disabled = $8, registered = $9, lastLogin = $10, authNonce = $11, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, disabled = $8, registered = $9, lastLogin = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
                          returning *`
-	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce)
+	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin)
 	if err != nil {
 		// TODO add roll back, if there's failure
 		return userAccountUpdated, err
@@ -714,4 +714,19 @@ func UserAccountExists(db *sql.DB, id string) (exists bool, err error) {
 	rows.Scan(&userIdFromDB)
 	err = rows.Err()
 	return userIdFromDB == id, err
+}
+
+// GenerateNewAuthNonce
+// given a user account id, generates a new auth nonce to reset all logins and invalidate all issued JWTs
+func GenerateNewAuthNonce(db *sql.DB, id string) (err error) {
+	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid where id = $1
+                         returning *`
+	rows, err := db.Query(sqlStatement, id)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	rows.Next()
+	_, err = UserObjectFromRows(rows)
+	return err
 }

@@ -2,6 +2,7 @@
   <b-tooltip
     :label="message"
     type="is-white"
+    position="is-top"
     multilined>
     <b-icon
       icon="information-outline"
