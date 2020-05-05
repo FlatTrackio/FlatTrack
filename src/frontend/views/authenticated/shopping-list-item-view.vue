@@ -28,7 +28,7 @@
               required>
             </b-input>
           </b-field>
-          <b-field label="Notes">
+          <b-field label="Notes (optional)">
             <b-input
               type="text"
               v-model="notes"
@@ -37,7 +37,7 @@
               icon="text">
             </b-input>
           </b-field>
-          <b-field label="Price">
+          <b-field label="Price (optional)">
             <b-input
               type="number"
               step="0.01"
@@ -47,7 +47,7 @@
               size="is-medium">
             </b-input>
           </b-field>
-          <b-field label="Quantity">
+          <b-field label="Quantity (optional)">
             <b-numberinput
               v-model="quantity"
               size="is-medium"
@@ -55,7 +55,7 @@
             </b-numberinput>
           </b-field>
           <div>
-            <label class="label">Tag</label>
+            <label class="label">Tag (optional)</label>
             <b-field>
               <p class="control" v-if="tags.length > 0">
                 <b-dropdown>

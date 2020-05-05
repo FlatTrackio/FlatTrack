@@ -21,7 +21,7 @@
               required>
             </b-input>
           </b-field>
-          <b-field label="Notes">
+          <b-field label="Notes (optional)">
             <b-input
               type="text"
               size="is-medium"

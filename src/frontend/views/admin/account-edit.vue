@@ -72,7 +72,7 @@
         </section>
         <br/>
 
-        <b-field label="Phone number">
+        <b-field label="Phone number (optional)">
           <b-input
             type="tel"
             v-model="phoneNumber"
@@ -83,7 +83,7 @@
           </b-input>
         </b-field>
 
-        <b-field label="Birthday">
+        <b-field label="Birthday (optional)">
           <b-datepicker
             v-model="jsBirthday"
             :max-date="maxDate"
