@@ -121,7 +121,7 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
 // GetAllUsers
 // return all users in the database
 func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector) (users []types.UserSpec, err error) {
-	sqlStatement := `select * from users where deletionTimestamp = 0`
+	sqlStatement := `select * from users where deletionTimestamp = 0 order by names`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		return users, err

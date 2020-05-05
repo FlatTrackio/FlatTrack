@@ -61,6 +61,8 @@ $material-icons-font-path: '~material-icons/iconfont/';
 
 @import '~material-icons/iconfont/material-icons.scss';
 
+@import '~@mdi/font/css/materialdesignicons.min.css';
+
 $midgray: #c9c9c9;
 $primary: #00a7d6;
 $primary-invert: findColorInvert($primary);
