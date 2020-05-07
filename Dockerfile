@@ -22,7 +22,8 @@ ARG APP_BUILD_VERSION="0.0.0"
 ARG APP_BUILD_HASH="???"
 ARG APP_BUILD_DATE="???"
 ARG APP_BUILD_MODE="development"
-RUN CGO_ENABLED=0 GOOS=linux go build \
+ARG GOARCH="amd64"
+RUN CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
   -a \
   -installsuffix cgo \
   -ldflags "-extldflags '-static' -s -w \

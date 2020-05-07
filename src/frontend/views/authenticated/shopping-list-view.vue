@@ -18,15 +18,15 @@
             <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">{{ name || 'Unnamed list' }}</router-link></li>
           </ul>
         </nav>
-        <div v-if="editing">
+        <div v-if="editingMeta">
           <b-field label="Name">
             <b-input
               type="text"
               icon="format-title"
               size="is-medium"
               ref="name"
-              @keyup.enter.native="notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed)"
-              @keyup.esc.native="editing = false"
+              @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, completed)"
+              @keyup.esc.native="editing = false; editingMeta = false"
               v-model="name"
               required>
             </b-input>
@@ -34,10 +34,10 @@
           <br/>
         </div>
         <div v-else>
-          <h1 id="ListName" class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="editing = !editing; FocusName()">{{ name }}</h1>
+          <h1 id="ListName" class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="editing = true; editingMeta = true; FocusName()">{{ name }}</h1>
         </div>
-        <div v-if="notes != '' || notesFromEmpty || editing">
-          <div v-if="editing">
+        <div v-if="notes !== '' || notesFromEmpty || editingMeta">
+          <div v-if="editingMeta">
             <b-field label="Notes">
               <b-input
                 icon="text"
@@ -45,8 +45,8 @@
                 maxlength="100"
                 type="text"
                 ref="notes"
-                @keyup.enter.native="notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes)"
-                @keyup.esc.native="editing = false"
+                @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes)"
+                @keyup.esc.native="editing = false; editingMeta = false"
                 v-model="notes">
               </b-input>
             </b-field>
@@ -56,7 +56,7 @@
             <div>
               <div class="content">
                 <label class="label">Notes</label>
-                <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="editing = true; FocusNotes()">
+                <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="editing = true; editingMeta = true; FocusNotes()">
                   <i>
                     {{ notes }}
                   </i>
@@ -65,9 +65,9 @@
             </div>
           </div>
         </div>
-        <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true; FocusNotes() }" v-if="!editing && notes.length == 0">Add notes</b-button>
-        <div v-if="editing">
-          <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; UpdateShoppingList(name, notes, completed) }">Done</b-button>
+        <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true; editingMeta = true; FocusNotes() }" v-if="!editingMeta && notes.length == 0">Add notes</b-button>
+        <div v-if="editingMeta">
+          <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, completed) }">Done</b-button>
           <br/>
         </div>
         <br/>
@@ -127,14 +127,20 @@
               <div v-if="editingTag === itemTag.tag">
                 <label class="label">Tag name</label>
                 <b-field>
+                  <b-button
+                    type="is-danger"
+                    size="is-medium"
+                    @click="editingTag = ''; editing = false">
+                    X
+                  </b-button>
                   <b-input
                     type="text"
                     icon="format-title"
                     size="is-medium"
                     placeholder="Enter a tag name"
                     expanded
-                    @keyup.enter.native="editingTag = ''; UpdateShoppingListItemTag(itemTag.tag, TagTmp); itemTag.tag = TagTmp; TagTmp = ''"
-                    @keyup.esc.native="editingTag = ''"
+                    @keyup.enter.native="editingTag = ''; UpdateShoppingListItemTag(itemTag.tag, TagTmp); itemTag.tag = TagTmp; TagTmp = ''; editing = false"
+                    @keyup.esc.native="editingTag = ''; editing = false"
                     v-model="TagTmp"
                     required>
                   </b-input>
@@ -142,14 +148,14 @@
                     <b-button
                       type="is-primary"
                       size="is-medium"
-                      @click="editingTag = ''; UpdateShoppingListItemTag(itemTag.tag, TagTmp); itemTag.tag = TagTmp; TagTmp = ''">
-                      Save
+                      icon-left="check"
+                      @click="editingTag = ''; UpdateShoppingListItemTag(itemTag.tag, TagTmp); itemTag.tag = TagTmp; TagTmp = ''; editing = false">
                     </b-button>
                   </p>
                 </b-field>
                 <br/>
               </div>
-              <div @click="TagTmp = itemTag.tag; editingTag = itemTag.tag" v-else>
+              <div @click="TagTmp = itemTag.tag; editingTag = itemTag.tag; editing = true" v-else>
                 <p class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover">
                   {{ itemTag.tag }}
                   <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
@@ -259,6 +265,7 @@ export default {
     return {
       intervalLoop: null,
       editing: false,
+      editingMeta: false,
       notesFromEmpty: false,
       itemSearch: '',
       authorNames: '',
@@ -470,6 +477,9 @@ export default {
         return
       }
       this.intervalLoop = window.setInterval(() => {
+        if (this.editing === true) {
+          return
+        }
         this.GetShoppingList()
         this.GetShoppingListItems()
 

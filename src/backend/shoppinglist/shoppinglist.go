@@ -14,6 +14,8 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
+// ValidateShoppingList
+// given a shopping list, return it's validitiy
 func ValidateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (valid bool, err error) {
 	if len(shoppingList.Name) == 0 || len(shoppingList.Name) > 30 || shoppingList.Name == "" {
 		return valid, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
@@ -30,6 +32,8 @@ func ValidateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (vali
 	return true, err
 }
 
+// ValidateShoppingListItem
+// given a shopping list item, return it's validitiy
 func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bool, err error) {
 	if len(item.Name) == 0 || len(item.Name) > 30 || item.Name == "" {
 		return valid, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
