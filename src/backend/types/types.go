@@ -111,6 +111,15 @@ type ShoppingItemSpec struct {
 	DeletionTimestamp     int     `json:"deletionTimestamp"`
 }
 
+type ShoppingItemSortType string
+const (
+	ShoppingItemSortByPrice = "price"
+	ShoppingItemSortByTag = "tag"
+	ShoppingItemSortByRecentlyAdded = "recentlyAdded"
+	ShoppingItemSortByRecentlyUpdated = "recentlyUpdated"
+	ShoppingItemSortByQuantity = "quantity"
+)
+
 type ShoppingItemOptions struct {
 	Selector ShoppingItemSelector `json:"Selector"`
 	SortBy string `json:"sortBy"`

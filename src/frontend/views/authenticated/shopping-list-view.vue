@@ -92,9 +92,17 @@
             expanded>
           </b-input>
           <p class="control">
-            <b-select placeholder="Sort by" icon="sort" v-model="sortBy" size="is-medium" expanded>
+            <b-select
+              placeholder="Sort by"
+              icon="sort"
+              v-model="sortBy"
+              size="is-medium"
+              expanded>
               <option value="tags">Tags</option>
               <option value="price">Price</option>
+              <option value="recentlyAdded">Recently Added</option>
+              <option value="recentlyUpdated">Recently Updated</option>
+              <option value="quantity">Quantity</option>
             </b-select>
           </p>
         </b-field>
@@ -184,14 +192,14 @@
               <br/>
             </section>
           </div>
-          <div v-if="sortBy === 'price'">
-            <div v-for="(item, index) in listItemsFromPrice" v-bind:key="item">
+          <div v-if="sortBy !== 'tag'">
+            <div v-for="(item, index) in listItemsFromPlainList" v-bind:key="item">
               <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true" :deviceIsMobile="deviceIsMobile"/>
             </div>
             <section>
               <br/>
               <p>
-                {{ listItemsFromPrice.length || 0 }} item(s)
+                {{ listItemsFromPlainList.length || 0 }} item(s)
               </p>
             </section>
             <br/>
@@ -272,7 +280,7 @@ export default {
       authorLastNames: '',
       totalItems: 0,
       loopCreated: new Date(),
-      sortBy: shoppinglistCommon.GetShoppingListSortBy(),
+      sortBy: shoppinglistCommon.GetShoppingListSortBy() || 'tags',
       itemDisplayState: null,
       deviceIsMobile: false,
       HeaderIsSticky: false,
@@ -299,7 +307,7 @@ export default {
         return this.ItemDisplayState(item)
       }))
     },
-    listItemsFromPrice () {
+    listItemsFromPlainList () {
       return this.list.filter((item) => {
         return this.ItemDisplayState(item)
       })
@@ -427,11 +435,7 @@ export default {
       })
     },
     GetShoppingListItems () {
-      var sortBy
-      if (this.sortBy === 'price') {
-        sortBy = this.sortBy
-      }
-      shoppinglist.GetShoppingListItems(this.id, sortBy).then(resp => {
+      shoppinglist.GetShoppingListItems(this.id, this.sortBy).then(resp => {
         var responseList = resp.data.list
         this.totalItems = responseList === null ? 0 : responseList.length
         if (this.list === null) {
