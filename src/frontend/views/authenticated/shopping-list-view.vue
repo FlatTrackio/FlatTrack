@@ -192,7 +192,7 @@
               <br/>
             </section>
           </div>
-          <div v-if="sortBy !== 'tag'">
+          <div v-else-if="sortBy !== 'tag'">
             <div v-for="(item, index) in listItemsFromPlainList" v-bind:key="item">
               <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true" :deviceIsMobile="deviceIsMobile"/>
             </div>
