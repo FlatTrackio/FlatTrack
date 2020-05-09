@@ -79,6 +79,14 @@
             </b-field>
           </div>
           <br/>
+          <b-field
+            label="Obtained">
+            <b-checkbox
+              size="is-medium"
+              v-model="obtained">
+              Obtained
+            </b-checkbox>
+          </b-field>
           <b-field>
             <b-button
               type="is-success"
@@ -86,7 +94,7 @@
               icon-left="delta"
               native-type="submit"
               expanded
-              @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag)">
+              @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag, obtained)">
               Update item
             </b-button>
             <p class="control">
@@ -126,6 +134,7 @@ export default {
       price: 0,
       quantity: 1,
       tag: undefined,
+      obtained: false,
       author: '',
       authorLast: '',
       creationTimestamp: 0,
@@ -171,6 +180,11 @@ export default {
             common.DisplayFailureToast('Failed to delete shopping list item' + ' - ' + err.response.data.metadata.response)
           })
         }
+      })
+    },
+    PatchItemObtained (obtained) {
+      shoppinglist.PatchShoppingListItemObtained(this.shoppingListId, this.id, obtained).catch(err => {
+        common.DisplayFailureToast('Failed to patch the obtained field of this item' + '<br/>' + err.response.data.metadata.response)
       })
     },
     TimestampToCalendar (timestamp) {

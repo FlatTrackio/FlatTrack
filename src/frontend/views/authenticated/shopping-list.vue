@@ -52,7 +52,7 @@
           <div class="card">
             <div class="card-content card-content-list">
               <div class="media">
-                <div class="media-left" @click="PatchItemObtained(item.id, !item.obtained)">
+                <div class="media-left">
                   <b-icon icon="cart-remove" size="is-medium" type="is-midgray"></b-icon>
                 </div>
                 <div class="media-content">
