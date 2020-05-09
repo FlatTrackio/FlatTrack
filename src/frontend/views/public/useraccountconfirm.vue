@@ -32,6 +32,7 @@
             <b-datepicker
               v-model="jsBirthday"
               :max-date="maxDate"
+              :min-date="minDate"
               :show-week-numbers="true"
               :focused-date="focusedDate"
               placeholder="Click to select birthday"
@@ -100,10 +101,14 @@ import moment from 'moment'
 export default {
   name: 'Account confirmation',
   data () {
-    var today = new Date()
-    var maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDay())
+    const today = new Date()
+    const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDay())
+    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())
 
     return {
+      minDate: minDate,
+      maxDate: maxDate,
+      focusedDate: maxDate,
       idValid: false,
       jsBirthday: null,
       id: this.$route.params.id,
@@ -134,6 +139,7 @@ export default {
           return
         }
         localStorage.setItem('authToken', resp.data.data)
+        common.DisplaySuccessToast(resp.data.metadata.response)
         setTimeout(() => {
           loadingComponent.close()
           window.location.href = '/'
