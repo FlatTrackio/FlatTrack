@@ -17,7 +17,7 @@
           <!-- TODO explain better -->
         </b-message>
         <div v-if="idValid === true && typeof secret !== 'undefined' && secret !== ''">
-          <b-field label="Phone number*">
+          <b-field label="Phone number (optional)">
             <b-input
               type="tel"
               v-model="phoneNumber"
@@ -28,7 +28,7 @@
             </b-input>
           </b-field>
 
-          <b-field label="Birthday*">
+          <b-field label="Birthday (optional)">
             <b-datepicker
               v-model="jsBirthday"
               :max-date="maxDate"
@@ -42,7 +42,13 @@
           </b-field>
           <br/>
 
-          <b-field label="Password">
+          <div class="field has-addons is-marginless">
+            <h1 class="title is-6 is-marginless">Password</h1>
+            <p class="control">
+              <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
+            </p>
+          </div>
+          <b-field>
             <b-input
               type="password"
               v-model="password"
@@ -51,6 +57,8 @@
               placeholder="Enter your password"
               icon="textbox-password"
               size="is-medium"
+              pattern="^([a-z]*)([a-z]*).{10,}$"
+              validation-message="password is invalid. passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
               required>
             </b-input>
           </b-field>
@@ -64,6 +72,8 @@
               placeholder="Confirm your password"
               icon="textbox-password"
               size="is-medium"
+              pattern="^([a-z]*)([A-Z]*).{10,}$"
+              validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
               required>
             </b-input>
           </b-field>
@@ -104,7 +114,8 @@ export default {
     }
   },
   components: {
-    headerDisplay: () => import('@/frontend/components/common/header-display')
+    headerDisplay: () => import('@/frontend/components/common/header-display'),
+    infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
   },
   methods: {
     PostUserConfirm (id, secret, phoneNumber, password, passwordConfirm, jsBirthday) {
@@ -119,7 +130,7 @@ export default {
       })
       confirm.PostUserConfirm(id, secret, phoneNumber, birthday, password).then(resp => {
         if (resp.data.data === '') {
-          common.DisplayFailureToast('Unable to find token to sign in with after confirming account. Please contact an administrator')
+          common.DisplayFailureToast(resp.data.metadata.response)
           return
         }
         localStorage.setItem('authToken', resp.data.data)
@@ -127,9 +138,9 @@ export default {
           loadingComponent.close()
           window.location.href = '/'
         }, 2 * 1000)
-      }).catch(() => {
+      }).catch(err => {
         loadingComponent.close()
-        common.DisplayFailureToast('Unable to find token to sign in with after confirming account. Please contact an administrator')
+        common.DisplayFailureToast(err.response.data.metadata.response)
       })
     }
   },

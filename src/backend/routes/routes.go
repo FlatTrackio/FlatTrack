@@ -1211,7 +1211,7 @@ func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 // confirm a user account
 func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		response := "Failed to confirm account"
+		response := "Failed to confirm your user account"
 		code := 500
 
 		vars := mux.Vars(r)
@@ -1225,8 +1225,10 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 
 		tokenString, err := users.ConfirmUserAccount(db, id, secret, user)
 		if err == nil && errUnmarshal == nil {
-			response = "Confirmed the account"
+			response = "Your user account has been confirmed"
 			code = 200
+		} else {
+			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{

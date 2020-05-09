@@ -93,6 +93,7 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
 	if err != nil {
 		return userInserted, err
 	}
+	defer rows.Close()
 	rows.Next()
 	userInserted, err = UserObjectFromRows(rows)
 	if err != nil {

@@ -62,7 +62,6 @@ func GetShoppingLists(db *sql.DB) (shoppingLists []types.ShoppingListSpec, err e
 		return shoppingLists, err
 	}
 	defer rows.Close()
-
 	for rows.Next() {
 		shoppingList, err := ShoppingListObjectFromRows(rows)
 		if err != nil {
@@ -86,7 +85,6 @@ func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingList
 		return shoppingList, err
 	}
 	defer rows.Close()
-
 	rows.Next()
 	shoppingList, err = ShoppingListObjectFromRows(rows)
 	if err != nil {
@@ -114,7 +112,6 @@ func GetShoppingListItems(db *sql.DB, listId string, options types.ShoppingItemO
 		return items, err
 	}
 	defer rows.Close()
-
 	for rows.Next() {
 		item, err := ShoppingItemObjectFromRows(rows)
 		if err != nil {
@@ -139,7 +136,6 @@ func GetShoppingListItem(db *sql.DB, listid, itemId string) (item types.Shopping
 		return item, err
 	}
 	defer rows.Close()
-
 	rows.Next()
 	return ShoppingItemObjectFromRows(rows)
 }
@@ -162,6 +158,7 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, options
 	if err != nil {
 		return shoppingListInserted, err
 	}
+	defer rows.Close()
 	rows.Next()
 	shoppingListInserted, err = ShoppingListObjectFromRows(rows)
 	if err != nil || shoppingListInserted.Id == "" {
@@ -218,6 +215,7 @@ func PatchShoppingList(db *sql.DB, listId string, shoppingList types.ShoppingLis
 	if err != nil {
 		return shoppingListPatched, err
 	}
+	defer rows.Close()
 	rows.Next()
 	shoppingListPatched, err = ShoppingListObjectFromRows(rows)
 	if err != nil || shoppingListPatched.Id == "" {
@@ -240,6 +238,7 @@ func UpdateShoppingList(db *sql.DB, listId string, shoppingList types.ShoppingLi
 	if err != nil {
 		return shoppingListUpdated, err
 	}
+	defer rows.Close()
 	rows.Next()
 	shoppingListUpdated, err = ShoppingListObjectFromRows(rows)
 	if err != nil || shoppingListUpdated.Id == "" {
