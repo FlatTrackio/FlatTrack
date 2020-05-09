@@ -6,7 +6,7 @@
           FlatTrack
         </p>
         <p class="subtitle">
-          Keep track of your flat
+          Collaborate with your flatmates
         </p>
       </div>
     </section>

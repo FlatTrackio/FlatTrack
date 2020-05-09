@@ -856,8 +856,7 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 		itemId := vars["id"]
 
 		id, errId := users.GetIdFromJWT(db, r)
-		shoppingList.AuthorLast = id
-		patchedList, err := shoppinglist.SetListCompleted(db, itemId, shoppingList.Completed)
+		patchedList, err := shoppinglist.SetListCompleted(db, itemId, shoppingList.Completed, id)
 		if err == nil && errId == nil {
 			code = 200
 			response = "Successfully patched the shopping list completed field"
@@ -961,8 +960,7 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 		listId := vars["listId"]
 
 		id, errId := users.GetIdFromJWT(db, r)
-		shoppingItem.AuthorLast = id
-		patchedItem, err := shoppinglist.SetItemObtained(db, listId, itemId, shoppingItem.Obtained)
+		patchedItem, err := shoppinglist.SetItemObtained(db, listId, itemId, shoppingItem.Obtained, id)
 		if err == nil && errId == nil {
 			code = 200
 			response = "Successfully patched the shopping list item obtained field"

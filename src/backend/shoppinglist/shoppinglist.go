@@ -221,7 +221,7 @@ func PatchShoppingList(db *sql.DB, listId string, shoppingList types.ShoppingLis
 	rows.Next()
 	shoppingListPatched, err = ShoppingListObjectFromRows(rows)
 	if err != nil || shoppingListPatched.Id == "" {
-		return shoppingListPatched, errors.New("Failed to create shopping list")
+		return shoppingListPatched, errors.New("Failed to patch shopping list")
 	}
 	return shoppingListPatched, err
 }
@@ -250,7 +250,7 @@ func UpdateShoppingList(db *sql.DB, listId string, shoppingList types.ShoppingLi
 
 // SetListCompleted
 // updates the list's completed field
-func SetListCompleted(db *sql.DB, listId string, completed bool) (list types.ShoppingListSpec, err error) {
+func SetListCompleted(db *sql.DB, listId string, completed bool, userId string) (list types.ShoppingListSpec, err error) {
 	sqlStatement := `update shopping_list set completed = $1 where id = $2 returning *`
 	rows, err := db.Query(sqlStatement, completed, listId)
 	if err != nil {
@@ -263,6 +263,7 @@ func SetListCompleted(db *sql.DB, listId string, completed bool) (list types.Sho
 			return list, err
 		}
 	}
+
 	return list, err
 }
 
@@ -345,7 +346,10 @@ func PatchItem(db *sql.DB, listid string, itemId string, item types.ShoppingItem
 		}
 	}
 
-	_, err = PatchShoppingList(db, itemPatched.ListId, types.ShoppingListSpec{})
+	shoppingListPatch := types.ShoppingListSpec{
+		AuthorLast: item.AuthorLast,
+	}
+	_, err = PatchShoppingList(db, itemPatched.ListId, shoppingListPatch)
 	return itemPatched, err
 }
 
@@ -370,13 +374,17 @@ func UpdateItem(db *sql.DB, listId string, itemId string, item types.ShoppingIte
 		}
 	}
 
-	PatchShoppingList(db, itemUpdated.ListId, types.ShoppingListSpec{})
+
+	shoppingListPatch := types.ShoppingListSpec{
+		AuthorLast: item.AuthorLast,
+	}
+	_, err = PatchShoppingList(db, itemUpdated.ListId, shoppingListPatch)
 	return itemUpdated, err
 }
 
 // SetItemObtained
 // updates the item's obtained field
-func SetItemObtained(db *sql.DB, listId string, itemId string, obtained bool) (item types.ShoppingItemSpec, err error) {
+func SetItemObtained(db *sql.DB, listId string, itemId string, obtained bool, authorLast string) (item types.ShoppingItemSpec, err error) {
 	sqlStatement := `update shopping_item set obtained = $3 where listId = $1 and id = $2 returning *`
 	rows, err := db.Query(sqlStatement, listId, itemId, obtained)
 	if err != nil {
@@ -390,7 +398,10 @@ func SetItemObtained(db *sql.DB, listId string, itemId string, obtained bool) (i
 		}
 	}
 
-	PatchShoppingList(db, item.ListId, types.ShoppingListSpec{})
+	shoppingListPatch := types.ShoppingListSpec{
+		AuthorLast: authorLast,
+	}
+	_, err = PatchShoppingList(db, item.ListId, shoppingListPatch)
 	return item, err
 }
 

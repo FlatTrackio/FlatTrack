@@ -12,7 +12,7 @@
 
 # FlatTrack
 
-> Keep track of your flat or community house
+> Collaborate with your flatmates
 
 ## Features
 - Fluid, friendly, and modern mobile-first design
