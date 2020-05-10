@@ -633,7 +633,7 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 
 		options := types.ShoppingItemOptions{
 			Selector: types.ShoppingItemSelector{
-				NotObtained: r.FormValue("notObtained") == "true",
+				TemplateListItemSelector: r.FormValue("templateListItemSelector"),
 			},
 		}
 

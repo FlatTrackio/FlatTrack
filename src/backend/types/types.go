@@ -126,7 +126,7 @@ type ShoppingItemOptions struct {
 }
 
 type ShoppingItemSelector struct {
-	NotObtained bool `json:"notObtained"`
+	TemplateListItemSelector string `json:"templateListItemSelector"`
 }
 
 type ShoppingItemTag struct {

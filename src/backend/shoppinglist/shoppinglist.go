@@ -117,8 +117,12 @@ func GetShoppingListItems(db *sql.DB, listId string, options types.ShoppingItemO
 		if err != nil {
 			return items, err
 		}
-		if options.Selector.NotObtained == true {
-			if item.Obtained == true {
+		if options.Selector.TemplateListItemSelector == "obtained" {
+			if item.Obtained != true {
+				continue
+			}
+		} else if options.Selector.TemplateListItemSelector == "unobtained" {
+			if item.Obtained != false {
 				continue
 			}
 		}

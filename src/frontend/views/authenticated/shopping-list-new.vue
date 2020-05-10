@@ -49,7 +49,36 @@
             </b-select>
           </b-field>
           <div class="field" v-if="listTemplate !== '' && typeof listTemplate !== 'undefined'">
-            <b-checkbox v-model="templateListFromOnlyUnobtained">Create list only from unobtained items in template list</b-checkbox>
+            <label class="label">
+              Select items
+            </label>
+            <div class="field">
+              <b-radio
+                v-model="templateListItemSelector"
+                size="is-medium"
+                name="itemSelector"
+                native-value="all">
+                All items
+              </b-radio>
+            </div>
+            <div class="field">
+              <b-radio
+                v-model="templateListItemSelector"
+                size="is-medium"
+                name="itemSelector"
+                native-value="unobtained">
+                Only from unobtained
+              </b-radio>
+            </div>
+            <div class="field">
+              <b-radio
+                v-model="templateListItemSelector"
+                size="is-medium"
+                name="itemSelector"
+                native-value="obtained">
+                Only from obtained
+              </b-radio>
+            </div>
           </div>
           <br/>
           <b-button
@@ -57,8 +86,8 @@
             type="is-success"
             size="is-medium"
             native-type="submit"
-            @click="PostNewShoppingList(name, notes, listTemplate, templateListFromOnlyUnobtained)">
-            Create
+            @click="PostNewShoppingList(name, notes, listTemplate, templateListItemSelector)">
+            Create list
           </b-button>
         </div>
       </section>
@@ -77,16 +106,16 @@ export default {
       name: '',
       notes: '',
       listTemplate: '',
-      templateListOnlyFromUnobtained: false,
+      templateListItemSelector: 'all',
       lists: []
     }
   },
   methods: {
-    PostNewShoppingList (name, notes, listTemplate, templateListFromOnlyUnobtained) {
+    PostNewShoppingList (name, notes, listTemplate, templateListItemSelector) {
       if (notes === '') {
         notes = undefined
       }
-      shoppinglist.PostShoppingList(name, notes, listTemplate, templateListFromOnlyUnobtained).then(resp => {
+      shoppinglist.PostShoppingList(name, notes, listTemplate, templateListItemSelector).then(resp => {
         var list = resp.data.spec
         if (list.id !== '' || typeof list.id === 'undefined') {
           this.$router.push({ path: `/apps/shopping-list/list/${list.id}` })
