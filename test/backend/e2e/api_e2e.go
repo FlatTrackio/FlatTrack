@@ -75,7 +75,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + ""
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		Expect(routes.GetHTTPresponseBodyContents(resp).Metadata.URL).To(Equal(fmt.Sprintf("/%v", apiEndpoint)))
 	})
 
@@ -84,7 +84,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/system/initialized"
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		Expect(routes.GetHTTPresponseBodyContents(resp).Data.(bool)).To(Equal(true), "instance should be initialized")
 	})
 
@@ -93,7 +93,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/system/flatName"
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		Expect(routes.GetHTTPresponseBodyContents(resp).Spec.(string)).ToNot(Equal(""), "flatName should not be empty")
 	})
 
@@ -104,7 +104,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		response := routes.GetHTTPresponseBodyContents(resp)
 		Expect(len(response.List.([]interface{})) > 0).To(Equal(true), "should at least one user account")
 	})
@@ -114,7 +114,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		allUserAccountsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		allUserAccountsJSON, err := json.Marshal(allUserAccountsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -126,7 +126,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + firstUserAccount.Id
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -208,7 +208,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/admin/users"
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			response := routes.GetHTTPresponseBodyContents(resp)
 			userAccountResponse := response.Spec
 			userAccountJSON, err := json.Marshal(userAccountResponse)
@@ -225,7 +225,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 			resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		}
 	})
 
@@ -336,7 +336,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/admin/users"
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			Expect(err).To(BeNil(), apiServerAPIprefix + " should return error")
-			Expect(resp.StatusCode).To(Equal(400), "api have return code of 400")
+			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest), "api have return code of http.StatusBadRequest")
 			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -390,7 +390,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/admin/users"
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -406,7 +406,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err = json.Marshal(userAccountResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -424,7 +424,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 			resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		}
 	})
 
@@ -444,7 +444,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/admin/users/" + id
 			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(404), "api have return code of 404")
+			Expect(resp.StatusCode).To(Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
 		}
 	})
 
@@ -462,7 +462,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		response := routes.GetHTTPresponseBodyContents(resp)
 		userAccountResponse := response.Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
@@ -509,13 +509,13 @@ var _ = Describe("API e2e tests", func() {
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
 			resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountUpdateBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 			By("creating fetching the user account")
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err = json.Marshal(userAccountResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -534,7 +534,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should create account confirms when a password is not provided and allow it to be confirmed", func() {
@@ -551,7 +551,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -567,7 +567,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/useraccountconfirms"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v?userId=%v", apiServer, apiEndpoint, userAccount.Id), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		confirmsListResponse := routes.GetHTTPresponseBodyContents(resp).List
 		confirmsListJSON, err := json.Marshal(confirmsListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -579,7 +579,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/useraccountconfirms/" + confirmsList[0].Id
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		confirmResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		confirmJSON, err := json.Marshal(confirmResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -594,7 +594,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/confirm/" + confirmsList[0].Id
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		confirmValid := routes.GetHTTPresponseBodyContents(resp).Data
 		Expect(confirmValid.(bool)).To(Equal(true), "confirm valid must be true")
 
@@ -607,19 +607,19 @@ var _ = Describe("API e2e tests", func() {
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), confirmUserAccountJSON, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("fetching the user account confirm to check for it to be unavailable")
 		apiEndpoint = apiServerAPIprefix + "/admin/useraccountconfirms/" + confirmsList[0].Id
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(404), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusNotFound), "api have return code of http.StatusOK")
 
 		By("fetching the user account to check if it's been registered")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err = json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -632,7 +632,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should disallow a deleted account to log in", func() {
@@ -651,7 +651,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -667,7 +667,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
 		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
 
@@ -675,7 +675,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginValid := routes.GetHTTPresponseBodyContents(resp).Data.(bool)
 		Expect(userAccountLoginValid).To(Equal(true), "JWT should be valid")
 
@@ -683,13 +683,13 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("checking validation of the token")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(401), "api have return code of 401")
+		Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
 		userAccountLoginValid = routes.GetHTTPresponseBodyContents(resp).Data.(bool)
 		Expect(userAccountLoginValid).To(Equal(false), "JWT should be valid")
 	})
@@ -710,7 +710,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -726,7 +726,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
 		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
 
@@ -734,19 +734,19 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/auth/reset"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("checking validation of the token")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(401), "api have return code of 401")
+		Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
 
 		By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should disallow non-existent confirms", func() {
@@ -764,7 +764,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/admin/useraccountconfirms/" + confirmId
 			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(404), "api have return code of 404")
+			Expect(resp.StatusCode).To(Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
 		}
 	})
 
@@ -783,7 +783,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/user/confirm/" + confirmId
 			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(404), "api have return code of 404")
+			Expect(resp.StatusCode).To(Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
 		}
 	})
 
@@ -799,14 +799,14 @@ var _ = Describe("API e2e tests", func() {
 
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), userAccountLoginData, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
 		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
 
 		By("checking validation of the token")
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), userAccountLoginData, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginValid := routes.GetHTTPresponseBodyContents(resp).Data
 		Expect(userAccountLoginValid).To(Equal(true), "JWT should be valid")
 	})
@@ -827,7 +827,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -844,7 +844,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
 		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
 
@@ -852,7 +852,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/profile"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		profileResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		profileJSON, err := json.Marshal(profileResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -878,7 +878,7 @@ var _ = Describe("API e2e tests", func() {
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
 		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		profileResponse = routes.GetHTTPresponseBodyContents(resp).Spec
 		profileJSON, err = json.Marshal(profileResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -894,13 +894,13 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should list all user accounts", func() {
@@ -908,7 +908,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/users"
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		userAccountsBytes, err := json.Marshal(userAccountsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -933,7 +933,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -949,7 +949,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/users"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountsResponse = routes.GetHTTPresponseBodyContents(resp).List
 		userAccountsBytes, err = json.Marshal(userAccountsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -963,13 +963,13 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("listing user accounts and checking the count")
 		apiEndpoint = apiServerAPIprefix + "/users"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountsResponse = routes.GetHTTPresponseBodyContents(resp).List
 		userAccountsBytes, err = json.Marshal(userAccountsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -996,7 +996,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1010,7 +1010,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err = json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1029,7 +1029,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should not allow two emails with the same email when patching a profile", func() {
@@ -1048,7 +1048,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1071,7 +1071,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err = json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1085,7 +1085,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
 		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
 
@@ -1098,7 +1098,7 @@ var _ = Describe("API e2e tests", func() {
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
 		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(400), "api have return code of 400")
+		Expect(resp.StatusCode).To(Equal(http.StatusBadRequest), "api have return code of http.StatusBadRequest")
 		profileResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		profileJSON, err := json.Marshal(profileResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1110,13 +1110,13 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount1.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("deleting the account2")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount2.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should not allow non admins to patch their groups", func() {
@@ -1135,7 +1135,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1149,7 +1149,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
 		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
 
@@ -1163,7 +1163,7 @@ var _ = Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
 		response := routes.GetHTTPresponseBodyContents(resp)
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		profileResponse := response.Spec
 		profileJSON, err := json.Marshal(profileResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1175,7 +1175,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should not allow non admins to update their groups", func() {
@@ -1195,7 +1195,7 @@ var _ = Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		response := routes.GetHTTPresponseBodyContents(resp)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := response.Spec
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1209,7 +1209,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
 		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
 
@@ -1222,7 +1222,7 @@ var _ = Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
 		response = routes.GetHTTPresponseBodyContents(resp)
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		profileResponse := response.Spec
 		profileJSON, err := json.Marshal(profileResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1234,7 +1234,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should fail to list non-existent user accounts", func() {
@@ -1252,7 +1252,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/admin/users/" + id
 			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(404), "api have return code of 404")
+			Expect(resp.StatusCode).To(Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
 		}
 	})
 
@@ -1260,7 +1260,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/groups"
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		groupsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		groupsBytes, err := json.Marshal(groupsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1273,7 +1273,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/groups/" + groupItem.Id
 			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			groupResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 			groupBytes, err := json.Marshal(groupResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1302,7 +1302,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/groups/" + id
 			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(404), "api have return code of 404")
+			Expect(resp.StatusCode).To(Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
 		}
 	})
 
@@ -1326,7 +1326,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/groups"
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		groupsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		groupsBytes, err := json.Marshal(groupsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1341,7 +1341,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/admin/users"
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1355,7 +1355,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err = json.Marshal(userAccountResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1366,7 +1366,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/user/auth"
 			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			jwt := routes.GetHTTPresponseBodyContents(resp).Data.(string)
 			Expect(jwt).ToNot(Equal(""), "JWT in response must not be empty")
 
@@ -1375,7 +1375,7 @@ var _ = Describe("API e2e tests", func() {
 				apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 				resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 				Expect(err).To(BeNil(), "Request should not return an error")
-				Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+				Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			}()
 
 			for _, groupItem := range groups {
@@ -1389,7 +1389,7 @@ var _ = Describe("API e2e tests", func() {
 				apiEndpoint := apiServerAPIprefix + "/user/can-i/group/" + groupItem.Name
 				resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, jwt)
 				Expect(err).To(BeNil(), "Request should not return an error")
-				Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+				Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 				canIgroupResponse := routes.GetHTTPresponseBodyContents(resp).Data.(bool)
 				Expect(canIgroupResponse).To(Equal(expectGroup), "Group was expected for this user account", account.Names, account.Groups, groupItem.Name, expectGroup)
 			}
@@ -1412,7 +1412,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1423,13 +1423,13 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(400), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusBadRequest), "api have return code of http.StatusOK")
 
 		By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should create a shopping list", func() {
@@ -1443,7 +1443,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1457,7 +1457,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListsBytes, err := json.Marshal(shoppingListsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1470,7 +1470,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should patch a shopping list", func() {
@@ -1484,7 +1484,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1515,7 +1515,7 @@ var _ = Describe("API e2e tests", func() {
 			resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListPatchBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
 			shoppingListPatchedResponse := routes.GetHTTPresponseBodyContents(resp)
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			shoppingListPatchedResponseSpec := shoppingListPatchedResponse.Spec
 			shoppingListPatchedBytes, err := json.Marshal(shoppingListPatchedResponseSpec)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1531,7 +1531,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should update a shopping list", func() {
@@ -1545,7 +1545,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1578,7 +1578,7 @@ var _ = Describe("API e2e tests", func() {
 			resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListUpdateBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
 			shoppingListUpdatedResponse := routes.GetHTTPresponseBodyContents(resp)
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 			shoppingListUpdatedResponseSpec := shoppingListUpdatedResponse.Spec
 			shoppingListUpdatedBytes, err := json.Marshal(shoppingListUpdatedResponseSpec)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1595,7 +1595,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should not allow invalid shopping list properties", func() {
@@ -1624,7 +1624,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(400), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest), "api have return code of http.StatusOK")
 			shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListBytes, err = json.Marshal(shoppingListResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1646,7 +1646,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1660,7 +1660,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1714,14 +1714,14 @@ var _ = Describe("API e2e tests", func() {
 			var shoppingItem types.ShoppingItemSpec
 			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
 			Expect(shoppingItem.ListId).To(Equal(shoppingListCreated.Id), "shopping item must belong to a list")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		}
 
 		By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse = routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1734,7 +1734,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should disallow adding items to a non-existent list", func() {
@@ -1777,7 +1777,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists/" + "xxxxxxxx" + "/items"
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(400), "api have return code of 400")
+			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest), "api have return code of http.StatusBadRequest")
 			shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err := json.Marshal(shoppingItemResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1798,7 +1798,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1812,7 +1812,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1861,14 +1861,14 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(400), "api must have return code of 400")
+			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest), "api must have return code of http.StatusBadRequest")
 		}
 
 		By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api must have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api must have return code of http.StatusOK")
 		shoppingListItemsResponse = routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1881,7 +1881,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should allow updating of shopping list items", func() {
@@ -1895,7 +1895,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1909,7 +1909,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -1939,7 +1939,7 @@ var _ = Describe("API e2e tests", func() {
 		var shoppingItem types.ShoppingItemSpec
 		json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
 		Expect(shoppingItem.ListId).To(Equal(shoppingListCreated.Id), "shopping item must belong to a list")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("updating item on the list")
 		updatedShoppingListItems := []types.ShoppingItemSpec{
@@ -1973,7 +1973,7 @@ var _ = Describe("API e2e tests", func() {
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
 			var shoppingItemUpdated types.ShoppingItemSpec
 			json.Unmarshal(shoppingListItemBytes, &shoppingItemUpdated)
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 			Expect(shoppingItemUpdated.Id).ToNot(Equal(""), "shopping item id should not be nil")
 			Expect(updatedShoppingListItem.Name).To(Equal(shoppingItemUpdated.Name), "shopping item name was not updated")
@@ -1988,13 +1988,13 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items/" + shoppingItem.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should allow patching of shopping list items", func() {
@@ -2008,7 +2008,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2022,7 +2022,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2052,7 +2052,7 @@ var _ = Describe("API e2e tests", func() {
 		var shoppingItem types.ShoppingItemSpec
 		json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
 		Expect(shoppingItem.ListId).To(Equal(shoppingListCreated.Id), "shopping item must belong to a list")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("updating item on the list")
 		updatedShoppingListItems := []types.ShoppingItemSpec{
@@ -2084,7 +2084,7 @@ var _ = Describe("API e2e tests", func() {
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
 			var shoppingItemUpdated types.ShoppingItemSpec
 			json.Unmarshal(shoppingListItemBytes, &shoppingItemUpdated)
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 			Expect(updatedShoppingListItem.Name).To(Equal(shoppingItemUpdated.Name), "shopping item name was not updated")
 			Expect(updatedShoppingListItem.Price).To(Equal(shoppingItemUpdated.Price), "shopping item price was not updated")
@@ -2097,7 +2097,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should return a list of tags", func() {
@@ -2111,7 +2111,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2125,7 +2125,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2183,14 +2183,14 @@ var _ = Describe("API e2e tests", func() {
 			var shoppingItem types.ShoppingItemSpec
 			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
 			Expect(shoppingItem.ListId).To(Equal(shoppingListCreated.Id), "shopping item must belong to a list")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		}
 
 		By("fetching the shopping list tags")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListTags := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2203,7 +2203,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should only return tags from a shopping list", func() {
@@ -2217,7 +2217,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2231,7 +2231,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2289,7 +2289,7 @@ var _ = Describe("API e2e tests", func() {
 			var shoppingItem types.ShoppingItemSpec
 			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
 			Expect(shoppingItem.ListId).To(Equal(shoppingListCreated.Id), "shopping item must belong to a list")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		}
 
 		By("creating the 2nd list")
@@ -2303,7 +2303,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse = routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2317,7 +2317,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse = routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2375,14 +2375,14 @@ var _ = Describe("API e2e tests", func() {
 			var shoppingItem types.ShoppingItemSpec
 			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
 			Expect(shoppingItem.ListId).To(Equal(shoppingList2Created.Id), "shopping item must belong to a list")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		}
 
 		By("fetching the shopping list tags")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/tags"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListTags := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2404,7 +2404,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.Id + "/tags"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListTags = routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListTagBytes, err = json.Marshal(shoppingListTags)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2427,13 +2427,13 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("deleting the 2nd shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should allow updating of tags in a shopping list", func() {
@@ -2447,7 +2447,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2461,7 +2461,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2492,7 +2492,7 @@ var _ = Describe("API e2e tests", func() {
 		var shoppingItem types.ShoppingItemSpec
 		json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
 		Expect(shoppingItem.ListId).To(Equal(shoppingListCreated.Id), "shopping item must belong to a list")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		shoppingItemTagUpdate := types.ShoppingItemTag{
 			Name: "Veges",
@@ -2504,13 +2504,13 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/tags/Fruits%20and%20veges"
 		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemTagBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		By("fetching the shopping list tags")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/tags"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListTags := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2529,7 +2529,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should allow templating of a shopping list", func() {
@@ -2543,7 +2543,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2557,7 +2557,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2615,7 +2615,7 @@ var _ = Describe("API e2e tests", func() {
 			var shoppingItem types.ShoppingItemSpec
 			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
 			Expect(shoppingItem.ListId).To(Equal(shoppingListCreated.Id), "shopping item must belong to a list")
-			Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		}
 
 		shoppingListFromTemplate := types.ShoppingListSpec{
@@ -2630,7 +2630,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		templatedShoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		templatedShoppingListBytes, err := json.Marshal(templatedShoppingListResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2641,7 +2641,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListTemplatedCreated.Id + "/items"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse = routes.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2665,20 +2665,20 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api must have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api must have return code of http.StatusOK")
 
 		By("deleting the template shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListTemplatedCreated.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api must have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api must have return code of http.StatusOK")
 	})
 
 	It("should require authorization for protected routes", func() {
 		apiEndpoint := apiServer + "/" + apiServerAPIprefix + "/user/profile"
 		resp, err := http.Get(apiEndpoint)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(401), "endpoint should be restricted")
+		Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized), "endpoint should be restricted")
 		requestResp := routes.GetHTTPresponseBodyContents(resp)
 		Expect(requestResp.Metadata.Response).To(Equal("Unauthorized"), "")
 	})
@@ -2699,7 +2699,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
@@ -2715,7 +2715,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
 		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
 
@@ -2723,13 +2723,13 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/admin/users"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, userAccountLoginResponseData)
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(403), "api have return code of 403")
+		Expect(resp.StatusCode).To(Equal(http.StatusForbidden), "api have return code of http.StatusForbidden")
 
 		By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.Id
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
-		Expect(resp.StatusCode).To(Equal(200), "api have return code of 200")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 })
 

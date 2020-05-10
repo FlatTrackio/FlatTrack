@@ -26,7 +26,7 @@ import (
 // get a list of all users
 func GetAllUsers(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to fetch user accounts"
 
 		userSelectorId := r.FormValue("id")
@@ -45,10 +45,10 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 
 		users, err := users.GetAllUsers(db, false, selectors)
 		if err == nil && errJWT == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Fetched user accounts"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -65,7 +65,7 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 // get a user by id or email (whatever is provided in the given respective order)
 func GetUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to fetch user account"
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -76,7 +76,7 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 
 		user, err := users.GetUserById(db, id, false)
 		if err != nil || user.Id == "" {
-			code = 404
+			code = http.StatusNotFound
 			response = "Failed to find user"
 			JSONresp := types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
@@ -88,10 +88,10 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 			return
 		}
 		if err == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Fetched user account"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -108,7 +108,7 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 // create a user
 func PostUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 400
+		code := http.StatusBadRequest
 		response := "Failed to create user account"
 
 		var user types.UserSpec
@@ -117,7 +117,7 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 
 		userAccount, err := users.CreateUser(db, user, user.Password == "")
 		if err == nil && userAccount.Id != "" {
-			code = 200
+			code = http.StatusOK
 			response = "Created user account"
 		} else {
 			response = err.Error()
@@ -136,7 +136,7 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 // updates a user account by their id
 func PutUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to updat the user account"
 
 		var userAccount types.UserSpec
@@ -149,10 +149,10 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 		// TODO disallow admins to remove their own admin group access
 		userAccountUpdated, err := users.UpdateProfileAdmin(db, userId, userAccount)
 		if err == nil && userAccountUpdated.Id != "" {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully updated the user account"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -169,7 +169,7 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 // patches a user account by their id
 func PatchUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to patch the user account"
 
 		var userAccount types.UserSpec
@@ -182,10 +182,10 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 		// TODO disallow admins to remove their own admin group access
 		userAccountPatched, err := users.PatchProfileAdmin(db, userId, userAccount)
 		if err == nil && userAccountPatched.Id != "" {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully patched the user account"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -202,7 +202,7 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 // delete a user
 func DeleteUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to delete user account"
 
 		vars := mux.Vars(r)
@@ -210,7 +210,7 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 
 		userInDB, err := users.GetUserById(db, userId, false)
 		if err != nil || userInDB.Id == "" {
-			code = 404
+			code = http.StatusNotFound
 			response = "Failed to find user"
 			JSONresp := types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
@@ -227,10 +227,10 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 
 		err = users.DeleteUserById(db, userInDB.Id)
 		if err == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Deleted user account"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -247,15 +247,15 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 // returns the authenticated user's profile
 func GetProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to fetch user account"
 
 		user, err := users.GetProfile(db, r)
 		if err == nil && user.Id != "" {
-			code = 200
+			code = http.StatusOK
 			response = "Fetched user account"
 		} else {
-			code = 404
+			code = http.StatusNotFound
 			response = "Failed to find your profile"
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -272,7 +272,7 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 // Update a user account their id from their JWT
 func PutProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to patch the user account"
 
 		var userAccount types.UserSpec
@@ -282,10 +282,10 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 		id, errId := users.GetIdFromJWT(db, r)
 		userAccountUpdated, err := users.UpdateProfile(db, id, userAccount)
 		if err == nil && errId == nil && userAccountUpdated.Id != "" {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully patched the user account"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -302,7 +302,7 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 // patches a user account their id from their JWT
 func PatchProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to patch the user account"
 
 		var userAccount types.UserSpec
@@ -312,10 +312,10 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 		id, errId := users.GetIdFromJWT(db, r)
 		userAccountPatched, err := users.PatchProfile(db, id, userAccount)
 		if err == nil && errId == nil && userAccountPatched.Id != "" {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully patched the user account"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -332,11 +332,11 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 // check if the server has been initialized
 func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to fetch if this FlatTrack instance has initialized"
 		initialized, err := system.GetHasInitialized(db)
 		if err == nil {
-			code = 200
+			code = http.StatusOK
 		}
 		if err == nil && initialized == "true" {
 			response = "This FlatTrack instance has initialized"
@@ -358,7 +358,7 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 func UserAuth(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to authenticate user, incorrect email or password"
-		code := 401
+		code := http.StatusUnauthorized
 		jwtToken := ""
 
 		var user types.UserSpec
@@ -368,18 +368,18 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 		userInDB, err := users.GetUserByEmail(db, user.Email, false)
 		if err != nil || userInDB.Id == "" {
 			response = "Unable to find the account"
-			code = 404
+			code = http.StatusNotFound
 		}
 		if userInDB.Id != "" && userInDB.Registered == false {
 			response = "Account not yet registered"
-			code = 403
+			code = http.StatusForbidden
 		}
 		// Check password locally, fall back to remote if incorrect
 		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
-		if err == nil && matches == true && code == 401 {
+		if err == nil && matches == true && code == http.StatusUnauthorized {
 			jwtToken, _ = users.GenerateJWTauthToken(db, userInDB.Id, userInDB.AuthNonce, 0)
 			response = "Successfully authenticated user"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -396,12 +396,12 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to validate authentication token"
-		code := 401
+		code := http.StatusUnauthorized
 
 		valid, err := users.ValidateJWTauthToken(db, r)
 		if valid == true && err == nil {
 			response = "Authentication token is valid"
-			code = 200
+			code = http.StatusOK
 		} else {
 			response = err.Error()
 		}
@@ -420,7 +420,7 @@ func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 func UserAuthReset(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to sign out all devices logged in"
-		code := 500
+		code := http.StatusInternalServerError
 
 		id, err := users.GetIdFromJWT(db, r)
 		if err != nil {
@@ -436,7 +436,7 @@ func UserAuthReset(db *sql.DB) http.HandlerFunc {
 		err = users.GenerateNewAuthNonce(db, id)
 		if err == nil {
 			response = "Successfully signed out all devices logged in"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -452,7 +452,7 @@ func UserAuthReset(db *sql.DB) http.HandlerFunc {
 func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to determine group privileges"
-		code := 500
+		code := http.StatusInternalServerError
 
 		vars := mux.Vars(r)
 		groupName := vars["name"]
@@ -461,7 +461,7 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 		userIsInGroup, err := groups.CheckUserInGroup(db, id, groupName)
 		if err == nil && errId == nil {
 			response = "Determined if user account can perform tasks of group"
-			code = 200
+			code = http.StatusOK
 		}
 
 		JSONresp := types.JSONMessageResponse{
@@ -479,15 +479,15 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch the flat name"
-		code := 500
+		code := http.StatusInternalServerError
 
 		flatName, err := settings.GetFlatName(db)
 		if flatName == "" {
 			response = "Flat name is not set"
-			code = 200
+			code = http.StatusOK
 		} else if err == nil {
 			response = "Fetched the flat name"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -503,7 +503,7 @@ func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 // update the flat's name
 func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to update the flat name"
 
 		var flatName types.FlatName
@@ -512,10 +512,10 @@ func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 
 		err := settings.SetFlatName(db, flatName.FlatName)
 		if err == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully set flat name"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -532,13 +532,13 @@ func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 // register the instance of FlatTrack
 func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to register the FlatTrack instance"
 
 		initialized, err := system.GetHasInitialized(db)
 		if err == nil && initialized == "true" {
 			response = "This instance is already registered"
-			code = 200
+			code = http.StatusOK
 			JSONresp := types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
 					Response: response,
@@ -556,10 +556,10 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 
 		registered, jwt, err := registration.Register(db, registrationForm)
 		if err == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully registered the FlatTrack instance"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -578,7 +578,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 func GetShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch shopping lists"
-		code := 500
+		code := http.StatusInternalServerError
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -586,7 +586,7 @@ func GetShoppingList(db *sql.DB) http.HandlerFunc {
 		shoppingList, err := shoppinglist.GetShoppingList(db, id)
 		if err == nil && shoppingList.Id != "" {
 			response = "Fetched the shopping lists"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -603,12 +603,12 @@ func GetShoppingList(db *sql.DB) http.HandlerFunc {
 func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch shopping lists"
-		code := 500
+		code := http.StatusInternalServerError
 
 		shoppingLists, err := shoppinglist.GetShoppingLists(db)
 		if err == nil {
 			response = "Fetched the shopping lists"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -624,7 +624,7 @@ func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 // creates a new shopping list to add items to
 func PostShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to create the shopping list"
 
 		var shoppingList types.ShoppingListSpec
@@ -641,10 +641,10 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 		shoppingList.Author = id
 		shoppingListInserted, err := shoppinglist.CreateShoppingList(db, shoppingList, options)
 		if err == nil && errId == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully created the shopping list"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -661,7 +661,7 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 // patches an existing shopping list
 func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 400
+		code := http.StatusBadRequest
 		response := "Failed to patch the shopping list"
 
 		var shoppingList types.ShoppingListSpec
@@ -675,7 +675,7 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 		shoppingList.AuthorLast = id
 		shoppingListPatched, err := shoppinglist.PatchShoppingList(db, listId, shoppingList)
 		if err == nil && errId == nil && shoppingListPatched.Id != "" {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully patched the shopping list"
 		} else {
 			response = err.Error()
@@ -694,7 +694,7 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 // updates an existing shopping list
 func PutShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to update the shopping list"
 
 		var shoppingList types.ShoppingListSpec
@@ -708,10 +708,10 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 		shoppingList.AuthorLast = id
 		shoppingListUpdated, err := shoppinglist.UpdateShoppingList(db, listId, shoppingList)
 		if err == nil && errId == nil && shoppingListUpdated.Id != "" {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully updated the shopping list"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -728,7 +728,7 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 // delete a new shopping list by it's id
 func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to delete the shopping list"
 
 		vars := mux.Vars(r)
@@ -736,10 +736,10 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 
 		err := shoppinglist.DeleteShoppingList(db, listId)
 		if err == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully deleted the shopping list"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -756,7 +756,7 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch shopping list items"
-		code := 500
+		code := http.StatusInternalServerError
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -769,7 +769,7 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 		shoppingListItems, err := shoppinglist.GetShoppingListItems(db, id, options)
 		if err == nil {
 			response = "Fetched the shopping list items"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -786,7 +786,7 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch shopping list item"
-		code := 500
+		code := http.StatusInternalServerError
 
 		vars := mux.Vars(r)
 		itemId := vars["itemId"]
@@ -795,7 +795,7 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 		shoppingListItem, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
 		if err == nil && shoppingListItem.Id != "" {
 			response = "Fetched the shopping list item"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -811,7 +811,7 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 // adds an item to a shopping list
 func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to create the shopping list item"
 
 		var shoppingItem types.ShoppingItemSpec
@@ -825,10 +825,10 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 		shoppingItem.Author = id
 		shoppingItemInserted, err := shoppinglist.AddItemToList(db, listId, shoppingItem)
 		if err == nil && errId == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully created the shopping list item"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -845,7 +845,7 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 // adds an item to a shopping list
 func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to patch the shopping list completed field"
 
 		var shoppingList types.ShoppingListSpec
@@ -858,10 +858,10 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 		id, errId := users.GetIdFromJWT(db, r)
 		patchedList, err := shoppinglist.SetListCompleted(db, itemId, shoppingList.Completed, id)
 		if err == nil && errId == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully patched the shopping list completed field"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -878,7 +878,7 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 // patches an item in a shopping list
 func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to patch the shopping list item"
 
 		var shoppingItem types.ShoppingItemSpec
@@ -893,10 +893,10 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 		shoppingItem.AuthorLast = id
 		patchedItem, err := shoppinglist.PatchItem(db, listId, itemId, shoppingItem)
 		if err == nil && errId == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully patched the shopping list item"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -913,7 +913,7 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 // updates an item in a shopping list
 func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to update the shopping list item"
 
 		var shoppingItem types.ShoppingItemSpec
@@ -928,10 +928,10 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 		shoppingItem.AuthorLast = id
 		updatedItem, err := shoppinglist.UpdateItem(db, listId, itemId, shoppingItem)
 		if err == nil && errId == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully updated the shopping list item"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -948,7 +948,7 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 // patches an item in a shopping list
 func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to patch the shopping list item obtained field"
 
 		var shoppingItem types.ShoppingItemSpec
@@ -962,10 +962,10 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 		id, errId := users.GetIdFromJWT(db, r)
 		patchedItem, err := shoppinglist.SetItemObtained(db, listId, itemId, shoppingItem.Obtained, id)
 		if err == nil && errId == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully patched the shopping list item obtained field"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -982,7 +982,7 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 // delete a shopping list item by it's id
 func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		code := 500
+		code := http.StatusInternalServerError
 		response := "Failed to delete the shopping list item"
 
 		vars := mux.Vars(r)
@@ -991,10 +991,10 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 
 		err := shoppinglist.RemoveItemFromList(db, itemId, listId)
 		if err == nil {
-			code = 200
+			code = http.StatusOK
 			response = "Successfully deleted the shopping list item"
 		} else {
-			code = 400
+			code = http.StatusBadRequest
 			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -1011,7 +1011,7 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch shopping list item tags"
-		code := 500
+		code := http.StatusInternalServerError
 
 		vars := mux.Vars(r)
 		listId := vars["listId"]
@@ -1019,7 +1019,7 @@ func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 		tags, err := shoppinglist.GetShoppingListTags(db, listId)
 		if err == nil {
 			response = "Fetched the shopping list item tags"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1036,7 +1036,7 @@ func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to update shopping list item tag name"
-		code := 500
+		code := http.StatusInternalServerError
 
 		vars := mux.Vars(r)
 		listId := vars["listId"]
@@ -1049,7 +1049,7 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 		tag, err := shoppinglist.UpdateShoppingListTag(db, listId, tag, tagUpdate.Name)
 		if err == nil {
 			response = "Updated the shopping list item tag name"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1066,12 +1066,12 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 func GetAllShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch shopping list item tags"
-		code := 500
+		code := http.StatusInternalServerError
 
 		tags, err := shoppinglist.GetAllShoppingListTags(db)
 		if err == nil {
 			response = "Fetched the shopping list item tags"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1088,12 +1088,12 @@ func GetAllShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 func GetAllGroups(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch groups"
-		code := 500
+		code := http.StatusInternalServerError
 
 		groups, err := groups.GetAllGroups(db)
 		if err == nil {
 			response = "Fetched all groups"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1110,7 +1110,7 @@ func GetAllGroups(db *sql.DB) http.HandlerFunc {
 func GetGroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch groups"
-		code := 404
+		code := http.StatusNotFound
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -1118,7 +1118,7 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 		group, err := groups.GetGroupById(db, id)
 		if err == nil && group.Id != "" {
 			response = "Fetched the groups"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1135,7 +1135,7 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch user account creation secrets"
-		code := 500
+		code := http.StatusInternalServerError
 
 		userIdSelector := r.FormValue("userId")
 		userCreationSecretSelector := types.UserCreationSecretSelector{
@@ -1145,7 +1145,7 @@ func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 		creationSecrets, err := users.GetAllUserCreationSecrets(db, userCreationSecretSelector)
 		if err == nil {
 			response = "Fetched the user account creation secrets"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1162,7 +1162,7 @@ func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch user account creation secret"
-		code := 404
+		code := http.StatusNotFound
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -1170,7 +1170,7 @@ func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 		creationSecret, err := users.GetUserCreationSecret(db, id)
 		if err == nil && creationSecret.Id != "" {
 			response = "Fetched the user account creation secret"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1187,7 +1187,7 @@ func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch user account creation secret"
-		code := 404
+		code := http.StatusNotFound
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -1195,7 +1195,7 @@ func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 		creationSecret, err := users.GetUserCreationSecret(db, id)
 		if err == nil && creationSecret.Id != "" {
 			response = "Fetched the user account creation secret"
-			code = 200
+			code = http.StatusOK
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1212,7 +1212,7 @@ func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to confirm your user account"
-		code := 500
+		code := http.StatusInternalServerError
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -1226,7 +1226,7 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 		tokenString, err := users.ConfirmUserAccount(db, id, secret, user)
 		if err == nil && errUnmarshal == nil {
 			response = "Your user account has been confirmed"
-			code = 200
+			code = http.StatusOK
 		} else {
 			response = err.Error()
 		}
@@ -1249,13 +1249,13 @@ func Root(w http.ResponseWriter, r *http.Request) {
 			Response: "Hey! you're talking to the Flattrack API",
 		},
 	}
-	JSONResponse(r, w, 200, JSONresp)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // UnknownEndpoint
 // response for hitting an unknown endpoint
 func UnknownEndpoint(w http.ResponseWriter, r *http.Request) {
-	JSONResponse(r, w, 404, types.JSONMessageResponse{
+	JSONResponse(r, w, http.StatusNotFound, types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "This endpoint doesn't seem to exist.",
 		},
@@ -1271,7 +1271,7 @@ func HTTPvalidateJWT(db *sql.DB) func(http.HandlerFunc) http.HandlerFunc {
 				h.ServeHTTP(w, r)
 				return
 			}
-			JSONResponse(r, w, 401, types.JSONMessageResponse{
+			JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
 					Response: "Unauthorized",
 				},
@@ -1292,7 +1292,7 @@ func HTTPcheckGroupsFromId(db *sql.DB, groupsAllowed ...string) func(http.Handle
 					return
 				}
 			}
-			JSONResponse(r, w, 403, types.JSONMessageResponse{
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
 					Response: "Forbidden",
 				},
