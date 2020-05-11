@@ -53,6 +53,7 @@
                    maxlength="70"
                    icon="email"
                    size="is-medium"
+                   placeholder="Enter your email address"
                    required>
           </b-input>
         </b-field>

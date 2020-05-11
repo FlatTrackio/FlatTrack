@@ -1,24 +1,36 @@
 <template>
     <div>
-      <headerDisplay genericMessage="true"/>
+      <headerDisplay/>
       <div class="container">
-        <section class="section">
+        <section class="section form-width">
           <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
-              <li><a href="/login">Login</a></li>
-              <li class="is-active"><a href="/forgot-password">Forgot Password</a></li>
+              <li><router-link to="/login">Login</router-link></li>
+              <li class="is-active"><router-link to="/forgot-password">Forgot Password</router-link></li>
           </ul>
           </nav>
-          <h1 class="title">Forgot Password</h1>
-          <h2 class="subtitle">Enter you email to reset your password</h2>
-          <b-field label="Email">
-              <b-input type="email"
-                  v-model="email"
-                  maxlength="70"
-                  required>
+          <h1 class="title is-1">Forgot Password</h1>
+          <p class="subtitle is-3">Enter you email to reset your password</p>
+          <b-field label="Email" class="is-marginless">
+            <b-input
+              type="email"
+              v-model="email"
+              maxlength="70"
+              autofocus
+              placeholder="Enter your email"
+              @keyup.enter.native="sendPasswordResetRequest(email)"
+              size="is-medium"
+              icon="email"
+              required>
               </b-input>
           </b-field>
-          <b-button rounded @click="sendPasswordResetRequest(email)" type="is-light">Reset</b-button>
+          <b-button
+            expanded
+            @click="sendPasswordResetRequest(email)"
+            size="is-medium"
+            type="is-primary">
+            Reset
+          </b-button>
         </section>
       </div>
     </div>

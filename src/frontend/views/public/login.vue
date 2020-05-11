@@ -7,12 +7,13 @@
           <p class="subtitle is-3">
               Welcome to FlatTrack, please login.
           </p>
-          <b-field label="Email">
+          <b-field label="Email" class="is-marginless">
             <b-input
               type="email"
               v-model="email"
               maxlength="70"
               autofocus
+              placeholder="Enter your email"
               @keyup.enter.native="postLogin(email, password)"
               size="is-medium"
               icon="email"
@@ -26,6 +27,7 @@
               password-reveal
               maxlength="70"
               @keyup.enter.native="postLogin(email, password)"
+              placeholder="Enter your password"
               size="is-medium"
               icon="textbox-password"
               pattern="^([a-z]*)([A-Z]*).{10,}$"
@@ -33,21 +35,28 @@
               required>
             </b-input>
           </b-field>
-          <b-button
-            icon-left="login"
-            native-type="submit"
-            size="is-medium"
-            @click="postLogin(email, password)">
-            Login
-          </b-button>
-          <b-button
-            tag="a"
-            href="forgot-password"
-            icon-left="lifebuoy"
-            size="is-medium"
-            type="is-warning">
-            Forgot Password
-          </b-button>
+          <div class="field">
+            <p class="control">
+              <b-button
+                icon-left="login"
+                native-type="submit"
+                size="is-medium"
+                expanded
+                @click="postLogin(email, password)">
+                Login
+              </b-button>
+              <b-button
+                tag="a"
+                href="forgot-password"
+                icon-left="lifebuoy"
+                size="is-medium"
+                expanded
+                disabled
+                type="is-text">
+                Forgot Password
+              </b-button>
+            </p>
+          </div>
           <!-- TODO add FlatTrack version and links -->
         </section>
       </div>
@@ -72,6 +81,7 @@ export default {
   },
   methods: {
     postLogin (email, password) {
+      console.log({ email, password })
       const loadingComponent = Loading.open({
         container: null
       })

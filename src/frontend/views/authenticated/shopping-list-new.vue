@@ -18,6 +18,7 @@
               maxlength="30"
               icon="textbox"
               size="is-medium"
+              placeholder="Enter a title for this list"
               required>
             </b-input>
           </b-field>
@@ -27,12 +28,13 @@
               size="is-medium"
               v-model="notes"
               icon="text"
+              placeholder="Enter extra information about this list"
               maxlength="100">
             </b-input>
           </b-field>
-          <b-field label="Use another list as a template (optional)" v-if="lists.length > 0">
+          <b-field label="Template list (optional)" v-if="lists.length > 0">
             <b-select
-              placeholder="Template a preview list"
+              placeholder="Optionally select a list to base a new list off"
               v-model="listTemplate"
               icon="content-copy"
               expanded
@@ -86,6 +88,7 @@
             type="is-success"
             size="is-medium"
             native-type="submit"
+            expanded
             @click="PostNewShoppingList(name, notes, listTemplate, templateListItemSelector)">
             Create list
           </b-button>

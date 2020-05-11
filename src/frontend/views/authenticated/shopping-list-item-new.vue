@@ -11,23 +11,25 @@
         <div>
           <h1 class="title is-1">New shopping item</h1>
           <p class="subtitle is-3">Add an item to the list</p>
-          <b-field label="Name">
+          <b-field label="Name" class="is-marginless">
             <b-input
               type="text"
               v-model="name"
               size="is-medium"
               maxlength="30"
               icon="text"
+              placeholder="Enter a name for this item"
               autofocus
               required>
             </b-input>
           </b-field>
-          <b-field label="Notes (optional)">
+          <b-field label="Notes (optional)" class="is-marginless">
             <b-input
               type="text"
               v-model="notes"
               size="is-medium"
               icon="text"
+              placeholder="Enter extra information as notes to this item"
               maxlength="40">
             </b-input>
           </b-field>
@@ -45,12 +47,14 @@
             <b-numberinput
               v-model="quantity"
               size="is-medium"
+              placeholder="Enter how many of this item should be obtained"
+              expanded
               icon="numeric">
             </b-numberinput>
           </b-field>
           <div>
             <label class="label">Tag (optional)</label>
-            <b-field>
+            <b-field class="is-marginless">
               <p class="control" v-if="tags.length > 0">
                 <b-dropdown>
                   <b-button
@@ -60,7 +64,9 @@
                     size="is-medium">
                   </b-button>
 
-                  <b-dropdown-item v-for="existingTag in tags" v-bind:key="existingTag" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
+                  <div v-for="existingTag in tags" v-bind:key="existingTag">
+                    <b-dropdown-item v-if="existingTag !== '' && existingTag.length > 0 && typeof existingTag !== 'undefined'" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
+                  </div>
                 </b-dropdown>
               </p>
               <b-input
@@ -68,17 +74,18 @@
                 type="text"
                 v-model="tag"
                 icon="tag"
+                placeholder="Enter a tag to group the item"
                 size="is-medium">
               </b-input>
             </b-field>
           </div>
-          <br/>
           <br/>
           <b-button
             type="is-success"
             size="is-medium"
             icon-left="plus"
             native-type="submit"
+            expanded
             @click="PostShoppingListItem(shoppingListId, name, notes, price, quantity, tag)">
             Add
           </b-button>
@@ -133,7 +140,7 @@ export default {
     shoppinglist.GetShoppingList(this.shoppingListId).then(resp => {
       var list = resp.data.spec
       this.shoppingListName = list.name
-      return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
+      return shoppinglist.GetAllShoppingListItemTags()
     }).then(resp => {
       this.tags = resp.data.list || []
     })

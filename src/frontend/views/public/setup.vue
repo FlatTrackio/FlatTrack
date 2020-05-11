@@ -174,13 +174,14 @@ export default {
     const today = new Date()
     const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDay())
     const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDay())
+    const focusedDate = new Date(today.getFullYear() - 15, today.getMonth() - 5, today.getDay())
 
     return {
       language: 'English',
       timezone: 'Pacific/Auckland',
       maxDate: maxDate,
       minDate: minDate,
-      focusedDate: maxDate,
+      focusedDate: focusedDate,
       jsBirthday: null,
       passwordConfirm: '',
       flatName: null,
@@ -229,8 +230,4 @@ export default {
 </script>
 
 <style scoped>
-.form-width {
-    width: 380px;
-    margin: auto;
-}
 </style>

@@ -25,6 +25,7 @@
               size="is-medium"
               maxlength="30"
               icon="text"
+              placeholder="Enter a name for this item"
               required>
             </b-input>
           </b-field>
@@ -34,6 +35,7 @@
               v-model="notes"
               size="is-medium"
               maxlength="40"
+              placeholder="Enter extra information as notes to this item"
               icon="text">
             </b-input>
           </b-field>
@@ -51,6 +53,8 @@
             <b-numberinput
               v-model="quantity"
               size="is-medium"
+              placeholder="Enter how many of this item should be obtained"
+              expanded
               icon="numeric">
             </b-numberinput>
           </b-field>
@@ -66,7 +70,9 @@
                     size="is-medium">
                   </b-button>
 
-                  <b-dropdown-item v-for="existingTag in tags" v-bind:key="existingTag" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
+                  <div v-for="existingTag in tags" v-bind:key="existingTag">
+                    <b-dropdown-item v-if="existingTag !== '' && existingTag.length > 0 && typeof existingTag !== 'undefined'" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
+                  </div>
                 </b-dropdown>
               </p>
               <b-input
@@ -74,6 +80,7 @@
                 type="text"
                 v-model="tag"
                 icon="tag"
+                placeholder="Enter a tag to group the item"
                 size="is-medium">
               </b-input>
             </b-field>
@@ -214,7 +221,7 @@ export default {
       return flatmates.GetFlatmate(this.authorLast)
     }).then(resp => {
       this.authorLastNames = resp.data.spec.names
-      return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
+      return shoppinglist.GetAllShoppingListItemTags()
     }).then(resp => {
       this.tags = resp.data.list || []
     })

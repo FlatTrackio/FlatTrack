@@ -188,6 +188,15 @@ function GetShoppingListItemTags (listId) {
   })
 }
 
+// GetAllShoppingListItemTags
+// fetches all tags
+function GetAllShoppingListItemTags () {
+  return Request({
+    url: `/api/apps/shoppinglist/tags`,
+    method: 'GET'
+  })
+}
+
 // UpdateShoppingListItemTag
 // updates a tag name used in a list
 function UpdateShoppingListItemTag (listId, tagName, tagNameNew) {
@@ -212,6 +221,7 @@ export default {
   GetShoppingListItem,
   PostShoppingListItem,
   DeleteShoppingListItem,
+  GetAllShoppingListItemTags,
   GetShoppingListItemTags,
   UpdateShoppingListItemTag,
   PatchShoppingListItem,

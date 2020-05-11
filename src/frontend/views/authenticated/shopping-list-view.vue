@@ -5,8 +5,8 @@
         <b>{{ name }}</b>
         ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
         <span @click="PatchShoppingListCompleted(id, !completed)" class="display-is-editable pointer-cursor-on-hover">
-          <b-tag type="is-info" v-if="completed">Completed</b-tag>
           <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
+          <b-tag type="is-success" v-else-if="completed">Completed</b-tag>
         </span>
       </p>
     </div>
@@ -25,6 +25,7 @@
               icon="format-title"
               size="is-medium"
               ref="name"
+              placeholder="Enter a title for this list"
               @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, completed)"
               @keyup.esc.native="editing = false; editingMeta = false"
               v-model="name"
@@ -45,6 +46,7 @@
                 maxlength="100"
                 type="text"
                 ref="notes"
+                placeholder="Enter extra information about this list"
                 @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes)"
                 @keyup.esc.native="editing = false; editingMeta = false"
                 v-model="notes">
@@ -71,8 +73,8 @@
           <br/>
         </div>
         <br/>
-        <b-tag type="is-info" v-if="completed">Completed</b-tag>
-        <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
+        <b-tag type="is-success" v-if="completed">Completed</b-tag>
+        <b-tag type="is-warning" v-else-if="!completed">Uncompleted</b-tag>
         <br/>
         <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block is-marginless" v-model="itemDisplayState">
           <b-tab-item icon="" label="All"></b-tab-item>
@@ -232,7 +234,7 @@
         <b-field>
           <b-button
             :icon-left="completed === false ? 'checkbox-blank-outline' : 'check-box-outline'"
-            type="is-success"
+            :type="completed === true ? 'is-success' : 'is-warning'"
             size="is-medium"
             expanded
             @click="PatchShoppingListCompleted(id, !completed)">
