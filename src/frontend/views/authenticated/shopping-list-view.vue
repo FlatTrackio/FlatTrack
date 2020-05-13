@@ -420,6 +420,11 @@ export default {
       }).then(resp => {
         this.authorLastNames = resp.data.spec.names
       }).catch(err => {
+        if (err.response.status === 404) {
+          common.DisplayFailureToast('Error list not found' + '<br/>' + err.response.data.metadata.response)
+          this.$router.push({ name: 'Shopping list' })
+          return
+        }
         common.DisplayFailureToast('Error loading the shopping list' + '<br/>' + err.response.data.metadata.response)
       })
     },

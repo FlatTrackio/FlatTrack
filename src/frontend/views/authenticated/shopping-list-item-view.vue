@@ -234,6 +234,13 @@ export default {
     }).then(resp => {
       this.itemIsLoading = false
       this.tags = resp.data.list || []
+    }).catch(err => {
+      if (err.response.status === 404) {
+        common.DisplayFailureToast('Error item not found' + '<br/>' + err.response.data.metadata.response)
+        this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
+        return
+      }
+      common.DisplayFailureToast('Error loading the shopping list item' + '<br/>' + err.response.data.metadata.response)
     })
   }
 }
