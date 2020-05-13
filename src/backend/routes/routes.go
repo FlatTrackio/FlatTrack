@@ -147,6 +147,20 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		userId := vars["id"]
 
+		user, err := users.GetUserById(db, userId, false)
+		if err != nil || user.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find user"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.UserSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
 		// TODO disallow admins to remove their own admin group access
 		userAccountUpdated, err := users.UpdateProfileAdmin(db, userId, userAccount)
 		if err == nil && userAccountUpdated.Id != "" {
@@ -179,6 +193,20 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 
 		vars := mux.Vars(r)
 		userId := vars["id"]
+
+		user, err := users.GetUserById(db, userId, false)
+		if err != nil || user.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find user"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.UserSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
 
 		// TODO disallow admins to remove their own admin group access
 		userAccountPatched, err := users.PatchProfileAdmin(db, userId, userAccount)
@@ -458,6 +486,20 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		groupName := vars["name"]
 
+		group, err := groups.GetGroupByName(db, groupName)
+		if err != nil || group.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find group"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.GroupSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
 		id, errId := users.GetIdFromJWT(db, r)
 		userIsInGroup, err := groups.CheckUserInGroup(db, id, groupName)
 		if err == nil && errId == nil {
@@ -579,7 +621,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 func GetShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch shopping lists"
-		code := http.StatusInternalServerError
+		code := http.StatusNotFound
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -672,6 +714,20 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		listId := vars["id"]
 
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingList.AuthorLast = id
 		shoppingListPatched, err := shoppinglist.PatchShoppingList(db, listId, shoppingList)
@@ -705,6 +761,20 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		listId := vars["id"]
 
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingList.AuthorLast = id
 		shoppingListUpdated, err := shoppinglist.UpdateShoppingList(db, listId, shoppingList)
@@ -735,7 +805,21 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		listId := vars["id"]
 
-		err := shoppinglist.DeleteShoppingList(db, listId)
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		err = shoppinglist.DeleteShoppingList(db, listId)
 		if err == nil {
 			code = http.StatusOK
 			response = "Successfully deleted the shopping list"
@@ -766,6 +850,20 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 			SortBy: r.FormValue("sortBy"),
 		}
 
+		list, err := shoppinglist.GetShoppingList(db, id)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
 		// TODO add item selectors for this endpoint
 		shoppingListItems, err := shoppinglist.GetShoppingListItems(db, id, options)
 		if err == nil {
@@ -787,11 +885,25 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch shopping list item"
-		code := http.StatusInternalServerError
+		code := http.StatusNotFound
 
 		vars := mux.Vars(r)
 		itemId := vars["itemId"]
 		listId := vars["listId"]
+
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
 
 		shoppingListItem, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
 		if err == nil && shoppingListItem.Id != "" {
@@ -821,6 +933,20 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 
 		vars := mux.Vars(r)
 		listId := vars["id"]
+
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
 
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingItem.Author = id
@@ -854,10 +980,24 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &shoppingList)
 
 		vars := mux.Vars(r)
-		itemId := vars["id"]
+		listId := vars["id"]
+
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
 
 		id, errId := users.GetIdFromJWT(db, r)
-		patchedList, err := shoppinglist.SetListCompleted(db, itemId, shoppingList.Completed, id)
+		patchedList, err := shoppinglist.SetListCompleted(db, listId, shoppingList.Completed, id)
 		if err == nil && errId == nil {
 			code = http.StatusOK
 			response = "Successfully patched the shopping list completed field"
@@ -889,6 +1029,34 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		itemId := vars["id"]
 		listId := vars["listId"]
+
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		item, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
+		if err != nil || item.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list item"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingItemSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
 
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingItem.AuthorLast = id
@@ -925,6 +1093,34 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 		itemId := vars["id"]
 		listId := vars["listId"]
 
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		item, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
+		if err != nil || item.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list item"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingItemSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
 		id, errId := users.GetIdFromJWT(db, r)
 		shoppingItem.AuthorLast = id
 		updatedItem, err := shoppinglist.UpdateItem(db, listId, itemId, shoppingItem)
@@ -960,6 +1156,34 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 		itemId := vars["id"]
 		listId := vars["listId"]
 
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		item, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
+		if err != nil || item.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list item"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingItemSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
 		id, errId := users.GetIdFromJWT(db, r)
 		patchedItem, err := shoppinglist.SetItemObtained(db, listId, itemId, shoppingItem.Obtained, id)
 		if err == nil && errId == nil {
@@ -990,7 +1214,35 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 		itemId := vars["itemId"]
 		listId := vars["listId"]
 
-		err := shoppinglist.RemoveItemFromList(db, itemId, listId)
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		item, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
+		if err != nil || item.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list item"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingItemSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		err = shoppinglist.RemoveItemFromList(db, itemId, listId)
 		if err == nil {
 			code = http.StatusOK
 			response = "Successfully deleted the shopping list item"
@@ -1043,11 +1295,25 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 		listId := vars["listId"]
 		tag := vars["tagName"]
 
+		list, err := shoppinglist.GetShoppingList(db, listId)
+		if err != nil || list.Id == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping list"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingListSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
 		var tagUpdate types.ShoppingItemTag
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &tagUpdate)
 
-		tag, err := shoppinglist.UpdateShoppingListTag(db, listId, tag, tagUpdate.Name)
+		tag, err = shoppinglist.UpdateShoppingListTag(db, listId, tag, tagUpdate.Name)
 		if err == nil {
 			response = "Updated the shopping list item tag name"
 			code = http.StatusOK
