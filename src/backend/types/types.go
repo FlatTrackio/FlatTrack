@@ -114,15 +114,17 @@ type ShoppingItemSpec struct {
 type ShoppingItemSortType string
 
 const (
-	ShoppingItemSortByTag             = "tag"
-	ShoppingItemSortByHighestPrice    = "highestPrice"
-	ShoppingItemSortByHighestQuantity = "highestQuantity"
-	ShoppingItemSortByLowestPrice     = "lowestPrice"
-	ShoppingItemSortByLowestQuantity  = "lowestQuantity"
-	ShoppingItemSortByRecentlyAdded   = "recentlyAdded"
-	ShoppingItemSortByRecentlyUpdated = "recentlyUpdated"
-	ShoppingItemSortByLastAdded       = "lastAdded"
-	ShoppingItemSortByLastUpdated     = "lastUpdated"
+	ShoppingItemSortByTag                    = "tag"
+	ShoppingItemSortByHighestPrice           = "highestPrice"
+	ShoppingItemSortByHighestQuantity        = "highestQuantity"
+	ShoppingItemSortByLowestPrice            = "lowestPrice"
+	ShoppingItemSortByLowestQuantity         = "lowestQuantity"
+	ShoppingItemSortByRecentlyAdded          = "recentlyAdded"
+	ShoppingItemSortByRecentlyUpdated        = "recentlyUpdated"
+	ShoppingItemSortByLastAdded              = "lastAdded"
+	ShoppingItemSortByLastUpdated            = "lastUpdated"
+	ShoppingItemSortByAlphabeticalDescending = "alphabeticalDescending"
+	ShoppingItemSortByAlphabeticalAscending  = "alphabeticalAscending"
 )
 
 type ShoppingItemOptions struct {

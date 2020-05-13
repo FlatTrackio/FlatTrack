@@ -58,7 +58,6 @@
               </b-button>
             </p>
           </div>
-          <!-- TODO add FlatTrack version and links -->
         </section>
       </div>
     </div>

@@ -14,10 +14,7 @@
           <p class="is-size-5">
             FlatTrack is a
             <a href="https://simple.wikipedia.org/wiki/Free_and_open-source_software" target="_blank">Free and Open Source</a>
-            collaboration software for
-            <b-tag size="is-medium" type="is-info"> flats </b-tag> /
-            <b-tag size="is-medium" type="is-info"> community houses </b-tag> and
-            <b-tag size="is-medium" type="is-info"> homes </b-tag>
+            collaboration software for flats / community houses and homes
             with the goals of <b>easing common tasks</b> in living environments, <b>enabling closer collaboration</b>, and <b>empowering humans who live together</b>.
           </p>
         </b-message>

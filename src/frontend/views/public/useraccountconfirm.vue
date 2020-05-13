@@ -9,12 +9,20 @@
         </p>
 
         <b-message type="is-danger" has-icon v-if="(typeof id === 'undefined' || id === '') || idValid !== true">
-          Token Id is missing or is invalid
-          <!-- TODO explain better -->
+          Token Id is missing or is invalid.
+          <br/>
+          <br/>
+          The link that you were provided appears to be damaged or invalid.
+          <br/>
+          Please contact your system administrator or support.
         </b-message>
         <b-message type="is-danger" has-icon v-if="typeof secret === 'undefined' || secret === ''">
           Missing a confirmation secret.
-          <!-- TODO explain better -->
+          <br/>
+          <br/>
+          The link that you were provided appears to be damaged or invalid.
+          <br/>
+          Please contact your system administrator or support.
         </b-message>
         <div v-if="idValid === true && typeof secret !== 'undefined' && secret !== ''">
           <b-field label="Phone number (optional)">

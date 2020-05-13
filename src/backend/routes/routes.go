@@ -1255,10 +1255,10 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 			Response: "Fetched version information",
 		},
 		Data: types.SystemVersion{
-			Version: version,
+			Version:    version,
 			CommitHash: commitHash,
-			Mode: mode,
-			Date: date,
+			Mode:       mode,
+			Date:       date,
 		},
 	}
 	JSONResponse(r, w, http.StatusOK, JSONresp)

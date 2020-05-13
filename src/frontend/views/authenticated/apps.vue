@@ -6,7 +6,6 @@
         <p class="subtitle is-3">Manage your flat</p>
         <p></p>
         <br>
-        <!-- TODO add icons to the left sides of cards -->
         <div v-for="app in apps" v-bind:key="app" >
           <div class="card pointer-cursor-on-hover" @click="goToApp(app.ref)">
             <div class="card-content">

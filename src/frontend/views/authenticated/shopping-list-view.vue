@@ -111,6 +111,8 @@
               <option value="lastAdded">Last Added</option>
               <option value="recentlyUpdated">Recently Updated</option>
               <option value="lastUpdated">Last Updated</option>
+              <option value="alphabeticalDescending">A-z</option>
+              <option value="alphabeticalAscending">z-A</option>
             </b-select>
           </p>
         </b-field>
