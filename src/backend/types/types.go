@@ -112,21 +112,22 @@ type ShoppingItemSpec struct {
 }
 
 type ShoppingItemSortType string
+
 const (
-	ShoppingItemSortByTag = "tag"
-	ShoppingItemSortByHighestPrice = "highestPrice"
+	ShoppingItemSortByTag             = "tag"
+	ShoppingItemSortByHighestPrice    = "highestPrice"
 	ShoppingItemSortByHighestQuantity = "highestQuantity"
-	ShoppingItemSortByLowestPrice = "lowestPrice"
-	ShoppingItemSortByLowestQuantity = "lowestQuantity"
-	ShoppingItemSortByRecentlyAdded = "recentlyAdded"
+	ShoppingItemSortByLowestPrice     = "lowestPrice"
+	ShoppingItemSortByLowestQuantity  = "lowestQuantity"
+	ShoppingItemSortByRecentlyAdded   = "recentlyAdded"
 	ShoppingItemSortByRecentlyUpdated = "recentlyUpdated"
-	ShoppingItemSortByLastAdded = "lastAdded"
-	ShoppingItemSortByLastUpdated = "lastUpdated"
+	ShoppingItemSortByLastAdded       = "lastAdded"
+	ShoppingItemSortByLastUpdated     = "lastUpdated"
 )
 
 type ShoppingItemOptions struct {
 	Selector ShoppingItemSelector `json:"Selector"`
-	SortBy string `json:"sortBy"`
+	SortBy   string               `json:"sortBy"`
 }
 
 type ShoppingItemSelector struct {
@@ -164,6 +165,13 @@ type Registration struct {
 	Timezone string   `json:"timezone"`
 	Language string   `json:"language"`
 	FlatName string   `json:"flatName"`
+}
+
+type SystemVersion struct {
+	Version    string `json:"version"`
+	CommitHash string `json:"commitHash"`
+	Mode       string `json:"mode"`
+	Date       string `json:"date"`
 }
 
 // JSONResponseMetadata

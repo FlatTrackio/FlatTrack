@@ -14,4 +14,6 @@ function GetCanIgroup (name) {
   })
 }
 
-export default { GetCanIgroup }
+export default {
+  GetCanIgroup
+}

@@ -385,7 +385,6 @@ func UpdateItem(db *sql.DB, listId string, itemId string, item types.ShoppingIte
 		}
 	}
 
-
 	shoppingListPatch := types.ShoppingListSpec{
 		AuthorLast: item.AuthorLast,
 	}

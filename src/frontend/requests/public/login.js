@@ -13,10 +13,8 @@ function GetUserAuth (redirect) {
       url: '/api/user/auth',
       method: 'GET'
     }, redirect).then(resp => {
-      console.log({ resp })
       resolve(resp)
     }).catch(err => {
-      console.log({ err })
       reject(err)
     }, false, true)
   })

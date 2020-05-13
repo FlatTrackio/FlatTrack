@@ -17,8 +17,8 @@ import (
 	"database/sql"
 	"github.com/ddo/go-vue-handler"
 	"github.com/gorilla/mux"
-	"github.com/rs/cors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/rs/cors"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )

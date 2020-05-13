@@ -23,6 +23,9 @@
         <b-navbar-item tag="router-link" :to="{ name: 'My Flat' }">
           My flat: {{ flatName }}
         </b-navbar-item>
+        <b-navbar-item tag="router-link" :to="{ name: 'About FlatTrack' }">
+          About FlatTrack
+        </b-navbar-item>
         <b-navbar-item @click="signOut">
           Sign out
         </b-navbar-item>

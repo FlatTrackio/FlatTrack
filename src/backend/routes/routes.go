@@ -13,6 +13,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/groups"
 	"gitlab.com/flattrack/flattrack/src/backend/registration"
 	"gitlab.com/flattrack/flattrack/src/backend/settings"
@@ -1239,6 +1240,28 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 		JSONResponse(r, w, code, JSONresp)
 
 	}
+}
+
+// GetVersion
+// returns version information about the instance
+func GetVersion(w http.ResponseWriter, r *http.Request) {
+	version := common.GetAppBuildVersion()
+	commitHash := common.GetAppBuildHash()
+	mode := common.GetAppBuildMode()
+	date := common.GetAppBuildDate()
+
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "Fetched version information",
+		},
+		Data: types.SystemVersion{
+			Version: version,
+			CommitHash: commitHash,
+			Mode: mode,
+			Date: date,
+		},
+	}
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // Root

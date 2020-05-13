@@ -179,8 +179,7 @@ export default {
           }
         })
       }).catch(err => {
-        console.log(err)
-        common.DisplayFailureToast('Failed to list groups')
+        common.DisplayFailureToast('Failed to list groups' + '<br/>' + err.response.data.metadata.response)
       })
     },
     GetFilteredGroups (text) {

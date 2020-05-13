@@ -204,7 +204,6 @@ export default {
           }
         })
       }).catch(err => {
-        console.log(err)
         common.DisplayFailureToast('Failed to list groups')
       })
     },
@@ -234,7 +233,6 @@ export default {
         this.jsBirthday = typeof this.birthday !== 'undefined' ? new Date(this.birthday * 1000) : null
         this.pageLoading = false
       }).catch(err => {
-        console.log({ err })
         common.DisplayFailureToast('Failed to fetch user account' + '<br/>' + (err.response.data.metadata.response || err))
       })
     },

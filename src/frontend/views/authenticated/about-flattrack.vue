@@ -1,0 +1,75 @@
+<template>
+  <div>
+    <div class="container">
+      <section class="section">
+        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
+            <ul>
+              <li><router-link to="/">Home</router-link></li>
+              <li class="is-active"><router-link to="/about-flattrack">About FlatTrack</router-link></li>
+            </ul>
+        </nav>
+        <h1 class="title is-1">About FlatTrack</h1>
+        <p class="subtitle is-3">What is FlatTrack?</p>
+        <b-message type="is-primary" has-icon icon="help">
+          <p class="is-size-5">
+            FlatTrack is a
+            <a href="https://simple.wikipedia.org/wiki/Free_and_open-source_software" target="_blank">Free and Open Source</a>
+            collaboration software for
+            <b-tag size="is-medium" type="is-info"> flats </b-tag> /
+            <b-tag size="is-medium" type="is-info"> community houses </b-tag> and
+            <b-tag size="is-medium" type="is-info"> homes </b-tag>
+            with the goals of <b>easing common tasks</b> in living environments, <b>enabling closer collaboration</b>, and <b>empowering humans who live together</b>.
+          </p>
+        </b-message>
+        <p class="subtitle is-3">This FlatTrack instance</p>
+        <b-message type="is-warning" has-icon icon="information-outline">
+          <p class="is-size-5">
+            <b>Version</b>: {{ version || 'Unknown' }}
+            <br/>
+            <b>Commit hash</b>:
+            <a v-if="commitHash !== '???' && typeof commitHash !== 'undefined'" :href="'https://gitlab.com/flattrack/flattrack/-/commit/' + commitHash" target="_blank">{{ commitHash }}</a>
+            <span v-else>
+              Unknown
+            </span>
+            <br/>
+            <b>Mode</b>: {{ mode || 'Unknown' }}
+            <br/>
+            <b>Date</b>: {{ date || 'Unknown' }}
+          </p>
+        </b-message>
+      </section>
+    </div>
+  </div>
+</template>
+
+<script>
+import system from '@/frontend/requests/authenticated/system'
+import common from '@/frontend/common/common'
+
+export default {
+  name: 'flat',
+  data () {
+    return {
+      hasInitialLoaded: false,
+      version: '',
+      commitHash: '',
+      mode: '',
+      date: ''
+    }
+  },
+  methods: {
+    GetVersion () {
+      system.GetVersion().then(resp => {
+        this.hasInitialLoaded = true
+        this.version = resp.data.data.version
+        this.commitHash = resp.data.data.commitHash
+        this.mode = resp.data.data.mode
+        this.date = resp.data.data.date
+      })
+    }
+  },
+  async beforeMount () {
+    this.GetVersion()
+  }
+}
+</script>

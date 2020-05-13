@@ -82,7 +82,6 @@ export default {
   },
   methods: {
     postLogin (email, password) {
-      console.log({ email, password })
       const loadingComponent = Loading.open({
         container: null
       })
@@ -99,7 +98,6 @@ export default {
             window.location.href = '/'
           }, 2 * 1000)
         }).catch(err => {
-          console.log(err)
           loadingComponent.close()
           common.DisplayFailureToast(err.response.data.metadata.response || err)
         })

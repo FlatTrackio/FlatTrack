@@ -20,7 +20,8 @@
             <b-menu>
               <b-menu-list label="General">
                 <b-menu-item icon="home" label="Home" tag="router-link" to="/"></b-menu-item>
-                <b-menu-item icon="information-outline" :label="flatName" tag="router-link" :to="{ name: 'My Flat' }" v-cloak></b-menu-item>
+                <b-menu-item icon="information-outline" :label="'My flat: ' + flatName" tag="router-link" :to="{ name: 'My Flat' }"></b-menu-item>
+                <b-menu-item icon="information-outline" label="About FlatTrack" tag="router-link" :to="{ name: 'About FlatTrack' }"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Apps">
                 <b-menu-item icon="format-list-checks" label="Shopping list" tag="router-link" :to="{ name: 'Shopping list' }"></b-menu-item>

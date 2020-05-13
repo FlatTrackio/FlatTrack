@@ -63,6 +63,14 @@ export default [
     }
   },
   {
+    path: '/about-flattrack',
+    name: 'About FlatTrack',
+    component: () => import('@/frontend/views/authenticated/about-flattrack.vue'),
+    beforeEnter: (to, from, next) => {
+      requireAuthToken(to, from, next)
+    }
+  },
+  {
     path: '/account',
     name: 'Account',
     component: () => import('@/frontend/views/authenticated/account-home.vue'),
