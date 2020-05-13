@@ -1777,7 +1777,7 @@ var _ = Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists/" + "xxxxxxxx" + "/items"
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			Expect(err).To(BeNil(), "Request should not return an error")
-			Expect(resp.StatusCode).To(Equal(http.StatusBadRequest), "api have return code of http.StatusBadRequest")
+			Expect(resp.StatusCode).To(Equal(http.StatusNotFound), "api have return code of http.StatusBadRequest")
 			shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err := json.Marshal(shoppingItemResponse)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
