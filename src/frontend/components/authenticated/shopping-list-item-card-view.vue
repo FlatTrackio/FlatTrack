@@ -15,6 +15,7 @@
                 <b-icon
                   v-if="typeof item.price === 'undefined' || item.price === 0"
                   icon="currency-usd-off"
+                  type="is-lightred"
                   size="is-small">
                 </b-icon>
               </p>
@@ -34,8 +35,15 @@
             </div>
           </div>
           <div class="media-right">
-            <b-button type="is-danger" icon-right="delete" v-if="deviceIsMobile === false" @click="DeleteShoppingListItem(item.id, index)" />
-            <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+            <b-button
+              type="is-danger"
+              icon-right="delete"
+              :loading="itemDeleting"
+              v-if="deviceIsMobile === false"
+              @click="DeleteShoppingListItem(item.id, index)" />
+            <span class="pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + listId + '/item/' + item.id)">
+              <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+            </span>
           </div>
         </div>
       </div>
@@ -50,6 +58,11 @@ import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
 
 export default {
   name: 'shopping list item card view',
+  data () {
+    return {
+      itemDeleting: false
+    }
+  },
   props: {
     item: Object,
     listId: String,
@@ -75,11 +88,13 @@ export default {
         type: 'is-danger',
         hasIcon: true,
         onConfirm: () => {
+          this.itemDeleting = true
           shoppinglist.DeleteShoppingListItem(this.listId, itemId).then(resp => {
             common.DisplaySuccessToast(resp.data.metadata.response)
             this.list.splice(index, 1)
           }).catch(err => {
             common.DisplayFailureToast('Failed to delete shopping list item' + ' - ' + err.response.data.metadata.response)
+            this.itemDeleting = false
           })
         }
       })

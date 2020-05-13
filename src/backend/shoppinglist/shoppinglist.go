@@ -44,8 +44,8 @@ func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bo
 	if item.Tag != "" && len(item.Tag) == 0 || len(item.Tag) > 30 {
 		return valid, errors.New("Unable to use the provided tag, as it is either empty or too long or too short")
 	}
-	if item.Quantity == 0 {
-		return valid, errors.New("Item quanity must be greater than zero")
+	if item.Quantity < 1 {
+		return valid, errors.New("Item quantity must be at least one")
 	}
 	return true, err
 }
@@ -98,14 +98,22 @@ func GetShoppingList(db *sql.DB, listId string) (shoppingList types.ShoppingList
 // returns a list of items on a shopping list
 func GetShoppingListItems(db *sql.DB, listId string, options types.ShoppingItemOptions) (items []types.ShoppingItemSpec, err error) {
 	sqlStatement := `select * from shopping_item where listId = $1 order by tag, name`
-	if options.SortBy == types.ShoppingItemSortByPrice {
+	if options.SortBy == types.ShoppingItemSortByHighestPrice {
 		sqlStatement = `select * from shopping_item where listId = $1 order by price desc, name asc`
+	} else if options.SortBy == types.ShoppingItemSortByHighestQuantity {
+		sqlStatement = `select * from shopping_item where listId = $1 order by quantity desc, name desc`
+	} else if options.SortBy == types.ShoppingItemSortByLowestPrice {
+		sqlStatement = `select * from shopping_item where listId = $1 order by price asc, name asc`
+	} else if options.SortBy == types.ShoppingItemSortByLowestQuantity {
+		sqlStatement = `select * from shopping_item where listId = $1 order by quantity asc, name desc`
 	} else if options.SortBy == types.ShoppingItemSortByRecentlyAdded {
 		sqlStatement = `select * from shopping_item where listId = $1 order by creationTimestamp desc`
 	} else if options.SortBy == types.ShoppingItemSortByRecentlyUpdated {
 		sqlStatement = `select * from shopping_item where listId = $1 order by modificationTimestamp desc`
-	} else if options.SortBy == types.ShoppingItemSortByQuantity {
-		sqlStatement = `select * from shopping_item where listId = $1 order by quantity desc, name desc`
+	} else if options.SortBy == types.ShoppingItemSortByLastAdded {
+		sqlStatement = `select * from shopping_item where listId = $1 order by creationTimestamp asc`
+	} else if options.SortBy == types.ShoppingItemSortByLastUpdated {
+		sqlStatement = `select * from shopping_item where listId = $1 order by modificationTimestamp asc`
 	}
 	rows, err := db.Query(sqlStatement, listId)
 	if err != nil {

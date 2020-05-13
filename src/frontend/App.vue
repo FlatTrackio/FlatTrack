@@ -64,6 +64,7 @@ $material-icons-font-path: '~material-icons/iconfont/';
 @import '~@mdi/font/css/materialdesignicons.min.css';
 
 $midgray: #c9c9c9;
+$lightred: #b55c5c;
 $primary: #00a7d6;
 $primary-invert: findColorInvert($primary);
 
@@ -77,7 +78,8 @@ $colors: (
     "info": ($info, $info-invert),
     "success": ($success, $success-invert),
     "warning": ($warning, $warning-invert),
-    "danger": ($danger, $danger-invert)
+    "danger": ($danger, $danger-invert),
+    "lightred": ($lightred, #b55c5c)
 );
 
 $link: hsl(217, 71%, 53%);
@@ -101,7 +103,7 @@ $breadcrumb-item-color: $link;
 }
 
 .pad-left {
-    margin-left: 265px;
+    margin-left: 260px;
 }
 
 .pad-top {
@@ -124,12 +126,21 @@ html {
     cursor: pointer;
 }
 
+.card {
+    user-select: none;
+}
+
 .card:hover {
     background-color: #fbfbfb;
+    box-shadow: black 0 0px 66px -27px;
+    transition: box-shadow 0.4s;
 }
 
 .card:active {
     background-color: #f1f0f0;
+    transition: height 0.1s, width 0.1s, margin 0.1s;
+    height: calc(100% - 8px);
+    border: 1px dashed;
 }
 
 .form-width {

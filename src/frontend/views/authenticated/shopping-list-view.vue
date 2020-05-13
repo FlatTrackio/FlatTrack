@@ -15,7 +15,8 @@
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
             <li><router-link to="/apps/shopping-list">Shopping list</router-link></li>
-            <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">{{ name || 'Unnamed list' }}</router-link></li>
+            <li v-if="hasInitialLoaded || name !== '' || typeof name !== 'undefined'" class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">{{ name || 'Unnamed list' }}</router-link></li>
+            <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
           </ul>
         </nav>
         <div v-if="editingMeta">
@@ -35,7 +36,8 @@
           <br/>
         </div>
         <div v-else>
-          <h1 id="ListName" class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="editing = true; editingMeta = true; FocusName()">{{ name }}</h1>
+          <h1 v-if="hasInitialLoaded || name !== '' || typeof name !== 'undefined'" id="ListName" class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover" @click="editing = true; editingMeta = true; FocusName()">{{ name }}</h1>
+          <b-skeleton v-else size="is-medium" width="35%" :animated="true"></b-skeleton>
         </div>
         <div v-if="notes !== '' || notesFromEmpty || editingMeta">
           <div v-if="editingMeta">
@@ -101,10 +103,14 @@
               size="is-medium"
               expanded>
               <option value="tags">Tags</option>
-              <option value="price">Price</option>
+              <option value="highestPrice">Highest Price</option>
+              <option value="lowestPrice">Lowest Price</option>
+              <option value="highestQuantity">Highest Quantity</option>
+              <option value="lowestQuantity">Lowest Quantity</option>
               <option value="recentlyAdded">Recently Added</option>
+              <option value="lastAdded">Last Added</option>
               <option value="recentlyUpdated">Recently Updated</option>
-              <option value="quantity">Quantity</option>
+              <option value="lastUpdated">Last Updated</option>
             </b-select>
           </p>
         </b-field>
@@ -132,6 +138,7 @@
         </div>
         <br/>
         <div v-if="listItemsFromTags.length > 0">
+          <b-loading :is-full-page="false" :active.sync="listIsLoading" :can-cancel="false"></b-loading>
           <div v-if="sortBy === 'tags'">
             <section v-for="itemTag in listItemsFromTags" v-bind:key="itemTag">
               <div v-if="editingTag === itemTag.tag">
@@ -238,22 +245,31 @@
             size="is-medium"
             expanded
             @click="PatchShoppingListCompleted(id, !completed)">
-            {{ completed === false ? 'Completed' : 'Uncompleted' }}
+            {{ completed === false ? 'Uncompleted' : 'Completed' }}
           </b-button>
           <p class="control">
             <b-button
               icon-left="delete"
               type="is-danger"
               size="is-medium"
+              :loading="deleteLoading"
               @click="DeleteShoppingList(id)">
             </b-button>
           </p>
         </b-field>
         <p class="subtitle is-6">
-            Created {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
+          Created
+          <span v-if="hasInitialLoaded || typeof authorName !== 'undefined'">{{ TimestampToCalendar(creationTimestamp) }}</span>, by
+          <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
+          <router-link v-if="hasInitialLoaded || typeof authorName !== 'undefined'" tag="a" :to="{ name: 'My Flatmates', query: { 'id': author }}"> {{ authorNames }} </router-link>
+            <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
             <span v-if="creationTimestamp !== modificationTimestamp">
               <br/>
-              Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast"> {{ authorLastNames }} </router-link>
+              Last updated
+              <span v-if="hasInitialLoaded || typeof authorName !== 'undefined'">{{ TimestampToCalendar(modificationTimestamp) }}</span>, by
+              <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
+              <router-link v-if="hasInitialLoaded || typeof authorName !== 'undefined'" tag="a" :to="{ name: 'My Flatmates', query: { 'id': author }}"> {{ authorLastNames }} </router-link>
+            <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
             </span>
         </p>
         <br/>
@@ -288,6 +304,9 @@ export default {
       HeaderIsSticky: false,
       TagTmp: '',
       editingTag: '',
+      listIsLoading: true,
+      hasInitialLoaded: false,
+      deleteLoading: false,
       id: this.$route.params.id,
       name: 'Unnamed list',
       notes: '',
@@ -423,6 +442,7 @@ export default {
         type: 'is-danger',
         hasIcon: true,
         onConfirm: () => {
+          this.deleteLoading = true
           window.clearInterval(this.intervalLoop)
           shoppinglist.DeleteShoppingList(id).then(resp => {
             common.DisplaySuccessToast('Deleted the shopping list')
@@ -431,6 +451,7 @@ export default {
               this.$router.push({ name: 'Shopping list' })
             }, 1 * 1000)
           }).catch(err => {
+            this.deleteLoading = false
             common.DisplayFailureToast('Failed to delete the shopping list' + '<br/>' + err.response.data.metadata.response)
           })
         }
@@ -447,6 +468,8 @@ export default {
         if (responseList !== this.list) {
           this.list = responseList || []
           shoppinglistCommon.WriteShoppingListToCache(this.id, this.list)
+          this.listIsLoading = false
+          this.hasInitialLoaded = true
         }
       })
     },
@@ -505,7 +528,7 @@ export default {
     ManageStickyHeader () {
       this.HeaderIsSticky = window.pageYOffset > document.getElementById('ListName').offsetTop + 30
     },
-    RestartLoop () {
+    ResetLoopTime () {
       this.loopCreated = new Date()
     },
     FocusName () {
@@ -518,6 +541,10 @@ export default {
   watch: {
     sortBy () {
       shoppinglistCommon.WriteShoppingListSortBy(this.sortBy)
+      this.listIsLoading = true
+      this.ResetLoopTime()
+      this.LoopStop()
+      this.LoopStart()
     },
     itemDisplayState () {
       shoppinglistCommon.WriteShoppingListObtainedFilter(this.id, this.itemDisplayState)
@@ -538,13 +565,13 @@ export default {
     window.addEventListener('resize', this.CheckDeviceIsMobile, true)
     window.addEventListener('scroll', this.ManageStickyHeader, true)
     this.LoopStart()
-    window.addEventListener('focus', this.RestartLoop, true)
+    window.addEventListener('focus', this.ResetLoopTime, true)
   },
   beforeDestroy () {
     this.LoopStop()
     window.removeEventListener('resize', this.CheckDeviceIsMobile, true)
     window.removeEventListener('scroll', this.ManageStickyHeader, true)
-    window.removeEventListener('focus', this.RestartLoop, true)
+    window.removeEventListener('focus', this.ResetLoopTime, true)
   }
 }
 </script>

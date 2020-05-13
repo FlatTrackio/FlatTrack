@@ -49,6 +49,8 @@
               size="is-medium"
               placeholder="Enter how many of this item should be obtained"
               expanded
+              min="1"
+              controls-position="compact"
               icon="numeric">
             </b-numberinput>
           </b-field>
@@ -86,6 +88,7 @@
             icon-left="plus"
             native-type="submit"
             expanded
+            :loading="submitLoading"
             @click="PostShoppingListItem(shoppingListId, name, notes, price, quantity, tag)">
             Add
           </b-button>
@@ -106,6 +109,7 @@ export default {
       shoppingListId: this.$route.params.id,
       shoppingListName: '',
       tags: [],
+      submitLoading: false,
       name: '',
       notes: '',
       price: 0,
@@ -115,6 +119,7 @@ export default {
   },
   methods: {
     PostShoppingListItem (listId, name, notes, price, quantity, tag) {
+      this.submitLoading = true
       if (notes === '') {
         notes = undefined
       }
@@ -129,9 +134,11 @@ export default {
         if (item.id !== '' || typeof item.id === 'undefined') {
           this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
         } else {
+          this.submitLoading = false
           common.DisplayFailureToast('Unable to find created shopping item')
         }
       }).catch(err => {
+        this.submitLoading = false
         common.DisplayFailureToast(`Failed to add shopping list item - ${err.response.data.metadata.response}`)
       })
     }

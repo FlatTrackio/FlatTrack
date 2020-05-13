@@ -20,24 +20,24 @@
             <b-menu>
               <b-menu-list label="General">
                 <b-menu-item icon="home" label="Home" tag="router-link" to="/"></b-menu-item>
-                <b-menu-item icon="information-outline" :label="flatName" tag="router-link" to="/flat" v-cloak></b-menu-item>
+                <b-menu-item icon="information-outline" :label="flatName" tag="router-link" :to="{ name: 'My Flat' }" v-cloak></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Apps">
-                <b-menu-item icon="format-list-checks" label="Shopping list" tag="router-link" to="/apps/shopping-list"></b-menu-item>
-                <b-menu-item icon="account-group" label="Flatmates" tag="router-link" to="/apps/flatmates"></b-menu-item>
-                <b-menu-item icon="apps" label="Apps" tag="router-link" to="/apps"></b-menu-item>
+                <b-menu-item icon="format-list-checks" label="Shopping list" tag="router-link" :to="{ name: 'Shopping list' }"></b-menu-item>
+                <b-menu-item icon="account-group" label="Flatmates" tag="router-link" :to="{ name: 'My Flatmates' }"></b-menu-item>
+                <b-menu-item icon="apps" label="Apps" tag="router-link" :to="{ name: 'Apps' }"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Admin" v-if="canUserAccountAdmin">
-                <b-menu-item icon="account-group" label="Flatmates" tag="router-link" to="/admin/accounts"></b-menu-item>
-                <b-menu-item icon="settings" label="Admin apps" tag="router-link" to="/admin"></b-menu-item>
+                <b-menu-item icon="account-group" label="Flatmates" tag="router-link" :to="{ name: 'Admin accounts' }"></b-menu-item>
+                <b-menu-item icon="settings" label="Admin apps" tag="router-link" :to="{ name: 'Admin home' }"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Help">
                 <b-menu-item icon="open-in-new" label="FlatTrack help" tag="a" target="_blank" href="https://flattrack.io/help" disabled></b-menu-item>
-                <b-menu-item icon="phone" label="Contact admin" tag="router-link" to="/apps/flatmates?group=admin"></b-menu-item>
+                <b-menu-item icon="phone" label="Contact admin" tag="router-link" :to="{ name: 'My Flatmates', query: { 'group': 'admin' }}"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Account">
-                <b-menu-item icon="account-circle" label="Profile" tag="router-link" to="/account/profile"></b-menu-item>
-                <b-menu-item icon="account" label="My Account" tag="router-link" to="/account"></b-menu-item>
+                <b-menu-item icon="account-circle" label="Profile" tag="router-link" :to="{ name: 'Account Profile' }"></b-menu-item>
+                <b-menu-item icon="account" label="My Account" tag="router-link" :to="{ name: 'Account' }"></b-menu-item>
                 <b-menu-item icon="exit-to-app" label="Sign out" @click="signOut"></b-menu-item>
               </b-menu-list>
             </b-menu>

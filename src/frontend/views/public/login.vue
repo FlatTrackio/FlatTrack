@@ -20,7 +20,7 @@
               required>
               </b-input>
           </b-field>
-          <b-field label="Password">
+          <b-field label="Password" class="is-marginless">
             <b-input
               type="password"
               v-model="password"
@@ -41,6 +41,7 @@
                 icon-left="login"
                 native-type="submit"
                 size="is-medium"
+                type="is-primary"
                 expanded
                 @click="postLogin(email, password)">
                 Login

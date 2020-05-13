@@ -9,6 +9,7 @@
             </ul>
         </nav>
         <div>
+          <b-loading :is-full-page="false" :active.sync="itemIsLoading" :can-cancel="false"></b-loading>
           <h1 class="title is-1">{{ name || 'Unnamed item' }}</h1>
           <p class="subtitle is-3">View or edit this item</p>
           <p>
@@ -49,12 +50,15 @@
               size="is-medium">
             </b-input>
           </b-field>
-          <b-field label="Quantity (optional)">
+          <b-field label="Quantity">
             <b-numberinput
               v-model="quantity"
               size="is-medium"
               placeholder="Enter how many of this item should be obtained"
+              min="1"
               expanded
+              required
+              controls-position="compact"
               icon="numeric">
             </b-numberinput>
           </b-field>
@@ -101,6 +105,7 @@
               icon-left="delta"
               native-type="submit"
               expanded
+              :loading="submitLoading"
               @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag, obtained)">
               Update item
             </b-button>
@@ -110,6 +115,7 @@
                 size="is-medium"
                 icon-left="delete"
                 native-type="submit"
+                :loading="deleteLoading"
                 @click="DeleteShoppingListItem(shoppingListId, id)">
               </b-button>
             </p>
@@ -135,6 +141,9 @@ export default {
       authorNames: '',
       authorLastNames: '',
       tags: [],
+      itemIsLoading: true,
+      submitLoading: false,
+      deleteLoading: false,
       id: this.$route.params.itemId,
       name: '',
       notes: '',
@@ -150,6 +159,7 @@ export default {
   },
   methods: {
     UpdateShoppingListItem (listId, itemId, name, notes, price, quantity, tag, obtained) {
+      this.submitLoading = true
       if (notes === '') {
         notes = undefined
       }
@@ -164,10 +174,12 @@ export default {
           common.DisplaySuccessToast('Updated item successfully')
           this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
         } else {
+          this.submitLoading = false
           common.DisplayFailureToast('Unable to find created shopping item')
         }
       }).catch(err => {
         common.DisplayFailureToast('Failed to add shopping list item' + ' - ' + err.response.data.metadata.response)
+        this.submitLoading = false
       })
     },
     DeleteShoppingListItem (listId, itemId) {
@@ -178,20 +190,17 @@ export default {
         type: 'is-danger',
         hasIcon: true,
         onConfirm: () => {
+          this.deleteLoading = true
           shoppinglist.DeleteShoppingListItem(listId, itemId).then(resp => {
             common.DisplaySuccessToast(resp.data.metadata.response)
             setTimeout(() => {
               this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
             }, 1 * 1000)
           }).catch(err => {
+            this.deleteLoading = false
             common.DisplayFailureToast('Failed to delete shopping list item' + ' - ' + err.response.data.metadata.response)
           })
         }
-      })
-    },
-    PatchItemObtained (obtained) {
-      shoppinglist.PatchShoppingListItemObtained(this.shoppingListId, this.id, obtained).catch(err => {
-        common.DisplayFailureToast('Failed to patch the obtained field of this item' + '<br/>' + err.response.data.metadata.response)
       })
     },
     TimestampToCalendar (timestamp) {
@@ -223,6 +232,7 @@ export default {
       this.authorLastNames = resp.data.spec.names
       return shoppinglist.GetAllShoppingListItemTags()
     }).then(resp => {
+      this.itemIsLoading = false
       this.tags = resp.data.list || []
     })
   }

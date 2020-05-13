@@ -10,6 +10,7 @@
         </nav>
         <h1 class="title is-1">Profile</h1>
         <p class="subtitle is-3">Manage your account</p>
+        <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <div class="card">
           <div class="card-content">
             <div class="media">
@@ -111,6 +112,7 @@ export default {
       focusedDate: maxDate,
       passwordConfirm: '',
       jsBirthday: null,
+      pageLoading: true,
       names: '',
       email: '',
       phoneNumber: '',
@@ -131,6 +133,7 @@ export default {
         this.groups = resp.data.spec.groups
         this.email = resp.data.spec.email
         this.creationTimestamp = resp.data.spec.creationTimestamp
+        this.pageLoading = false
       })
     },
     PatchProfile (names, email, phoneNumber, password, passwordConfirm, jsBirthday) {

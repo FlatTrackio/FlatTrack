@@ -19,7 +19,8 @@
           <label class="label">Search for lists</label>
           <b-field>
             <b-input icon="magnify" size="is-medium" placeholder="List name" type="search" v-model="listSearch" ref="search"></b-input>
-        </b-field>
+          </b-field>
+          <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
           <section>
             <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/new')">
               <div class="card-content">
@@ -82,7 +83,8 @@ export default {
       authors: {},
       listDisplayState: 0,
       deviceIsMobile: false,
-      listSearch: ''
+      listSearch: '',
+      pageLoading: true
     }
   },
   components: {
@@ -102,6 +104,7 @@ export default {
     },
     GetShoppingLists () {
       shoppinglist.GetShoppingLists().then(resp => {
+        this.pageLoading = false
         this.lists = resp.data.list || []
       }).catch(() => {
         common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping lists')

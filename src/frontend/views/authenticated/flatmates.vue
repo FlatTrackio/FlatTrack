@@ -17,6 +17,7 @@
             Listing flatmates, filtering by the group {{ GroupQuery }}
           </span>
         </p>
+        <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <div v-if="members && members.length">
           <div class="card-margin" v-for="member of members" v-bind:key="member">
             <div class="card">
@@ -93,6 +94,7 @@ export default {
   name: 'Flatmates',
   data () {
     return {
+      pageLoading: true,
       members: [],
       emojiSmile: emoji.get('smile')
     }
@@ -118,6 +120,7 @@ export default {
       }
       params.notSelf = true
       flatmates.GetAllFlatmates(params).then(resp => {
+        this.pageLoading = false
         this.members = resp.data.list
       }).catch(err => {
         common.DisplayFailureToast('Failed to list flatmates' + `<br/>${err}`)

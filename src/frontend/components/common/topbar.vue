@@ -2,7 +2,7 @@
   <div id="topbar">
     <b-navbar fixed-top type="is-info" class="gradient-blue" shadow="true" transparent="false">
       <template slot="brand">
-        <b-navbar-item tag="router-link" :to="{ path: '/' }">
+        <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
           <img
             src=""
             alt="FlatTrack logo"
@@ -11,16 +11,16 @@
         </b-navbar-item>
       </template>
       <template slot="start">
-        <b-navbar-item tag="router-link" :to="{ path: '/' }">
+        <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
           Home
         </b-navbar-item>
         <b-navbar-item href="https://flattrack.io/help" tag="a" target="_blank" v-if="false">
           FlatTrack Help
         </b-navbar-item>
-        <b-navbar-item tag="router-link" :to="{ path: '/apps/flatmates?group=admin' }">
+        <b-navbar-item tag="router-link" :to="{ name: 'My Flatmates', query: { 'group': 'admin' }}">
           Contact admin
         </b-navbar-item>
-        <b-navbar-item tag="router-link" :to="{ path: '/flat' }">
+        <b-navbar-item tag="router-link" :to="{ name: 'My Flat' }">
           My flat: {{ flatName }}
         </b-navbar-item>
         <b-navbar-item @click="signOut">

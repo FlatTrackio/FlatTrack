@@ -10,7 +10,7 @@
         </nav>
         <h1 class="title is-1">Edit account</h1>
         <p class="subtitle is-3">Edit an existing user account</p>
-
+        <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <div v-if="registered !== true">
           <div class="notification is-warning">
             <p class="subtitle is-6">This account doesn't appear to be registered</p>
@@ -172,6 +172,7 @@ export default {
       showRegistrationCompletionDetails: false,
       userAccountConfirmId: null,
       userAccountConfirmSecret: null,
+      pageLoading: true,
       id: this.$route.params.id,
       names: null,
       email: null,
@@ -231,6 +232,7 @@ export default {
           }
         })
         this.jsBirthday = typeof this.birthday !== 'undefined' ? new Date(this.birthday * 1000) : null
+        this.pageLoading = false
       }).catch(err => {
         console.log({ err })
         common.DisplayFailureToast('Failed to fetch user account' + '<br/>' + (err.response.data.metadata.response || err))

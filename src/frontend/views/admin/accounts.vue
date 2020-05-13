@@ -10,6 +10,7 @@
         </nav>
         <h1 class="title is-1">Accounts</h1>
         <p class="subtitle is-3">Manage the account of your flatmates</p>
+        <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <div>
           <section>
             <div class="card pointer-cursor-on-hover" @click="goToRef('/admin/accounts/new')">
@@ -115,7 +116,8 @@ export default {
     return {
       members: [],
       groupQuery: undefined,
-      emojiSmile: emoji.get('smile')
+      emojiSmile: emoji.get('smile'),
+      pageLoading: true
     }
   },
   async beforeMount () {
@@ -134,8 +136,8 @@ export default {
       if (typeof this.groupQuery !== 'undefined') {
         params.group = this.groupQuery
       }
-      console.log(params)
       flatmates.GetAllFlatmates(params).then(resp => {
+        this.pageLoading = false
         this.members = resp.data.list
       }).catch(err => {
         common.DisplayFailureToast('Failed to list flatmates' + `<br/>${err}`)
