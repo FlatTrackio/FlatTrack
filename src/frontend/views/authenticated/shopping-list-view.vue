@@ -48,7 +48,7 @@
                 maxlength="100"
                 type="text"
                 ref="notes"
-                placeholder="Enter extra information about this list"
+                placeholder="Enter extra information"
                 @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes)"
                 @keyup.esc.native="editing = false; editingMeta = false"
                 v-model="notes">

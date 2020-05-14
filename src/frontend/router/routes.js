@@ -169,6 +169,15 @@ export default [
     }
   },
   {
+    path: '/admin/settings',
+    name: 'Admin settings',
+    component: () => import('@/frontend/views/admin/settings.vue'),
+    beforeEnter: (to, from, next) => {
+      requireAuthToken(to, from, next)
+      checkForAdminGroup(to, from, next)
+    }
+  },
+  {
     path: '/admin/accounts',
     name: 'Admin accounts',
     component: () => import('@/frontend/views/admin/accounts.vue'),

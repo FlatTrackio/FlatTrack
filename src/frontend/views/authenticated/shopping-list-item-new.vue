@@ -29,7 +29,7 @@
               v-model="notes"
               size="is-medium"
               icon="text"
-              placeholder="Enter extra information as notes to this item"
+              placeholder="Enter information extra"
               maxlength="40">
             </b-input>
           </b-field>
@@ -43,13 +43,14 @@
               size="is-medium">
             </b-input>
           </b-field>
-          <b-field label="Quantity (optional)">
+          <b-field label="Quantity">
             <b-numberinput
               v-model="quantity"
               size="is-medium"
               placeholder="Enter how many of this item should be obtained"
+              min="0"
               expanded
-              min="1"
+              required
               controls-position="compact"
               icon="numeric">
             </b-numberinput>

@@ -21,7 +21,7 @@
           Contact admin
         </b-navbar-item>
         <b-navbar-item tag="router-link" :to="{ name: 'My Flat' }">
-          My flat: {{ flatName }}
+          My flat
         </b-navbar-item>
         <b-navbar-item tag="router-link" :to="{ name: 'About FlatTrack' }">
           About FlatTrack

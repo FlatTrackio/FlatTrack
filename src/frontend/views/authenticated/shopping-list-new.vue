@@ -28,7 +28,7 @@
               size="is-medium"
               v-model="notes"
               icon="text"
-              placeholder="Enter extra information about this list"
+              placeholder="Enter extra information"
               maxlength="100">
             </b-input>
           </b-field>
@@ -41,7 +41,9 @@
               size="is-medium">
               <option
                 value="">
+                No template
               </option>
+              <option disabled></option>
               <option
                 v-for="list in lists"
                 :value="list.id"

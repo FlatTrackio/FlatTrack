@@ -55,7 +55,7 @@
               v-model="quantity"
               size="is-medium"
               placeholder="Enter how many of this item should be obtained"
-              min="1"
+              min="0"
               expanded
               required
               controls-position="compact"

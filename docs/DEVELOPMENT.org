@@ -1,7 +1,7 @@
 #+TITLE: FlatTrack development
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
 
-* Development
+* Development cycle
 In-cluster local development is recommended, use [[https://minikube.sigs.k8s.io][minikube]] or [[https://kind.sigs.k8s.io/][kind]].
 
 ** Bring up the deployments
@@ -19,6 +19,7 @@ In-cluster local development is recommended, use [[https://minikube.sigs.k8s.io]
     #+begin_src shell
     go build -o flattrack src/backend/main.go && ./flattrack
     #+end_src
+
 *** Frontend
     #+begin_src shell
     npm run build:frontend
@@ -26,14 +27,13 @@ In-cluster local development is recommended, use [[https://minikube.sigs.k8s.io]
 
 ** Auto build and launch with [[https://tilt.dev][Tilt]]
    #+begin_src shell
-     eval $(minikube -p minikube docker-env)
      tilt up --host 0.0.0.0
    #+end_src
 
 * Additional
 ** Manually connecting to the Postgres database
    #+begin_src shell
-   psql -h localhost flattrack -U postgres -W
+   kubectl -n flattrack-dev exec -it postgres-0 -- psql
    #+end_src
 
 ** Remove migrations   

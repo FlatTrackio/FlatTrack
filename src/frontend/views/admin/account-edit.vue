@@ -234,6 +234,7 @@ export default {
         this.pageLoading = false
       }).catch(err => {
         common.DisplayFailureToast('Failed to fetch user account' + '<br/>' + (err.response.data.metadata.response || err))
+        this.$router.push({ name: 'Admin accounts' })
       })
     },
     PatchUserAccount (names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull) {

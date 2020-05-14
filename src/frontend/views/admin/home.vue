@@ -43,6 +43,12 @@ export default {
           description: 'Manage your flatmates accounts',
           icon: 'account-group',
           ref: '/admin/accounts'
+        },
+        {
+          name: 'Settings',
+          description: 'General FlatTrack settings',
+          icon: 'settings',
+          ref: '/admin/settings'
         }
       ]
     }
