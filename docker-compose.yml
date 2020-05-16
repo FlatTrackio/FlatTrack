@@ -1,0 +1,39 @@
+# NOTE:
+#   this docker-compose set up is not ready for production
+#   it is recommended to add an SSL/TLS to the set up, so the connection is secure.
+#   if you wish to make this setup production-ish, you may wish to investigate the linuxserver/letsencrypt image to add to the stack.
+
+version: '3'
+
+volumes:
+  flattrack_db:
+    driver: local
+
+services:
+  flattrack_db:
+    image: postgres:12.2-alpine
+    restart: unless-stopped
+    volumes:
+      - flattrack_db:/var/lib/postgres
+    environment:
+      - TZ=Pacific/Auckland
+      - POSTGRES_DB=flattrack
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - PGDATABASE=flattrack
+      - PGUSER=postgres
+
+  flattrack:
+    image: registry.gitlab.com/flattrack/flattrack:0.0.1-alpha6
+    # uncomment to build from local instead of using a pre-built image 
+    # build: ./
+    restart: unless-stopped
+    environment:
+      - APP_DB_USERNAME=postgres
+      - APP_DB_PASSWORD=postgres
+      - APP_DB_HOST=flattrack_db
+      - APP_DB_DATABASE=flattrack
+    depends_on:
+      - flattrack_db
+    ports:
+      - '80:8080'
