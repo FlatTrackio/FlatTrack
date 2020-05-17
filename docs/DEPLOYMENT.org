@@ -1,0 +1,17 @@
+#+TITLE: Deploying FlatTrack
+#+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
+
+* Kubernetes (recommended)
+
+
+* Docker-compose
+The example set up in Docker-compose for FlatTrack is located in [[https://gitlab.com/flattrack/flattrack/-/blob/master/docker-compose.yml][../docker-compose.yml]]. This configuration is not considered production-ready, but for some may be a good enough option.
+~Important notes~:
+- the docker-compose deployment doesn't include SSL/TLS in the stack, so if you wish to deploy it you will need to add a reverse-proxy to handle SSL/TLS - this isn't something that FlatTrack implements.
+- ensure that the credentials are updated 
+
+#+name: deploy the docker-compose stack
+#+begin_src sh :src ../
+docker-compose up -d
+#+end_src
+

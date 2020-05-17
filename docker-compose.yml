@@ -1,7 +1,7 @@
-# NOTE:
-#   this docker-compose set up is not ready for production
-#   it is recommended to add an SSL/TLS to the set up, so the connection is secure.
-#   if you wish to make this setup production-ish, you may wish to investigate the linuxserver/letsencrypt image to add to the stack.
+# IMPORTANT NOTE:
+#   - this docker-compose set up is not ready for production
+#     it is recommended to add an SSL/TLS to the set up, so the connection is secure.
+#     if you wish to make this setup production-ish, you may wish to investigate the linuxserver/letsencrypt image to add to the stack.
 
 version: '3'
 
@@ -37,3 +37,6 @@ services:
       - flattrack_db
     ports:
       - '80:8080'
+    # if using a reverse proxy, you'll need to set expose instead of ports (so the reverse-proxy can bind to both 80 and 443)
+    # expose:
+    #   - '80'

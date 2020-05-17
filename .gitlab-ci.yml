@@ -119,3 +119,16 @@ test_backend_e2e:
   script:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
 
+pages:
+  image: python:3.8-buster
+  before_script:
+    - pip install mkdocs
+  script:
+  - mkdocs build
+  - mv site public
+  artifacts:
+    paths:
+    - public
+  only:
+  - master
+

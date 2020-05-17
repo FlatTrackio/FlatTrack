@@ -2,7 +2,7 @@
     <img src="https://img.shields.io/badge/License-AGPL-3.0-blue.svg" alt="License: AGPL-3.0" />
 </a>
 <a href="https://gitlab.com/flattrack/flattrack/releases">
-    <img src="https://img.shields.io/badge/version-0.0.1-brightgreen.svg" alt="Version 0.0.1" />
+    <img src="https://img.shields.io/badge/version-0.0.1--alpha6-brightgreen.svg" alt="Version 0.0.1-alpha6" />
 </a>
 <a href='https://ind.ie/ethical-design'>
     <img style='margin-left: auto; margin-right: auto;' alt='We practice Ethical Design' src='https://img.shields.io/badge/Ethical_Design-_▲_❤_-blue.svg'>
@@ -15,9 +15,6 @@
 > Collaborate with your flatmates
 
 ## Features
-- Fluid, friendly, and modern mobile-first design
-
-### Sections
 - Shopping List
 - Tasks (WIP - no progress)
 - Noticeboard (WIP - no progress)
@@ -31,19 +28,28 @@
 - [vuejs](https://vuejs.org) - frontend
 - [gorilla/mux](https://github.com/gorilla/mux) - HTTP multiplexer
 - [bulma](https://bulma.io/) + [buefy](https://buefy.org/) - CSS framework
+- [vuematerial](http://vuematerial.io/) - CSS framework
 - [axios](https://github.com/axios/axios) - client-side HTTP request library
 - [ginkgo & gomega](https://onsi.github.io/ginkgo/) - tests
 
 ## Getting started
 Various options are available for running a FlatTrack instance:
 - [FlatTrack.io hosting](https://flattrack.io) (recommended)
-- [Self-hosted Kubernetes](#) (recommended)
-- [Self-hosted Docker-Compose](#)
-- [Self-hosted Docker](#)
-- [Self-hosted plain server](#)
+- [Self-hosted Kubernetes](docs/DEPLOYMENT.org#kubernetes-recommended) (recommended)
+- [Self-hosted Docker-Compose](docs/DEPLOYMENT.org#docker-compose)
 
-## Development
-For beginning development, please refer to the [development documentation](docs/DEVELOPMENT.org)
+## Documentation
+To view the documentation, please check out the GitLab-hosted [FlatTrack docs](https://flattrack.gitlab.io/flattrack)
+
+## Contribution
+### Development
+From code, to assets/artwork, to community, to documentation, there are many ways to contribute.  
+To learn how to contribute, please refer to the [development+contribution documentation](docs/DEVELOPMENT.org).  
+Looking for something to do? Check out the [FlatTrack issues](https://gitlab.com/flattrack/flattrack/-/issues) page.
+
+## Community
+Join FlatTrack's community to chip in and improve it!  
+Please read [community docs](docs/COMMUNITY.org)
 
 ## License
 Copyright 2019-2020 Caleb Woodbine.  

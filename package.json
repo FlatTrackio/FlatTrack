@@ -10,7 +10,6 @@
     "build:backend": "go build -o flattrack src/backend/main.go",
     "test:unit": "vue-cli-service test:unit --timeout 10000",
     "test:e2e": "vue-cli-service test:e2e",
-    "test:e2e-api": "ginkgo test/api/e2e",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
