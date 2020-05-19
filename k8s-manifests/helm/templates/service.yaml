@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "flattrack.fullname" . }}
+  labels:
+    {{- include "flattrack.labels" . | nindent 4 }}
+  annotations:
+  {{- if "flattrack.prometheus.enabled" }}
+    prometheus.io/scrape: "true"
+    prometheus.io/scheme: http
+    prometheus.io/port: "2112"
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "flattrack.selectorLabels" . | nindent 4 }}
