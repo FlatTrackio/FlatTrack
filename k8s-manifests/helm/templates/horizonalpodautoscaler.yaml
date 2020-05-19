@@ -1,0 +1,16 @@
+{{ if .Values.horizonalPodAutoscaler.enabled }}
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "flattrack.fullname" . }}
+  labels:
+    {{- include "flattrack.labels" . | nindent 4 }}
+spec:
+  maxReplicas: {{ .Values.horizonalPodAutoscaler.maxReplicas }}
+  minReplicas: {{ .Values.horizonalPodAutoscaler.minReplicas }}
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "flattrack.fullname" . }}
+  targetCPUUtilizationPercentage: {{ .Values.horizonalPodAutoscaler.targetCPUUtilizationPercentage }}
+{{- end }}

@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "flattrack.fullname" . }}
+  labels:
+    {{- include "flattrack.labels" . | nindent 4 }}
+  annotations:
+    {{- include "flattrack.annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "flattrack.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "flattrack.selectorLabels" . | nindent 8 }}
+      annotations:
+        {{- include "flattrack.annotations" . | nindent 8 }}
+        {{- if "flattrack.prometheus.enabled" }}
+        prometheus.io/path: /metrics
+        prometheus.io/port: "2112"
+        prometheus.io/scrape: "true"
+        {{- end }}
+    spec:
+      automountServiceAccountToken: false
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: APP_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "grafana.fullname" . }}
+                  key: {{ .Values.postgres.username | default "" }}
+            - name: APP_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "grafana.fullname" . }}
+                  key: {{ .Values.postgres.password | default "" }}
+            - name: APP_DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "grafana.fullname" . }}
+                  key: {{ .Values.postgres.host | default "" }}
+            - name: APP_DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "grafana.fullname" . }}
+                  key: {{ .Values.postgres.database | default "" }}
+            - name: APP_PORT
+              value: {{ .Values.service.port }}
+        {{- with .Values.extraEnvVars }}
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            {{- if "flattrack.prometheus.enabled" }}
+            - name: prometheus-metrics
+              containerPort: 2112
+              protocol: TCP
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /api
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
