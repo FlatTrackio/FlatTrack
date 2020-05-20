@@ -4,8 +4,17 @@ metadata:
   name: {{ include "flattrack.fullname" . }}
   labels:
     {{- include "flattrack.labels" . | nindent 4 }}
+{{- if .Values.labels }}
+{{- with .Values.labels }}
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
   annotations:
-    {{- include "flattrack.annotations" . | nindent 4 }}
+{{- if .Values.annotations }}
+{{- with .Values.annotations }}
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
@@ -15,13 +24,22 @@ spec:
     metadata:
       labels:
         {{- include "flattrack.selectorLabels" . | nindent 8 }}
+    {{- if .Values.labels }}
+    {{- with .Values.labels }}
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- end }}
       annotations:
-        {{- include "flattrack.annotations" . | nindent 8 }}
-        {{- if "flattrack.prometheus.enabled" }}
+    {{- if .Values.annotations }}
+    {{- with .Values.annotations }}
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- end }}
+    {{- if .Values.prometheus.enabled }}
         prometheus.io/path: /metrics
         prometheus.io/port: "2112"
         prometheus.io/scrape: "true"
-        {{- end }}
+    {{- end }}
     spec:
       automountServiceAccountToken: false
     {{- with .Values.imagePullSecrets }}
@@ -34,53 +52,51 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: APP_DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "grafana.fullname" . }}
-                  key: {{ .Values.postgres.username | default "" }}
+                  name: {{ include "flattrack.fullname" . }}
+                  key: app-db-username
             - name: APP_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "grafana.fullname" . }}
-                  key: {{ .Values.postgres.password | default "" }}
+                  name: {{ include "flattrack.fullname" . }}
+                  key: app-db-password
             - name: APP_DB_HOST
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "grafana.fullname" . }}
-                  key: {{ .Values.postgres.host | default "" }}
+                  name: {{ include "flattrack.fullname" . }}
+                  key: app-db-host
             - name: APP_DB_DATABASE
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "grafana.fullname" . }}
-                  key: {{ .Values.postgres.database | default "" }}
+                  name: {{ include "flattrack.fullname" . }}
+                  key: app-db-database
             - name: APP_PORT
-              value: {{ .Values.service.port }}
+              value: {{ printf ":%v" .Values.service.port | toString | quote }}
         {{- with .Values.extraEnvVars }}
             {{- toYaml . | nindent 12 }}
         {{- end }}
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
             {{- if "flattrack.prometheus.enabled" }}
-            - name: prometheus-metrics
+            - name: prometheus
               containerPort: 2112
               protocol: TCP
             {{- end }}
           livenessProbe:
-            httpGet:
-              path: /api
-              port: http
+            tcpSocket:
+              port: {{ .Values.service.port }}
             initialDelaySeconds: 2
             periodSeconds: 10
           readinessProbe:
-            httpGet:
-              path: /api
-              port: http
+            tcpSocket:
+              port: {{ .Values.service.port }}
             initialDelaySeconds: 2
             periodSeconds: 10
           resources:
