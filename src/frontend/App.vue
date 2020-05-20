@@ -128,6 +128,7 @@ html {
 
 .card {
     user-select: none;
+    border: 1px dashed rgba(0, 0, 0, .0);
 }
 
 .card:hover {
@@ -140,7 +141,8 @@ html {
     background-color: #f1f0f0;
     transition: height 0.1s, width 0.1s, margin 0.1s;
     height: calc(100% - 8px);
-    border: 1px dashed;
+    border: 1px dashed #000000;
+    top: 1px;
 }
 
 .form-width {
