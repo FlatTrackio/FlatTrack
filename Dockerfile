@@ -13,6 +13,7 @@ RUN npm i
 RUN npm run build:frontend
 
 FROM golang:1.13.4-alpine3.10 AS api
+RUN apk add tzdata
 WORKDIR /app
 COPY src /app/src
 COPY go.* /app/
@@ -43,6 +44,7 @@ COPY --from=api /app/flattrack .
 COPY --from=api /etc/passwd /etc/passwd
 COPY --from=api /etc/group /etc/group
 COPY --chown=user migrations /app/migrations
+COPY --from=api /usr/share/zoneinfo /usr/share/zoneinfo
 EXPOSE 8080
 USER user
 ENTRYPOINT ["/app/flattrack"]
