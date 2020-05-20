@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: flattrack-dev
 spec:
   replicas: 1
   serviceName: "postgres"
