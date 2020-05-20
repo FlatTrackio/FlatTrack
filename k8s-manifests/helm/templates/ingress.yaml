@@ -11,10 +11,20 @@ metadata:
   name: {{ $fullName }}
   labels:
     {{- include "flattrack.labels" . | nindent 4 }}
+{{- if .Values.labels }}
+{{- with .Values.labels }}
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+{{- if .Values.annotations }}
+{{- with .Values.annotations }}
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
 spec:
 {{- if .Values.ingress.tls }}
   tls:
