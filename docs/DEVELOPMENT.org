@@ -21,11 +21,18 @@ In-cluster local development is recommended, use [[https://minikube.sigs.k8s.io]
     #+end_src
 
 *** Frontend
+    #+name: install frontend dependencies
+    #+begin_src shell
+    npm i
+    #+end_src
+
+    #+name: build the frontend
     #+begin_src shell
     npm run build:frontend
     #+end_src
 
-** Auto build and launch with [[https://tilt.dev][Tilt]]
+** Auto build and launch with Tilt
+   Get tilt from [[https://tilt.dev][Tilt.dev]].
    #+begin_src shell
      tilt up --host 0.0.0.0
    #+end_src
@@ -41,3 +48,29 @@ In-cluster local development is recommended, use [[https://minikube.sigs.k8s.io]
    gomigrate -source "file://$(pwd)/migrations" -database postgres://postgres:postgres@localhost/flattrack?sslmode=disable down
    #+end_src
 
+* Project structure and details
+** Code
+*** API
+Written in golang, the API is located in [[../src/backend][src/backend]].
+
+The features and areas are separated into packages.
+
+**** Testing
+Tests are located in [[../test/backend/e2e][test/backend/e2e]]. So far there are only e2e tests for FlatTrack's API.
+
+*** Frontend
+Written in Vue.js + JavaScript, the frontend is located in [[../src/frontend][src/frontend]].
+
+The frontend makes requests to the backend to perform actions.
+
+** Database
+The migrations and database structuring is located in [[../migrations][migrations]].
+Each table is created with [[https://github.com/golang-migrate/migrate][golang-migrate]].
+
+** Assets
+Images are located in [[../src/frontend/assets][src/frontend/assets]], these are used throughout the project (such as in the frontend, and readme).
+* Docs
+To run the docs in development, use:
+#+begin_src sh
+docker run --rm -it -p 8000:8000 -v ${PWD}:/docs:ro,Z -v ${PWD}/mkdocs.yml:/docs/mkdocs.yml:ro,Z --cgroup-manager=systemd squidfunk/mkdocs-material
+#+end_src

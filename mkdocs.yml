@@ -1,0 +1,30 @@
+site_name: FlatTrack
+strict: true
+repo_name: "flattrack/flattrack"
+repo_url: https://gitlab.com/flattrack/flattrack
+site_url: https://flattrack.io
+
+markdown_extensions:
+  - codehilite
+  - meta
+  - toc:
+      permalink: " ¶"
+
+theme:
+  name: material
+  features:
+    - tabs
+    - instant
+  palette:
+    primary: "blue"
+    accent: "green"
+
+nav:
+  - Welcome: index.md
+  - Community: COMMUNITY.md
+  - Contibuting: CONTRIBUTING.md
+  - Design guidelines: DESIGNGUIDELINES.md
+  - Development: DEVELOPMENT.md
+  - Testing: TESTING.md
+  - Deployment: DEPLOYMENT.md
+  - Roadmap: ROADMAP.md
