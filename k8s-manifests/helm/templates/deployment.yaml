@@ -50,8 +50,6 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
@@ -76,13 +74,13 @@ spec:
                   name: {{ include "flattrack.fullname" . }}
                   key: app-db-database
             - name: APP_PORT
-              value: {{ printf ":%v" .Values.service.port | toString | quote }}
+              value: {{ printf ":%v" .Values.service.port | toString | quote | default "8080" }}
         {{- with .Values.extraEnvVars }}
             {{- toYaml . | nindent 12 }}
         {{- end }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.service.port | default 8080 }}
               protocol: TCP
             {{- if "flattrack.prometheus.enabled" }}
             - name: prometheus
@@ -91,12 +89,12 @@ spec:
             {{- end }}
           livenessProbe:
             tcpSocket:
-              port: {{ .Values.service.port }}
+              port: {{ .Values.service.port | default "8080" }}
             initialDelaySeconds: 2
             periodSeconds: 10
           readinessProbe:
             tcpSocket:
-              port: {{ .Values.service.port }}
+              port: {{ .Values.service.port | default "8080" }}
             initialDelaySeconds: 2
             periodSeconds: 10
           resources:

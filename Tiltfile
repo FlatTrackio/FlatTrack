@@ -5,7 +5,6 @@ yaml = helm(
   set=[
       'service.type=NodePort',
       'prometheus.enabled=false',
-      'podDisruptionBudget.enabled=false',
       'horizonalPodAutoscaler.enabled=false'
   ]
   )
