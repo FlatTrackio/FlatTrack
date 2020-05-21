@@ -69,3 +69,8 @@ Each table is created with [[https://github.com/golang-migrate/migrate][golang-m
 
 ** Assets
 Images are located in [[../src/frontend/assets][src/frontend/assets]], these are used throughout the project (such as in the frontend, and readme).
+* Docs
+To run the docs in development, use:
+#+begin_src sh
+docker run --rm -it -p 8000:8000 -v ${PWD}:/docs:ro,Z -v ${PWD}/mkdocs.yml:/docs/mkdocs.yml:ro,Z --cgroup-manager=systemd squidfunk/mkdocs-material
+#+end_src

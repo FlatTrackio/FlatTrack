@@ -14,6 +14,7 @@
     - [Frontend](#sec-3-1-2)
   - [Database](#sec-3-2)
   - [Assets](#sec-3-3)
+- [Docs](#sec-4)
 
 
 # Development cycle<a id="sec-1"></a>
@@ -99,3 +100,11 @@ The migrations and database structuring is located in [migrations](../migrations
 ## Assets<a id="sec-3-3"></a>
 
 Images are located in [src/frontend/assets](../src/frontend/assets), these are used throughout the project (such as in the frontend, and readme).
+
+# Docs<a id="sec-4"></a>
+
+To run the docs in development, use:
+
+```sh
+docker run --rm -it -p 8000:8000 -v ${PWD}:/docs:ro,Z -v ${PWD}/mkdocs.yml:/docs/mkdocs.yml:ro,Z --cgroup-manager=systemd squidfunk/mkdocs-material
+```
