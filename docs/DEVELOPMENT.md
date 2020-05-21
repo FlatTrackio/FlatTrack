@@ -43,9 +43,13 @@ go build -o flattrack src/backend/main.go && ./flattrack
 
 ### Frontend<a id="sec-1-3-2"></a>
 
+Install frontend dependencies:
+
 ```shell
 npm i
 ```
+
+Build the frontend:
 
 ```shell
 npm run build:frontend
@@ -58,6 +62,8 @@ Get tilt from [Tilt.dev](https://tilt.dev).
 ```shell
 tilt up --host 0.0.0.0
 ```
+
+Note: Due to multi-stage container builds, this isn't the fastest method.
 
 # Additional<a id="sec-2"></a>
 
@@ -79,27 +85,27 @@ gomigrate -source "file://$(pwd)/migrations" -database postgres://postgres:postg
 
 ### API<a id="sec-3-1-1"></a>
 
-Written in golang, the API is located in [src/backend](../src/backend).
+Written in golang, the API is located in [src/backend](https://gitlab.com/flattrack/flattrack/-/tree/master/test/backend).
 
 The features and areas are separated into packages.
 
 1.  Testing
 
-    Tests are located in [test/backend/e2e](../test/backend/e2e). So far there are only e2e tests for FlatTrack's API.
+    Tests are located in [test/backend/e2e](https://gitlab.com/flattrack/flattrack/-/tree/master/test/backend/e2e). So far there are only e2e tests for FlatTrack's API.
 
 ### Frontend<a id="sec-3-1-2"></a>
 
-Written in Vue.js + JavaScript, the frontend is located in [src/frontend](../src/frontend).
+Written in Vue.js + JavaScript, the frontend is located in [src/frontend](https://gitlab.com/flattrack/flattrack/-/tree/master/test/frontend).
 
 The frontend makes requests to the backend to perform actions.
 
 ## Database<a id="sec-3-2"></a>
 
-The migrations and database structuring is located in [migrations](../migrations). Each table is created with [golang-migrate](https://github.com/golang-migrate/migrate).
+The migrations and database structuring is located in [migrations](https://gitlab.com/flattrack/flattrack/-/tree/master/migrations). Each table is created with [golang-migrate](https://github.com/golang-migrate/migrate).
 
 ## Assets<a id="sec-3-3"></a>
 
-Images are located in [src/frontend/assets](../src/frontend/assets), these are used throughout the project (such as in the frontend, and readme).
+Images are located in [src/frontend/assets](https://gitlab.com/flattrack/flattrack/-/tree/master/src/frontend/assets), these are used throughout the project (such as in the frontend, and readme).
 
 # Docs<a id="sec-4"></a>
 
