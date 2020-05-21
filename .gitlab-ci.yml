@@ -120,9 +120,9 @@ test_backend_e2e:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
 
 pages:
-  image: squidfunk/mkdocs-material:5.2.0
-  before_script:
-    - pip install mkdocs
+  image:
+    name: squidfunk/mkdocs-material:5.2.0
+    entrypoint: [""]
   script:
   - mkdocs build
   - mv site public
