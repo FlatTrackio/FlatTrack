@@ -2,3 +2,9 @@
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
 
 Goals for future version of FlatTrack
+
+* Versions
+** 0.0.1
+- [X] shopping list
+  - [X] auto-updating
+- [X] account confirms

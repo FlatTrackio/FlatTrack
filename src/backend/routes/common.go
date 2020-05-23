@@ -17,7 +17,6 @@ import (
 	"database/sql"
 	"github.com/ddo/go-vue-handler"
 	"github.com/gorilla/mux"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
@@ -77,9 +76,9 @@ func Logging(next http.Handler) http.Handler {
 	})
 }
 
-// HandleWebserver
+// Handle
 // manage the launching of the API's webserver
-func HandleWebserver(db *sql.DB) {
+func Handle(db *sql.DB) {
 	port := common.GetAppPort()
 	router := mux.NewRouter().StrictSlash(true)
 	apiEndpointPrefix := "/api"
@@ -90,11 +89,6 @@ func HandleWebserver(db *sql.DB) {
 	}
 
 	router.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)
-	go func() {
-		http.Handle("/metrics", promhttp.Handler())
-		log.Println("Metrics listening on :2112")
-		http.ListenAndServe(":2112", nil)
-	}()
 	// TODO implement /healthz for healthiness checks
 	// TODO implement /readyz for readiness checks
 	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {

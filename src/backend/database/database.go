@@ -30,3 +30,15 @@ func DB(username string, password string, hostname string, database string) (*sq
 	connStr := fmt.Sprintf("postgres://%v:%v@%v/%v?sslmode=disable", username, password, hostname, database)
 	return sql.Open("postgres", connStr)
 }
+
+// Close
+// close the connection to the database
+func Close(db *sql.DB) (err error) {
+	return db.Close()
+}
+
+// Ping
+// ping the database
+func Ping(db *sql.DB) (err error) {
+	return db.Ping()
+}

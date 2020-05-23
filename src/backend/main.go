@@ -11,6 +11,8 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/database"
 	"gitlab.com/flattrack/flattrack/src/backend/migrations"
 	"gitlab.com/flattrack/flattrack/src/backend/routes"
+	"gitlab.com/flattrack/flattrack/src/backend/metrics"
+	"gitlab.com/flattrack/flattrack/src/backend/health"
 	"log"
 )
 
@@ -36,5 +38,7 @@ func main() {
 		return
 	}
 
-	routes.HandleWebserver(db)
+	go metrics.Handle()
+	go health.Handle(db)
+	routes.Handle(db)
 }
