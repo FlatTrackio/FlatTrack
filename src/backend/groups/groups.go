@@ -12,33 +12,33 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
-// AddUserToGroup
-// given a userId and a groupId, adds a user to a group
-func AddUserToGroup(db *sql.DB, userId string, groupId string) (err error) {
+// AddUserToGroup ...
+// given a userID and a groupID, adds a user to a group
+func AddUserToGroup(db *sql.DB, userID string, groupID string) (err error) {
 	sqlStatement := `insert into user_to_groups (userid, groupid) values ($1, $2)`
-	rows, err := db.Query(sqlStatement, userId, groupId)
+	rows, err := db.Query(sqlStatement, userID, groupID)
 	defer rows.Close()
 	return err
 }
 
-// RemoveUserToGroup
-// given a userId and a groupId, removes a user from a group
-func RemoveUserFromGroup(db *sql.DB, userId string, groupId string) (err error) {
+// RemoveUserFromGroup ...
+// given a userID and a groupID, removes a user from a group
+func RemoveUserFromGroup(db *sql.DB, userID string, groupID string) (err error) {
 	sqlStatement := `delete from user_to_groups where userid = $1 and groupid = $2`
-	rows, err := db.Query(sqlStatement, userId, groupId)
+	rows, err := db.Query(sqlStatement, userID, groupID)
 	defer rows.Close()
 	return err
 }
 
-// GroupObjectFromRows
+// GroupObjectFromRows ...
 // constructs a group object from database rows
 func GroupObjectFromRows(rows *sql.Rows) (group types.GroupSpec, err error) {
-	rows.Scan(&group.Id, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp)
+	rows.Scan(&group.ID, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp)
 	err = rows.Err()
 	return group, err
 }
 
-// GetAllGroups
+// GetAllGroups ...
 // returns a list of all groups
 func GetAllGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where deletionTimestamp = 0`
@@ -58,7 +58,7 @@ func GetAllGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 	return groups, err
 }
 
-// GetGroupByName
+// GetGroupByName ...
 // given a group name, return the group
 func GetGroupByName(db *sql.DB, name string) (group types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where name = $1`
@@ -72,9 +72,9 @@ func GetGroupByName(db *sql.DB, name string) (group types.GroupSpec, err error) 
 	return group, err
 }
 
-// GetGroupById
+// GetGroupByID ...
 // given a group id, return the group
-func GetGroupById(db *sql.DB, id string) (group types.GroupSpec, err error) {
+func GetGroupByID(db *sql.DB, id string) (group types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
@@ -86,23 +86,23 @@ func GetGroupById(db *sql.DB, id string) (group types.GroupSpec, err error) {
 	return group, err
 }
 
-// GetGroupsOfUserById
-// given a userId, return the group which the user account belongs to
-func GetGroupsOfUserById(db *sql.DB, userId string) (groups []types.GroupSpec, err error) {
-	var groupIds []string
+// GetGroupsOfUserByID ...
+// given a userID, return the group which the user account belongs to
+func GetGroupsOfUserByID(db *sql.DB, userID string) (groups []types.GroupSpec, err error) {
+	var groupIDs []string
 	sqlStatement := `select groupid from user_to_groups where userid = $1`
-	rows, err := db.Query(sqlStatement, userId)
+	rows, err := db.Query(sqlStatement, userID)
 	if err != nil {
 		return groups, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var groupId string
-		rows.Scan(&groupId)
-		groupIds = append(groupIds, groupId)
+		var groupID string
+		rows.Scan(&groupID)
+		groupIDs = append(groupIDs, groupID)
 	}
-	for _, groupId := range groupIds {
-		group, err := GetGroupById(db, groupId)
+	for _, groupID := range groupIDs {
+		group, err := GetGroupByID(db, groupID)
 		if err != nil {
 			return groups, err
 		}
@@ -111,10 +111,10 @@ func GetGroupsOfUserById(db *sql.DB, userId string) (groups []types.GroupSpec, e
 	return groups, err
 }
 
-// GetGroupNamesOfUserById
-// given a userId, return the group names which the user account belongs to
-func GetGroupNamesOfUserById(db *sql.DB, userId string) (groups []string, err error) {
-	groupsFull, err := GetGroupsOfUserById(db, userId)
+// GetGroupNamesOfUserByID ...
+// given a userID, return the group names which the user account belongs to
+func GetGroupNamesOfUserByID(db *sql.DB, userID string) (groups []string, err error) {
+	groupsFull, err := GetGroupsOfUserByID(db, userID)
 	if err != nil {
 		return groups, err
 	}
@@ -124,10 +124,10 @@ func GetGroupNamesOfUserById(db *sql.DB, userId string) (groups []string, err er
 	return groups, err
 }
 
-// CheckUserInGroup
+// CheckUserInGroup ...
 // return bool if user is in a group
-func CheckUserInGroup(db *sql.DB, userId string, group string) (found bool, err error) {
-	groups, err := GetGroupNamesOfUserById(db, userId)
+func CheckUserInGroup(db *sql.DB, userID string, group string) (found bool, err error) {
+	groups, err := GetGroupNamesOfUserByID(db, userID)
 	if err != nil {
 		return found, err
 	}
@@ -139,7 +139,7 @@ func CheckUserInGroup(db *sql.DB, userId string, group string) (found bool, err 
 	return found, err
 }
 
-// GetDefaultGroups
+// GetDefaultGroups ...
 // return a list of default groups
 func GetDefaultGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where defaultGroup = true`
@@ -159,27 +159,27 @@ func GetDefaultGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 	return groups, err
 }
 
-// UpdateUserGroups
+// UpdateUserGroups ...
 // manages a user account's groups according to what's provided
-func UpdateUserGroups(db *sql.DB, userId string, groups []string) (complete bool, err error) {
+func UpdateUserGroups(db *sql.DB, userID string, groups []string) (complete bool, err error) {
 	allGroups, err := GetAllGroups(db)
 	if err != nil {
 		return false, err
 	}
 	for _, group := range allGroups {
-		inGroup, err := CheckUserInGroup(db, userId, group.Name)
+		inGroup, err := CheckUserInGroup(db, userID, group.Name)
 		if err != nil {
 			return false, err
 		}
 		shouldBeInGroup := common.StringInStringSlice(group.Name, groups)
 		groupFull, err := GetGroupByName(db, group.Name)
 		if inGroup == true && shouldBeInGroup == false {
-			err = RemoveUserFromGroup(db, userId, groupFull.Id)
+			err = RemoveUserFromGroup(db, userID, groupFull.ID)
 			if err != nil {
 				return false, err
 			}
 		} else if inGroup == false && shouldBeInGroup == true {
-			err = AddUserToGroup(db, userId, groupFull.Id)
+			err = AddUserToGroup(db, userID, groupFull.ID)
 			if err != nil {
 				return false, err
 			}

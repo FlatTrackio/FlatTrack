@@ -9,7 +9,7 @@ import (
 	"database/sql"
 )
 
-// GetHasInitialized
+// GetHasInitialized ...
 // return if the FlatTrack instance has initialized
 func GetHasInitialized(db *sql.DB) (initialized string, err error) {
 	sqlStatement := `select value from system where name = 'initialized'`
@@ -24,7 +24,7 @@ func GetHasInitialized(db *sql.DB) (initialized string, err error) {
 	return initialized, err
 }
 
-// SetHasInitialized
+// SetHasInitialized ...
 // set if the FlatTrack instance has been initialized
 func SetHasInitialized(db *sql.DB) (err error) {
 	sqlStatement := `update system set value = 'true' where name = 'initialized'`
@@ -33,7 +33,7 @@ func SetHasInitialized(db *sql.DB) (err error) {
 	return err
 }
 
-// GetJWTsecret
+// GetJWTsecret ...
 // return the JWT secret, used in authentication
 func GetJWTsecret(db *sql.DB) (jwtSecret string, err error) {
 	sqlStatement := `select value from system where name = 'jwtSecret'`

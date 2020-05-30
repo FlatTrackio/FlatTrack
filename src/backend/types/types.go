@@ -10,18 +10,17 @@ import (
 	"net/http"
 )
 
-// Group
+// Group ...
 // request object for a group
 type Group struct {
-	TypeMeta `json:",inline"`
 	Metadata JSONResponseMetadata `json:"metadata"`
 	Spec     GroupSpec            `json:"spec"`
 }
 
-// GroupSpec
+// GroupSpec ...
 // standard values for a group
 type GroupSpec struct {
-	Id                    string `json:"id"`
+	ID                    string `json:"id"`
 	Name                  string `json:"name"`
 	DefaultGroup          bool   `json:"defaultGroup"`
 	Description           string `json:"description"`
@@ -30,26 +29,25 @@ type GroupSpec struct {
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
 }
 
-// GroupList
+// GroupList ...
 // a list of groups
 type GroupList struct {
-	TypeMeta `json:",inline"`
 	Metadata JSONResponseMetadata `json:"metadata"`
 	List     []GroupSpec          `json:"list"`
 }
 
-// User
+// User ...
 // request object for a user account
 type User struct {
-	TypeMeta `json:",inline"`
 	Metadata JSONResponseMetadata `json:"metadata"`
 	Spec     UserSpec             `json:"spec"`
 }
 
-// UserSpec
+// UserSpec ...
 // standard user account objects
+// swagger:response userSpec
 type UserSpec struct {
-	Id                    string   `json:"id"`
+	ID                    string   `json:"id"`
 	Names                 string   `json:"names"`
 	Email                 string   `json:"email"`
 	Groups                []string `json:"groups"`
@@ -66,26 +64,29 @@ type UserSpec struct {
 	DeletionTimestamp     int      `json:"deletionTimestamp"`
 }
 
-// UserList
+// UserList ...
 // include multiple user accounts
 type UserList struct {
-	TypeMeta `json:",inline"`
 	Metadata JSONResponseMetadata `json:"metadata"`
 	List     []UserSpec           `json:"list"`
 }
 
+// UserSelector ...
+// fields for filtering user account lists
 type UserSelector struct {
-	Id      string `json:"id,omitempty"`
+	ID      string `json:"id,omitempty"`
 	Group   string `json:"group,omitempty"`
-	NotId   string `json:"notId,omitempty"`
+	NotID   string `json:"notId,omitempty"`
 	NotSelf string `json:"notSelf,omitempty"`
 }
 
+// ShoppingListSpec ...
+// fields for a shopping list
 type ShoppingListSpec struct {
-	Id                    string `json:"id"`
+	ID                    string `json:"id"`
 	Name                  string `json:"name"`
 	Notes                 string `json:"notes,omitempty"`
-	TemplateId            string `json:"templateId,omitempty"`
+	TemplateID            string `json:"templateId,omitempty"`
 	Completed             bool   `json:"completed"`
 	Count                 int    `json:"count,omitempty"`
 	Author                string `json:"author"`
@@ -95,9 +96,11 @@ type ShoppingListSpec struct {
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
 }
 
+// ShoppingItemSpec ...
+// fields for a shopping item
 type ShoppingItemSpec struct {
-	Id                    string  `json:"id"`
-	ListId                string  `json:"listId"`
+	ID                    string  `json:"id"`
+	ListID                string  `json:"listId"`
 	Name                  string  `json:"name"`
 	Price                 float64 `json:"price,omitempty"`
 	Quantity              int     `json:"quantity"`
@@ -111,8 +114,12 @@ type ShoppingItemSpec struct {
 	DeletionTimestamp     int     `json:"deletionTimestamp"`
 }
 
+// ShoppingItemSortType ...
+// ways of sorting shopping list items
 type ShoppingItemSortType string
 
+// ShoppingItemSortTypes ...
+// ways of sorting shopping list items
 const (
 	ShoppingItemSortByTag                    = "tag"
 	ShoppingItemSortByHighestPrice           = "highestPrice"
@@ -127,22 +134,30 @@ const (
 	ShoppingItemSortByAlphabeticalAscending  = "alphabeticalAscending"
 )
 
+// ShoppingItemOptions ...
+// options for list items
 type ShoppingItemOptions struct {
-	Selector ShoppingItemSelector `json:"Selector"`
+	Selector ShoppingItemSelector `json:"selector"`
 	SortBy   string               `json:"sortBy"`
 }
 
+// ShoppingItemSelector ...
+// options for creating and selecting lists
 type ShoppingItemSelector struct {
 	TemplateListItemSelector string `json:"templateListItemSelector"`
 }
 
+// ShoppingItemTag ...
+// selects a tag
 type ShoppingItemTag struct {
 	Name string `json:"name"`
 }
 
+// UserCreationSecretSpec ...
+// values for a user to confirm their account with
 type UserCreationSecretSpec struct {
-	Id                    string `json:"id"`
-	UserId                string `json:"userId"`
+	ID                    string `json:"id"`
+	UserID                string `json:"userId"`
 	Secret                string `json:"secret"`
 	Valid                 bool   `json:"valid"`
 	CreationTimestamp     int    `json:"creationTimestamp"`
@@ -150,17 +165,19 @@ type UserCreationSecretSpec struct {
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
 }
 
+// UserCreationSecretSelector ...
+// filters the userCreationSecrets
 type UserCreationSecretSelector struct {
-	UserId string `json:"userId"`
+	UserID string `json:"userId"`
 }
 
-// FlatName
+// FlatName ...
 // the name of the flat
 type FlatName struct {
 	FlatName string `json:"flatName"`
 }
 
-// Registration
+// Registration ...
 // fields to initialize the instance of FlatTrack
 type Registration struct {
 	User     UserSpec `json:"user"`
@@ -169,6 +186,8 @@ type Registration struct {
 	FlatName string   `json:"flatName"`
 }
 
+// SystemVersion ...
+// values for the release of FlatTrack
 type SystemVersion struct {
 	Version    string `json:"version"`
 	CommitHash string `json:"commitHash"`
@@ -176,17 +195,17 @@ type SystemVersion struct {
 	Date       string `json:"date"`
 }
 
-// JSONResponseMetadata
+// JSONResponseMetadata ...
 // values to return in each request
 type JSONResponseMetadata struct {
 	URL       string `json:"selfLink"`
 	Version   string `json:"version"`
-	RequestId string `json:"requestId"`
+	RequestID string `json:"requestId"`
 	Timestamp int64  `json:"timestamp"`
 	Response  string `json:"response"`
 }
 
-// JSONMessageResponse
+// JSONMessageResponse ...
 // generic JSON response
 type JSONMessageResponse struct {
 	Metadata JSONResponseMetadata `json:"metadata"`
@@ -195,22 +214,18 @@ type JSONMessageResponse struct {
 	Data     interface{}          `json:"data,omitempty"`
 }
 
-type TypeMeta struct {
-	Kind string `json:"kind"`
-}
-
-// Endpoints
+// Endpoints ...
 // all API endpoints stored in an array
 type Endpoints []struct {
 	EndpointPath string
 	HandlerFunc  http.HandlerFunc
-	HttpMethod   string
+	HTTPMethod   string
 }
 
-// JWTclaim
+// JWTclaim ...
 // contents for JWT token
 type JWTclaim struct {
-	Id        string `json:"id"`
+	ID        string `json:"id"`
 	AuthNonce string `json:"authNonce"`
 	jwt.StandardClaims
 }

@@ -1,9 +1,9 @@
 FROM node:12.10.0-alpine AS ui
 LABEL maintainer="Caleb Woodbine <calebwoodbine.public@gmail.com>"
-ARG APP_BUILD_VERSION="0.0.0"
-ARG APP_BUILD_HASH="???"
-ARG APP_BUILD_DATE="???"
-ARG APP_BUILD_MODE="development"
+ARG AppBuildVersion="0.0.0"
+ARG AppBuildHash="???"
+ARG AppBuildDate="???"
+ARG AppBuildMode="development"
 
 WORKDIR /app
 COPY src /app/src
@@ -19,19 +19,19 @@ COPY src /app/src
 COPY go.* /app/
 RUN adduser -D user
 # TODO build the version, git hash, and build date into the binary from build-args or env
-ARG APP_BUILD_VERSION="0.0.0"
-ARG APP_BUILD_HASH="???"
-ARG APP_BUILD_DATE="???"
-ARG APP_BUILD_MODE="development"
+ARG AppBuildVersion="0.0.0"
+ARG AppBuildHash="???"
+ARG AppBuildDate="???"
+ARG AppBuildMode="development"
 ARG GOARCH="amd64"
 RUN CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
   -a \
   -installsuffix cgo \
   -ldflags "-extldflags '-static' -s -w \
-    -X gitlab.com/flattrack/flattrack/src/backend/common.APP_BUILD_VERSION=$APP_BUILD_VERSION \
-    -X gitlab.com/flattrack/flattrack/src/backend/common.APP_BUILD_HASH=$APP_BUILD_HASH \
-    -X gitlab.com/flattrack/flattrack/src/backend/common.APP_BUILD_DATE=$APP_BUILD_DATE \
-    -X gitlab.com/flattrack/flattrack/src/backend/common.APP_BUILD_MODE=$APP_BUILD_MODE" \
+    -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildVersion=$AppBuildVersion \
+    -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildHash=$AppBuildHash \
+    -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildDate=$AppBuildDate \
+    -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildMode=$AppBuildMode" \
   -o flattrack \
   src/backend/main.go
 

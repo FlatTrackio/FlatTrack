@@ -12,12 +12,13 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	// allow file-based migrations
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 )
 
-// Migrate
+// Migrate ...
 // creates all the tables via the migration sql files
 func Migrate(db *sql.DB) (err error) {
 	migrationPath := common.GetMigrationsPath()
@@ -42,7 +43,7 @@ func Migrate(db *sql.DB) (err error) {
 	return err
 }
 
-// Reset
+// Reset ...
 // removes all tables
 func Reset(db *sql.DB) (err error) {
 	migrationPath := common.GetMigrationsPath()

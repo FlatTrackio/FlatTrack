@@ -2,10 +2,10 @@ package settings
 
 import (
 	"database/sql"
-	"errors"
+	"fmt"
 )
 
-// GetFlatName
+// GetFlatName ...
 // returns the name of the flat
 func GetFlatName(db *sql.DB) (flatName string, err error) {
 	sqlStatement := `select value from settings where name = 'flatName'`
@@ -20,11 +20,11 @@ func GetFlatName(db *sql.DB) (flatName string, err error) {
 	return flatName, err
 }
 
-// SetFlatName
+// SetFlatName ...
 // given a flatName, set the name of the flat
 func SetFlatName(db *sql.DB, flatName string) (err error) {
 	if flatName == "" || len(flatName) == 0 || len(flatName) > 60 {
-		return errors.New("Unable to set the flat name as it is either invalid, too short, or too long")
+		return fmt.Errorf("Unable to set the flat name as it is either invalid, too short, or too long")
 	}
 	sqlStatement := `update settings set value = $1 where name = $2;`
 	rows, err := db.Query(sqlStatement, flatName, "flatName")
@@ -32,7 +32,7 @@ func SetFlatName(db *sql.DB, flatName string) (err error) {
 	return err
 }
 
-// GetTimezone
+// GetTimezone ...
 // returns the timezone
 func GetTimezone(db *sql.DB) (timezone string, err error) {
 	sqlStatement := `select value from settings where name = 'timezone'`
@@ -47,7 +47,7 @@ func GetTimezone(db *sql.DB) (timezone string, err error) {
 	return timezone, err
 }
 
-// SetTimezone
+// SetTimezone ...
 // given a timezone, set the timezone of the FlatTrack instance
 func SetTimezone(db *sql.DB, timezone string) (err error) {
 	sqlStatement := `update settings set value = $1 where name = 'timezone';`
@@ -56,7 +56,7 @@ func SetTimezone(db *sql.DB, timezone string) (err error) {
 	return err
 }
 
-// GetLanguage
+// GetLanguage ...
 // returns the language
 func GetLanguage(db *sql.DB) (language string, err error) {
 	sqlStatement := `select value from settings where name = 'language'`
@@ -71,7 +71,7 @@ func GetLanguage(db *sql.DB) (language string, err error) {
 	return language, err
 }
 
-// SetLanguage
+// SetLanguage ...
 // given a language, set the language of the FlatTrack instance
 func SetLanguage(db *sql.DB, language string) (err error) {
 	sqlStatement := `update settings set value = $1 where name = 'language';`

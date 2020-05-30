@@ -13,11 +13,12 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/users"
 )
 
+// Default groups
 var (
 	defaultInitalizationGroups = []string{"flatmember", "admin"}
 )
 
-// Register
+// Register ...
 // perform initial FlatTrack instance setup
 func Register(db *sql.DB, registration types.Registration) (successful bool, jwt string, err error) {
 	// TODO add timezone validation
@@ -37,10 +38,10 @@ func Register(db *sql.DB, registration types.Registration) (successful bool, jwt
 	registration.User.Groups = defaultInitalizationGroups
 	registration.User.Registered = true
 	user, err := users.CreateUser(db, registration.User, false)
-	if err != nil || user.Id == "" {
+	if err != nil || user.ID == "" {
 		return successful, jwt, err
 	}
-	jwt, err = users.GenerateJWTauthToken(db, user.Id, user.AuthNonce, 0)
+	jwt, err = users.GenerateJWTauthToken(db, user.ID, user.AuthNonce, 0)
 	if err != nil {
 		return successful, "", err
 	}

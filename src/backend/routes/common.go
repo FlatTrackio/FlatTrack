@@ -22,7 +22,7 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
-// JSONResponse
+// JSONResponse ...
 // form generic JSON responses
 func JSONResponse(r *http.Request, w http.ResponseWriter, code int, output types.JSONMessageResponse) {
 	// simpilify sending a JSON response
@@ -36,7 +36,7 @@ func JSONResponse(r *http.Request, w http.ResponseWriter, code int, output types
 	w.Write(response)
 }
 
-// GetHTTPresponseBodyContents
+// GetHTTPresponseBodyContents ...
 // convert the body of a HTTP response into a JSONMessageResponse
 func GetHTTPresponseBodyContents(response *http.Response) (output types.JSONMessageResponse) {
 	responseData, err := ioutil.ReadAll(response.Body)
@@ -47,7 +47,7 @@ func GetHTTPresponseBodyContents(response *http.Response) (output types.JSONMess
 	return output
 }
 
-// HTTPuseMiddleware
+// HTTPuseMiddleware ...
 // append functions to run before the endpoint handler
 func HTTPuseMiddleware(handler http.HandlerFunc, middlewares ...func(http.HandlerFunc) http.HandlerFunc) http.HandlerFunc {
 	for _, middleware := range middlewares {
@@ -57,7 +57,7 @@ func HTTPuseMiddleware(handler http.HandlerFunc, middlewares ...func(http.Handle
 	return handler
 }
 
-// Logging
+// Logging ...
 // log the HTTP requests
 func Logging(next http.Handler) http.Handler {
 	// log all requests
@@ -76,7 +76,7 @@ func Logging(next http.Handler) http.Handler {
 	})
 }
 
-// Handle
+// Handle ...
 // manage the launching of the API's webserver
 func Handle(db *sql.DB) {
 	port := common.GetAppPort()
@@ -85,7 +85,7 @@ func Handle(db *sql.DB) {
 
 	router.HandleFunc(apiEndpointPrefix, Root)
 	for _, endpoint := range GetEndpoints(apiEndpointPrefix, db) {
-		router.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HttpMethod, http.MethodOptions)
+		router.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HTTPMethod, http.MethodOptions)
 	}
 
 	router.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)

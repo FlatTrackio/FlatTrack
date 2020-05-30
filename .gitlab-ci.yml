@@ -1,4 +1,5 @@
 stages:
+  - lint
   - test
   - build
 
@@ -49,6 +50,7 @@ variables:
 build-amd64:
   stage: build
   image: docker:stable
+  retry: 2
   services:
     - docker:stable-dind
   variables:
@@ -67,6 +69,7 @@ build-amd64:
 build-amd64-release:
   stage: build
   image: docker:stable
+  retry: 2
   services:
     - docker:stable-dind
   variables:
@@ -118,6 +121,25 @@ test_backend_e2e:
     - ./flattrack &
   script:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
+    
+lint_frontend:
+  stage: lint
+  image: node:12.10.0-alpine
+  allow_failure: true
+  before_script:
+    - npm i
+  script:
+    - npm run lint
+
+lint_backend:
+  stage: lint
+  image: golang:1.13.10-alpine3.11
+  allow_failure: true
+  before_script:
+    - apk add git gcc
+    - go get -u golang.org/x/lint/golint
+  script:
+    - golint -set_exit_status src/backend/...
 
 pages:
   image: python:3.8-buster

@@ -7,7 +7,6 @@ package users
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -22,18 +21,18 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
-// ValidateUser
+// ValidateUser ...
 // given a UserSpec, return if it's valid
 func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (valid bool, err error) {
 	if len(user.Names) == 0 || len(user.Names) > 60 || user.Names == "" {
-		return false, errors.New("Unable to use the provided name, as it is either empty or too long or too short")
+		return false, fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
 	}
 	if common.RegexMatchEmail(user.Email) == false || user.Email == "" {
-		return false, errors.New("Unable to use the provided email, as it is either empty or not valid")
+		return false, fmt.Errorf("Unable to use the provided email, as it is either empty or not valid")
 	}
 
 	if len(user.Groups) == 0 {
-		return false, errors.New("No groups provided; please select at least one group")
+		return false, fmt.Errorf("No groups provided; please select at least one group")
 	}
 	groupsIncludeFlatmember := false
 	for _, groupItem := range user.Groups {
@@ -41,29 +40,29 @@ func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (val
 			groupsIncludeFlatmember = true
 		}
 		group, err := groups.GetGroupByName(db, groupItem)
-		if err != nil || group.Id == "" {
-			return false, errors.New(fmt.Sprintf("Unable to use the provided group '%v' as it is invalid", groupItem))
+		if err != nil || group.ID == "" {
+			return false, fmt.Errorf("Unable to use the provided group '%v' as it is invalid", groupItem)
 		}
 	}
 	if groupsIncludeFlatmember == false {
-		return false, errors.New("User account must be in the flatmember group")
+		return false, fmt.Errorf("User account must be in the flatmember group")
 	}
 
 	if user.Birthday != 0 && (common.ValidateBirthday(user.Birthday) == false) {
-		return false, errors.New("Unable to use the provided birthday, your birthday year must not be within the last 15 years")
+		return false, fmt.Errorf("Unable to use the provided birthday, your birthday year must not be within the last 15 years")
 	}
 
 	if (common.RegexMatchPassword(user.Password) == false || user.Password == "") && allowEmptyPassword == false {
-		return false, errors.New("Unable to use the provided password, as it is either empty of invalid")
+		return false, fmt.Errorf("Unable to use the provided password, as it is either empty of invalid")
 	}
 	if user.PhoneNumber != "" && common.RegexMatchPhoneNumber(user.PhoneNumber) == false {
-		return false, errors.New("Unable to use the provided phone number")
+		return false, fmt.Errorf("Unable to use the provided phone number")
 	}
 
 	return true, err
 }
 
-// CreateUser
+// CreateUser ...
 // given a UserSpec, create a user
 func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userInserted types.UserSpec, err error) {
 	var userCreationSecretInserted types.UserCreationSecretSpec
@@ -73,11 +72,11 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
 		return userInserted, err
 	}
 	localUser, err := GetUserByEmail(db, user.Email, false)
-	if err == nil || localUser.Id != "" {
-		return userInserted, errors.New("Email address is unable to be used")
+	if err == nil || localUser.ID != "" {
+		return userInserted, fmt.Errorf("Email address is unable to be used")
 	}
 	if localUser.Email == user.Email {
-		return userInserted, errors.New("Email address is already taken")
+		return userInserted, fmt.Errorf("Email address is already taken")
 	}
 	if user.Password != "" {
 		user.Password = common.HashSHA512(user.Password)
@@ -100,26 +99,26 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
 		return userInserted, err
 	}
 
-	updatedGroups, err := groups.UpdateUserGroups(db, userInserted.Id, user.Groups)
+	updatedGroups, err := groups.UpdateUserGroups(db, userInserted.ID, user.Groups)
 	if updatedGroups == false || err != nil {
 		return userInserted, err
 	}
 	userInserted.Groups = user.Groups
 	userInserted.Password = ""
 	if allowEmptyPassword == true {
-		userCreationSecretInserted, err = CreateUserCreationSecret(db, userInserted.Id)
+		userCreationSecretInserted, err = CreateUserCreationSecret(db, userInserted.ID)
 		if err != nil {
 			return userInserted, err
 		}
-		if userCreationSecretInserted.Id == "" {
-			return userInserted, errors.New("Failed to created a user creation secret")
+		if userCreationSecretInserted.ID == "" {
+			return userInserted, fmt.Errorf("Failed to created a user creation secret")
 		}
 	}
 
 	return userInserted, err
 }
 
-// GetAllUsers
+// GetAllUsers ...
 // return all users in the database
 func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector) (users []types.UserSpec, err error) {
 	sqlStatement := `select * from users where deletionTimestamp = 0 order by names`
@@ -134,19 +133,19 @@ func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector)
 		if err != nil {
 			return users, err
 		}
-		groupsOfUser, err := groups.GetGroupNamesOfUserById(db, user.Id)
+		groupsOfUser, err := groups.GetGroupNamesOfUserByID(db, user.ID)
 		if err != nil {
 			return users, err
 		}
 		if selectors.Group != "" {
-			found, err = groups.CheckUserInGroup(db, user.Id, selectors.Group)
+			found, err = groups.CheckUserInGroup(db, user.ID, selectors.Group)
 			if err != nil {
 				return users, err
 			}
-		} else if selectors.Id != "" {
-			found = selectors.Id == user.Id
-		} else if selectors.NotId != "" {
-			found = !(selectors.NotId == user.Id)
+		} else if selectors.ID != "" {
+			found = selectors.ID == user.ID
+		} else if selectors.NotID != "" {
+			found = !(selectors.NotID == user.ID)
 		}
 		user.Groups = groupsOfUser
 		if includePassword == false {
@@ -160,15 +159,15 @@ func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector)
 	return users, err
 }
 
-// GetUser
+// GetUser ...
 // given a UserSpec and an ID or Email, return a user from the database
 func GetUser(db *sql.DB, userSelect types.UserSpec, includePassword bool) (user types.UserSpec, err error) {
-	if userSelect.Id != "" {
-		return GetUserById(db, userSelect.Id, includePassword)
+	if userSelect.ID != "" {
+		return GetUserByID(db, userSelect.ID, includePassword)
 	}
 	if userSelect.Email != "" {
 		if common.RegexMatchEmail(userSelect.Email) {
-			return user, errors.New("Invalid email address")
+			return user, fmt.Errorf("Invalid email address")
 		}
 		return GetUserByEmail(db, userSelect.Email, includePassword)
 	}
@@ -178,25 +177,25 @@ func GetUser(db *sql.DB, userSelect types.UserSpec, includePassword bool) (user 
 	return user, err
 }
 
-// UserObjectFromRowsRestricted
+// UserObjectFromRowsRestricted ...
 // construct a restricted UserSpec from database rows
 func UserObjectFromRowsRestricted(rows *sql.Rows) (user types.UserSpec, err error) {
-	rows.Scan(&user.Id, &user.Names, &user.Email, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
+	rows.Scan(&user.ID, &user.Names, &user.Email, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
 	err = rows.Err()
 	return user, err
 }
 
-// UserObjectFromRows
+// UserObjectFromRows ...
 // construct a UserSpec from database rows
 func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
-	rows.Scan(&user.Id, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.AuthNonce, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
+	rows.Scan(&user.ID, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.AuthNonce, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
 	err = rows.Err()
 	return user, err
 }
 
-// GetUserById
+// GetUserByID ...
 // given an id, return a UserSpec
-func GetUserById(db *sql.DB, id string, includePassword bool) (user types.UserSpec, err error) {
+func GetUserByID(db *sql.DB, id string, includePassword bool) (user types.UserSpec, err error) {
 	sqlStatement := `select * from users where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
@@ -208,7 +207,7 @@ func GetUserById(db *sql.DB, id string, includePassword bool) (user types.UserSp
 	if err != nil {
 		return user, err
 	}
-	groups, err := groups.GetGroupNamesOfUserById(db, user.Id)
+	groups, err := groups.GetGroupNamesOfUserByID(db, user.ID)
 	if err != nil {
 		return user, err
 	}
@@ -219,7 +218,7 @@ func GetUserById(db *sql.DB, id string, includePassword bool) (user types.UserSp
 	return user, err
 }
 
-// GetUserByEmail
+// GetUserByEmail ...
 // given a email, return a UserSpec
 func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.UserSpec, err error) {
 	sqlStatement := `select * from users where email = $1`
@@ -233,10 +232,10 @@ func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.
 	if err != nil {
 		return user, err
 	}
-	if user.Id == "" {
-		return user, errors.New("Failed to find user")
+	if user.ID == "" {
+		return user, fmt.Errorf("Failed to find user")
 	}
-	groups, err := groups.GetGroupNamesOfUserById(db, user.Id)
+	groups, err := groups.GetGroupNamesOfUserByID(db, user.ID)
 	if err != nil {
 		return user, err
 	}
@@ -247,21 +246,21 @@ func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.
 	return user, err
 }
 
-// DeleteUserById
+// DeleteUserByID ...
 // given an id, remove the user account from all the groups and then delete a user account
-func DeleteUserById(db *sql.DB, id string) (err error) {
-	userGroups, err := groups.GetGroupsOfUserById(db, id)
+func DeleteUserByID(db *sql.DB, id string) (err error) {
+	userGroups, err := groups.GetGroupsOfUserByID(db, id)
 	if err != nil {
 		return err
 	}
 	for _, groupItem := range userGroups {
-		err = groups.RemoveUserFromGroup(db, id, groupItem.Id)
+		err = groups.RemoveUserFromGroup(db, id, groupItem.ID)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = DeleteUserCreationSecretByUserId(db, id)
+	err = DeleteUserCreationSecretByUserID(db, id)
 	if err != nil {
 		return err
 	}
@@ -272,7 +271,7 @@ func DeleteUserById(db *sql.DB, id string) (err error) {
 	return err
 }
 
-// CheckUserPassword
+// CheckUserPassword ...
 // given an email and password, find the user account with the email, return if the password matches
 func CheckUserPassword(db *sql.DB, email string, password string) (matches bool, err error) {
 	user, err := GetUserByEmail(db, email, true)
@@ -283,7 +282,7 @@ func CheckUserPassword(db *sql.DB, email string, password string) (matches bool,
 	return user.Password == passwordHashed, err
 }
 
-// GenerateJWTauthToken
+// GenerateJWTauthToken ...
 // given an email, return a usable JWT token
 func GenerateJWTauthToken(db *sql.DB, id string, authNonce string, expiresIn time.Duration) (tokenString string, err error) {
 	if expiresIn == 0 {
@@ -295,7 +294,7 @@ func GenerateJWTauthToken(db *sql.DB, id string, authNonce string, expiresIn tim
 	}
 	expirationTime := time.Now().Add(time.Hour * expiresIn)
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, types.JWTclaim{
-		Id:        id,
+		ID:        id,
 		AuthNonce: authNonce,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expirationTime.Unix(),
@@ -306,20 +305,20 @@ func GenerateJWTauthToken(db *sql.DB, id string, authNonce string, expiresIn tim
 	return tokenString, err
 }
 
-// ValidateJWTauthToken
+// ValidateJWTauthToken ...
 // given an HTTP request and Authorization header, return if auth is valid
 func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 	secret, err := system.GetJWTsecret(db)
 	if err != nil {
-		return false, errors.New("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
+		return false, fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
 	}
 	tokenHeader := r.Header.Get("Authorization")
 	if tokenHeader == "" {
-		return false, errors.New("Unable to find authorization token (header doesn't exist)")
+		return false, fmt.Errorf("Unable to find authorization token (header doesn't exist)")
 	}
 	authorizationHeader := strings.Split(tokenHeader, " ")
 	if authorizationHeader[0] != "bearer" || len(authorizationHeader) <= 1 {
-		return false, errors.New("Unable to find authorization token (must be as bearer)")
+		return false, fmt.Errorf("Unable to find authorization token (must be as bearer)")
 	}
 	tokenHeaderJWT := authorizationHeader[1]
 	claims := &types.JWTclaim{}
@@ -331,19 +330,19 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 	}
 
 	reqClaims := token.Claims.(*types.JWTclaim)
-	user, err := GetUserById(db, reqClaims.Id, true)
-	if err != nil || user.Id == "" || user.DeletionTimestamp != 0 {
-		return false, errors.New("Unable to find the user account which the authentication token belongs to")
+	user, err := GetUserByID(db, reqClaims.ID, true)
+	if err != nil || user.ID == "" || user.DeletionTimestamp != 0 {
+		return false, fmt.Errorf("Unable to find the user account which the authentication token belongs to")
 	}
 
 	if reqClaims.AuthNonce != user.AuthNonce {
-		return false, errors.New("Authentication has been invalidated, please log in again")
+		return false, fmt.Errorf("Authentication has been invalidated, please log in again")
 	}
 
 	return token.Valid, nil
 }
 
-// InvalidAllAuthTokens
+// InvalidateAllAuthTokens ...
 // updates the authNonce to invalidate auth tokens
 func InvalidateAllAuthTokens(db *sql.DB, id string) (err error) {
 	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid where id = $1`
@@ -352,20 +351,20 @@ func InvalidateAllAuthTokens(db *sql.DB, id string) (err error) {
 	return err
 }
 
-// GetIdFromJWT
-// return the userId in a JWT from a header in a HTTP request
-func GetIdFromJWT(db *sql.DB, r *http.Request) (id string, err error) {
+// GetIDFromJWT ...
+// return the userID in a JWT from a header in a HTTP request
+func GetIDFromJWT(db *sql.DB, r *http.Request) (id string, err error) {
 	secret, err := system.GetJWTsecret(db)
 	if err != nil {
-		return "", errors.New("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
+		return "", fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
 	}
 	tokenHeader := r.Header.Get("Authorization")
 	if tokenHeader == "" {
-		return "", errors.New("Unable to find authorization token (header doesn't exist)")
+		return "", fmt.Errorf("Unable to find authorization token (header doesn't exist)")
 	}
 	authorizationHeader := strings.Split(tokenHeader, " ")
 	if authorizationHeader[0] != "bearer" || len(authorizationHeader) <= 1 {
-		return "", errors.New("Unable to find authorization token (must be as bearer)")
+		return "", fmt.Errorf("Unable to find authorization token (must be as bearer)")
 	}
 	tokenHeaderJWT := authorizationHeader[1]
 	claims := &types.JWTclaim{}
@@ -377,41 +376,41 @@ func GetIdFromJWT(db *sql.DB, r *http.Request) (id string, err error) {
 	}
 
 	reqClaims := token.Claims.(*types.JWTclaim)
-	user, err := GetUserById(db, reqClaims.Id, true)
-	if err != nil || user.Id == "" {
-		return "", errors.New("Unable to find the user account which the authentication token belongs to")
+	user, err := GetUserByID(db, reqClaims.ID, true)
+	if err != nil || user.ID == "" {
+		return "", fmt.Errorf("Unable to find the user account which the authentication token belongs to")
 	}
-	return user.Id, err
+	return user.ID, err
 }
 
-// GetProfile
-// return user from Id in JWT from HTTP request
+// GetProfile ...
+// return user from ID in JWT from HTTP request
 func GetProfile(db *sql.DB, r *http.Request) (user types.UserSpec, err error) {
-	id, err := GetIdFromJWT(db, r)
+	id, err := GetIDFromJWT(db, r)
 	if err != nil {
 		return user, err
 	}
 
-	user, err = GetUserById(db, id, false)
+	user, err = GetUserByID(db, id, false)
 	return user, err
 }
 
-// PatchProfile
+// PatchProfile ...
 // patches the profile of a user account
 func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
-	existingUserAccount, err := GetUserById(db, id, true)
-	if err != nil || existingUserAccount.Id == "" {
-		return userAccountPatched, errors.New("Failed to find user account")
+	existingUserAccount, err := GetUserByID(db, id, true)
+	if err != nil || existingUserAccount.ID == "" {
+		return userAccountPatched, fmt.Errorf("Failed to find user account")
 	}
 	if userAccount.Email != "" && userAccount.Email != existingUserAccount.Email {
 		localUser, err := GetUserByEmail(db, userAccount.Email, false)
-		if err == nil || localUser.Id != "" {
-			return userAccountPatched, errors.New("Email address is unable to be used")
+		if err == nil || localUser.ID != "" {
+			return userAccountPatched, fmt.Errorf("Email address is unable to be used")
 		}
 	}
 	err = mergo.Merge(&userAccount, existingUserAccount)
 	if err != nil {
-		return userAccountPatched, errors.New("Failed to update fields in the user account")
+		return userAccountPatched, fmt.Errorf("Failed to update fields in the user account")
 	}
 	noUpdatePassword := userAccount.Password == existingUserAccount.Password
 	valid, err := ValidateUser(db, userAccount, noUpdatePassword)
@@ -433,8 +432,8 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	defer rows.Close()
 	rows.Next()
 	userAccountPatched, err = UserObjectFromRowsRestricted(rows)
-	if err != nil || userAccountPatched.Id == "" {
-		return userAccountPatched, errors.New("Failed to patch user account")
+	if err != nil || userAccountPatched.ID == "" {
+		return userAccountPatched, fmt.Errorf("Failed to patch user account")
 	}
 
 	userAccountPatched.Groups = existingUserAccount.Groups
@@ -442,22 +441,22 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	return userAccountPatched, err
 }
 
-// PatchProfileAdmin
+// PatchProfileAdmin ...
 // patches a profile with all fields
 func PatchProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
-	existingUserAccount, err := GetUserById(db, id, true)
-	if err != nil || existingUserAccount.Id == "" {
-		return userAccountPatched, errors.New("Failed to find user account")
+	existingUserAccount, err := GetUserByID(db, id, true)
+	if err != nil || existingUserAccount.ID == "" {
+		return userAccountPatched, fmt.Errorf("Failed to find user account")
 	}
 	if userAccount.Email != "" && userAccount.Email != existingUserAccount.Email {
 		localUser, err := GetUserByEmail(db, userAccount.Email, false)
-		if err == nil || localUser.Id != "" {
-			return userAccountPatched, errors.New("Email address is unable to be used")
+		if err == nil || localUser.ID != "" {
+			return userAccountPatched, fmt.Errorf("Email address is unable to be used")
 		}
 	}
 	err = mergo.Merge(&userAccount, existingUserAccount)
 	if err != nil {
-		return userAccountPatched, errors.New("Failed to update fields in the user account")
+		return userAccountPatched, fmt.Errorf("Failed to update fields in the user account")
 	}
 	noUpdatePassword := userAccount.Password == existingUserAccount.Password
 	valid, err := ValidateUser(db, userAccount, noUpdatePassword)
@@ -479,8 +478,8 @@ func PatchProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userA
 	defer rows.Close()
 	rows.Next()
 	userAccountPatched, err = UserObjectFromRows(rows)
-	if err != nil || userAccountPatched.Id == "" {
-		return userAccountPatched, errors.New("Failed to patch user account")
+	if err != nil || userAccountPatched.ID == "" {
+		return userAccountPatched, fmt.Errorf("Failed to patch user account")
 	}
 
 	updatedGroups, err := groups.UpdateUserGroups(db, id, userAccount.Groups)
@@ -493,21 +492,21 @@ func PatchProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userA
 	return userAccountPatched, err
 }
 
-// UpdateProfile
+// UpdateProfile ...
 // updates the profile of a user account
 func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
 	valid, err := ValidateUser(db, userAccount, false)
 	if !valid || err != nil {
 		return userAccountUpdated, err
 	}
-	existingUserAccount, err := GetUserById(db, id, true)
-	if err != nil || existingUserAccount.Id == "" {
-		return userAccountUpdated, errors.New("Failed to find user account")
+	existingUserAccount, err := GetUserByID(db, id, true)
+	if err != nil || existingUserAccount.ID == "" {
+		return userAccountUpdated, fmt.Errorf("Failed to find user account")
 	}
 	if userAccount.Email != existingUserAccount.Email {
 		localUser, err := GetUserByEmail(db, userAccount.Email, false)
-		if err == nil || localUser.Id != "" {
-			return userAccountUpdated, errors.New("Email address is unable to be used")
+		if err == nil || localUser.ID != "" {
+			return userAccountUpdated, fmt.Errorf("Email address is unable to be used")
 		}
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
@@ -522,29 +521,29 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 	defer rows.Close()
 	rows.Next()
 	userAccountUpdated, err = UserObjectFromRowsRestricted(rows)
-	if err != nil || userAccountUpdated.Id == "" {
-		return userAccountUpdated, errors.New("Failed to update profile")
+	if err != nil || userAccountUpdated.ID == "" {
+		return userAccountUpdated, fmt.Errorf("Failed to update profile")
 	}
 
 	userAccountUpdated.Groups = existingUserAccount.Groups
 	return userAccountUpdated, err
 }
 
-// UpdateProfileAdmin
+// UpdateProfileAdmin ...
 // updates all fields of a profile
 func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
 	valid, err := ValidateUser(db, userAccount, false)
 	if !valid || err != nil {
 		return userAccountUpdated, err
 	}
-	existingUserAccount, err := GetUserById(db, id, true)
-	if err != nil || existingUserAccount.Id == "" {
-		return userAccountUpdated, errors.New("Failed to find user account")
+	existingUserAccount, err := GetUserByID(db, id, true)
+	if err != nil || existingUserAccount.ID == "" {
+		return userAccountUpdated, fmt.Errorf("Failed to find user account")
 	}
 	if userAccount.Email != existingUserAccount.Email {
 		localUser, err := GetUserByEmail(db, userAccount.Email, false)
-		if err == nil || localUser.Id != "" {
-			return userAccountUpdated, errors.New("Email address is unable to be used")
+		if err == nil || localUser.ID != "" {
+			return userAccountUpdated, fmt.Errorf("Email address is unable to be used")
 		}
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
@@ -559,8 +558,8 @@ func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (user
 	defer rows.Close()
 	rows.Next()
 	userAccountUpdated, err = UserObjectFromRows(rows)
-	if err != nil || userAccountUpdated.Id == "" {
-		return userAccountUpdated, errors.New("Failed to update profile")
+	if err != nil || userAccountUpdated.ID == "" {
+		return userAccountUpdated, fmt.Errorf("Failed to update profile")
 	}
 
 	updatedGroups, err := groups.UpdateUserGroups(db, id, userAccount.Groups)
@@ -573,15 +572,15 @@ func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (user
 	return userAccountUpdated, err
 }
 
-// UserCreationSecretsFromRows
+// UserCreationSecretsFromRows ...
 // constructs a UserCreationSecretSpec from rows
 func UserCreationSecretsFromRows(rows *sql.Rows) (creationSecret types.UserCreationSecretSpec, err error) {
-	rows.Scan(&creationSecret.Id, &creationSecret.UserId, &creationSecret.Secret, &creationSecret.Valid, creationSecret.CreationTimestamp, &creationSecret.ModificationTimestamp, &creationSecret.DeletionTimestamp)
+	rows.Scan(&creationSecret.ID, &creationSecret.UserID, &creationSecret.Secret, &creationSecret.Valid, creationSecret.CreationTimestamp, &creationSecret.ModificationTimestamp, &creationSecret.DeletionTimestamp)
 	err = rows.Err()
 	return creationSecret, err
 }
 
-// GetAllUserCreationSecrets
+// GetAllUserCreationSecrets ...
 // returns all UserCreationSecrets from the database
 func GetAllUserCreationSecrets(db *sql.DB, secretsSelector types.UserCreationSecretSelector) (creationSecrets []types.UserCreationSecretSpec, err error) {
 	sqlStatement := `select * from user_creation_secret`
@@ -593,17 +592,17 @@ func GetAllUserCreationSecrets(db *sql.DB, secretsSelector types.UserCreationSec
 	for rows.Next() {
 		creationSecret, err := UserCreationSecretsFromRows(rows)
 		if err != nil {
-			return creationSecrets, errors.New("Failed to list user creation secrets")
+			return creationSecrets, fmt.Errorf("Failed to list user creation secrets")
 		}
-		if secretsSelector.UserId != "" {
-			userExists, err := UserAccountExists(db, secretsSelector.UserId)
+		if secretsSelector.UserID != "" {
+			userExists, err := UserAccountExists(db, secretsSelector.UserID)
 			if err != nil {
 				return creationSecrets, err
 			}
 			if userExists == false {
-				return creationSecrets, errors.New("Unable to find user account")
+				return creationSecrets, fmt.Errorf("Unable to find user account")
 			}
-			if creationSecret.UserId != secretsSelector.UserId {
+			if creationSecret.UserID != secretsSelector.UserID {
 				continue
 			}
 		}
@@ -612,7 +611,7 @@ func GetAllUserCreationSecrets(db *sql.DB, secretsSelector types.UserCreationSec
 	return creationSecrets, err
 }
 
-// GetUserCreationSecret
+// GetUserCreationSecret ...
 // returns a UserCreationSecret by it's id from the database
 func GetUserCreationSecret(db *sql.DB, id string) (creationSecret types.UserCreationSecretSpec, err error) {
 	sqlStatement := `select * from user_creation_secret where id = $1`
@@ -626,13 +625,13 @@ func GetUserCreationSecret(db *sql.DB, id string) (creationSecret types.UserCrea
 	return creationSecret, err
 }
 
-// CreateUserCreationSecret
+// CreateUserCreationSecret ...
 // creates a user creation secret for account confirming
-func CreateUserCreationSecret(db *sql.DB, userId string) (userCreationSecretInserted types.UserCreationSecretSpec, err error) {
+func CreateUserCreationSecret(db *sql.DB, userID string) (userCreationSecretInserted types.UserCreationSecretSpec, err error) {
 	sqlStatement := `insert into user_creation_secret (userId)
                          values ($1)
                          returning *`
-	rows, err := db.Query(sqlStatement, userId)
+	rows, err := db.Query(sqlStatement, userID)
 	if err != nil {
 		return userCreationSecretInserted, err
 	}
@@ -642,7 +641,7 @@ func CreateUserCreationSecret(db *sql.DB, userId string) (userCreationSecretInse
 	return userCreationSecretInserted, err
 }
 
-// DeleteUserCreationSecret
+// DeleteUserCreationSecret ...
 // deletes the acccount creation secret, after it's been used
 func DeleteUserCreationSecret(db *sql.DB, id string) (err error) {
 	sqlStatement := `delete from user_creation_secret where id = $1`
@@ -651,32 +650,32 @@ func DeleteUserCreationSecret(db *sql.DB, id string) (err error) {
 	return err
 }
 
-// DeleteUserCreationSecretByUserId
+// DeleteUserCreationSecretByUserID ...
 // deletes the acccount creation secret by userid, after it's been used
-func DeleteUserCreationSecretByUserId(db *sql.DB, userId string) (err error) {
+func DeleteUserCreationSecretByUserID(db *sql.DB, userID string) (err error) {
 	sqlStatement := `delete from user_creation_secret where userId = $1`
-	rows, err := db.Query(sqlStatement, userId)
+	rows, err := db.Query(sqlStatement, userID)
 	defer rows.Close()
 	return err
 }
 
-// ConfirmUserAccount
+// ConfirmUserAccount ...
 // confirms the user account
 func ConfirmUserAccount(db *sql.DB, id string, secret string, user types.UserSpec) (tokenString string, err error) {
 	if user.Password == "" {
-		return tokenString, errors.New("Unable to confirm account, a password must be provided to complete registration")
+		return tokenString, fmt.Errorf("Unable to confirm account, a password must be provided to complete registration")
 	}
 	userCreationSecret, err := GetUserCreationSecret(db, id)
 	if err != nil {
 		return tokenString, err
 	}
-	if userCreationSecret.Id == "" {
-		return tokenString, errors.New("Unable to find account confirmation secret")
+	if userCreationSecret.ID == "" {
+		return tokenString, fmt.Errorf("Unable to find account confirmation secret")
 	}
 	if secret != userCreationSecret.Secret {
-		return tokenString, errors.New("Unable to confirm account, as the secret doesn't match")
+		return tokenString, fmt.Errorf("Unable to confirm account, as the secret doesn't match")
 	}
-	userInDB, err := GetUserById(db, userCreationSecret.UserId, false)
+	userInDB, err := GetUserByID(db, userCreationSecret.UserID, false)
 	if err != nil {
 		return tokenString, err
 	}
@@ -689,19 +688,19 @@ func ConfirmUserAccount(db *sql.DB, id string, secret string, user types.UserSpe
 		PhoneNumber: user.PhoneNumber,
 		Registered:  true,
 	}
-	userConfirmed, err := PatchProfileAdmin(db, userCreationSecret.UserId, userAccountPatch)
+	userConfirmed, err := PatchProfileAdmin(db, userCreationSecret.UserID, userAccountPatch)
 	if err != nil {
 		return tokenString, err
 	}
-	if userConfirmed.Id == "" || userConfirmed.Registered == false {
-		return tokenString, errors.New("Failed to patch profile")
+	if userConfirmed.ID == "" || userConfirmed.Registered == false {
+		return tokenString, fmt.Errorf("Failed to patch profile")
 	}
 	err = DeleteUserCreationSecret(db, id)
 
-	return GenerateJWTauthToken(db, userInDB.Id, userInDB.AuthNonce, 0)
+	return GenerateJWTauthToken(db, userInDB.ID, userInDB.AuthNonce, 0)
 }
 
-// UserAccountExists
+// UserAccountExists ...
 // returns bool if user account exists
 func UserAccountExists(db *sql.DB, id string) (exists bool, err error) {
 	sqlStatement := `select id from users where id = $1`
@@ -711,13 +710,13 @@ func UserAccountExists(db *sql.DB, id string) (exists bool, err error) {
 	}
 	defer rows.Close()
 	rows.Next()
-	var userIdFromDB string
-	rows.Scan(&userIdFromDB)
+	var userIDFromDB string
+	rows.Scan(&userIDFromDB)
 	err = rows.Err()
-	return userIdFromDB == id, err
+	return userIDFromDB == id, err
 }
 
-// GenerateNewAuthNonce
+// GenerateNewAuthNonce ...
 // given a user account id, generates a new auth nonce to reset all logins and invalidate all issued JWTs
 func GenerateNewAuthNonce(db *sql.DB, id string) (err error) {
 	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid where id = $1

@@ -23,24 +23,27 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/users"
 )
 
-// GetAllUsers
+// GetAllUsers ...
+// swagger:route GET /users users getAllUsers
+// responses:
+//  200: []userSpec
 // get a list of all users
 func GetAllUsers(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		code := http.StatusInternalServerError
 		response := "Failed to fetch user accounts"
 
-		userSelectorId := r.FormValue("id")
-		userSelectorNotId := r.FormValue("notId")
+		userSelectorID := r.FormValue("id")
+		userSelectorNotID := r.FormValue("notId")
 		userSelectorGroup := r.FormValue("group")
 		var errJWT error = nil
 		if r.FormValue("notSelf") == "true" {
-			userSelectorNotId, errJWT = users.GetIdFromJWT(db, r)
+			userSelectorNotID, errJWT = users.GetIDFromJWT(db, r)
 		}
 
 		selectors := types.UserSelector{
-			Id:    userSelectorId,
-			NotId: userSelectorNotId,
+			ID:    userSelectorID,
+			NotID: userSelectorNotID,
 			Group: userSelectorGroup,
 		}
 
@@ -62,7 +65,7 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetUser
+// GetUser ...
 // get a user by id or email (whatever is provided in the given respective order)
 func GetUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -72,11 +75,11 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 		id := vars["id"]
 
 		user := types.UserSpec{
-			Id: id,
+			ID: id,
 		}
 
-		user, err := users.GetUserById(db, id, false)
-		if err != nil || user.Id == "" {
+		user, err := users.GetUserByID(db, id, false)
+		if err != nil || user.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find user"
 			JSONresp := types.JSONMessageResponse{
@@ -105,7 +108,7 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PostUser
+// PostUser ...
 // create a user
 func PostUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -117,7 +120,7 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &user)
 
 		userAccount, err := users.CreateUser(db, user, user.Password == "")
-		if err == nil && userAccount.Id != "" {
+		if err == nil && userAccount.ID != "" {
 			code = http.StatusOK
 			response = "Created user account"
 		} else {
@@ -133,7 +136,7 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PutUser
+// PutUser ...
 // updates a user account by their id
 func PutUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -145,10 +148,10 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &userAccount)
 
 		vars := mux.Vars(r)
-		userId := vars["id"]
+		userID := vars["id"]
 
-		user, err := users.GetUserById(db, userId, false)
-		if err != nil || user.Id == "" {
+		user, err := users.GetUserByID(db, userID, false)
+		if err != nil || user.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find user"
 			JSONresp := types.JSONMessageResponse{
@@ -162,8 +165,8 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 		}
 
 		// TODO disallow admins to remove their own admin group access
-		userAccountUpdated, err := users.UpdateProfileAdmin(db, userId, userAccount)
-		if err == nil && userAccountUpdated.Id != "" {
+		userAccountUpdated, err := users.UpdateProfileAdmin(db, userID, userAccount)
+		if err == nil && userAccountUpdated.ID != "" {
 			code = http.StatusOK
 			response = "Successfully updated the user account"
 		} else {
@@ -180,7 +183,7 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PatchUser
+// PatchUser ...
 // patches a user account by their id
 func PatchUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -192,10 +195,10 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &userAccount)
 
 		vars := mux.Vars(r)
-		userId := vars["id"]
+		userID := vars["id"]
 
-		user, err := users.GetUserById(db, userId, false)
-		if err != nil || user.Id == "" {
+		user, err := users.GetUserByID(db, userID, false)
+		if err != nil || user.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find user"
 			JSONresp := types.JSONMessageResponse{
@@ -209,8 +212,8 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 		}
 
 		// TODO disallow admins to remove their own admin group access
-		userAccountPatched, err := users.PatchProfileAdmin(db, userId, userAccount)
-		if err == nil && userAccountPatched.Id != "" {
+		userAccountPatched, err := users.PatchProfileAdmin(db, userID, userAccount)
+		if err == nil && userAccountPatched.ID != "" {
 			code = http.StatusOK
 			response = "Successfully patched the user account"
 		} else {
@@ -227,7 +230,7 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// DeleteUser
+// DeleteUser ...
 // delete a user
 func DeleteUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -235,10 +238,10 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 		response := "Failed to delete user account"
 
 		vars := mux.Vars(r)
-		userId := vars["id"]
+		userID := vars["id"]
 
-		userInDB, err := users.GetUserById(db, userId, false)
-		if err != nil || userInDB.Id == "" {
+		userInDB, err := users.GetUserByID(db, userID, false)
+		if err != nil || userInDB.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find user"
 			JSONresp := types.JSONMessageResponse{
@@ -254,7 +257,7 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 		// TODO make sure that if any errors occur the user account still won't be deleted
 		// TODO make sure that admins can't be deleted
 
-		err = users.DeleteUserById(db, userInDB.Id)
+		err = users.DeleteUserByID(db, userInDB.ID)
 		if err == nil {
 			code = http.StatusOK
 			response = "Deleted user account"
@@ -272,7 +275,7 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetProfile
+// GetProfile ...
 // returns the authenticated user's profile
 func GetProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -280,7 +283,7 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 		response := "Failed to fetch user account"
 
 		user, err := users.GetProfile(db, r)
-		if err == nil && user.Id != "" {
+		if err == nil && user.ID != "" {
 			code = http.StatusOK
 			response = "Fetched user account"
 		} else {
@@ -297,7 +300,7 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PutProfile
+// PutProfile ...
 // Update a user account their id from their JWT
 func PutProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -308,9 +311,9 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &userAccount)
 
-		id, errId := users.GetIdFromJWT(db, r)
+		id, errID := users.GetIDFromJWT(db, r)
 		userAccountUpdated, err := users.UpdateProfile(db, id, userAccount)
-		if err == nil && errId == nil && userAccountUpdated.Id != "" {
+		if err == nil && errID == nil && userAccountUpdated.ID != "" {
 			code = http.StatusOK
 			response = "Successfully patched the user account"
 		} else {
@@ -327,7 +330,7 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PatchProfile
+// PatchProfile ...
 // patches a user account their id from their JWT
 func PatchProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -338,9 +341,9 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &userAccount)
 
-		id, errId := users.GetIdFromJWT(db, r)
+		id, errID := users.GetIDFromJWT(db, r)
 		userAccountPatched, err := users.PatchProfile(db, id, userAccount)
-		if err == nil && errId == nil && userAccountPatched.Id != "" {
+		if err == nil && errID == nil && userAccountPatched.ID != "" {
 			code = http.StatusOK
 			response = "Successfully patched the user account"
 		} else {
@@ -357,7 +360,7 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetSystemInitialized
+// GetSystemInitialized ...
 // check if the server has been initialized
 func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -382,7 +385,7 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// UserAuth
+// UserAuth ...
 // authenticate a user
 func UserAuth(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -395,18 +398,18 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &user)
 
 		userInDB, err := users.GetUserByEmail(db, user.Email, false)
-		if err != nil || userInDB.Id == "" {
+		if err != nil || userInDB.ID == "" {
 			response = "Unable to find the account"
 			code = http.StatusNotFound
 		}
-		if userInDB.Id != "" && userInDB.Registered == false {
+		if userInDB.ID != "" && userInDB.Registered == false {
 			response = "Account not yet registered"
 			code = http.StatusForbidden
 		}
 		// Check password locally, fall back to remote if incorrect
 		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
 		if err == nil && matches == true && code == http.StatusUnauthorized {
-			jwtToken, _ = users.GenerateJWTauthToken(db, userInDB.Id, userInDB.AuthNonce, 0)
+			jwtToken, _ = users.GenerateJWTauthToken(db, userInDB.ID, userInDB.AuthNonce, 0)
 			response = "Successfully authenticated user"
 			code = http.StatusOK
 		}
@@ -420,7 +423,7 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// UserAuthValidate
+// UserAuthValidate ...
 // validate an auth token
 func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -444,14 +447,14 @@ func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// UserAuthReset
+// UserAuthReset ...
 // invalidates all JWTs
 func UserAuthReset(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to sign out all devices logged in"
 		code := http.StatusInternalServerError
 
-		id, err := users.GetIdFromJWT(db, r)
+		id, err := users.GetIDFromJWT(db, r)
 		if err != nil {
 			response = "Failed to find account"
 			JSONresp := types.JSONMessageResponse{
@@ -476,7 +479,7 @@ func UserAuthReset(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// UserCanIgroup
+// UserCanIgroup ...
 // respond whether the current user account is in a group
 func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -487,7 +490,7 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 		groupName := vars["name"]
 
 		group, err := groups.GetGroupByName(db, groupName)
-		if err != nil || group.Id == "" {
+		if err != nil || group.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find group"
 			JSONresp := types.JSONMessageResponse{
@@ -500,9 +503,9 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		id, errId := users.GetIdFromJWT(db, r)
+		id, errID := users.GetIDFromJWT(db, r)
 		userIsInGroup, err := groups.CheckUserInGroup(db, id, groupName)
-		if err == nil && errId == nil {
+		if err == nil && errID == nil {
 			response = "Determined if user account can perform tasks of group"
 			code = http.StatusOK
 		}
@@ -517,7 +520,7 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetSettingsFlatName
+// GetSettingsFlatName ...
 // responds with the name of the flat
 func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -542,7 +545,7 @@ func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// SetSettingsFlatName
+// SetSettingsFlatName ...
 // update the flat's name
 func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -571,7 +574,7 @@ func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PostAdminRegister
+// PostAdminRegister ...
 // register the instance of FlatTrack
 func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -616,7 +619,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetShoppingList
+// GetShoppingList ...
 // responds with list of shopping lists
 func GetShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -627,7 +630,7 @@ func GetShoppingList(db *sql.DB) http.HandlerFunc {
 		id := vars["id"]
 
 		shoppingList, err := shoppinglist.GetShoppingList(db, id)
-		if err == nil && shoppingList.Id != "" {
+		if err == nil && shoppingList.ID != "" {
 			response = "Fetched the shopping lists"
 			code = http.StatusOK
 		}
@@ -641,7 +644,7 @@ func GetShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetShoppingLists
+// GetShoppingLists ...
 // responds with shopping list by id
 func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -663,7 +666,7 @@ func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PostShoppingList
+// PostShoppingList ...
 // creates a new shopping list to add items to
 func PostShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -680,10 +683,10 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 			},
 		}
 
-		id, errId := users.GetIdFromJWT(db, r)
+		id, errID := users.GetIDFromJWT(db, r)
 		shoppingList.Author = id
 		shoppingListInserted, err := shoppinglist.CreateShoppingList(db, shoppingList, options)
-		if err == nil && errId == nil {
+		if err == nil && errID == nil {
 			code = http.StatusOK
 			response = "Successfully created the shopping list"
 		} else {
@@ -700,7 +703,7 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PatchShoppingList
+// PatchShoppingList ...
 // patches an existing shopping list
 func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -712,10 +715,10 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &shoppingList)
 
 		vars := mux.Vars(r)
-		listId := vars["id"]
+		listID := vars["id"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -728,10 +731,10 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		id, errId := users.GetIdFromJWT(db, r)
+		id, errID := users.GetIDFromJWT(db, r)
 		shoppingList.AuthorLast = id
-		shoppingListPatched, err := shoppinglist.PatchShoppingList(db, listId, shoppingList)
-		if err == nil && errId == nil && shoppingListPatched.Id != "" {
+		shoppingListPatched, err := shoppinglist.PatchShoppingList(db, listID, shoppingList)
+		if err == nil && errID == nil && shoppingListPatched.ID != "" {
 			code = http.StatusOK
 			response = "Successfully patched the shopping list"
 		} else {
@@ -747,7 +750,7 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PutShoppingList
+// PutShoppingList ...
 // updates an existing shopping list
 func PutShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -759,10 +762,10 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &shoppingList)
 
 		vars := mux.Vars(r)
-		listId := vars["id"]
+		listID := vars["id"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -775,10 +778,10 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		id, errId := users.GetIdFromJWT(db, r)
+		id, errID := users.GetIDFromJWT(db, r)
 		shoppingList.AuthorLast = id
-		shoppingListUpdated, err := shoppinglist.UpdateShoppingList(db, listId, shoppingList)
-		if err == nil && errId == nil && shoppingListUpdated.Id != "" {
+		shoppingListUpdated, err := shoppinglist.UpdateShoppingList(db, listID, shoppingList)
+		if err == nil && errID == nil && shoppingListUpdated.ID != "" {
 			code = http.StatusOK
 			response = "Successfully updated the shopping list"
 		} else {
@@ -795,7 +798,7 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// DeleteShoppingList
+// DeleteShoppingList ...
 // delete a new shopping list by it's id
 func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -803,10 +806,10 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 		response := "Failed to delete the shopping list"
 
 		vars := mux.Vars(r)
-		listId := vars["id"]
+		listID := vars["id"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -819,7 +822,7 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		err = shoppinglist.DeleteShoppingList(db, listId)
+		err = shoppinglist.DeleteShoppingList(db, listID)
 		if err == nil {
 			code = http.StatusOK
 			response = "Successfully deleted the shopping list"
@@ -836,7 +839,7 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetShoppingListItems
+// GetShoppingListItems ...
 // responds with shopping items by list id
 func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -851,7 +854,7 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 		}
 
 		list, err := shoppinglist.GetShoppingList(db, id)
-		if err != nil || list.Id == "" {
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -880,7 +883,7 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetShoppingListItem
+// GetShoppingListItem ...
 // responds with list of shopping lists
 func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -888,11 +891,11 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 		code := http.StatusNotFound
 
 		vars := mux.Vars(r)
-		itemId := vars["itemId"]
-		listId := vars["listId"]
+		itemID := vars["itemId"]
+		listID := vars["listId"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -905,8 +908,8 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		shoppingListItem, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
-		if err == nil && shoppingListItem.Id != "" {
+		shoppingListItem, err := shoppinglist.GetShoppingListItem(db, listID, itemID)
+		if err == nil && shoppingListItem.ID != "" {
 			response = "Fetched the shopping list item"
 			code = http.StatusOK
 		}
@@ -920,7 +923,7 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PostItemToShoppingList
+// PostItemToShoppingList ...
 // adds an item to a shopping list
 func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -932,10 +935,10 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &shoppingItem)
 
 		vars := mux.Vars(r)
-		listId := vars["id"]
+		listID := vars["id"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -948,10 +951,10 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		id, errId := users.GetIdFromJWT(db, r)
+		id, errID := users.GetIDFromJWT(db, r)
 		shoppingItem.Author = id
-		shoppingItemInserted, err := shoppinglist.AddItemToList(db, listId, shoppingItem)
-		if err == nil && errId == nil {
+		shoppingItemInserted, err := shoppinglist.AddItemToList(db, listID, shoppingItem)
+		if err == nil && errID == nil {
 			code = http.StatusOK
 			response = "Successfully created the shopping list item"
 		} else {
@@ -968,7 +971,7 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PatchShoppingListCompleted
+// PatchShoppingListCompleted ...
 // adds an item to a shopping list
 func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -980,10 +983,10 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &shoppingList)
 
 		vars := mux.Vars(r)
-		listId := vars["id"]
+		listID := vars["id"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -996,9 +999,9 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		id, errId := users.GetIdFromJWT(db, r)
-		patchedList, err := shoppinglist.SetListCompleted(db, listId, shoppingList.Completed, id)
-		if err == nil && errId == nil {
+		id, errID := users.GetIDFromJWT(db, r)
+		patchedList, err := shoppinglist.SetListCompleted(db, listID, shoppingList.Completed, id)
+		if err == nil && errID == nil {
 			code = http.StatusOK
 			response = "Successfully patched the shopping list completed field"
 		} else {
@@ -1015,7 +1018,7 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PatchShoppingListItem
+// PatchShoppingListItem ...
 // patches an item in a shopping list
 func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1027,11 +1030,11 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &shoppingItem)
 
 		vars := mux.Vars(r)
-		itemId := vars["id"]
-		listId := vars["listId"]
+		itemID := vars["id"]
+		listID := vars["listId"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -1044,8 +1047,8 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		item, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
-		if err != nil || item.Id == "" {
+		item, err := shoppinglist.GetShoppingListItem(db, listID, itemID)
+		if err != nil || item.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list item"
 			JSONresp := types.JSONMessageResponse{
@@ -1058,10 +1061,10 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		id, errId := users.GetIdFromJWT(db, r)
+		id, errID := users.GetIDFromJWT(db, r)
 		shoppingItem.AuthorLast = id
-		patchedItem, err := shoppinglist.PatchItem(db, listId, itemId, shoppingItem)
-		if err == nil && errId == nil {
+		patchedItem, err := shoppinglist.PatchItem(db, listID, itemID, shoppingItem)
+		if err == nil && errID == nil {
 			code = http.StatusOK
 			response = "Successfully patched the shopping list item"
 		} else {
@@ -1078,7 +1081,7 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PutShoppingListItem
+// PutShoppingListItem ...
 // updates an item in a shopping list
 func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1090,11 +1093,11 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &shoppingItem)
 
 		vars := mux.Vars(r)
-		itemId := vars["id"]
-		listId := vars["listId"]
+		itemID := vars["id"]
+		listID := vars["listId"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -1107,8 +1110,8 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		item, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
-		if err != nil || item.Id == "" {
+		item, err := shoppinglist.GetShoppingListItem(db, listID, itemID)
+		if err != nil || item.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list item"
 			JSONresp := types.JSONMessageResponse{
@@ -1121,10 +1124,10 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		id, errId := users.GetIdFromJWT(db, r)
+		id, errID := users.GetIDFromJWT(db, r)
 		shoppingItem.AuthorLast = id
-		updatedItem, err := shoppinglist.UpdateItem(db, listId, itemId, shoppingItem)
-		if err == nil && errId == nil {
+		updatedItem, err := shoppinglist.UpdateItem(db, listID, itemID, shoppingItem)
+		if err == nil && errID == nil {
 			code = http.StatusOK
 			response = "Successfully updated the shopping list item"
 		} else {
@@ -1141,7 +1144,7 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// PatchShoppingListItemObtained
+// PatchShoppingListItemObtained ...
 // patches an item in a shopping list
 func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1153,11 +1156,11 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &shoppingItem)
 
 		vars := mux.Vars(r)
-		itemId := vars["id"]
-		listId := vars["listId"]
+		itemID := vars["id"]
+		listID := vars["listId"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -1170,8 +1173,8 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		item, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
-		if err != nil || item.Id == "" {
+		item, err := shoppinglist.GetShoppingListItem(db, listID, itemID)
+		if err != nil || item.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list item"
 			JSONresp := types.JSONMessageResponse{
@@ -1184,9 +1187,9 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		id, errId := users.GetIdFromJWT(db, r)
-		patchedItem, err := shoppinglist.SetItemObtained(db, listId, itemId, shoppingItem.Obtained, id)
-		if err == nil && errId == nil {
+		id, errID := users.GetIDFromJWT(db, r)
+		patchedItem, err := shoppinglist.SetItemObtained(db, listID, itemID, shoppingItem.Obtained, id)
+		if err == nil && errID == nil {
 			code = http.StatusOK
 			response = "Successfully patched the shopping list item obtained field"
 		} else {
@@ -1203,7 +1206,7 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// DeleteShoppingListItem
+// DeleteShoppingListItem ...
 // delete a shopping list item by it's id
 func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1211,11 +1214,11 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 		response := "Failed to delete the shopping list item"
 
 		vars := mux.Vars(r)
-		itemId := vars["itemId"]
-		listId := vars["listId"]
+		itemID := vars["itemId"]
+		listID := vars["listId"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -1228,8 +1231,8 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		item, err := shoppinglist.GetShoppingListItem(db, listId, itemId)
-		if err != nil || item.Id == "" {
+		item, err := shoppinglist.GetShoppingListItem(db, listID, itemID)
+		if err != nil || item.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list item"
 			JSONresp := types.JSONMessageResponse{
@@ -1242,7 +1245,7 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		err = shoppinglist.RemoveItemFromList(db, itemId, listId)
+		err = shoppinglist.RemoveItemFromList(db, itemID, listID)
 		if err == nil {
 			code = http.StatusOK
 			response = "Successfully deleted the shopping list item"
@@ -1259,7 +1262,7 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetShoppingListItemTags
+// GetShoppingListItemTags ...
 // responds with tags used in shopping list items from a list
 func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1267,9 +1270,9 @@ func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 		code := http.StatusInternalServerError
 
 		vars := mux.Vars(r)
-		listId := vars["listId"]
+		listID := vars["listId"]
 
-		tags, err := shoppinglist.GetShoppingListTags(db, listId)
+		tags, err := shoppinglist.GetShoppingListTags(db, listID)
 		if err == nil {
 			response = "Fetched the shopping list item tags"
 			code = http.StatusOK
@@ -1284,7 +1287,7 @@ func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// UpdateShoppingListItemTag
+// UpdateShoppingListItemTag ...
 // updates then tag name used in shopping list items from a list
 func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1292,11 +1295,11 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 		code := http.StatusInternalServerError
 
 		vars := mux.Vars(r)
-		listId := vars["listId"]
+		listID := vars["listId"]
 		tag := vars["tagName"]
 
-		list, err := shoppinglist.GetShoppingList(db, listId)
-		if err != nil || list.Id == "" {
+		list, err := shoppinglist.GetShoppingList(db, listID)
+		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
 			response = "Failed to find shopping list"
 			JSONresp := types.JSONMessageResponse{
@@ -1313,7 +1316,7 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &tagUpdate)
 
-		tag, err = shoppinglist.UpdateShoppingListTag(db, listId, tag, tagUpdate.Name)
+		tag, err = shoppinglist.UpdateShoppingListTag(db, listID, tag, tagUpdate.Name)
 		if err == nil {
 			response = "Updated the shopping list item tag name"
 			code = http.StatusOK
@@ -1328,7 +1331,7 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetAllShoppingListItemTags
+// GetAllShoppingListItemTags ...
 // responds with all tags used in shopping list items
 func GetAllShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1350,7 +1353,7 @@ func GetAllShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetAllGroups
+// GetAllGroups ...
 // returns a list of all groups
 func GetAllGroups(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1372,7 +1375,7 @@ func GetAllGroups(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetGroup
+// GetGroup ...
 // returns a group by id
 func GetGroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1382,8 +1385,8 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		id := vars["id"]
 
-		group, err := groups.GetGroupById(db, id)
-		if err == nil && group.Id != "" {
+		group, err := groups.GetGroupByID(db, id)
+		if err == nil && group.ID != "" {
 			response = "Fetched the groups"
 			code = http.StatusOK
 		}
@@ -1397,16 +1400,16 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetUserConfirms
+// GetUserConfirms ...
 // returns a list of account confirms
 func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch user account creation secrets"
 		code := http.StatusInternalServerError
 
-		userIdSelector := r.FormValue("userId")
+		userIDSelector := r.FormValue("userId")
 		userCreationSecretSelector := types.UserCreationSecretSelector{
-			UserId: userIdSelector,
+			UserID: userIDSelector,
 		}
 
 		creationSecrets, err := users.GetAllUserCreationSecrets(db, userCreationSecretSelector)
@@ -1424,7 +1427,7 @@ func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetUserConfirm
+// GetUserConfirm ...
 // returns an account confirm by id
 func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1435,7 +1438,7 @@ func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 		id := vars["id"]
 
 		creationSecret, err := users.GetUserCreationSecret(db, id)
-		if err == nil && creationSecret.Id != "" {
+		if err == nil && creationSecret.ID != "" {
 			response = "Fetched the user account creation secret"
 			code = http.StatusOK
 		}
@@ -1449,7 +1452,7 @@ func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetUserConfirmValid
+// GetUserConfirmValid ...
 // returns if an account confirm is valid by id
 func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1460,7 +1463,7 @@ func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 		id := vars["id"]
 
 		creationSecret, err := users.GetUserCreationSecret(db, id)
-		if err == nil && creationSecret.Id != "" {
+		if err == nil && creationSecret.ID != "" {
 			response = "Fetched the user account creation secret"
 			code = http.StatusOK
 		}
@@ -1468,13 +1471,13 @@ func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
 			},
-			Data: creationSecret.Id != "",
+			Data: creationSecret.ID != "",
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}
 }
 
-// PostUserConfirm
+// PostUserConfirm ...
 // confirm a user account
 func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -1508,7 +1511,7 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetVersion
+// GetVersion ...
 // returns version information about the instance
 func GetVersion(w http.ResponseWriter, r *http.Request) {
 	version := common.GetAppBuildVersion()
@@ -1530,7 +1533,7 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
-// Root
+// Root ...
 // /api endpoint
 func Root(w http.ResponseWriter, r *http.Request) {
 	JSONresp := types.JSONMessageResponse{
@@ -1541,7 +1544,7 @@ func Root(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
-// UnknownEndpoint
+// UnknownEndpoint ...
 // response for hitting an unknown endpoint
 func UnknownEndpoint(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusNotFound, types.JSONMessageResponse{
@@ -1551,7 +1554,7 @@ func UnknownEndpoint(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// HTTPvalidateJWT
+// HTTPvalidateJWT ...
 // middleware for checking JWT auth token validity
 func HTTPvalidateJWT(db *sql.DB) func(http.HandlerFunc) http.HandlerFunc {
 	return func(h http.HandlerFunc) http.HandlerFunc {
@@ -1569,14 +1572,14 @@ func HTTPvalidateJWT(db *sql.DB) func(http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// HTTPcheckGroupsFromId
-// middleware for checking if a route can be accessed given a Id and groupId
-func HTTPcheckGroupsFromId(db *sql.DB, groupsAllowed ...string) func(http.HandlerFunc) http.HandlerFunc {
+// HTTPcheckGroupsFromID ...
+// middleware for checking if a route can be accessed given a ID and groupID
+func HTTPcheckGroupsFromID(db *sql.DB, groupsAllowed ...string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			id, errId := users.GetIdFromJWT(db, r)
+			id, errID := users.GetIDFromJWT(db, r)
 			for _, group := range groupsAllowed {
-				if userInGroup, err := groups.CheckUserInGroup(db, id, group); userInGroup == true && err == nil && err == errId {
+				if userInGroup, err := groups.CheckUserInGroup(db, id, group); userInGroup == true && err == nil && err == errID {
 					h.ServeHTTP(w, r)
 					return
 				}

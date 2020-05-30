@@ -9,6 +9,8 @@ import (
 	"net/http"
 )
 
+// healthz ...
+// HTTP handler for health checks
 func healthz(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "App unhealthy"
@@ -29,7 +31,7 @@ func healthz(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// Handle
+// Handle ...
 func Handle(db *sql.DB) {
 	http.Handle("/_healthz", healthz(db))
 	log.Println("Health listening on :8081")

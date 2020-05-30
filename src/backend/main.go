@@ -3,16 +3,32 @@
     initialize the app
 */
 
+// Package classification for FlatTrack API.
+//
+//     Schemes: http
+//     Host: localhost
+//     BasePath: /api
+//     Version: 0.0.1-alpha6
+//     License: AGPL-3.0 http://www.gnu.org/licenses/agpl-3.0.html
+//     Contact: Caleb Woodbine <calebwoodbine.public@gmail.com>
+//
+//     Consumes:
+//     - application/json
+//
+//     Produces:
+//     - application/json
+//
+// swagger:meta
 package main
 
 import (
 	"github.com/joho/godotenv"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/database"
+	"gitlab.com/flattrack/flattrack/src/backend/health"
+	"gitlab.com/flattrack/flattrack/src/backend/metrics"
 	"gitlab.com/flattrack/flattrack/src/backend/migrations"
 	"gitlab.com/flattrack/flattrack/src/backend/routes"
-	"gitlab.com/flattrack/flattrack/src/backend/metrics"
-	"gitlab.com/flattrack/flattrack/src/backend/health"
 	"log"
 )
 
