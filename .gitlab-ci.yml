@@ -14,8 +14,8 @@ variables:
   APP_BUILD_VERSION: 0.0.0
   APP_BUILD_MODE: development
   POSTGRES_DB: flattrack
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: postgres
+  POSTGRES_USER: flattrack
+  POSTGRES_PASSWORD: flattrack
 
 .docker-build-pre-script: &docker-build-pre-script |
   set -x

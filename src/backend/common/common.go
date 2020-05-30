@@ -43,7 +43,7 @@ func GetDBdatabase() (output string) {
 // GetDBusername ...
 // return the database user to use
 func GetDBusername() (output string) {
-	return GetEnvOrDefault("APP_DB_USERNAME", "postgres")
+	return GetEnvOrDefault("APP_DB_USERNAME", "flattrack")
 }
 
 // GetDBhost ...
@@ -55,7 +55,7 @@ func GetDBhost() (output string) {
 // GetDBpassword ...
 // return the database password to use
 func GetDBpassword() (output string) {
-	return GetEnvOrDefault("APP_DB_PASSWORD", "postgres")
+	return GetEnvOrDefault("APP_DB_PASSWORD", "flattrack")
 }
 
 // GetMigrationsPath ...
