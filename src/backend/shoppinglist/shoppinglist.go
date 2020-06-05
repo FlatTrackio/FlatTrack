@@ -97,6 +97,7 @@ func GetShoppingList(db *sql.DB, listID string) (shoppingList types.ShoppingList
 // GetShoppingListItems ...
 // returns a list of items on a shopping list
 func GetShoppingListItems(db *sql.DB, listID string, options types.ShoppingItemOptions) (items []types.ShoppingItemSpec, err error) {
+	// sort by tags
 	sqlStatement := `select * from shopping_item where listId = $1 order by tag asc, name asc`
 	if options.SortBy == types.ShoppingItemSortByHighestPrice {
 		sqlStatement = `select * from shopping_item where listId = $1 order by price desc, name asc`

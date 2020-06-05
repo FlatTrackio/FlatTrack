@@ -9,7 +9,7 @@
             </ul>
         </nav>
         <h1 class="title is-1">Accounts</h1>
-        <p class="subtitle is-3">Manage the account of your flatmates</p>
+        <p class="subtitle is-4">Manage the account of your flatmates</p>
         <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <div>
           <section>

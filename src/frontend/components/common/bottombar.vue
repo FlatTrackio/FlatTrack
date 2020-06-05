@@ -1,5 +1,5 @@
 <template>
-  <div class="bottombar">
+  <div :class="ratherSmallerScreen ? 'bottombar bottombar-fixed' : 'bottombar'">
     <md-bottom-bar class="md-accent bottombar-background" md-sync-route>
       <md-bottom-bar-item to="/" exact md-label="Home" md-icon="home"></md-bottom-bar-item>
       <md-bottom-bar-item to="/apps" md-label="Apps" md-icon="apps"></md-bottom-bar-item>
@@ -11,12 +11,14 @@
 
 <script>
 import cani from '@/frontend/requests/authenticated/can-i'
+import common from '@/frontend/common/common'
 
 export default {
   name: 'bottombar',
   data () {
     return {
-      canUserAccountAdmin: false
+      canUserAccountAdmin: false,
+      ratherSmallScreen: false
     }
   },
   methods: {
@@ -28,13 +30,20 @@ export default {
   },
   async beforeMount () {
     this.CanIadmin()
+    if (window.innerWidth >= 330) {
+      this.ratherSmallerScreen = true
+    }
   }
 }
 </script>
 
 <style>
-.bottombar {
+.bottombar-fixed {
     position: fixed;
+}
+
+.bottombar {
+    #position: fixed;
     width: 100%;
     bottom: 0;
     display: inline-flex;

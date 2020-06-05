@@ -4,7 +4,7 @@
       <div class="container">
         <section class="section form-width">
           <h1 class="title is-1">Login</h1>
-          <p class="subtitle is-3">
+          <p class="subtitle is-4">
               Welcome to FlatTrack, please login.
           </p>
           <b-field label="Email" class="is-marginless">

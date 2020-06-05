@@ -1,7 +1,7 @@
 <template>
   <div>
     <div v-if="HeaderIsSticky && !editing" class="ListBar">
-      <p class="subtitle is-4">
+      <p class="subtitle is-5">
         <b>{{ name }}</b>
         ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
         <span @click="PatchShoppingListCompleted(id, !completed)" class="display-is-editable pointer-cursor-on-hover">
@@ -174,14 +174,21 @@
                 </b-field>
                 <br/>
               </div>
-              <div @click="TagTmp = itemTag.tag; editingTag = itemTag.tag; editing = true" v-else>
-                <p class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover">
-                  {{ itemTag.tag }}
-                  <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
-                    (${{ itemTag.price.toFixed(2) }})
-                  </span>
-                </p>
-                <br/>
+              <div v-else>
+                <div class="field">
+                  <p class="control">
+                    <b-button type="is-text" class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover" @click="TagTmp = itemTag.tag; editingTag = itemTag.tag; editing = true">
+                      {{ itemTag.tag }}
+                      <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
+                        (${{ itemTag.price.toFixed(2) }})
+                      </span>
+                    </b-button>
+                    <b-button
+                      icon-left="plus-box"
+                      size="medium">
+                    </b-button>
+                  </p>
+                </div>
               </div>
               <transition-group
                 name="staggered-fade"
@@ -611,5 +618,6 @@ export default {
     display: block;
     background-color: hsla(0,0%,100%,.73);
     backdrop-filter: blur(5px);
+    top: 0;
 }
 </style>

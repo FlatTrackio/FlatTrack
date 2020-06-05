@@ -9,7 +9,7 @@
             </ul>
         </nav>
         <h1 class="title is-1">Settings</h1>
-        <p class="subtitle is-3">General FlatTrack settings</p>
+        <p class="subtitle is-4">General FlatTrack settings</p>
         <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <div>
           <label class="label">Flat name</label>

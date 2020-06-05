@@ -11,7 +11,7 @@
         <div>
           <b-loading :is-full-page="false" :active.sync="itemIsLoading" :can-cancel="false"></b-loading>
           <h1 class="title is-1">{{ name || 'Unnamed item' }}</h1>
-          <p class="subtitle is-3">View or edit this item</p>
+          <p class="subtitle is-4">View or edit this item</p>
           <p>
             Added {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
           </p>

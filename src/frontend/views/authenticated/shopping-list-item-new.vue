@@ -152,6 +152,9 @@ export default {
     }).then(resp => {
       this.tags = resp.data.list || []
     })
+    if (this.$route.query.tag) {
+      this.tag = this.$route.query.tag
+    }
   }
 }
 </script>

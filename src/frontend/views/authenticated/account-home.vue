@@ -3,7 +3,7 @@
     <div class="container">
       <section class="section">
         <h1 class="title is-1">My Account</h1>
-        <p class="subtitle is-3">Manage your account</p>
+        <p class="subtitle is-4">Manage your account</p>
         <p></p>
         <br>
         <div v-for="app in apps" v-bind:key="app" >

@@ -10,7 +10,7 @@
           </ul>
           </nav>
           <h1 class="title is-1">Forgot Password</h1>
-          <p class="subtitle is-3">Enter you email to reset your password</p>
+          <p class="subtitle is-4">Enter you email to reset your password</p>
           <b-field label="Email" class="is-marginless">
             <b-input
               type="email"

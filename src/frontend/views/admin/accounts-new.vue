@@ -9,7 +9,7 @@
             </ul>
         </nav>
         <h1 class="title is-1">New account</h1>
-        <p class="subtitle is-3">Add a new flatmate</p>
+        <p class="subtitle is-4">Add a new flatmate</p>
 
         <b-field label="Names">
           <b-input type="text"

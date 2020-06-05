@@ -9,7 +9,7 @@
             </ul>
         </nav>
         <h1 class="title is-1">Edit account</h1>
-        <p class="subtitle is-3">Edit an existing user account</p>
+        <p class="subtitle is-4">Edit an existing user account</p>
         <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <div v-if="registered !== true">
           <div class="notification is-warning">

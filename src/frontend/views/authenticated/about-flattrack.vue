@@ -13,7 +13,7 @@
         <b-message type="is-primary" has-icon icon="help">
           <p class="is-size-5">
             FlatTrack is a
-            <a href="https://simple.wikipedia.org/wiki/Free_and_open-source_software" target="_blank">Free and Open Source</a>
+            <a href="https://simple.wikipedia.org/wiki/Free_and_open-source_software" target="_blank" rel="noreferrer">Free and Open Source</a>
             collaboration software for flats / community houses and homes
             with the goals of <b>easing common tasks</b> in living environments, <b>enabling closer collaboration</b>, and <b>empowering humans who live together</b>.
           </p>
@@ -24,7 +24,7 @@
             <b>Version</b>: {{ version || 'Unknown' }}
             <br/>
             <b>Commit hash</b>:
-            <a v-if="commitHash !== '???' && typeof commitHash !== 'undefined'" :href="'https://gitlab.com/flattrack/flattrack/-/commit/' + commitHash" target="_blank">{{ commitHash }}</a>
+            <a v-if="commitHash !== '???' && typeof commitHash !== 'undefined'" :href="'https://gitlab.com/flattrack/flattrack/-/commit/' + commitHash" target="_blank" rel="noreferrer">{{ commitHash }}</a>
             <span v-else>
               Unknown
             </span>

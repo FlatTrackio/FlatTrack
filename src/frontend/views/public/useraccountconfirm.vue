@@ -4,11 +4,11 @@
     <div class="container">
       <section class="section">
         <h1 class="title is-1">Confirm your account</h1>
-        <p class="subtitle is-3">
+        <p class="subtitle is-4">
           Final things to complete your sign up
         </p>
 
-        <b-message type="is-danger" has-icon v-if="(typeof id === 'undefined' || id === '') || idValid !== true">
+        <b-message type="is-danger" has-icon v-if="((typeof id === 'undefined' || id === '') || idValid !== true) && pageHasLoaded === true">
           Token Id is missing or is invalid.
           <br/>
           <br/>
@@ -119,6 +119,7 @@ export default {
       focusedDate: maxDate,
       idValid: false,
       jsBirthday: null,
+      pageHasLoaded: false,
       id: this.$route.params.id,
       secret: this.$route.query.secret,
       phoneNumber: null,
@@ -161,6 +162,7 @@ export default {
   async beforeMount () {
     confirm.GetTokenValid(this.id).then(resp => {
       this.idValid = resp.data.data
+      this.pageHasLoaded = true
     })
   }
 }
