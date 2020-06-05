@@ -1,6 +1,6 @@
 <template>
   <div id="topbar">
-    <b-navbar type="is-info" class="gradient-blue" shadow="true" transparent="false">
+    <b-navbar :fixed-top="ratherSmallerScreen !== true" type="is-info" class="gradient-blue" shadow="true" transparent="false">
       <template slot="brand">
         <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
           <img
@@ -43,7 +43,8 @@ export default {
   name: 'topbar',
   data () {
     return {
-      flatName: 'My Flat'
+      flatName: 'My Flat',
+      ratherSmallerScreen: false
     }
   },
   methods: {
@@ -58,6 +59,9 @@ export default {
   },
   async beforeMount () {
     this.GetFlatInfo()
+    if (window.innerWidth <= 330) {
+      this.ratherSmallerScreen = true
+    }
   }
 }
 </script>

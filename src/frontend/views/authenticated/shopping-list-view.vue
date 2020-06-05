@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="HeaderIsSticky && !editing" class="ListBar">
+    <div v-if="HeaderIsSticky && !editing" :class="ratherSmallerScreen ? 'ListBar ListBarTop' : 'ListBar'">
       <p class="subtitle is-5">
         <b>{{ name }}</b>
         ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
@@ -179,18 +179,14 @@
                   <p class="control">
                     <b-button type="is-text" class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover" @click="TagTmp = itemTag.tag; editingTag = itemTag.tag; editing = true">
                       {{ itemTag.tag }}
-                      <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
-                        (${{ itemTag.price.toFixed(2) }})
-                      </span>
                     </b-button>
-                    <b-tooltip label="Add new item with tag">
-                      <b-button
-                        icon-left="plus-box"
-                        size="medium"
-                        tag="router-link"
-                        :to="{ name: 'New shopping list item', query: { 'tag': itemTag.tag }}">
-                      </b-button>
-                    </b-tooltip>
+                    <b-button
+                      style="float: right; display: block;"
+                      icon-left="plus-box"
+                      size="medium"
+                      tag="router-link"
+                      :to="{ name: 'New shopping list item', query: { 'tag': itemTag.tag }}">
+                    </b-button>
                   </p>
                 </div>
               </div>
@@ -209,6 +205,9 @@
                 <br/>
                 <p>
                   {{ itemTag.items.length || 0 }} item(s)
+                  <span v-if="itemTag.price !== 0 && typeof itemTag.price !== 'undefined'">
+                    - ${{ itemTag.price.toFixed(2) }}
+                  </span>
                 </p>
               </section>
               <br/>
@@ -320,6 +319,7 @@ export default {
       listIsLoading: true,
       hasInitialLoaded: false,
       deleteLoading: false,
+      ratherSmallerScreen: false,
       id: this.$route.params.id,
       name: 'Unnamed list',
       notes: '',
@@ -576,6 +576,9 @@ export default {
     this.itemSearch = shoppinglistCommon.GetShoppingListSearch(this.id) || ''
     this.GetShoppingList()
     this.GetShoppingListItems()
+    if (window.innerWidth <= 330) {
+      this.ratherSmallerScreen = true
+    }
   },
   async created () {
     this.itemDisplayState = shoppinglistCommon.GetShoppingListObtainedFilter(this.id) || 0
@@ -622,6 +625,9 @@ export default {
     display: block;
     background-color: hsla(0,0%,100%,.73);
     backdrop-filter: blur(5px);
+}
+
+.ListBarTop {
     top: 0;
 }
 </style>
