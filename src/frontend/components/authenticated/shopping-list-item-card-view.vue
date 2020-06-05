@@ -35,14 +35,24 @@
             </div>
           </div>
           <div class="media-right">
-            <b-button
-              type="is-danger"
-              icon-right="delete"
-              :loading="itemDeleting"
-              v-if="deviceIsMobile === false"
-              @click="DeleteShoppingListItem(item.id, index)" />
+            <b-tooltip label="Duplicate" class="is-paddingless" :delay="200">
+              <b-button
+                type="is-white"
+                icon-right="content-duplicate"
+                v-if="deviceIsMobile === false"
+                @click="PostShoppingListItem(listId, item.name, item.notes, item.price, item.quantity, item.tag)" />
+            </b-tooltip>
+
+            <b-tooltip label="Delete" class="is-paddingless" :delay="200">
+              <b-button
+                type="is-danger"
+                icon-right="delete"
+                :loading="itemDeleting"
+                v-if="deviceIsMobile === false"
+                @click="DeleteShoppingListItem(item.id, index)" />
+            </b-tooltip>
             <span class="pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + listId + '/item/' + item.id)">
-              <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
             </span>
           </div>
         </div>
@@ -95,6 +105,37 @@ export default {
           }).catch(err => {
             common.DisplayFailureToast('Failed to delete shopping list item' + ' - ' + err.response.data.metadata.response)
             this.itemDeleting = false
+          })
+        }
+      })
+    },
+    PostShoppingListItem (listId, name, notes, price, quantity, tag) {
+      Dialog.confirm({
+        title: 'Duplicate item',
+        message: 'Are you sure that you wish to duplicate this shopping list item?',
+        confirmText: 'Duplicate item',
+        type: 'is-warning',
+        hasIcon: true,
+        onConfirm: () => {
+          this.submitLoading = true
+          if (notes === '') {
+            notes = undefined
+          }
+          if (price === 0) {
+            price = undefined
+          } else {
+            price = parseFloat(price)
+          }
+
+          shoppinglist.PostShoppingListItem(listId, name, notes, price, quantity, tag).then(resp => {
+            var item = resp.data.spec
+            if (item.id === '' || typeof item.id === 'undefined') {
+              this.submitLoading = false
+              common.DisplayFailureToast('Unable to find created shopping item')
+            }
+          }).catch(err => {
+            this.submitLoading = false
+            common.DisplayFailureToast(`Failed to add shopping list item - ${err.response.data.metadata.response}`)
           })
         }
       })

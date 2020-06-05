@@ -23,7 +23,7 @@ ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
 ARG AppBuildDate="???"
 ARG AppBuildMode="development"
-ARG GOARCH="amd64"
+ARG GOARCH=""
 RUN CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
   -a \
   -installsuffix cgo \

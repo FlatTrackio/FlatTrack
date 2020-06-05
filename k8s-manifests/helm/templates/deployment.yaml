@@ -91,19 +91,14 @@ spec:
               containerPort: 8081
               protocol: TCP
           livenessProbe:
-            tcpSocket:
-              port: http
-            # httpGet:
-            #   path: /_healthz
-            #   port: health
+            httpGet:
+              path: /_healthz
+              port: health
             initialDelaySeconds: 2
             periodSeconds: 10
           readinessProbe:
             tcpSocket:
               port: http
-            # httpGet:
-            #   path: /_healthz
-            #   port: health
             initialDelaySeconds: 2
             periodSeconds: 10
           resources:

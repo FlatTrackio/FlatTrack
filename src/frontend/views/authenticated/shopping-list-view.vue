@@ -183,10 +183,14 @@
                         (${{ itemTag.price.toFixed(2) }})
                       </span>
                     </b-button>
-                    <b-button
-                      icon-left="plus-box"
-                      size="medium">
-                    </b-button>
+                    <b-tooltip label="Add new item with tag">
+                      <b-button
+                        icon-left="plus-box"
+                        size="medium"
+                        tag="router-link"
+                        :to="{ name: 'New shopping list item', query: { 'tag': itemTag.tag }}">
+                      </b-button>
+                    </b-tooltip>
                   </p>
                 </div>
               </div>
