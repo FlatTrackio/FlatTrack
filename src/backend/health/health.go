@@ -5,6 +5,7 @@ import (
 	"gitlab.com/flattrack/flattrack/src/backend/database"
 	"gitlab.com/flattrack/flattrack/src/backend/routes"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
+	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"log"
 	"net/http"
 )
@@ -33,7 +34,8 @@ func healthz(db *sql.DB) http.HandlerFunc {
 
 // Handle ...
 func Handle(db *sql.DB) {
+	port := common.GetAppHealthPort()
 	http.Handle("/_healthz", healthz(db))
-	log.Println("Health listening on :8081")
-	http.ListenAndServe(":8081", nil)
+	log.Printf("Health listening on %v", port)
+	http.ListenAndServe(port, nil)
 }

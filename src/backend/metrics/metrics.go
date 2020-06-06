@@ -4,12 +4,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
+	"gitlab.com/flattrack/flattrack/src/backend/common"
 )
 
 // Handle ...
 // HTTP handler for metrics
 func Handle() {
+	port := common.GetAppMetricsPort()
 	http.Handle("/metrics", promhttp.Handler())
-	log.Println("Metrics listening on :2112")
-	http.ListenAndServe(":2112", nil)
+	log.Printf("Metrics listening on %v\n", port)
+	http.ListenAndServe(port, nil)
 }

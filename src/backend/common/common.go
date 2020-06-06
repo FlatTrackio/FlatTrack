@@ -78,6 +78,18 @@ func GetAppPort() (output string) {
 	return GetEnvOrDefault("APP_PORT", ":8080")
 }
 
+// GetAppMetricsPort ...
+// return the port which the app should serve metrics on
+func GetAppMetricsPort() (output string) {
+	return GetEnvOrDefault("APP_PORT_METRICS", ":2112")
+}
+
+// GetAppHealthPort ...
+// return the port which the app should serve health on
+func GetAppHealthPort() (output string) {
+	return GetEnvOrDefault("APP_PORT_HEALTH", ":8081")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {
