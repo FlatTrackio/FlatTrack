@@ -16,6 +16,7 @@ The project must be:
 - portable: it must be easy to pick up an instance and take it somewhere else
 - conformant: no matter where it runs, it should be expected to be the same
 - tested: it should be well-tested and audited for quality and consistency
+- using open standards: 
 
 * API
 The API must be:

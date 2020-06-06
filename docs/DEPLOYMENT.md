@@ -1,70 +1,84 @@
 - [Kubernetes (recommended)](#sec-1)
-  - [Helm](#sec-1-1)
-    - [Configuration](#sec-1-1-1)
-    - [Installation](#sec-1-1-2)
+    - [Helm](#sec-1-0-1)
 - [Docker-compose](#sec-2)
+- [Plain Ubuntu server](#sec-3)
+    - [Install packages](#sec-3-0-1)
+    - [DNS](#sec-3-0-2)
+    - [Set up LetsEncrypt with certbot](#sec-3-0-3)
+    - [Create FlatTrack user](#sec-3-0-4)
+    - [Set up Postgres](#sec-3-0-5)
+    - [Set up nginx](#sec-3-0-6)
+    - [Build FlatTrack](#sec-3-0-7)
+    - [Clone FlatTrack](#sec-3-0-8)
+    - [Build the frontend](#sec-3-0-9)
+    - [Build the backend](#sec-3-0-10)
+    - [Move files into place](#sec-3-0-11)
+    - [Install a systemd service](#sec-3-0-12)
+    - [Start FlatTrack](#sec-3-0-13)
+    - [Notes](#sec-3-0-14)
 
+To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATION.md).
 
 # Kubernetes (recommended)<a id="sec-1"></a>
 
-## Helm<a id="sec-1-1"></a>
+### Helm<a id="sec-1-0-1"></a>
 
-### Configuration<a id="sec-1-1-1"></a>
+1.  Configuration
 
-Chart values are located in [../k8s-manifests/helm/values.yaml](https://gitlab.com/flattrack/flattrack/-/blob/master/k8s-manifests/helm/values.yaml).
+    Chart values are located in [../k8s-manifests/helm/values.yaml](https://gitlab.com/flattrack/flattrack/-/blob/master/k8s-manifests/helm/values.yaml).
+    
+    | Parameter                                             | Description                                                  | Default                                 |
+    |----------------------------------------------------- |------------------------------------------------------------ |--------------------------------------- |
+    | replicaCount                                          | FlatTrack replica Pods                                       | 1                                       |
+    | image.repository                                      | The repo where the image lives                               | registry.gitlab.com/flattrack/flattrack |
+    | image.tag                                             | Specifies a tag of from the image to use                     | `nil`                                   |
+    | image.pullPolicy                                      | FlatTrack container pull policy                              | IfNotPresent                            |
+    | imagePullSecrets                                      | References for the registry secrets to pull FlatTrack from   | `[]`                                    |
+    | nameOverride                                          | Expand the name of the chart                                 | `""`                                    |
+    | fullNameOverride                                      | Create a FQDN for the app name                               | `""`                                    |
+    | podSecurityContext.readOnlyRootFilesystem             | Set the rootfs as read-only                                  | true                                    |
+    | podSecurityContext.runAsUser                          | The user to run as                                           | 1000                                    |
+    | podSecurityContext.runAsGroup                         | The group to run as                                          | 1000                                    |
+    | podSecurityContext.allowPrivilegeEscalation           | If the process in the container can become root              | true                                    |
+    | service.type                                          | In way which the app is exposed                              | ClusterIP                               |
+    | service.port                                          | The port to run the app on                                   | 8080                                    |
+    | horizonalPodAutoscaler.enabled                        | If the Pods should autoscale                                 | true                                    |
+    | horizonalPodAutoscaler.minReplicas                    | Minimum amount of Pods                                       | 2                                       |
+    | horizonalPodAutoscaler.maxReplicas                    | Maximum amount of Pods                                       | 5                                       |
+    | horizonalPodAutoscaler.targetCPUUtilizationPercentage | How much resource should be utilized before scaling          | 5                                       |
+    | podDisruptionBudget.enabled                           | define the max number of disruptions allowed                 | enable                                  |
+    | podDisruptionBudget.minAvailable                      | minimum number of Pods that should always be available       | 2                                       |
+    | podDisruptionBudget.maxUnavailable                    | max amount of Pods that are allowed to be unavailable        |                                         |
+    | prometheus.enabled                                    | enable Prometheus annotations                                | true                                    |
+    | extraEnvVars                                          | declare extra environment variables                          |                                         |
+    | postgres.username                                     | the username for an existing Postgres databse                | flattrack                               |
+    | postgres.password                                     | the password for an existing Postgres databse                | flattrack                               |
+    | postgres.host                                         | the host for an existing Postgres databse                    | flattrack                               |
+    | postgres.database                                     | the database for an existing Postgres databse                | flattrack                               |
+    | labels                                                | declare labels for all resources                             | `{}`                                    |
+    | annotations                                           | declare annotations for all resources                        | `{}`                                    |
+    | ingress.enabled                                       | create an ingress manifests                                  | false                                   |
+    | ingress.annotations                                   | set annotations for the ingress manifest                     | `{}`                                    |
+    | ingress.hosts                                         | the hosts which the ingress endpoint should be accessed from |                                         |
+    | ingress.tls                                           | references to TLS secrets                                    | `[]`                                    |
+    | resources.limits.cpu                                  | max amount of CPU                                            | 1m                                      |
+    | resources.limits.memory                               | max amount of memory                                         | 20Mi                                    |
+    | resources.resources.cpu                               | requested amount of CPU                                      | 1m                                      |
+    | resources.limits.memory                               | max amount of memory                                         | 20Mi                                    |
+    | nodeSelector                                          | delcare the node labels for Pod scheduling                   | `{}`                                    |
+    | tolerations                                           | declare the toleration labels for Pod scheduling             | `[]`                                    |
+    | affinity                                              | declare the affinity settings for the Pod scheduling         | `{}`                                    |
 
-| Parameter                                             | Description                                                  | Default                                 |
-|----------------------------------------------------- |------------------------------------------------------------ |--------------------------------------- |
-| replicaCount                                          | FlatTrack replica Pods                                       | 1                                       |
-| image.repository                                      | The repo where the image lives                               | registry.gitlab.com/flattrack/flattrack |
-| image.tag                                             | Specifies a tag of from the image to use                     | `nil`                                   |
-| image.pullPolicy                                      | FlatTrack container pull policy                              | IfNotPresent                            |
-| imagePullSecrets                                      | References for the registry secrets to pull FlatTrack from   | `[]`                                    |
-| nameOverride                                          | Expand the name of the chart                                 | `""`                                    |
-| fullNameOverride                                      | Create a FQDN for the app name                               | `""`                                    |
-| podSecurityContext.readOnlyRootFilesystem             | Set the rootfs as read-only                                  | true                                    |
-| podSecurityContext.runAsUser                          | The user to run as                                           | 1000                                    |
-| podSecurityContext.runAsGroup                         | The group to run as                                          | 1000                                    |
-| podSecurityContext.allowPrivilegeEscalation           | If the process in the container can become root              | true                                    |
-| service.type                                          | In way which the app is exposed                              | ClusterIP                               |
-| service.port                                          | The port to run the app on                                   | 8080                                    |
-| horizonalPodAutoscaler.enabled                        | If the Pods should autoscale                                 | true                                    |
-| horizonalPodAutoscaler.minReplicas                    | Minimum amount of Pods                                       | 2                                       |
-| horizonalPodAutoscaler.maxReplicas                    | Maximum amount of Pods                                       | 5                                       |
-| horizonalPodAutoscaler.targetCPUUtilizationPercentage | How much resource should be utilized before scaling          | 5                                       |
-| podDisruptionBudget.enabled                           | define the max number of disruptions allowed                 | enable                                  |
-| podDisruptionBudget.minAvailable                      | minimum number of Pods that should always be available       | 2                                       |
-| podDisruptionBudget.maxUnavailable                    | max amount of Pods that are allowed to be unavailable        |                                         |
-| prometheus.enabled                                    | enable Prometheus annotations                                | true                                    |
-| extraEnvVars                                          | declare extra environment variables                          |                                         |
-| postgres.username                                     | the username for an existing Postgres databse                | flattrack                               |
-| postgres.password                                     | the password for an existing Postgres databse                | flattrack                               |
-| postgres.host                                         | the host for an existing Postgres databse                    | flattrack                               |
-| postgres.database                                     | the database for an existing Postgres databse                | flattrack                               |
-| labels                                                | declare labels for all resources                             | `{}`                                    |
-| annotations                                           | declare annotations for all resources                        | `{}`                                    |
-| ingress.enabled                                       | create an ingress manifests                                  | false                                   |
-| ingress.annotations                                   | set annotations for the ingress manifest                     | `{}`                                    |
-| ingress.hosts                                         | the hosts which the ingress endpoint should be accessed from |                                         |
-| ingress.tls                                           | references to TLS secrets                                    | `[]`                                    |
-| resources.limits.cpu                                  | max amount of CPU                                            | 1m                                      |
-| resources.limits.memory                               | max amount of memory                                         | 20Mi                                    |
-| resources.resources.cpu                               | requested amount of CPU                                      | 1m                                      |
-| resources.limits.memory                               | max amount of memory                                         | 20Mi                                    |
-| nodeSelector                                          | delcare the node labels for Pod scheduling                   | `{}`                                    |
-| tolerations                                           | declare the toleration labels for Pod scheduling             | `[]`                                    |
-| affinity                                              | declare the affinity settings for the Pod scheduling         | `{}`                                    |
+2.  Installation
 
-### Installation<a id="sec-1-1-2"></a>
-
-```sh
-# create the namespace
-kubectl create namespace flattrack-myflat
-
-# TODO use url instead of path
-# install
-helm install flattrack-myflat --namespace flattrack-myflat k8s-manifests/helm
-```
+    ```sh
+    # create the namespace
+    kubectl create namespace flattrack-myflat
+    
+    # TODO use url instead of path
+    # install
+    helm install flattrack-myflat --namespace flattrack-myflat k8s-manifests/helm
+    ```
 
 # Docker-compose<a id="sec-2"></a>
 
@@ -73,6 +87,295 @@ The example set up in Docker-compose for FlatTrack is located in [../docker-comp
 -   the docker-compose deployment doesn't include SSL/TLS in the stack, so if you wish to deploy it you will need to add a reverse-proxy to handle SSL/TLS - this isn't something that FlatTrack implements.
 -   ensure that the credentials are updated
 
+Deploy the docker-compose stack:
+
 ```sh
 docker-compose up -d
 ```
+
+# Plain Ubuntu server<a id="sec-3"></a>
+
+Set up FlatTrack on an Ubuntu 18.04 server using systemd, certbot, and nginx. This has been tested on Ubuntu 18.04 and will very likely work on later versions.
+
+Commands are run as root.
+
+### Install packages<a id="sec-3-0-1"></a>
+
+```sh
+apt update && apt upgrade -y
+apt install -y nginx postgresql software-properties-common
+
+add-apt-repository universe
+add-apt-repository ppa:certbot/certbot
+add-apt-repository ppa:longsleep/golang-backports
+curl -sL https://deb.nodesource.com/setup_14.x | bash -
+apt update
+apt install -y certbot python3-certbot-nginx golang-go nodejs
+```
+
+### DNS<a id="sec-3-0-2"></a>
+
+Assign a host to your VPS.
+
+e.g:
+
+```example
+flattrack.mydomain.com. 443 IN A	159.89.157.114
+```
+
+### Set up LetsEncrypt with certbot<a id="sec-3-0-3"></a>
+
+```sh
+certbot --nginx
+```
+
+Notes:
+
+-   recommended redirection of traffic to HTTPS
+    
+        Saving debug log to /var/log/letsencrypt/letsencrypt.log
+        Plugins selected: Authenticator nginx, Installer nginx
+        Enter email address (used for urgent renewal and security notices) (Enter 'c' to
+        cancel): EMAIL@ADDRESS.COM
+        
+        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Please read the Terms of Service at
+        https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf. You must
+        agree in order to register with the ACME server at
+        https://acme-v02.api.letsencrypt.org/directory
+        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        (A)gree/(C)ancel: a
+        
+        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Would you be willing to share your email address with the Electronic Frontier
+        Foundation, a founding partner of the Let's Encrypt project and the non-profit
+        organization that develops Certbot? We'd like to send you email about our work
+        encrypting the web, EFF news, campaigns, and ways to support digital freedom.
+        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        (Y)es/(N)o: n
+        No names were found in your configuration files. Please enter in your domain
+        name(s) (comma and/or space separated)  (Enter 'c' to cancel): flattrack.mydomain.com
+        Obtaining a new certificate
+        Performing the following challenges:
+        http-01 challenge for flattrack.mydomain.com
+        Waiting for verification...
+        Cleaning up challenges
+        Deploying Certificate to VirtualHost /etc/nginx/sites-enabled/default
+        
+        Please choose whether or not to redirect HTTP traffic to HTTPS, removing HTTP access.
+        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        1: No redirect - Make no further changes to the webserver configuration.
+        2: Redirect - Make all requests redirect to secure HTTPS access. Choose this for
+        new sites, or if you're confident your site works on HTTPS. You can undo this
+        change by editing your web server's configuration.
+        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Select the appropriate number [1-2] then [enter] (press 'c' to cancel): 2
+        Redirecting all traffic on port 80 to ssl in /etc/nginx/sites-enabled/default
+        
+        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        Congratulations! You have successfully enabled
+        https://flattrack.mydomain.com
+        
+        You should test your configuration at:
+        https://www.ssllabs.com/ssltest/analyze.html?d=flattrack.mydomain.com
+        - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        
+        IMPORTANT NOTES:
+         - Congratulations! Your certificate and chain have been saved at:
+           /etc/letsencrypt/live/flattrack.mydomain.com/fullchain.pem
+           Your key file has been saved at:
+           /etc/letsencrypt/live/flattrack.mydomain.com/privkey.pem
+           Your cert will expire on 2020-09-04. To obtain a new or tweaked
+           version of this certificate in the future, simply run certbot again
+           with the "certonly" option. To non-interactively renew *all* of
+           your certificates, run "certbot renew"
+         - Your account credentials have been saved in your Certbot
+           configuration directory at /etc/letsencrypt. You should make a
+           secure backup of this folder now. This configuration directory will
+           also contain certificates and private keys obtained by Certbot so
+           making regular backups of this folder is ideal.
+         - If you like Certbot, please consider supporting our work by:
+        
+           Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+           Donating to EFF:                    https://eff.org/donate-le
+
+### Create FlatTrack user<a id="sec-3-0-4"></a>
+
+```sh
+useradd flattrack
+```
+
+Add a password:
+
+```
+passwd flattrack
+```
+
+### Set up Postgres<a id="sec-3-0-5"></a>
+
+Create the `FlatTrack` role:
+
+```sh
+su postgres -c 'createuser flattrack -s'   
+```
+
+Create the `FlatTrack` database:
+
+```sh
+su postgres -c 'createdb flattrack'
+```
+
+Check that you can authenticate:
+
+```sh
+su flattrack -c 'psql -c \\conninfo'
+```
+
+Change the postgres password FlatTrack user:
+
+```sh
+su flattrack -c "psql -c \"ALTER USER flattrack WITH PASSWORD 'flattrack';\""
+```
+
+Note: setting `'flattrack'` to the password that you want the role to have
+
+### Set up nginx<a id="sec-3-0-6"></a>
+
+Add a customized version of the following to `/etc/nginx/sites-available/default`:
+
+```text
+server {
+  listen 443 ssl http2;
+  server_name flattrack.mydomain.com;
+
+  ssl_certificate     /etc/letsencrypt/live/flattrack.mydomain.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/flattrack.mydomain.com/privkey.pem;
+  ssl_protocols       TLSv1 TLSv1.1 TLSv1.2;
+  ssl_ciphers         HIGH:!aNULL:!MD5;
+  add_header          Strict-Transport-Security "max-age=15552000";
+
+  fastcgi_hide_header X-Powered-By;
+
+  location / {
+    proxy_pass http://localhost:8080;
+
+    proxy_set_header X-Forwarded-Host     $host;
+    proxy_set_header X-Forwarded-Server   $host;
+    proxy_set_header X-Real-IP            $remote_addr;
+    proxy_set_header X-Forwarded-For      $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto    $scheme;
+    proxy_set_header X-Forwarded-Protocol $scheme;
+    proxy_set_header X-Forwarded-Port     $server_port;
+    proxy_set_header Host                 $http_host;
+
+    proxy_redirect  off;
+    proxy_buffering off;
+
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade    $http_upgrade;
+    proxy_set_header Connection "upgrade";
+  }
+}
+
+```
+
+Reload nginx
+
+```sh
+systemctl reload nginx
+```
+
+### Build FlatTrack<a id="sec-3-0-7"></a>
+
+### Clone FlatTrack<a id="sec-3-0-8"></a>
+
+Also, check a version (for stability):
+
+```sh
+git clone -b 0.0.1-alpha7-1 https://gitlab.com/flattrack/flattrack /usr/src/flattrack
+cd $_
+```
+
+### Build the frontend<a id="sec-3-0-9"></a>
+
+```sh
+npm i
+npm run build:frontend
+```
+
+### Build the backend<a id="sec-3-0-10"></a>
+
+```sh
+export CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH"
+
+go build \
+      -a \
+      -installsuffix cgo \
+      -ldflags "-extldflags '-static' -s -w \
+      -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildVersion=$(git symbolic-ref HEAD | sed 's!refs\/heads\/!!') \
+      -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildHash=$(git rev-parse --short HEAD) \
+      -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildDate=$(date -u +%Y-%m-%d_%I:%M:%S%p) \
+      -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildMode=production" \
+      -o flattrack \
+      src/backend/main.go
+```
+
+### Move files into place<a id="sec-3-0-11"></a>
+
+```
+mkdir -p /opt/flattrack
+
+mv /usr/src/flattrack/flattrack /opt/flattrack/flattrack
+mv /usr/src/flattrack/dist /opt/flattrack/dist
+cp -r /usr/src/flattrack/migrations /opt/flattrack/migrations
+```
+
+### Install a systemd service<a id="sec-3-0-12"></a>
+
+Install a customized version of the following, in `/etc/systemd/system/flattrack.service`:
+
+```systemd
+[Unit]
+Description=Collaborate with your flatmates
+After=postgresql.service
+After=nginx.service
+
+[Service]
+Type=simple
+ExecStart=/opt/flattrack/flattrack
+Restart=always
+User=flattrack
+Environment="APP_DB_MIGRATIONS_PATH=/opt/flattrack/migrations"
+Environment="APP_DB_PASSWORD=flattrack"
+Environment="APP_PORT=127.0.0.1:8080"
+Environment="APP_PORT_METRICS=127.0.0.1:2112"
+Environment="APP_PORT_HEALTH=127.0.0.1:8081"
+Environment="APP_DIST_FOLDER=/opt/flattrack/dist"
+
+[Install]
+WantedBy=default.target
+```
+
+The configuration above configures:
+
+-   ports for FlatTrack, metrics, health
+-   the database password; update `APP_DB_PASSWORD` it isn't `flattrack`
+-   the location of the built frontend
+
+### Start FlatTrack<a id="sec-3-0-13"></a>
+
+```sh
+systemctl enable --now flattrack
+```
+
+Check if FlatTrack is running and has started successfully.
+
+```sh
+systemctl status flattrack
+```
+
+Woohoo! FlatTrack should now be running. Go to the hostname assigned in the DNS stage in a web browser to access.
+
+### Notes<a id="sec-3-0-14"></a>
+
+-   Once the frontend and backend is built, golang and nodejs is no longer needed or used (except for manual updates), so feel free to remove them
