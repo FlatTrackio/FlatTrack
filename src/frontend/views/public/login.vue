@@ -31,7 +31,6 @@
               size="is-medium"
               icon="textbox-password"
               pattern="^([a-z]*)([A-Z]*).{10,}$"
-              validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
               required>
             </b-input>
           </b-field>
