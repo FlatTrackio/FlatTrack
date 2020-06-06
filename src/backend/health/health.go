@@ -34,6 +34,10 @@ func healthz(db *sql.DB) http.HandlerFunc {
 
 // Handle ...
 func Handle(db *sql.DB) {
+	if common.GetAppHealthEnabled() != "true" {
+		return
+	}
+
 	port := common.GetAppHealthPort()
 	http.Handle("/_healthz", healthz(db))
 	log.Printf("Health listening on %v", port)

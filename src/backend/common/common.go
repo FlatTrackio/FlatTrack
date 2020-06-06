@@ -84,10 +84,22 @@ func GetAppMetricsPort() (output string) {
 	return GetEnvOrDefault("APP_PORT_METRICS", ":2112")
 }
 
+// GetAppMetricsEnabled ...
+// serve metrics endpoint
+func GetAppMetricsEnabled() (output string) {
+	return GetEnvOrDefault("APP_METRICS_ENABLED", "true")
+}
+
 // GetAppHealthPort ...
 // return the port which the app should serve health on
 func GetAppHealthPort() (output string) {
 	return GetEnvOrDefault("APP_PORT_HEALTH", ":8081")
+}
+
+// GetAppHealthEnabled ...
+// serve health endpoint
+func GetAppHealthEnabled() (output string) {
+	return GetEnvOrDefault("APP_HEALTH_ENABLED", "true")
 }
 
 // GetAppBuildVersion ...
