@@ -78,3 +78,9 @@ To run the docs in development, use:
 #+begin_src sh
 docker run --rm -it -p 8000:8000 -v ${PWD}:/docs:ro,Z squidfunk/mkdocs-material
 #+end_src
+* Making a release checklist
+Things to do before making a release:
+- update helm chart version
+- ensure docs represent the latest changes
+- ensure linting passes
+

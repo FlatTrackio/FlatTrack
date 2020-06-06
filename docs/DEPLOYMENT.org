@@ -52,6 +52,7 @@ Chart values are located in [[https://gitlab.com/flattrack/flattrack/-/blob/mast
 | affinity                                            | declare the affinity settings for the Pod scheduling | ~{}~                                    |
 
 ***** Installation
+Create the namespace, and install a release with helm:
 #+begin_src sh :src ../
   # create the namespace
   kubectl create namespace flattrack-myflat

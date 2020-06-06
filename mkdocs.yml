@@ -26,5 +26,6 @@ nav:
   - Design guidelines: DESIGNGUIDELINES.md
   - Development: DEVELOPMENT.md
   - Testing: TESTING.md
+  - Configuration: CONFIGURATION.md
   - Deployment: DEPLOYMENT.md
   - Roadmap: ROADMAP.md

@@ -15,6 +15,7 @@
     - [Database](#sec-3-0-4)
     - [Assets](#sec-3-0-5)
 - [Docs](#sec-4)
+- [Making a release checklist](#sec-5)
 
 
 # Development cycle<a id="sec-1"></a>
@@ -114,3 +115,11 @@ To run the docs in development, use:
 ```sh
 docker run --rm -it -p 8000:8000 -v ${PWD}:/docs:ro,Z squidfunk/mkdocs-material
 ```
+
+# Making a release checklist<a id="sec-5"></a>
+
+Things to do before making a release:
+
+-   update helm chart version
+-   ensure docs represent the latest changes
+-   ensure linting passes

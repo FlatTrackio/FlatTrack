@@ -71,6 +71,8 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
 
 2.  Installation
 
+    Create the namespace, and install a release with helm:
+    
     ```sh
     # create the namespace
     kubectl create namespace flattrack-myflat
