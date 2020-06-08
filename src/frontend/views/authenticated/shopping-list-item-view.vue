@@ -12,13 +12,6 @@
           <b-loading :is-full-page="false" :active.sync="itemIsLoading" :can-cancel="false"></b-loading>
           <h1 class="title is-1">{{ name || 'Unnamed item' }}</h1>
           <p class="subtitle is-4">View or edit this item</p>
-          <p>
-            Added {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
-          </p>
-          <p v-if="creationTimestamp !== modificationTimestamp">
-            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast"> {{ authorLastNames }} </router-link>
-          </p>
-          <br/>
           <b-field label="Name">
             <b-input
               type="text"
@@ -120,6 +113,12 @@
               </b-button>
             </p>
           </b-field>
+          <p>
+            Added {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
+          </p>
+          <p v-if="creationTimestamp !== modificationTimestamp">
+            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast"> {{ authorLastNames }} </router-link>
+          </p>
         </div>
       </section>
     </div>
