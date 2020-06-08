@@ -30,7 +30,6 @@ func JSONResponse(r *http.Request, w http.ResponseWriter, code int, output types
 	output.Metadata.Timestamp = time.Now().Unix()
 	output.Metadata.Version = common.GetAppBuildVersion()
 	response, _ := json.Marshal(output)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	w.Write(response)
@@ -71,15 +70,15 @@ func Logging(next http.Handler) http.Handler {
 		} else {
 			pathSection = "frontend"
 		}
-		log.Printf("[%v] %v %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, r.RemoteAddr, r.Header["Content-Type"])
+		log.Printf("[%v] %v %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, r.RemoteAddr, r.Header)
 		next.ServeHTTP(w, r)
 	})
 }
 
 // RequireContentType ...
 // 404s requests if content-type isn't what is expected
-func RequireContentType (expectedContentType string) func(http.Handler) http.Handler {
-        return func(next http.Handler) http.Handler {
+func RequireContentType(expectedContentType string) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if (len(r.Header["Content-Type"]) > 0 && r.Header["Content-Type"][0] == expectedContentType) ||
 				(len(r.Header["Accept"]) > 0 && r.Header["Accept"][0] == expectedContentType) {

@@ -2,9 +2,9 @@ package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"log"
 	"net/http"
-	"gitlab.com/flattrack/flattrack/src/backend/common"
 )
 
 // Handle ...

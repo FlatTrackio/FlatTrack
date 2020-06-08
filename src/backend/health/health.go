@@ -2,10 +2,10 @@ package health
 
 import (
 	"database/sql"
+	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/database"
 	"gitlab.com/flattrack/flattrack/src/backend/routes"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
-	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"log"
 	"net/http"
 )

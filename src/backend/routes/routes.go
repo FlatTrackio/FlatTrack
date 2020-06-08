@@ -651,7 +651,14 @@ func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 		response := "Failed to fetch shopping lists"
 		code := http.StatusInternalServerError
 
-		shoppingLists, err := shoppinglist.GetShoppingLists(db)
+		options := types.ShoppingListOptions{
+			SortBy: r.FormValue("sortBy"),
+			Selector: types.ShoppingListSelector{
+				Completed: r.FormValue("completed"),
+			},
+		}
+
+		shoppingLists, err := shoppinglist.GetShoppingLists(db, options)
 		if err == nil {
 			response = "Fetched the shopping lists"
 			code = http.StatusOK

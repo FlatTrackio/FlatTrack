@@ -96,6 +96,34 @@ type ShoppingListSpec struct {
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
 }
 
+// ShoppingListSortType ...
+// ways of sorting shopping lists
+type ShoppingListSortType string
+
+// ShoppingListSortTypes ...
+// ways of sorting shopping lists
+const (
+	ShoppingListSortByRecentlyAdded          = "recentlyAdded"
+	ShoppingListSortByRecentlyUpdated        = "recentlyUpdated"
+	ShoppingListSortByLastAdded              = "lastAdded"
+	ShoppingListSortByLastUpdated            = "lastUpdated"
+	ShoppingListSortByAlphabeticalDescending = "alphabeticalDescending"
+	ShoppingListSortByAlphabeticalAscending  = "alphabeticalAscending"
+)
+
+// ShoppingListOptions ...
+// options for lists
+type ShoppingListOptions struct {
+	SortBy   string               `json:"sortBy"`
+	Selector ShoppingListSelector `json:"selector"`
+}
+
+// ShoppingListSelector ...
+// options for creating and selecting lists
+type ShoppingListSelector struct {
+	Completed string `json:"completed"`
+}
+
 // ShoppingItemSpec ...
 // fields for a shopping item
 type ShoppingItemSpec struct {

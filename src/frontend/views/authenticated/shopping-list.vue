@@ -18,7 +18,30 @@
           </b-tabs>
           <label class="label">Search for lists</label>
           <b-field>
-            <b-input icon="magnify" size="is-medium" placeholder="List name" type="search" v-model="listSearch" ref="search"></b-input>
+            <b-input
+              icon="magnify"
+              size="is-medium"
+              placeholder="Enter a list name"
+              type="search"
+              expanded
+              v-model="listSearch"
+              ref="search">
+            </b-input>
+            <p class="control">
+              <b-select
+                placeholder="Sort by"
+                icon="sort"
+                v-model="sortBy"
+                size="is-medium"
+                expanded>
+                <option value="recentlyAdded">Recently Added</option>
+                <option value="lastAdded">Last Added</option>
+                <option value="recentlyUpdated">Recently Updated</option>
+                <option value="lastUpdated">Last Updated</option>
+                <option value="alphabeticalDescending">A-z</option>
+                <option value="alphabeticalAscending">z-A</option>
+            </b-select>
+          </p>
           </b-field>
           <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
           <section>
@@ -84,7 +107,8 @@ export default {
       listDisplayState: 0,
       deviceIsMobile: false,
       listSearch: '',
-      pageLoading: true
+      pageLoading: true,
+      sortBy: 'lastUpdated'
     }
   },
   components: {
@@ -103,7 +127,7 @@ export default {
       this.$router.push({ path: ref })
     },
     GetShoppingLists () {
-      shoppinglist.GetShoppingLists().then(resp => {
+      shoppinglist.GetShoppingLists(undefined, this.sortBy).then(resp => {
         this.pageLoading = false
         this.lists = resp.data.list || []
       }).catch(() => {
@@ -134,6 +158,12 @@ export default {
     },
     CheckDeviceIsMobile () {
       this.deviceIsMobile = common.DeviceIsMobile()
+    }
+  },
+  watch: {
+    sortBy () {
+      this.listIsLoading = true
+      this.GetShoppingLists()
     }
   },
   async beforeMount () {

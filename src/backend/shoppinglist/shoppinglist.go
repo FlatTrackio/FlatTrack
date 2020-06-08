@@ -52,10 +52,32 @@ func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bo
 
 // GetShoppingLists ...
 // returns a list of all shopping lists (name, notes, author, etc...)
-func GetShoppingLists(db *sql.DB) (shoppingLists []types.ShoppingListSpec, err error) {
+func GetShoppingLists(db *sql.DB, options types.ShoppingListOptions) (shoppingLists []types.ShoppingListSpec, err error) {
+	// recentlyAdded
 	sqlStatement := `select * from shopping_list
                          where deletionTimestamp = 0
 	                 order by creationTimestamp desc`
+	if options.SortBy == types.ShoppingListSortByRecentlyUpdated {
+		sqlStatement = `select * from shopping_list
+                         where deletionTimestamp = 0
+	                 order by modificationTimestamp desc`
+	} else if options.SortBy == types.ShoppingListSortByLastAdded {
+		sqlStatement = `select * from shopping_list
+                         where deletionTimestamp = 0
+	                 order by creationTimestamp asc`
+	} else if options.SortBy == types.ShoppingListSortByLastUpdated {
+		sqlStatement = `select * from shopping_list
+                         where deletionTimestamp = 0
+	                 order by modificationTimestamp asc`
+	} else if options.SortBy == types.ShoppingListSortByAlphabeticalDescending {
+		sqlStatement = `select * from shopping_list
+                         where deletionTimestamp = 0
+	                 order by name asc`
+	} else if options.SortBy == types.ShoppingListSortByAlphabeticalAscending {
+		sqlStatement = `select * from shopping_list
+                         where deletionTimestamp = 0
+	                 order by name desc`
+	}
 
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
@@ -70,6 +92,12 @@ func GetShoppingLists(db *sql.DB) (shoppingLists []types.ShoppingListSpec, err e
 		shoppingList.Count, err = GetListItemCount(db, shoppingList.ID)
 		if err != nil {
 			return shoppingLists, err
+		}
+
+		if options.Selector.Completed == "true" && shoppingList.Completed != true {
+			continue
+		} else if options.Selector.Completed == "false" && shoppingList.Completed != false {
+			continue
 		}
 		shoppingLists = append(shoppingLists, shoppingList)
 	}

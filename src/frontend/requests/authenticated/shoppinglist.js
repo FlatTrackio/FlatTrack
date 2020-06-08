@@ -7,10 +7,14 @@ import Request from '@/frontend/requests/requests'
 
 // GetShoppingLists
 // returns a list of all shopping lists
-function GetShoppingLists () {
+function GetShoppingLists (completed, sortBy) {
   return Request({
     url: '/api/apps/shoppinglist/lists',
-    method: 'GET'
+    method: 'GET',
+    params: {
+      completed,
+      sortBy
+    }
   })
 }
 
