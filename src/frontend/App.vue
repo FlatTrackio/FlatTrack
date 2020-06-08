@@ -133,8 +133,9 @@ html {
 
 .card:hover {
     background-color: #fbfbfb;
-    box-shadow: black 0 0px 66px -27px;
     transition: box-shadow 0.4s;
+    box-shadow: black 0 0px 45px -33px;
+    transition: box-shadow 0.1s;
 }
 
 .card:active {
@@ -142,6 +143,7 @@ html {
     transition: height 0.1s, width 0.1s, margin 0.1s;
     height: calc(100% - 8px);
     border: 1px dashed #000000;
+    box-shadow: black 0 0px 66px -27px;
     top: 1px;
 }
 
