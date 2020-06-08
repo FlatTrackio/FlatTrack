@@ -84,6 +84,7 @@ func RequireContentType (expectedContentType string) func(http.Handler) http.Han
 			if (len(r.Header["Content-Type"]) > 0 && r.Header["Content-Type"][0] == expectedContentType) ||
 				(len(r.Header["Accept"]) > 0 && r.Header["Accept"][0] == expectedContentType) {
 				next.ServeHTTP(w, r)
+				return
 			}
 			http.Redirect(w, r, "/unknown-page", http.StatusMovedPermanently)
 		})
