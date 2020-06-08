@@ -71,9 +71,23 @@ func Logging(next http.Handler) http.Handler {
 		} else {
 			pathSection = "frontend"
 		}
-		log.Printf("[%v] %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, r.RemoteAddr)
+		log.Printf("[%v] %v %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, r.RemoteAddr, r.Header["Content-Type"])
 		next.ServeHTTP(w, r)
 	})
+}
+
+// RequireContentType ...
+// 404s requests if content-type isn't what is expected
+func RequireContentType (expectedContentType string) func(http.Handler) http.Handler {
+        return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if (len(r.Header["Content-Type"]) > 0 && r.Header["Content-Type"][0] == expectedContentType) ||
+				(len(r.Header["Accept"]) > 0 && r.Header["Accept"][0] == expectedContentType) {
+				next.ServeHTTP(w, r)
+			}
+			http.Redirect(w, r, "/unknown-page", http.StatusMovedPermanently)
+		})
+	}
 }
 
 // Handle ...
@@ -83,11 +97,14 @@ func Handle(db *sql.DB) {
 	router := mux.NewRouter().StrictSlash(true)
 	apiEndpointPrefix := "/api"
 
-	router.HandleFunc(apiEndpointPrefix, Root)
-	for _, endpoint := range GetEndpoints(apiEndpointPrefix, db) {
-		router.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HTTPMethod, http.MethodOptions)
+	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
+	apiRouters.Use(RequireContentType("application/json"))
+	apiRouters.HandleFunc("", Root)
+	for _, endpoint := range GetEndpoints(db) {
+		apiRouters.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HTTPMethod, http.MethodOptions)
 	}
 
+	apiRouters.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)
 	router.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)
 	// TODO implement /healthz for healthiness checks
 	// TODO implement /readyz for readiness checks

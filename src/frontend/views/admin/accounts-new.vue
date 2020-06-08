@@ -46,7 +46,7 @@
               icon="account-group"
               placeholder="Select groups"
               size="is-medium"
-              @typing="GetFilteredGroups">
+              @typing="GetFilteredGroups" />
           </b-field>
         </section>
         <br/>

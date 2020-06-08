@@ -153,6 +153,7 @@
           size="is-medium"
           icon-left="check"
           native-type="submit"
+          expanded
           @click="Register({ language, timezone, flatName, user: { names, email, password, passwordConfirm, jsBirthday, phoneNumber } })">
           Setup
         </b-button>

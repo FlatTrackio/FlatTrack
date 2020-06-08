@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "./flattrack",
-    "start:frontend": "vue-cli-service serve",
+    "start:frontend": "vue-cli-service serve ./src/frontend/main.js",
     "build:all": "npm run build:frontend && npm run build:api",
     "build:frontend": "vue-cli-service build --dest dist src/frontend/main.js",
     "build:backend": "go build -o flattrack src/backend/main.go",

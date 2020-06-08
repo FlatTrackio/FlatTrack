@@ -119,7 +119,7 @@
                 @click="DeleteShoppingListItem(shoppingListId, id)">
               </b-button>
             </p>
-          <b-field>
+          </b-field>
         </div>
       </section>
     </div>

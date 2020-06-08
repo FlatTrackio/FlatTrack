@@ -17,10 +17,11 @@ function Request (request, redirect = true, publicRoute = false) {
     if ((typeof authToken === 'undefined' || authToken === null || authToken === '') && publicRoute !== true) {
       redirectToLogin(redirect)
     }
+    request.headers = {
+      Accept: 'application/json'
+    }
     if (publicRoute !== true) {
-      request.headers = {
-        Authorization: 'bearer ' + authToken
-      }
+      request.headers.Authorization = `bearer ${authToken}`
     }
     axios(request)
       .then(resp => resolve(resp))
