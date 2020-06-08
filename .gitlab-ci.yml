@@ -153,5 +153,8 @@ pages:
     paths:
     - public
   only:
-  - master
+    changes:
+      - docs
+    refs:
+      - master
 
