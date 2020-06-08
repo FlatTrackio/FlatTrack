@@ -2676,7 +2676,10 @@ var _ = Describe("API e2e tests", func() {
 
 	It("should require authorization for protected routes", func() {
 		apiEndpoint := apiServer + "/" + apiServerAPIprefix + "/user/profile"
-		resp, err := http.Get(apiEndpoint)
+		req, err := http.NewRequest("GET", apiEndpoint, nil)
+		req.Header.Set("Content-Type", "application/json")
+		client := &http.Client{}
+		resp, err := client.Do(req)
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized), "endpoint should be restricted")
 		requestResp := routes.GetHTTPresponseBodyContents(resp)
