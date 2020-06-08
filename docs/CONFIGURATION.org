@@ -2,7 +2,7 @@
 #+TITLE: Configuring FlatTrack
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
 
-FlatTrack is solely configured to run with environment variables; Here are the variables to configure FlatTrack with.
+FlatTrack is solely configured to run with environment variables (or a ~.env~ file in the same directory as the FlatTrack binary, such as ~/app/.env~); Here are the variables to configure FlatTrack with.
 
 * Configurable values
 | Field                    | Description                                                               | Default        |

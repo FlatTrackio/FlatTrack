@@ -15,7 +15,7 @@ Various information about the project
   classified 162 filesDuplicate file check 162 files (158 known unique)Unique:      100 files                                               161 unique files.                              
   Counting:  100      28 files ignored.
 
-  github.com/AlDanial/cloc v 1.82  T=0.23 s (606.7 files/s, 136043.8 lines/s)
+  github.com/AlDanial/cloc v 1.82  T=0.19 s (716.7 files/s, 160771.7 lines/s)
   -------------------------------------------------------------------------------
   Language                     files          blank        comment           code
   -------------------------------------------------------------------------------
@@ -23,13 +23,13 @@ Various information about the project
   Go                              19            683            472           5882
   Vuejs Component                 33            181              7           4282
   JavaScript                      30            120            259            977
-  YAML                            22             40             26            799
-  Markdown                        11            206              0            547
+  YAML                            22             40             26            800
+  Markdown                        11            210              0            555
   SQL                             16             59              9            155
   Dockerfile                       1              3              1             46
   TypeScript                       2              1              2             14
   HTML                             1              0              1             12
   -------------------------------------------------------------------------------
-  SUM:                           139           1293            777          29099
+  SUM:                           139           1297            777          29108
   -------------------------------------------------------------------------------
   #+end_example
