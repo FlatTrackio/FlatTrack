@@ -28,4 +28,5 @@ nav:
   - Testing: TESTING.md
   - Configuration: CONFIGURATION.md
   - Deployment: DEPLOYMENT.md
+  - API: API.md
   - Roadmap: ROADMAP.md
