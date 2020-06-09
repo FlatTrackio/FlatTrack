@@ -1,5 +1,6 @@
 <template>
   <div class="navbar-z">
+    <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
     <section>
       <div class="block">
         <b-sidebar
@@ -20,7 +21,7 @@
             <b-menu>
               <b-menu-list label="General">
                 <b-menu-item icon="home" label="Home" tag="router-link" to="/"></b-menu-item>
-                <b-menu-item icon="information-outline" :label="'My flat: ' + flatName" tag="router-link" :to="{ name: 'My Flat' }"></b-menu-item>
+                <b-menu-item icon="information-outline" label="My flat" tag="router-link" :to="{ name: 'My Flat' }"></b-menu-item>
                 <b-menu-item icon="information-outline" label="About FlatTrack" tag="router-link" :to="{ name: 'About FlatTrack' }"></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Apps">
@@ -63,6 +64,7 @@ export default {
       overlay: false,
       fullheight: true,
       fullwidth: false,
+      pageLoading: true,
       flatName: 'My flat',
       canUserAccountAdmin: false
     }
@@ -70,21 +72,13 @@ export default {
   methods: {
     signOut () {
       common.SignoutDialog()
-    },
-    GetFlatName () {
-      flatInfo.GetFlatName().then(resp => {
-        this.flatName = resp.data.spec
-      })
-    },
-    CanIadmin () {
-      cani.GetCanIgroup('admin').then(resp => {
-        this.canUserAccountAdmin = resp.data.data
-      })
     }
   },
   async beforeMount () {
-    this.GetFlatName()
-    this.CanIadmin()
+    cani.GetCanIgroup('admin').then(resp => {
+      this.canUserAccountAdmin = resp.data.data
+      this.pageLoading = false
+    })
   }
 }
 </script>
