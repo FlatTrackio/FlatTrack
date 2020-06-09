@@ -71,14 +71,15 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
 
 2.  Installation
 
-    Create the namespace, and install a release with helm:
+    Create the namespace:
     
     ```sh
-    # create the namespace
     kubectl create namespace flattrack-myflat
+    ```
     
-    # TODO use url instead of path
-    # install
+    Install the release with Helm:
+    
+    ```sh
     helm install flattrack-myflat --namespace flattrack-myflat k8s-manifests/helm
     ```
 

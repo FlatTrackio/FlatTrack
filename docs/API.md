@@ -1,6 +1,6 @@
 - [Talking to the API](#sec-1)
 
-API docs coming soon.
+API docs coming soon. TODO add openapi-spec.
 
 # Talking to the API<a id="sec-1"></a>
 
