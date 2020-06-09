@@ -35,8 +35,13 @@ function requireGroup (to, from, next) {
   })
 }
 
+function isPublicRoute (to) {
+  return to.meta.requiresAuth !== true
+}
+
 export default {
   requireAuthToken,
   requireNoAuthToken,
-  requireGroup
+  requireGroup,
+  isPublicRoute
 }

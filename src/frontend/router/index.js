@@ -20,16 +20,15 @@ const router = new VueRouter({
 
 router.beforeEach((to, from, next) => {
   if (typeof to.name !== 'undefined') {
-    document.title = `FlatTrack | ${to.name}`
+    document.title = `${to.name} | FlatTrack`
   }
-  if (to.matched.some(route => route.meta.requiresAuth)) {
+  if (to.matched.some(route => route.meta.requiresAuth === true)) {
     routerCommon.requireAuthToken(to, from, next)
   }
   if (to.matched.some(route => route.meta.requiresNoAuth === true)) {
     routerCommon.requireNoAuthToken(to, from, next)
   }
   if (to.matched.some(route => route.meta.requiresGroup)) {
-    console.log({ to })
     routerCommon.requireGroup(to, from, next)
   }
   next()

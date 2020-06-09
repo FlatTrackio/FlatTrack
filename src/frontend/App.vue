@@ -17,15 +17,19 @@
 import Vue from 'vue'
 import Component from 'vue-class-component'
 import themes from '@/frontend/common/theme'
-import common from '@/frontend/common/common'
+import routerCommon from '@/frontend/router/common'
 
 export default {
   name: 'App',
   data () {
     return {
       onMobile: false,
-      displayNavigationBar: true,
-      publicPages: window.location.pathname === '/login' || window.location.pathname === '/setup' || (window.location.pathname.split('/')[1] === 'useraccountconfirm' && typeof window.location.pathname.split('/')[2] !== 'undefined') || window.location.pathname === '/forgot-password'
+      displayNavigationBar: true
+    }
+  },
+  computed: {
+    publicPages () {
+      return routerCommon.isPublicRoute(this.$route)
     }
   },
   async beforeMount () {

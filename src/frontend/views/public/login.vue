@@ -71,7 +71,7 @@ export default {
   name: 'login',
   data () {
     return {
-      redirect: $route.query.redirect || null,
+      redirect: this.$route.query.redirect || null,
       email: '',
       password: ''
     }
@@ -94,6 +94,10 @@ export default {
           localStorage.setItem('authToken', resp.data.data)
           setTimeout(() => {
             loadingComponent.close()
+            if (this.redirect !== null) {
+              this.$router.push({ path: this.redirect })
+              return
+            }
             window.location.href = '/'
           }, 2 * 1000)
         }).catch(err => {
@@ -112,6 +116,11 @@ export default {
           common.DisplaySuccessToast('You are still signed in, going to the home page...')
           setTimeout(() => {
             loadingComponent.close()
+
+            if (this.redirect !== null) {
+              this.$router.push({ path: this.redirect })
+              return
+            }
             window.location.href = '/'
           }, 2 * 1000)
         })
@@ -119,10 +128,6 @@ export default {
     }
   },
   mounted () {
-    if (this.redirect !== null) {
-      this.$router.push({ path: this.redirect })
-      return
-    }
     this.checkForLoginToken()
   }
 }
