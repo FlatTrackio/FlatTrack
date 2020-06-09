@@ -71,6 +71,7 @@ export default {
   name: 'login',
   data () {
     return {
+      redirect: $route.query.redirect || null,
       email: '',
       password: ''
     }
@@ -118,6 +119,10 @@ export default {
     }
   },
   mounted () {
+    if (this.redirect !== null) {
+      this.$router.push({ path: this.redirect })
+      return
+    }
     this.checkForLoginToken()
   }
 }

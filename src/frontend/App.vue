@@ -17,6 +17,7 @@
 import Vue from 'vue'
 import Component from 'vue-class-component'
 import themes from '@/frontend/common/theme'
+import common from '@/frontend/common/common'
 
 export default {
   name: 'App',
