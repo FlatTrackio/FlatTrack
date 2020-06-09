@@ -70,7 +70,7 @@ func Logging(next http.Handler) http.Handler {
 		} else {
 			pathSection = "frontend"
 		}
-		log.Printf("[%v] %v %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, r.RemoteAddr, r.Header)
+		log.Printf("[%v] %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, r.RemoteAddr)
 		next.ServeHTTP(w, r)
 	})
 }
@@ -117,7 +117,7 @@ func Handle(db *sql.DB) {
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
-		AllowedHeaders:   []string{"*"},
+		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization", "User-Agent", "Accept-Encoding"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
 		AllowCredentials: true,
 	})
