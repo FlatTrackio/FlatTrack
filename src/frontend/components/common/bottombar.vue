@@ -1,5 +1,6 @@
 <template>
   <div :class="ratherSmallerScreen ? 'bottombar bottombar-fixed' : 'bottombar'">
+    <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
     <md-bottom-bar class="md-accent bottombar-background" md-sync-route>
       <md-bottom-bar-item to="/" exact md-label="Home" md-icon="home"></md-bottom-bar-item>
       <md-bottom-bar-item to="/apps" md-label="Apps" md-icon="apps"></md-bottom-bar-item>
@@ -17,6 +18,7 @@ export default {
   name: 'bottombar',
   data () {
     return {
+      pageLoading: true,
       canUserAccountAdmin: false,
       ratherSmallScreen: false
     }
@@ -25,6 +27,7 @@ export default {
     CanIadmin () {
       cani.GetCanIgroup('admin').then(resp => {
         this.canUserAccountAdmin = resp.data.data
+        this.pageLoading = false
       })
     }
   },
