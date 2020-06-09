@@ -12,7 +12,7 @@ COPY *.js *.json /app/
 RUN npm i
 RUN npm run build:frontend
 
-FROM golang:1.13.4-alpine3.10 AS api
+FROM golang:1.14.4-alpine3.10 AS api
 RUN apk add tzdata
 WORKDIR /app
 COPY src /app/src
