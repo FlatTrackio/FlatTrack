@@ -152,6 +152,10 @@ html {
     top: 1px;
 }
 
+.hero-body, .section {
+    padding: 3rem 1rem;
+}
+
 .form-width {
     width: 380px;
     margin: auto;

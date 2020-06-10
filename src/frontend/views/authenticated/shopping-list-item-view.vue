@@ -77,6 +77,7 @@
                 type="text"
                 v-model="tag"
                 icon="tag"
+                maxlength="25"
                 placeholder="Enter a tag to group the item"
                 size="is-medium">
               </b-input>

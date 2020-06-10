@@ -156,6 +156,7 @@
                     type="text"
                     icon="format-title"
                     size="is-medium"
+                    maxlength="25"
                     placeholder="Enter a tag name"
                     expanded
                     @keyup.enter.native="editingTag = ''; UpdateShoppingListItemTag(itemTag.tag, TagTmp); itemTag.tag = TagTmp; TagTmp = ''; editing = false"
@@ -177,7 +178,11 @@
               <div v-else>
                 <div class="field">
                   <p class="control">
-                    <b-button type="is-text" class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover" @click="TagTmp = itemTag.tag; editingTag = itemTag.tag; editing = true">
+                    <b-button
+                      type="is-text"
+                      size="medium"
+                      class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover is-paddingless"
+                      @click="TagTmp = itemTag.tag; editingTag = itemTag.tag; editing = true">
                       {{ itemTag.tag }}
                     </b-button>
                     <b-button
@@ -271,14 +276,14 @@
         </b-field>
         <p class="subtitle is-6">
           Created
-          <span v-if="hasInitialLoaded || typeof authorName !== 'undefined'">{{ TimestampToCalendar(creationTimestamp) }}</span>, by
+          <span v-if="hasInitialLoaded || typeof authorName !== 'undefined'">{{ TimestampToCalendar(creationTimestamp) }}, by</span>
           <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
           <router-link v-if="hasInitialLoaded || typeof authorName !== 'undefined'" tag="a" :to="{ name: 'My Flatmates', query: { 'id': author }}"> {{ authorNames }} </router-link>
             <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
             <span v-if="creationTimestamp !== modificationTimestamp">
               <br/>
               Last updated
-              <span v-if="hasInitialLoaded || typeof authorName !== 'undefined'">{{ TimestampToCalendar(modificationTimestamp) }}</span>, by
+              <span v-if="hasInitialLoaded || typeof authorName !== 'undefined'">{{ TimestampToCalendar(modificationTimestamp) }}, by</span>
               <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
               <router-link v-if="hasInitialLoaded || typeof authorName !== 'undefined'" tag="a" :to="{ name: 'My Flatmates', query: { 'id': author }}"> {{ authorLastNames }} </router-link>
             <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
