@@ -17,7 +17,7 @@ import (
 // ValidateShoppingList ...
 // given a shopping list, return it's validitiy
 func ValidateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (valid bool, err error) {
-	if len(shoppingList.Name) == 0 || len(shoppingList.Name) > 30 || shoppingList.Name == "" {
+	if len(shoppingList.Name) == 0 || len(shoppingList.Name) >= 30 || shoppingList.Name == "" {
 		return valid, fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
 	}
 	if shoppingList.Notes != "" && len(shoppingList.Notes) > 100 {
@@ -35,13 +35,13 @@ func ValidateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (vali
 // ValidateShoppingListItem ...
 // given a shopping list item, return it's validitiy
 func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bool, err error) {
-	if len(item.Name) == 0 || len(item.Name) > 30 || item.Name == "" {
+	if len(item.Name) == 0 || len(item.Name) >= 30 || item.Name == "" {
 		return valid, fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
 	}
-	if item.Notes != "" && len(item.Notes) > 40 {
+	if item.Notes != "" && len(item.Notes) >= 40 {
 		return valid, fmt.Errorf("Unable to save shopping list notes, as they are too long")
 	}
-	if item.Tag != "" && len(item.Tag) == 0 || len(item.Tag) > 30 {
+	if item.Tag != "" && len(item.Tag) == 0 || len(item.Tag) >= 25 {
 		return valid, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
 	}
 	if item.Quantity < 1 {
