@@ -17,6 +17,18 @@ spec:
       containers:
       - name: postgres
         image: "docker.io/postgres:12.2-alpine"
+        securityContext:
+          readOnlyRootFilesystem: true
+          runAsUser: 70
+          runAsGroup: 70
+          allowPrivilegeEscalation: false
+        volumeMounts:
+          - name: var-lib-postgresql
+            mountPath: /var/lib/postgresql
+          - name: var-run-postgresql
+            mountPath: /var/run/postgresql
+          - name: tmp
+            mountPath: /tmp
         ports:
         - containerPort: 5432
         livenessProbe:
@@ -56,4 +68,21 @@ spec:
             configMapKeyRef:
               name: postgres-configuration
               key: PGUSER
+      initContainers:
+        - name: postgres-permissions-fix
+          image: busybox
+          command:
+            - /bin/sh
+            - -c
+            - "/bin/chown -R 70:70 /var/lib/postgresql"
+          volumeMounts:
+          - name: var-lib-postgresql
+            mountPath: /var/lib/postgresql
+      volumes:
+        - name: var-lib-postgresql
+          emptyDir: {}
+        - name: var-run-postgresql
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
 
