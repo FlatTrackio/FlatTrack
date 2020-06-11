@@ -35,6 +35,22 @@ podDisruptionBudget:
 prometheus:
   enabled: true
 
+networkPolicy:
+  enabled: false
+  # ingress:
+  # - from:
+  #   - namespaceSelector:
+  #       matchLabels:
+  #         app: nginx-ingress
+  #     podSelector:
+  #       matchLabels:
+  #         app: nginx-ingress
+  # - from:
+  #   - podSelector:
+  #       matchLabels:
+  #         app: postgres
+  egress: {}
+
 extraEnvVars:
   - name: TZ
     value: "Pacific/Auckland"
