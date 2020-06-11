@@ -68,6 +68,8 @@ spec:
             configMapKeyRef:
               name: postgres-configuration
               key: PGUSER
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
       initContainers:
         - name: postgres-permissions-fix
           image: busybox
