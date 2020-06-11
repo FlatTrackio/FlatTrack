@@ -1,0 +1,37 @@
+{{ if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "flattrack.fullname" . }}
+  labels:
+    {{- include "flattrack.labels" . | nindent 4 }}
+{{- if .Values.labels }}
+{{- with .Values.labels }}
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
+  annotations:
+{{- if .Values.annotations }}
+{{- with .Values.annotations }}
+    {{- toYaml . | nindent 4 }}
+{{- end }}
+{{- end }}
+spec:
+  podSelector:
+    matchLabels:
+    {{- include "flattrack.labels" . | nindent 6 }}
+  policyTypes:
+  - Ingress
+{{- if .Values.networkPolicy.ingress }}
+  ingress:
+{{- with .Values.networkPolicy.ingress }}
+    {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- end }}
+{{- if .Values.networkPolicy.egress }}
+  egress:
+{{- with .Values.networkPolicy.egress }}
+    {{- toYaml . | nindent 8 }}
+{{- end }}
+{{- end }}
+{{- end }}
