@@ -109,7 +109,7 @@ export default {
       deviceIsMobile: false,
       listSearch: '',
       pageLoading: true,
-      sortBy: 'lastUpdated'
+      sortBy: 'recentlyUpdated'
     }
   },
   components: {
