@@ -50,6 +50,9 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
     | podDisruptionBudget.minAvailable                      | minimum number of Pods that should always be available       | 2                                       |
     | podDisruptionBudget.maxUnavailable                    | max amount of Pods that are allowed to be unavailable        |                                         |
     | prometheus.enabled                                    | enable Prometheus annotations                                | true                                    |
+    | networkPolicy.enabled                                 | enable networkPolicy rules                                   | false                                   |
+    | networkPolicy.ingress                                 | configure Ingress policy rules                               | {}                                      |
+    | networkPolicy.egress                                  | configure Egress policy rules                                | {}                                      |
     | extraEnvVars                                          | declare extra environment variables                          |                                         |
     | postgres.username                                     | the username for an existing Postgres databse                | flattrack                               |
     | postgres.password                                     | the password for an existing Postgres databse                | flattrack                               |

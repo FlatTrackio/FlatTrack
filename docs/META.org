@@ -11,25 +11,25 @@ Various information about the project
 
   #+RESULTS:
   #+begin_example
-       164 text files.
-  classified 164 filesDuplicate file check 164 files (159 known unique)Unique:      100 files                                               163 unique files.                              
+       166 text files.
+  classified 166 filesDuplicate file check 166 files (161 known unique)Unique:      100 files                                               165 unique files.                              
   Counting:  100      29 files ignored.
 
-  github.com/AlDanial/cloc v 1.82  T=0.22 s (632.7 files/s, 141514.7 lines/s)
+  github.com/AlDanial/cloc v 1.82  T=0.19 s (757.9 files/s, 167804.4 lines/s)
   -------------------------------------------------------------------------------
   Language                     files          blank        comment           code
   -------------------------------------------------------------------------------
   JSON                             4              0              0          16385
   Go                              19            690            483           5947
-  Vuejs Component                 33            181              7           4314
-  JavaScript                      30            120            259            982
-  YAML                            22             40             26            802
-  Markdown                        12            214              0            559
+  Vuejs Component                 33            183              7           4336
+  JavaScript                      31            122            254           1003
+  YAML                            23             41             38            873
+  Markdown                        12            214              0            562
   SQL                             16             59              9            155
   Dockerfile                       1              3              1             46
   TypeScript                       2              1              2             14
   HTML                             1              0              1             12
   -------------------------------------------------------------------------------
-  SUM:                           140           1308            788          29216
+  SUM:                           142           1313            795          29333
   -------------------------------------------------------------------------------
   #+end_example
