@@ -254,7 +254,7 @@ func PatchShoppingList(db *sql.DB, listID string, shoppingList types.ShoppingLis
 		return shoppingListPatched, err
 	}
 
-	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $5
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int, resourceVersion = resourceVersion + 1 where id = $5
                          returning *`
 	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listID)
 	if err != nil {
@@ -277,7 +277,7 @@ func UpdateShoppingList(db *sql.DB, listID string, shoppingList types.ShoppingLi
 		return shoppingListUpdated, err
 	}
 
-	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $5
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int, resourceVersion = resourceVersion + 1 where id = $5
                          returning *`
 	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listID)
 	if err != nil {
@@ -295,7 +295,7 @@ func UpdateShoppingList(db *sql.DB, listID string, shoppingList types.ShoppingLi
 // SetListCompleted ...
 // updates the list's completed field
 func SetListCompleted(db *sql.DB, listID string, completed bool, userID string) (list types.ShoppingListSpec, err error) {
-	sqlStatement := `update shopping_list set completed = $1 where id = $2 returning *`
+	sqlStatement := `update shopping_list set completed = $1, resourceVersion = resourceVersion + 1 where id = $2 returning *`
 	rows, err := db.Query(sqlStatement, completed, listID)
 	if err != nil {
 		return list, err
@@ -314,7 +314,7 @@ func SetListCompleted(db *sql.DB, listID string, completed bool, userID string) 
 // GetListObjectFromRows ...
 // returns a shopping list object from rows
 func GetListObjectFromRows(rows *sql.Rows) (list types.ShoppingListSpec, err error) {
-	rows.Scan(&list.ID, &list.Name, &list.Notes, &list.Author, &list.AuthorLast, &list.Completed, &list.CreationTimestamp, &list.ModificationTimestamp, &list.DeletionTimestamp)
+	rows.Scan(&list.ID, &list.Name, &list.Notes, &list.Author, &list.AuthorLast, &list.Completed, &list.CreationTimestamp, &list.ModificationTimestamp, &list.DeletionTimestamp, &list.ResourceVersion)
 	err = rows.Err()
 	return list, err
 }
@@ -377,7 +377,7 @@ func PatchItem(db *sql.DB, listid string, itemID string, item types.ShoppingItem
 		return itemPatched, err
 	}
 
-	sqlStatement := `update shopping_item set name = $2, price = $3, quantity = $4, notes = $5, authorLast = $6, tag = $7, obtained = $8, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1 returning *`
+	sqlStatement := `update shopping_item set name = $2, price = $3, quantity = $4, notes = $5, authorLast = $6, tag = $7, obtained = $8, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int, resourceVersion = resourceVersion + 1 where id = $1 returning *`
 	rows, err := db.Query(sqlStatement, itemID, item.Name, item.Price, item.Quantity, item.Notes, item.AuthorLast, item.Tag, item.Obtained)
 	if err != nil {
 		return itemPatched, err
@@ -405,7 +405,7 @@ func UpdateItem(db *sql.DB, listID string, itemID string, item types.ShoppingIte
 		return itemUpdated, err
 	}
 
-	sqlStatement := `update shopping_item set name = $3, price = $4, quantity = $5, notes = $6, authorLast = $7, tag = $8, obtained = $9, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where listId = $1 and id = $2 returning *`
+	sqlStatement := `update shopping_item set name = $3, price = $4, quantity = $5, notes = $6, authorLast = $7, tag = $8, obtained = $9, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int, resourceVersion = resourceVersion + 1 where listId = $1 and id = $2 returning *`
 	rows, err := db.Query(sqlStatement, listID, itemID, item.Name, item.Price, item.Quantity, item.Notes, item.AuthorLast, item.Tag, item.Obtained)
 	if err != nil {
 		return itemUpdated, err
@@ -428,7 +428,7 @@ func UpdateItem(db *sql.DB, listID string, itemID string, item types.ShoppingIte
 // SetItemObtained ...
 // updates the item's obtained field
 func SetItemObtained(db *sql.DB, listID string, itemID string, obtained bool, authorLast string) (item types.ShoppingItemSpec, err error) {
-	sqlStatement := `update shopping_item set obtained = $3 where listId = $1 and id = $2 returning *`
+	sqlStatement := `update shopping_item set obtained = $3, resourceVersion = resourceVersion + 1 where listId = $1 and id = $2 returning *`
 	rows, err := db.Query(sqlStatement, listID, itemID, obtained)
 	if err != nil {
 		return item, err
@@ -451,7 +451,7 @@ func SetItemObtained(db *sql.DB, listID string, itemID string, obtained bool, au
 // GetItemObjectFromRows ...
 // returns an item object from rows
 func GetItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, err error) {
-	rows.Scan(&item.ID, &item.ListID, &item.Name, &item.Price, &item.Quantity, &item.Notes, &item.Obtained, &item.Tag, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp)
+	rows.Scan(&item.ID, &item.ListID, &item.Name, &item.Price, &item.Quantity, &item.Notes, &item.Obtained, &item.Tag, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp, &item.ResourceVersion)
 	err = rows.Err()
 	return item, err
 }
@@ -545,7 +545,7 @@ func UpdateShoppingListTag(db *sql.DB, listID string, tag string, tagUpdate stri
 	if tagUpdate != "" && len(tagUpdate) == 0 || len(tagUpdate) > 30 {
 		return tagNew, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
 	}
-	sqlStatement := `update shopping_item set tag = $3 where listId = $1 and tag = $2 returning tag`
+	sqlStatement := `update shopping_item set tag = $3, resourceVersion = resourceVersion + 1 where listId = $1 and tag = $2 returning tag`
 	rows, err := db.Query(sqlStatement, listID, tag, tagUpdate)
 	if err != nil {
 		return tagNew, err

@@ -27,6 +27,7 @@ type GroupSpec struct {
 	CreationTimestamp     int    `json:"creationTimestamp"`
 	ModificationTimestamp int    `json:"modificationTimestamp"`
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
+	ResourceVersion       int    `json:"resourceVersion"`
 }
 
 // GroupList ...
@@ -62,6 +63,7 @@ type UserSpec struct {
 	CreationTimestamp     int      `json:"creationTimestamp"`
 	ModificationTimestamp int      `json:"modificationTimestamp"`
 	DeletionTimestamp     int      `json:"deletionTimestamp"`
+	ResourceVersion       int    `json:"resourceVersion"`
 }
 
 // UserList ...
@@ -94,6 +96,7 @@ type ShoppingListSpec struct {
 	CreationTimestamp     int    `json:"creationTimestamp"`
 	ModificationTimestamp int    `json:"modificationTimestamp"`
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
+	ResourceVersion       int    `json:"resourceVersion"`
 }
 
 // ShoppingListSortType ...
@@ -140,6 +143,7 @@ type ShoppingItemSpec struct {
 	CreationTimestamp     int     `json:"creationTimestamp"`
 	ModificationTimestamp int     `json:"modificationTimestamp"`
 	DeletionTimestamp     int     `json:"deletionTimestamp"`
+	ResourceVersion       int    `json:"resourceVersion"`
 }
 
 // ShoppingItemSortType ...
@@ -191,6 +195,7 @@ type UserCreationSecretSpec struct {
 	CreationTimestamp     int    `json:"creationTimestamp"`
 	ModificationTimestamp int    `json:"modificationTimestamp"`
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
+	ResourceVersion       int    `json:"resourceVersion"`
 }
 
 // UserCreationSecretSelector ...

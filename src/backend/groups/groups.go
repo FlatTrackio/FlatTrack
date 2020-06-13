@@ -33,7 +33,7 @@ func RemoveUserFromGroup(db *sql.DB, userID string, groupID string) (err error) 
 // GroupObjectFromRows ...
 // constructs a group object from database rows
 func GroupObjectFromRows(rows *sql.Rows) (group types.GroupSpec, err error) {
-	rows.Scan(&group.ID, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp)
+	rows.Scan(&group.ID, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp, &group.ResourceVersion)
 	err = rows.Err()
 	return group, err
 }

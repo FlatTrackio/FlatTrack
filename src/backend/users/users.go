@@ -180,7 +180,7 @@ func GetUser(db *sql.DB, userSelect types.UserSpec, includePassword bool) (user 
 // UserObjectFromRowsRestricted ...
 // construct a restricted UserSpec from database rows
 func UserObjectFromRowsRestricted(rows *sql.Rows) (user types.UserSpec, err error) {
-	rows.Scan(&user.ID, &user.Names, &user.Email, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
+	rows.Scan(&user.ID, &user.Names, &user.Email, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp, &user.ResourceVersion)
 	err = rows.Err()
 	return user, err
 }
@@ -188,7 +188,7 @@ func UserObjectFromRowsRestricted(rows *sql.Rows) (user types.UserSpec, err erro
 // UserObjectFromRows ...
 // construct a UserSpec from database rows
 func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
-	rows.Scan(&user.ID, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.AuthNonce, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
+	rows.Scan(&user.ID, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.AuthNonce, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp, &user.ResourceVersion)
 	err = rows.Err()
 	return user, err
 }
@@ -265,7 +265,7 @@ func DeleteUserByID(db *sql.DB, id string) (err error) {
 		return err
 	}
 
-	sqlStatement := `update users set names = '(Deleted User)', email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
+	sqlStatement := `update users set names = '(Deleted User)', email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int, resourceVersion = resourceVersion + 1 where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	defer rows.Close()
 	return err
@@ -345,7 +345,7 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 // InvalidateAllAuthTokens ...
 // updates the authNonce to invalidate auth tokens
 func InvalidateAllAuthTokens(db *sql.DB, id string) (err error) {
-	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid where id = $1`
+	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid, resourceVersion = resourceVersion + 1 where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	defer rows.Close()
 	return err
@@ -422,8 +422,8 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 		passwordHashed = userAccount.Password
 	}
 
-	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $7
-                         returning id, names, email, phoneNumber, birthday, contractAgreement, disabled, registered, lastLogin, creationTimestamp, modificationTimestamp, deletionTimestamp`
+	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int, resourceVersion = resourceVersion + 1 where id = $7
+                         returning id, names, email, phoneNumber, birthday, contractAgreement, disabled, registered, lastLogin, creationTimestamp, modificationTimestamp, deletionTimestamp, resourceVersion`
 	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, id)
 	if err != nil {
 		// TODO add roll back, if there's failure
@@ -468,7 +468,7 @@ func PatchProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userA
 		passwordHashed = userAccount.Password
 	}
 
-	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, disabled = $7, registered = $8, lastLogin = $9, authNonce = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $11
+	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, disabled = $7, registered = $8, lastLogin = $9, authNonce = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int, resourceVersion = resourceVersion + 1 where id = $11
                          returning *`
 	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce, id)
 	if err != nil {
@@ -511,8 +511,8 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
 
-	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
-                         returning id, names, email, phoneNumber, birthday, contractAgreement, disabled, registered, lastLogin, creationTimestamp, modificationTimestamp, deletionTimestamp`
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int, resourceVersion = resourceVersion + 1 where id = $1
+                         returning id, names, email, phoneNumber, birthday, contractAgreement, disabled, registered, lastLogin, creationTimestamp, modificationTimestamp, deletionTimestamp, resourceVersion`
 	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement)
 	if err != nil {
 		// TODO add roll back, if there's failure
@@ -548,7 +548,7 @@ func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (user
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
 
-	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, disabled = $8, registered = $9, lastLogin = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, disabled = $8, registered = $9, lastLogin = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int, resourceVersion = resourceVersion + 1 where id = $1
                          returning *`
 	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin)
 	if err != nil {
@@ -575,7 +575,7 @@ func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (user
 // UserCreationSecretsFromRows ...
 // constructs a UserCreationSecretSpec from rows
 func UserCreationSecretsFromRows(rows *sql.Rows) (creationSecret types.UserCreationSecretSpec, err error) {
-	rows.Scan(&creationSecret.ID, &creationSecret.UserID, &creationSecret.Secret, &creationSecret.Valid, creationSecret.CreationTimestamp, &creationSecret.ModificationTimestamp, &creationSecret.DeletionTimestamp)
+	rows.Scan(&creationSecret.ID, &creationSecret.UserID, &creationSecret.Secret, &creationSecret.Valid, creationSecret.CreationTimestamp, &creationSecret.ModificationTimestamp, &creationSecret.DeletionTimestamp, &creationSecret.ResourceVersion)
 	err = rows.Err()
 	return creationSecret, err
 }
@@ -719,7 +719,7 @@ func UserAccountExists(db *sql.DB, id string) (exists bool, err error) {
 // GenerateNewAuthNonce ...
 // given a user account id, generates a new auth nonce to reset all logins and invalidate all issued JWTs
 func GenerateNewAuthNonce(db *sql.DB, id string) (err error) {
-	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid where id = $1
+	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid, resourceVersion = resourceVersion + 1 where id = $1
                          returning *`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
