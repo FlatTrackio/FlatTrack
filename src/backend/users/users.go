@@ -55,8 +55,19 @@ func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (val
 	if (common.RegexMatchPassword(user.Password) == false || user.Password == "") && allowEmptyPassword == false {
 		return false, fmt.Errorf("Unable to use the provided password, as it is either empty of invalid")
 	}
+
 	if user.PhoneNumber != "" && common.RegexMatchPhoneNumber(user.PhoneNumber) == false {
 		return false, fmt.Errorf("Unable to use the provided phone number")
+	}
+
+	if user.ID != "" {
+		userInDB, err := GetUser(db, user, false)
+		if err != nil {
+			return false, err
+		}
+		if user.ResourceVersion == 0 || userInDB.ResourceVersion > user.ResourceVersion {
+			return false, fmt.Errorf("Unable to update, the server's version of the account is newer than yours; Please refresh and try again")
+		}
 	}
 
 	return true, err

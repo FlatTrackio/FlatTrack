@@ -1217,6 +1217,7 @@ var _ = Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/user/profile"
 		profilePatch := account
 		profilePatch.Groups = []string{"flatmember", "admin"}
+		profilePatch.ResourceVersion = userAccount.ResourceVersion
 		profilePatchData, err := json.Marshal(profilePatch)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
 		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
@@ -1569,7 +1570,10 @@ var _ = Describe("API e2e tests", func() {
 				Completed: false,
 			},
 		}
+
+		newResourceVersion := shoppingListCreated.ResourceVersion
 		for _, shoppingListUpdate := range shoppingListUpdates {
+			shoppingListUpdate.ResourceVersion = newResourceVersion
 			shoppingListUpdateBytes, err := json.Marshal(shoppingListUpdate)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
 
@@ -1584,6 +1588,7 @@ var _ = Describe("API e2e tests", func() {
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
 			var shoppingListUpdated types.ShoppingListSpec
 			json.Unmarshal(shoppingListUpdatedBytes, &shoppingListUpdated)
+			newResourceVersion = shoppingListUpdated.ResourceVersion
 
 			Expect(shoppingListUpdated.ID).To(Equal(shoppingListCreated.ID), "shopping list id must be equal to shopping list created id")
 			Expect(shoppingListUpdated.Name).To(Equal(shoppingListUpdate.Name), "shopping list name does not match shopping list created name")
@@ -1961,7 +1966,9 @@ var _ = Describe("API e2e tests", func() {
 			},
 		}
 
+		newResourceVersion := shoppingItem.ResourceVersion
 		for _, updatedShoppingListItem := range updatedShoppingListItems {
+			updatedShoppingListItem.ResourceVersion = newResourceVersion
 			shoppingItemBytes, err = json.Marshal(updatedShoppingListItem)
 			Expect(err).To(BeNil(), "failed to marshal to JSON")
 
@@ -1974,6 +1981,7 @@ var _ = Describe("API e2e tests", func() {
 			var shoppingItemUpdated types.ShoppingItemSpec
 			json.Unmarshal(shoppingListItemBytes, &shoppingItemUpdated)
 			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+			newResourceVersion = shoppingItemUpdated.ResourceVersion
 
 			Expect(shoppingItemUpdated.ID).ToNot(Equal(""), "shopping item id should not be nil")
 			Expect(updatedShoppingListItem.Name).To(Equal(shoppingItemUpdated.Name), "shopping item name was not updated")

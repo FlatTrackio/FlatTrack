@@ -312,6 +312,7 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &userAccount)
 
 		id, errID := users.GetIDFromJWT(db, r)
+		userAccount.ID = id
 		userAccountUpdated, err := users.UpdateProfile(db, id, userAccount)
 		if err == nil && errID == nil && userAccountUpdated.ID != "" {
 			code = http.StatusOK
@@ -342,6 +343,7 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &userAccount)
 
 		id, errID := users.GetIDFromJWT(db, r)
+		userAccount.ID = id
 		userAccountPatched, err := users.PatchProfile(db, id, userAccount)
 		if err == nil && errID == nil && userAccountPatched.ID != "" {
 			code = http.StatusOK
@@ -740,6 +742,7 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 
 		id, errID := users.GetIDFromJWT(db, r)
 		shoppingList.AuthorLast = id
+		shoppingList.ID = listID
 		shoppingListPatched, err := shoppinglist.PatchShoppingList(db, listID, shoppingList)
 		if err == nil && errID == nil && shoppingListPatched.ID != "" {
 			code = http.StatusOK
@@ -771,6 +774,7 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 		vars := mux.Vars(r)
 		listID := vars["id"]
 
+		shoppingList.ID = listID
 		list, err := shoppinglist.GetShoppingList(db, listID)
 		if err != nil || list.ID == "" {
 			code = http.StatusNotFound
@@ -1069,7 +1073,9 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 		}
 
 		id, errID := users.GetIDFromJWT(db, r)
+		shoppingItem.ID = item.ID
 		shoppingItem.AuthorLast = id
+		shoppingItem.ListID = listID
 		patchedItem, err := shoppinglist.PatchItem(db, listID, itemID, shoppingItem)
 		if err == nil && errID == nil {
 			code = http.StatusOK
@@ -1133,6 +1139,8 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 
 		id, errID := users.GetIDFromJWT(db, r)
 		shoppingItem.AuthorLast = id
+		shoppingItem.ID = item.ID
+		shoppingItem.ListID = listID
 		updatedItem, err := shoppinglist.UpdateItem(db, listID, itemID, shoppingItem)
 		if err == nil && errID == nil {
 			code = http.StatusOK
@@ -1195,6 +1203,8 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 		}
 
 		id, errID := users.GetIDFromJWT(db, r)
+		shoppingItem.AuthorLast = id
+		shoppingItem.ListID = listID
 		patchedItem, err := shoppinglist.SetItemObtained(db, listID, itemID, shoppingItem.Obtained, id)
 		if err == nil && errID == nil {
 			code = http.StatusOK

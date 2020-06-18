@@ -100,7 +100,7 @@
               native-type="submit"
               expanded
               :loading="submitLoading"
-              @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag, obtained)">
+              @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag, obtained, resourceVersion)">
               Update item
             </b-button>
             <p class="control">
@@ -154,11 +154,12 @@ export default {
       author: '',
       authorLast: '',
       creationTimestamp: 0,
-      modificationTimestamp: 0
+      modificationTimestamp: 0,
+      resourceVersion: 0
     }
   },
   methods: {
-    UpdateShoppingListItem (listId, itemId, name, notes, price, quantity, tag, obtained) {
+    UpdateShoppingListItem (listId, itemId, name, notes, price, quantity, tag, obtained, resourceVersion) {
       this.submitLoading = true
       if (notes === '') {
         notes = undefined
@@ -168,7 +169,7 @@ export default {
       }
 
       price = Number(price)
-      shoppinglist.UpdateShoppingListItem(listId, itemId, name, notes, price, quantity, tag, obtained).then(resp => {
+      shoppinglist.UpdateShoppingListItem(listId, itemId, name, notes, price, quantity, tag, obtained, resourceVersion).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' && typeof item.id !== 'undefined') {
           common.DisplaySuccessToast('Updated item successfully')
@@ -224,6 +225,7 @@ export default {
       this.authorLast = item.authorLast
       this.creationTimestamp = item.creationTimestamp
       this.modificationTimestamp = item.modificationTimestamp
+      this.resourceVersion = item.resourceVersion
       return flatmates.GetFlatmate(item.author)
     }).then(resp => {
       this.authorNames = resp.data.spec.names

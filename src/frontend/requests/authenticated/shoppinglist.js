@@ -59,26 +59,28 @@ function PatchShoppingList (id, name, notes) {
 
 // UpdateShoppingList
 // given a name and optional notes, patch a shopping list
-function UpdateShoppingList (id, name, notes, completed) {
+function UpdateShoppingList (id, name, notes, completed, resourceVersion) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}`,
     method: 'PUT',
     data: {
       name,
       notes,
-      completed
+      completed,
+      resourceVersion
     }
   })
 }
 
 // PatchShoppingListCompleted
 // given a bool, patch a shopping list's completed field
-function PatchShoppingListCompleted (id, completed) {
+function PatchShoppingListCompleted (id, completed, resourceVersion) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}/completed`,
     method: 'PATCH',
     data: {
-      completed
+      completed,
+      resourceVersion
     }
   })
 }
@@ -131,7 +133,7 @@ function PostShoppingListItem (id, name, notes, price, quantity, tag) {
 
 // PatchShoppingListItem
 // patches the shopping list item
-function PatchShoppingListItem (listId, itemId, name, notes, price, quantity, tag) {
+function PatchShoppingListItem (listId, itemId, name, notes, price, quantity, tag, resourceVersion) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
     method: 'PATCH',
@@ -140,14 +142,15 @@ function PatchShoppingListItem (listId, itemId, name, notes, price, quantity, ta
       notes,
       price,
       quantity,
-      tag
+      tag,
+      resourceVersion
     }
   })
 }
 
 // UpdateShoppingListItem
 // updates the shopping list item
-function UpdateShoppingListItem (listId, itemId, name, notes, price, quantity, tag, obtained) {
+function UpdateShoppingListItem (listId, itemId, name, notes, price, quantity, tag, obtained, resourceVersion) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
     method: 'PUT',
@@ -157,19 +160,21 @@ function UpdateShoppingListItem (listId, itemId, name, notes, price, quantity, t
       price,
       quantity,
       tag,
-      obtained
+      obtained,
+      resourceVersion
     }
   })
 }
 
 // PatchShoppingListItemObtained
 // adds to the shopping list
-function PatchShoppingListItemObtained (listId, itemId, obtained) {
+function PatchShoppingListItemObtained (listId, itemId, obtained, resourceVersion) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}/obtained`,
     method: 'PATCH',
     data: {
-      obtained
+      obtained,
+      resourceVersion
     }
   })
 }
@@ -196,7 +201,7 @@ function GetShoppingListItemTags (listId) {
 // fetches all tags
 function GetAllShoppingListItemTags () {
   return Request({
-    url: `/api/apps/shoppinglist/tags`,
+    url: `/api/apps/smhoppinglist/tags`,
     method: 'GET'
   })
 }

@@ -85,8 +85,8 @@ export default {
     goToRef (ref) {
       this.$router.push({ path: ref })
     },
-    PatchItemObtained (itemId, obtained) {
-      shoppinglist.PatchShoppingListItemObtained(this.listId, itemId, obtained).catch(err => {
+    PatchItemObtained (itemId, obtained, resourceVersion) {
+      shoppinglist.PatchShoppingListItemObtained(this.listId, itemId, obtained, resourceVersion).catch(err => {
         common.DisplayFailureToast('Failed to patch the obtained field of this item' + '<br/>' + err.response.data.metadata.response)
       })
     },

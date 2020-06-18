@@ -111,7 +111,7 @@ export default {
       name: '',
       notes: '',
       listTemplate: '',
-      templateListItemSelector: 'all',
+      templateListItemSelector: undefined,
       lists: []
     }
   },

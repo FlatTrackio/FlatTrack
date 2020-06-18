@@ -16,7 +16,7 @@ function GetProfile () {
 
 // PatchProfile
 // updates the profile of the authenticated account
-function PatchProfile (names, email, phoneNumber, birthday, password) {
+function PatchProfile (names, email, phoneNumber, birthday, password, resourceVersion) {
   return Request({
     url: `/api/user/profile`,
     method: 'PATCH',
@@ -25,7 +25,8 @@ function PatchProfile (names, email, phoneNumber, birthday, password) {
       email,
       phoneNumber,
       birthday,
-      password
+      password,
+      resourceVersion
     }
   })
 }

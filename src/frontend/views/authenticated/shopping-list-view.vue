@@ -4,7 +4,7 @@
       <p class="subtitle is-5">
         <b>{{ name }}</b>
         ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
-        <span @click="PatchShoppingListCompleted(id, !completed)" class="display-is-editable pointer-cursor-on-hover">
+        <span @click="PatchShoppingListCompleted(id, !completed, resourceVersion)" class="display-is-editable pointer-cursor-on-hover">
           <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
           <b-tag type="is-success" v-else-if="completed">Completed</b-tag>
         </span>
@@ -27,7 +27,7 @@
               size="is-medium"
               ref="name"
               placeholder="Enter a title for this list"
-              @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, completed)"
+              @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, completed, resourceVersion)"
               @keyup.esc.native="editing = false; editingMeta = false"
               v-model="name"
               required>
@@ -49,7 +49,7 @@
                 type="text"
                 ref="notes"
                 placeholder="Enter extra information"
-                @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes)"
+                @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, resourceVersion)"
                 @keyup.esc.native="editing = false; editingMeta = false"
                 v-model="notes">
               </b-input>
@@ -71,7 +71,7 @@
         </div>
         <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true; editingMeta = true; FocusNotes() }" v-if="!editingMeta && notes.length == 0">Add notes</b-button>
         <div v-if="editingMeta">
-          <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, completed) }">Done</b-button>
+          <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, completed, resourceVersion) }">Done</b-button>
           <br/>
         </div>
         <br/>
@@ -261,7 +261,7 @@
             :type="completed === true ? 'is-success' : 'is-warning'"
             size="is-medium"
             expanded
-            @click="PatchShoppingListCompleted(id, !completed)">
+            @click="PatchShoppingListCompleted(id, !completed, resourceVersion)">
             {{ completed === false ? 'Uncompleted' : 'Completed' }}
           </b-button>
           <p class="control">
@@ -333,6 +333,7 @@ export default {
       completed: false,
       creationTimestamp: 0,
       modificationTimestamp: 0,
+      resourceVersion: 0,
       list: []
     }
   },
@@ -429,6 +430,7 @@ export default {
         this.completed = resp.data.spec.completed
         this.creationTimestamp = resp.data.spec.creationTimestamp
         this.modificationTimestamp = resp.data.spec.modificationTimestamp
+        this.resourceVersion = resp.data.spec.resourceVersion
         return flatmates.GetFlatmate(this.author)
       }).then(resp => {
         this.authorNames = resp.data.spec.names
@@ -444,15 +446,16 @@ export default {
         common.DisplayFailureToast('Error loading the shopping list' + '<br/>' + err.response.data.metadata.response)
       })
     },
-    UpdateShoppingList (name, notes, completed) {
+    UpdateShoppingList (name, notes, completed, resourceVersion) {
       var id = this.id
       shoppinglist.UpdateShoppingList(id, name, notes, completed).catch(err => {
         common.DisplayFailureToast('Failed to update shopping list' + '<br/>' + err.response.data.metadata.response)
       })
     },
-    PatchShoppingListCompleted (id, completed) {
-      shoppinglist.PatchShoppingListCompleted(id, completed).then(resp => {
+    PatchShoppingListCompleted (id, completed, resourceVersion) {
+      shoppinglist.PatchShoppingListCompleted(id, completed, resourceVersion).then(resp => {
         this.completed = resp.data.spec.completed
+        this.resourceVersion = resp.data.spec.resourceVersion
       }).catch(err => {
         common.DisplayFailureToast('Failed to set list as completed' + '<br/>' + err.response.data.metadata.response)
       })

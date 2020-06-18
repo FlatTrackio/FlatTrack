@@ -87,7 +87,7 @@
           size="is-medium"
           icon-left="delta"
           native-type="submit"
-          @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday)">
+          @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday, resourceVersion)">
           Update profile
         </b-button>
       </section>
@@ -133,20 +133,22 @@ export default {
         this.groups = resp.data.spec.groups
         this.email = resp.data.spec.email
         this.creationTimestamp = resp.data.spec.creationTimestamp
+        this.resourceVersion = resp.data.spec.resourceVersion
         this.pageLoading = false
       })
     },
-    PatchProfile (names, email, phoneNumber, password, passwordConfirm, jsBirthday) {
+    PatchProfile (names, email, phoneNumber, password, passwordConfirm, jsBirthday, resourceVersion) {
       if (password !== passwordConfirm) {
         common.DisplayFailureToast('Unable to use password as they either do not match')
         return
       }
       var birthday = new Date(jsBirthday || 0).getTime() / 1000 || 0
-      profile.PatchProfile(names, email, phoneNumber, birthday, password).then(resp => {
+      profile.PatchProfile(names, email, phoneNumber, birthday, password, resourceVersion).then(resp => {
         if (resp.data.spec.id === '') {
           common.DisplayFailureToast('Failed to update profile')
           return
         }
+        this.resourceVersion = resp.data.spec.resourceVersion
         common.DisplaySuccessToast('Successfully updated your profile')
       }).catch(err => {
         common.DisplayFailureToast('Failed to update profile' + '<br/>' + err.response.data.metadata.response)

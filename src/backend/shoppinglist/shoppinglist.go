@@ -29,6 +29,16 @@ func ValidateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (vali
 			return valid, fmt.Errorf("Unable to find list to use as template from provided id")
 		}
 	}
+
+	if shoppingList.ID != "" {
+		shoppingListInDB, err := GetShoppingList(db, shoppingList.ID)
+		if err != nil {
+			return false, err
+		}
+		if shoppingList.ResourceVersion == 0 || shoppingListInDB.ResourceVersion > shoppingList.ResourceVersion {
+			return false, fmt.Errorf("Unable to update, the server's version of the list is newer than yours. Please refresh and try again")
+		}
+	}
 	return true, err
 }
 
@@ -46,6 +56,16 @@ func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bo
 	}
 	if item.Quantity < 1 {
 		return valid, fmt.Errorf("Item quantity must be at least one")
+	}
+
+	if item.ID != "" {
+		itemInDB, err := GetShoppingListItem(db, item.ListID, item.ID)
+		if err != nil {
+			return false, err
+		}
+		if item.ResourceVersion == 0 || itemInDB.ResourceVersion > item.ResourceVersion {
+			return false, fmt.Errorf("Unable to update, the server's version of the item is newer than yours; Please refresh and try again")
+		}
 	}
 	return true, err
 }
