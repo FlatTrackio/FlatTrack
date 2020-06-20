@@ -156,7 +156,7 @@
                     type="text"
                     icon="format-title"
                     size="is-medium"
-                    maxlength="25"
+                    maxlength="30"
                     placeholder="Enter a tag name"
                     expanded
                     @keyup.enter.native="editingTag = ''; UpdateShoppingListItemTag(itemTag.tag, TagTmp); itemTag.tag = TagTmp; TagTmp = ''; editing = false"
