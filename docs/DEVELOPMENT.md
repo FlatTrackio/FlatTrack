@@ -77,7 +77,7 @@ kubectl -n flattrack-dev exec -it postgres-0 -- psql
 ### Remove migrations<a id="sec-2-0-2"></a>
 
 ```shell
-gomigrate -source "file://$(pwd)/migrations" -database postgres://postgres:postgres@localhost/flattrack?sslmode=disable down
+gomigrate -source "file://$(pwd)/migrations" -database postgres://flattrack:flattrack@localhost/flattrack?sslmode=disable down
 ```
 
 # Project structure and details<a id="sec-3"></a>
