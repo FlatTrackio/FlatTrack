@@ -49,7 +49,7 @@ Build the frontend:
 
 *** Remove migrations   
    #+begin_src shell
-   gomigrate -source "file://$(pwd)/migrations" -database postgres://postgres:postgres@localhost/flattrack?sslmode=disable down
+   gomigrate -source "file://$(pwd)/migrations" -database postgres://flattrack:flattrack@localhost/flattrack?sslmode=disable down
    #+end_src
 
 * Project structure and details
