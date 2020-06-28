@@ -9,12 +9,12 @@
           can-cancel="false"
           open="true">
           <div class="hero is-info is-bold navbar-text">
-            <div class="block">
-              <img
-                src=""
-                alt="FlatTrack logo"
-                />
-            </div>
+            <!-- <div class="block"> -->
+            <!--   <img -->
+            <!--     src="" -->
+            <!--     alt="FlatTrack logo" -->
+            <!--     /> -->
+            <!-- </div> -->
             <h1 class="title is-2">FlatTrack</h1>
           </div>
           <div class="p-1">
