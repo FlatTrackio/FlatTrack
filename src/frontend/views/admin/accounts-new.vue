@@ -126,6 +126,7 @@
           size="is-medium"
           icon-left="plus"
           native-type="submit"
+          expanded
           @click="PostNewUser(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">
           Create user account
         </b-button>

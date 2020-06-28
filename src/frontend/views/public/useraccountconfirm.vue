@@ -86,11 +86,13 @@
               required>
             </b-input>
           </b-field>
+
           <b-button
             type="is-success"
             size="is-medium"
             icon-left="check"
             native-type="submit"
+            expanded
             @click="PostUserConfirm(id, secret, phoneNumber, password, passwordConfirm, jsBirthday)">
             Confirm my account
           </b-button>
