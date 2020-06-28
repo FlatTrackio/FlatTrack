@@ -10,7 +10,7 @@ cache:
     - /go
 
 variables:
-  ARCHES: "linux/amd64,linux/arm32,linux/arm64"
+  ARCHES: "linux/amd64,linux/arm/v7,linux/arm64"
   APP_BUILD_VERSION: 0.0.0
   APP_BUILD_MODE: development
   POSTGRES_DB: flattrack
