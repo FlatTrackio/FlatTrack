@@ -1,10 +1,5 @@
 FROM node:12.10.0-alpine AS ui
-LABEL maintainer="Caleb Woodbine <calebwoodbine.public@gmail.com>"
-ARG AppBuildVersion="0.0.0"
-ARG AppBuildHash="???"
-ARG AppBuildDate="???"
-ARG AppBuildMode="development"
-
+RUN apk add python2 make g++
 WORKDIR /app
 COPY src /app/src
 COPY public /app/public
@@ -36,6 +31,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
   src/backend/main.go
 
 FROM scratch
+LABEL maintainer="Caleb Woodbine <calebwoodbine.public@gmail.com>"
 WORKDIR /app
 ENV PATH=/app
 COPY --from=ui /app/dist /app/dist
