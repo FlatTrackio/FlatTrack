@@ -139,7 +139,7 @@
             password-reveal
             placeholder="Confirm your password"
             icon="textbox-password"
-            @keyup.enter.native="Register({ language, timezone, flatName, user: { names, email, password } })"
+            @keyup.enter.native="Register({ language, timezone, flatName, user: { names, email, password, passwordConfirm, jsBirthday, phoneNumber } })"
             size="is-medium"
             maxlength="70"
             pattern="^([a-z]*)([A-Z]*).{10,}$"
@@ -215,6 +215,7 @@ export default {
           localStorage.setItem('authToken', resp.data.data)
         } else {
           common.DisplayFailureToast('Failed to find login token after registration')
+          return
         }
         common.DisplaySuccessToast('Welcome to FlatTrack!')
         setTimeout(() => {
@@ -222,8 +223,9 @@ export default {
           window.location.href = '/'
         }, 3 * 1000)
       }).catch(err => {
+        console.log(err)
         loadingComponent.close()
-        common.DisplayFailureToast(err.response.data.metadata.response)
+        common.DisplayFailureToast(err.response.data.metadata.response || err)
       })
     }
   }

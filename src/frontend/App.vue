@@ -124,7 +124,7 @@ $breadcrumb-item-color: $link;
 }
 
 html {
-    background-color: #f3f3f3;
+    background-color: #fbfbfb;
 }
 
 .pointer-cursor-on-hover {

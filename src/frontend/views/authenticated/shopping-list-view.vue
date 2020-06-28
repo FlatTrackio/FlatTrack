@@ -60,7 +60,7 @@
             <div>
               <div class="content">
                 <label class="label">Notes</label>
-                <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover" @click="editing = true; editingMeta = true; FocusNotes()">
+                <p class="display-is-editable subtitle is-4 pointer-cursor-on-hover notes-highlight" @click="editing = true; editingMeta = true; FocusNotes()">
                   <i>
                     {{ notes }}
                   </i>
@@ -79,7 +79,7 @@
         <b-tag type="is-warning" v-else-if="!completed">Uncompleted</b-tag>
         <br/>
         <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block is-marginless" v-model="itemDisplayState">
-          <b-tab-item icon="" label="All"></b-tab-item>
+          <b-tab-item icon="format-list-checks" label="All"></b-tab-item>
           <b-tab-item icon="playlist-remove" label="Unobtained"></b-tab-item>
           <b-tab-item icon="playlist-check" label="Obtained"></b-tab-item>
         </b-tabs>
@@ -634,5 +634,12 @@ export default {
 
 .ListBarTop {
     top: 0;
+}
+
+.notes-highlight {
+    background-color: #fff;
+    padding: 10px;
+    box-shadow: 0 0 30px -35px #000;
+    border-radius: 5px;
 }
 </style>

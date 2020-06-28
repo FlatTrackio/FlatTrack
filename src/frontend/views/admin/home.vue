@@ -39,7 +39,7 @@ export default {
     return {
       apps: [
         {
-          name: 'Flatmates',
+          name: 'Accounts',
           description: 'Manage your flatmates accounts',
           icon: 'account-group',
           ref: '/admin/accounts'

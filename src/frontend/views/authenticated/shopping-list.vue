@@ -12,7 +12,7 @@
         <p class="subtitle is-3">Manage your weekly shop</p>
         <div>
           <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block is-marginless" v-model="listDisplayState">
-            <b-tab-item icon="" label="All"></b-tab-item>
+            <b-tab-item icon="format-list-checks" label="All"></b-tab-item>
             <b-tab-item icon="playlist-remove" label="Uncompleted"></b-tab-item>
             <b-tab-item icon="playlist-check" label="Completed"></b-tab-item>
           </b-tabs>

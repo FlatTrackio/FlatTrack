@@ -3,11 +3,16 @@
     <b-navbar :fixed-top="ratherSmallerScreen !== true" type="is-info" class="gradient-blue" shadow="true" transparent="false">
       <template slot="brand">
         <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
-          <img
-            src=""
-            alt="FlatTrack logo"
-            />
-          <h1 class="title is-5" style="color: #fff;">{{ flatName }}</h1>
+          <!-- <img -->
+          <!--   src="" -->
+          <!--   alt="FlatTrack logo" -->
+          <!--   /> -->
+          <h1 class="title is-5" style="color: #fff;">
+            FlatTrack
+            <span style="font-weight: normal;">
+              {{ flatName }}
+            </span>
+          </h1>
         </b-navbar-item>
       </template>
       <template slot="start">

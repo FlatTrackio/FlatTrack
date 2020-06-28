@@ -1,153 +1,164 @@
 <template>
-  <div>
-    <div class="container">
-      <section class="section">
-        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
-            <ul>
-              <li><router-link to="/admin/accounts">Accounts</router-link></li>
-              <li class="is-active"><router-link to="/admin/accounts/new">Edit account</router-link></li>
-            </ul>
-        </nav>
-        <h1 class="title is-1">Edit account</h1>
-        <p class="subtitle is-4">Edit an existing user account</p>
-        <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
-        <div v-if="registered !== true">
-          <div class="notification is-warning">
-            <p class="subtitle is-6">This account doesn't appear to be registered</p>
-            <b-button @click="showRegistrationCompletionDetails = !showRegistrationCompletionDetails">{{ showRegistrationCompletionDetails === false ? 'Show' : 'Hide' }} registration details</b-button>
-            <div v-if="showRegistrationCompletionDetails === true">
-              <br/>
-              <div class="notification">
-                <div class="content">
-                  <qrcode-vue :value="windowOrigin + '/useraccountconfirm/' + userAccountConfirmId + '?secret=' + userAccountConfirmSecret" :size="200" level="H"></qrcode-vue>
-                  <br/>
-                  <p>
-                    Have your flatmate scan the QR code above, or <a type="is-text" @click="CopyRegistrationLink">click here</a> to copy the registration link for you to send to your flatmate
-                  </p>
-                </div>
+<div>
+  <div class="container">
+    <section class="section">
+      <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
+        <ul>
+          <li><router-link to="/admin/accounts">Accounts</router-link></li>
+          <li class="is-active"><router-link to="/admin/accounts/new">Edit account</router-link></li>
+        </ul>
+      </nav>
+      <h1 class="title is-1">Edit account</h1>
+      <p class="subtitle is-4">Edit an existing user account</p>
+      <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
+      <div v-if="registered !== true">
+        <div class="notification is-warning">
+          <p class="subtitle is-6">This account doesn't appear to be registered</p>
+          <b-button @click="showRegistrationCompletionDetails = !showRegistrationCompletionDetails">{{ showRegistrationCompletionDetails === false ? 'Show' : 'Hide' }} registration details</b-button>
+          <div v-if="showRegistrationCompletionDetails === true">
+            <br/>
+            <div class="notification">
+              <div class="content">
+                <qrcode-vue :value="windowOrigin + '/useraccountconfirm/' + userAccountConfirmId + '?secret=' + userAccountConfirmSecret" :size="200" level="H"></qrcode-vue>
+                <br/>
+                <p>
+                  Have your flatmate scan the QR code above, or <a type="is-text" @click="CopyRegistrationLink">click here</a> to copy the registration link for you to send to your flatmate
+                </p>
               </div>
             </div>
           </div>
-          <br/>
         </div>
-
-        <b-field label="Name(s)">
-          <b-input
-            type="text"
-            v-model="names"
-            maxlength="60"
-            placeholder="Enter your flatmate's name"
-            icon="textbox"
-            size="is-medium"
-            required>
-          </b-input>
-        </b-field>
-
-        <b-field label="Email">
-          <b-input
-            type="email"
-            v-model="email"
-            maxlength="70"
-            placeholder="Enter your flatmate's email"
-            icon="email"
-            size="is-medium"
-            required>
-          </b-input>
-        </b-field>
-
-        <section>
-          <b-field label="Groups">
-            <b-taginput
-              v-model="groupsFull"
-              :data="availableGroups"
-              field="name"
-              autocomplete
-              open-on-focus
-              ellipsis
-              icon="account-group"
-              placeholder="Select groups"
-              size="is-medium"
-              @typing="GetFilteredGroups">
-          </b-field>
-        </section>
         <br/>
+      </div>
 
-        <b-field label="Phone number (optional)">
-          <b-input
-            type="tel"
-            v-model="phoneNumber"
-            placeholder="Enter your flatmate's phone number"
-            icon="phone"
+      <b-field label="Name(s)">
+        <b-input
+          type="text"
+          v-model="names"
+          maxlength="60"
+          placeholder="Enter your flatmate's name"
+          icon="textbox"
+          size="is-medium"
+          required>
+        </b-input>
+      </b-field>
+
+      <b-field label="Email">
+        <b-input
+          type="email"
+          v-model="email"
+          maxlength="70"
+          placeholder="Enter your flatmate's email"
+          icon="email"
+          size="is-medium"
+          required>
+        </b-input>
+      </b-field>
+
+      <section>
+        <b-field label="Groups">
+          <b-taginput
+            v-model="groupsFull"
+            :data="availableGroups"
+            field="name"
+            autocomplete
+            open-on-focus
+            ellipsis
+            icon="account-group"
+            placeholder="Select groups"
             size="is-medium"
-            maxlength="30">
-          </b-input>
+            @typing="GetFilteredGroups">
         </b-field>
+      </section>
+      <br/>
 
-        <b-field label="Birthday (optional)">
-          <b-datepicker
-            v-model="jsBirthday"
-            :max-date="maxDate"
-            :show-week-numbers="true"
-            :focused-date="focusedDate"
-            placeholder="Click to select birthday"
-            icon="cake-variant"
-            size="is-medium"
-            trap-focus>
-          </b-datepicker>
-        </b-field>
-        <br/>
+      <b-field label="Phone number (optional)">
+        <b-input
+          type="tel"
+          v-model="phoneNumber"
+          placeholder="Enter your flatmate's phone number"
+          icon="phone"
+          size="is-medium"
+          maxlength="30">
+        </b-input>
+      </b-field>
 
-        <div class="field has-addons">
-          <label class="label">Password</label>
-          <p class="control">
-            <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
-          </p>
-        </div>
-        <b-field>
-          <b-input
-            type="password"
-            v-model="password"
-            password-reveal
-            maxlength="70"
-            placeholder="Enter a password for your flatmate"
-            icon="textbox-password"
-            pattern="^([a-z]*)([A-Z]*).{10,}$"
-            validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
-            size="is-medium">
-          </b-input>
-        </b-field>
+      <b-field label="Birthday (optional)">
+        <b-datepicker
+          v-model="jsBirthday"
+          :max-date="maxDate"
+          :show-week-numbers="true"
+          :focused-date="focusedDate"
+          placeholder="Click to select birthday"
+          icon="cake-variant"
+          size="is-medium"
+          trap-focus>
+        </b-datepicker>
+      </b-field>
+      <br/>
 
-        <b-field label="Confirm password">
-          <b-input
-            type="password"
-            v-model="passwordConfirm"
-            password-reveal
-            maxlength="70"
-            placeholder="Confirm a password for your flatmate"
-            icon="textbox-password"
-            pattern="^([a-z]*)([A-Z]*).{10,}$"
-            validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
-            size="is-medium">
-          </b-input>
-        </b-field>
+      <div class="field has-addons">
+        <label class="label">Password</label>
+        <p class="control">
+          <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
+        </p>
+      </div>
+      <b-field>
+        <b-input
+          type="password"
+          v-model="password"
+          password-reveal
+          maxlength="70"
+          placeholder="Enter a password for your flatmate"
+          icon="textbox-password"
+          pattern="^([a-z]*)([A-Z]*).{10,}$"
+          validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+          size="is-medium">
+        </b-input>
+      </b-field>
+
+      <b-field label="Confirm password">
+        <b-input
+          type="password"
+          v-model="passwordConfirm"
+          password-reveal
+          maxlength="70"
+          placeholder="Confirm a password for your flatmate"
+          icon="textbox-password"
+          pattern="^([a-z]*)([A-Z]*).{10,}$"
+          validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+          size="is-medium">
+        </b-input>
+      </b-field>
+      <b-field>
         <b-button
           type="is-success"
           size="is-medium"
           icon-left="delta"
           native-type="submit"
+          expanded
           @click="PatchUserAccount(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">
           Update user account
         </b-button>
-        <b-button
-          type="is-danger"
-          size="is-medium"
-          icon-left="delete"
-          native-type="submit"
-          @click="DeleteUserAccount(id)">
-        </b-button>
-      </section>
-    </div>
+        <p class="control">
+          <b-button
+            type="is-danger"
+            size="is-medium"
+            icon-left="delete"
+            native-type="submit"
+            @click="DeleteUserAccount(id)">
+          </b-button>
+        </p>
+      </b-field>
+      <p class="subtitle is-6">
+        Created {{ TimestampToCalendar(creationTimestamp) }} <br />
+        <span v-if="creationTimestamp !== modificationTimestamp">
+          Modified {{ TimestampToCalendar(modificationTimestamp) }}
+        </span>
+      </p>
+    </section>
   </div>
+</div>
 </template>
 
 <script>
@@ -225,6 +236,8 @@ export default {
         this.registered = user.registered
         this.groups = user.groups
         this.groupsFull = []
+        this.creationTimestamp = user.creationTimestamp
+        this.modificationTimestamp = user.modificationTimestamp
         this.availableGroups.map(group => {
           if (this.groups.includes(group.name)) {
             this.groupsFull.push(group)

@@ -50,7 +50,7 @@ func main() {
 	}
 	err = migrations.Migrate(db)
 	if err != nil {
-		log.Println(err)
+		log.Println("migrations:", err)
 		return
 	}
 
