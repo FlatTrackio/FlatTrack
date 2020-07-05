@@ -10,6 +10,27 @@
         </nav>
         <h1 class="title is-1">Shopping list</h1>
         <p class="subtitle is-3">Manage your weekly shop</p>
+        <section>
+          <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/tags')">
+            <div class="card-content">
+              <div class="media">
+                <div class="media-left">
+                  <b-icon
+                    icon="tag-multiple"
+                    size="is-medium">
+                  </b-icon>
+                </div>
+                <div class="media-content">
+                  <p class="title is-4">Manage tags</p>
+                </div>
+                <div class="media-right">
+                  <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <br />
         <div>
           <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block is-marginless" v-model="listDisplayState">
             <b-tab-item icon="format-list-checks" label="All"></b-tab-item>
