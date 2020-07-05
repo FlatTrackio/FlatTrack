@@ -175,10 +175,14 @@ type ShoppingItemSelector struct {
 	TemplateListItemSelector string `json:"templateListItemSelector"`
 }
 
-// ShoppingItemTag ...
+// ShoppingTag ...
 // selects a tag
-type ShoppingItemTag struct {
-	Name string `json:"name"`
+type ShoppingTag struct {
+	ID                    string `json:"id"`
+	Name                  string `json:"name"`
+	CreationTimestamp     int    `json:"creationTimestamp"`
+	ModificationTimestamp int    `json:"modificationTimestamp"`
+	DeletionTimestamp     int    `json:"deletionTimestamp"`
 }
 
 // UserCreationSecretSpec ...
