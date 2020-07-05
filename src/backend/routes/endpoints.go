@@ -229,8 +229,23 @@ func GetEndpoints(db *sql.DB) types.Endpoints {
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/tags",
-			HandlerFunc:  HTTPuseMiddleware(GetAllShoppingListItemTags(db), HTTPvalidateJWT(db)),
+			HandlerFunc:  HTTPuseMiddleware(CreateShoppingTag(db), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodPost,
+		},
+		{
+			EndpointPath: "/apps/shoppinglist/tags",
+			HandlerFunc:  HTTPuseMiddleware(GetAllShoppingTags(db), HTTPvalidateJWT(db)),
 			HTTPMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: "/apps/shoppinglist/tags/{id}",
+			HandlerFunc:  HTTPuseMiddleware(UpdateShoppingTag(db), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodPut,
+		},
+		{
+			EndpointPath: "/apps/shoppinglist/tags/{id}",
+			HandlerFunc:  HTTPuseMiddleware(DeleteShoppingTag(db), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodDelete,
 		},
 	}
 }
