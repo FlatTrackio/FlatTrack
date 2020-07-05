@@ -104,16 +104,18 @@ func GetShoppingTag(db *sql.DB, id string) (tag types.ShoppingTag, err error) {
 
 // GetAllShoppingTags ...
 // returns a list of all tags used in items across lists
-func GetAllShoppingTags(db *sql.DB) (tags []string, err error) {
-	sqlStatement := `select distinct name from shopping_list_tag order by name`
+func GetAllShoppingTags(db *sql.DB) (tags []types.ShoppingTag, err error) {
+	sqlStatement := `select * from shopping_list_tag order by name`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		return tags, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var tag string
-		rows.Scan(&tag)
+		tag, err := GetTagObjectFromRows(rows)
+		if err != nil {
+			return tags, err
+		}
 		tags = append(tags, tag)
 	}
 	return tags, err
