@@ -56,7 +56,12 @@
             </b-numberinput>
           </b-field>
           <div>
-            <label class="label">Tag (optional)</label>
+            <div class="field has-addons">
+              <label class="label">Tag (optional)</label>
+              <p class="control">
+                <infotooltip message="To manage tags, navigate to the Apps -> Shopping List -> Manage tags page"/>
+              </p>
+            </div>
             <b-field>
               <p class="control" v-if="tags.length > 0">
                 <b-dropdown>
@@ -68,7 +73,7 @@
                   </b-button>
 
                   <div v-for="existingTag in tags" v-bind:key="existingTag">
-                    <b-dropdown-item v-if="existingTag !== '' && existingTag.length > 0 && typeof existingTag !== 'undefined'" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
+                    <b-dropdown-item v-if="existingTag.name !== '' && existingTag.name.length > 0 && typeof existingTag.name !== 'undefined'" :value="existingTag.name" @click="tag = existingTag.name">{{ existingTag.name }}</b-dropdown-item>
                   </div>
                 </b-dropdown>
               </p>
@@ -134,6 +139,9 @@ import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
   name: 'shopping-item-view',
+  components: {
+    infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
+  },
   data () {
     return {
       shoppingListId: this.$route.params.listId,

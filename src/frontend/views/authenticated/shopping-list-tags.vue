@@ -40,7 +40,7 @@
           </b-field>
           <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
           <section>
-            <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/tag/new')">
+            <div class="card pointer-cursor-on-hover" @click="AddNewTag">
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
@@ -60,24 +60,13 @@
             </div>
           </section>
         </div>
-        <floatingAddButton path="/apps/shopping-list/tag/new"/>
+        <!-- TODO fix floating button -->
+        <floatingAddButton path="/apps/shopping-list/tags#newtag=prompt"/>
         <br/>
         <div v-if="tagsFiltered.length > 0">
           <!-- Card per-tag -->
-          <div class="card" v-for="tag in tags" v-bind:key="tag">
-            <div class="card-content card-content-list">
-              <div class="media">
-                <div class="media-left">
-                  <b-icon icon="tag" size="is-medium" type="is-midgray"></b-icon>
-                </div>
-                <div class="media-content">
-                  <p class="title is-4"> {{ tag.name }} </p>
-                </div>
-                <div class="media-right">
-                  <!-- Delete button -->
-                </div>
-              </div>
-            </div>
+          <div v-for="(tag, index) in tags" v-bind:key="tag">
+            <tagCard :tag="tag" :index="index" />
           </div>
           <br/>
           <p>{{ tagsFiltered.length }} tag(s)</p>
@@ -90,7 +79,7 @@
                   <b-icon icon="tag" size="is-medium" type="is-midgray"></b-icon>
                 </div>
                 <div class="media-content">
-                  <p class="subtitle is-4" v-if="listSearch === '' && lists.length === 0">No tags added yet.</p>
+                  <p class="subtitle is-4" v-if="listSearch === '' && tags.length === 0">No tags added yet.</p>
                   <p class="subtitle is-4" v-else-if="listSearch !== ''">No tags found.</p>
                 </div>
               </div>
@@ -105,6 +94,7 @@
 <script>
 import common from '@/frontend/common/common'
 import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
+import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
   name: 'Shopping Tags',
@@ -118,13 +108,17 @@ export default {
     }
   },
   components: {
-    floatingAddButton: () => import('@/frontend/components/common/floating-add-button.vue')
+    floatingAddButton: () => import('@/frontend/components/common/floating-add-button.vue'),
+    tagCard: () => import('@/frontend/components/authenticated/shopping-list-tag-card.vue')
   },
   computed: {
     tagsFiltered () {
       return this.tags.filter((item) => {
         return this.TagDisplayState(item)
       })
+    },
+    newTag () {
+      return this.$route.query.newtag
     }
   },
   methods: {
@@ -133,10 +127,44 @@ export default {
     },
     GetShoppingTags () {
       shoppinglist.GetShoppingTags().then(resp => {
-        this.pageLoading = false
         this.tags = resp.data.list || []
+        this.pageLoading = false
       }).catch(() => {
         common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping tags')
+      })
+    },
+    AddNewTag () {
+      Dialog.prompt({
+        message: `Enter the name of a tag to create.`,
+        inputAttrs: {
+          placeholder: 'e.g. Fruits and Veges',
+          maxlength: 30
+        },
+        trapFocus: true,
+        onConfirm: (value) => {
+          shoppinglist.PostShoppingTag(value).catch(err => {
+            common.DisplayFailureToast(`Failed to create tag; ${err.response.data.metadata.response}`)
+          })
+        }
+      })
+    },
+    DeleteShoppingListTag (id, index) {
+      Dialog.confirm({
+        title: 'Delete tag',
+        message: 'Are you sure that you wish to delete this shopping list tag?' + '<br/>' + 'This action cannot be undone.',
+        confirmText: 'Delete tag',
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: () => {
+          this.itemDeleting = true
+          shoppinglist.DeleteShoppingTag(id).then(resp => {
+            common.DisplaySuccessToast(resp.data.metadata.response)
+            this.list.splice(index, 1)
+          }).catch(err => {
+            common.DisplayFailureToast('Failed to delete shopping tag' + ' - ' + err.response.data.metadata.response)
+            this.itemDeleting = false
+          })
+        }
       })
     },
     TagDisplayState (tag) {
@@ -155,6 +183,11 @@ export default {
     sortBy () {
       this.listIsLoading = true
       this.GetShoppingTags()
+    },
+    newTag () {
+      if (this.newTag === 'prompt') {
+        this.AddNewTag()
+      }
     }
   },
   async beforeMount () {
