@@ -276,11 +276,3 @@ func GetListCount(db *sql.DB) (count int, err error) {
 
 	return count, err
 }
-
-// GetTagObjectFromRows ...
-// returns a shopping tag object from rows
-func GetTagObjectFromRows(rows *sql.Rows) (tag types.ShoppingTag, err error) {
-	rows.Scan(&tag.ID, &tag.Name, &tag.CreationTimestamp, &tag.ModificationTimestamp, &tag.DeletionTimestamp)
-	err = rows.Err()
-	return tag, err
-}

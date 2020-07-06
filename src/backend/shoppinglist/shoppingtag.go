@@ -22,11 +22,13 @@ func CreateShoppingTag(db *sql.DB, newTag types.ShoppingTag) (tag types.Shopping
 		return tag, err
 	}
 
+	newTag.AuthorLast = newTag.Author
+
 	// create
-	sqlStatement := `insert into shopping_tag (name)
-                         values ($1)
+	sqlStatement := `insert into shopping_list_tag (name, author, authorLast)
+                         values ($1, $2, $3)
                          returning *`
-	rows, err := db.Query(sqlStatement, newTag.Name)
+	rows, err := db.Query(sqlStatement, newTag.Name, newTag.Author, newTag.AuthorLast)
 	if err != nil {
 		return newTag, err
 	}
@@ -92,7 +94,7 @@ func UpdateShoppingListTag(db *sql.DB, listID string, tag string, tagUpdate stri
 // GetShoppingTags ...
 // returns a tag, given an id
 func GetShoppingTag(db *sql.DB, id string) (tag types.ShoppingTag, err error) {
-	sqlStatement := `select name from shopping_list_tag where id = $1`
+	sqlStatement := `select * from shopping_list_tag where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
 		return tag, err
@@ -148,4 +150,12 @@ func DeleteShoppingTag(db *sql.DB, id string) (err error) {
 	rows, err := db.Query(sqlStatement, id)
 	defer rows.Close()
 	return err
+}
+
+// GetTagObjectFromRows ...
+// returns a shopping tag object from rows
+func GetTagObjectFromRows(rows *sql.Rows) (tag types.ShoppingTag, err error) {
+	rows.Scan(&tag.ID, &tag.Name, &tag.Author, &tag.AuthorLast, &tag.CreationTimestamp, &tag.ModificationTimestamp, &tag.DeletionTimestamp)
+	err = rows.Err()
+	return tag, err
 }
