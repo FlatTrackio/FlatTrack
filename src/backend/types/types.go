@@ -180,6 +180,8 @@ type ShoppingItemSelector struct {
 type ShoppingTag struct {
 	ID                    string `json:"id"`
 	Name                  string `json:"name"`
+	Author                string `json:"author"`
+	AuthorLast            string `json:"authorLast"`
 	CreationTimestamp     int    `json:"creationTimestamp"`
 	ModificationTimestamp int    `json:"modificationTimestamp"`
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
