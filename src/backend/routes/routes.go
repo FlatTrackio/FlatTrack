@@ -1362,7 +1362,7 @@ func GetAllShoppingTags(db *sql.DB) http.HandlerFunc {
 
 // CreateShoppingTag ...
 // creates a tag name
-func CreateShoppingTag(db *sql.DB) http.HandlerFunc {
+func PostShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to create a shopping tag"
 		code := http.StatusInternalServerError
@@ -1371,10 +1371,14 @@ func CreateShoppingTag(db *sql.DB) http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &tag)
 
+		id, errID := users.GetIDFromJWT(db, r)
+		tag.Author = id
 		tag, err := shoppinglist.CreateShoppingTag(db, tag)
-		if err == nil {
+		if err == nil && errID == nil {
 			response = "Updated a shopping tag"
 			code = http.StatusOK
+		} else {
+			response = err.Error()
 		}
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
