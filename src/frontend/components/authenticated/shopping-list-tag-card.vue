@@ -1,0 +1,91 @@
+<template>
+  <div class="card">
+    <div class="card-content card-content-list">
+      <div class="media">
+        <div class="media-left">
+          <b-icon icon="tag" size="is-medium" type="is-midgray"></b-icon>
+        </div>
+        <div class="media-content">
+          <p class="title is-4"> {{ tag.name }} </p>
+          <p class="subtitle is-6">
+            <span v-if="tag.creationTimestamp == tag.modificationTimestamp">
+              Created {{ TimestampToCalendar(tag.creationTimestamp) }}, by {{ authorNames }}
+            </span>
+            <span v-else>
+              Updated {{ TimestampToCalendar(tag.modificationTimestamp) }}, by {{ authorLastNames }}
+            </span>
+          </p>
+        </div>
+        <div class="media-right">
+          <!-- Delete button -->
+          <b-tooltip label="Delete" class="is-paddingless" :delay="200">
+            <b-button
+              type="is-danger"
+              icon-right="delete"
+              :loading="itemDeleting"
+              @click="DeleteShoppingListTag(tag.id, index)" />
+          </b-tooltip>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import common from '@/frontend/common/common'
+import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
+import flatmates from '@/frontend/requests/authenticated/flatmates'
+import { DialogProgrammatic as Dialog } from 'buefy'
+
+export default {
+  name: 'Shopping Tag card',
+  data () {
+    return {
+      authorNames: '...',
+      authorNamesLast: '...'
+    }
+  },
+  props: {
+    tag: Object,
+    tags: Object
+  },
+  methods: {
+    TimestampToCalendar (timestamp) {
+      return common.TimestampToCalendar(timestamp)
+    },
+    DeleteShoppingListTag (id, index) {
+      Dialog.confirm({
+        title: 'Delete tag',
+        message: 'Are you sure that you wish to delete this shopping list tag?' + '<br/>' + 'This action cannot be undone.',
+        confirmText: 'Delete tag',
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: () => {
+          this.itemDeleting = true
+          shoppinglist.DeleteShoppingTag(id).then(resp => {
+            common.DisplaySuccessToast(resp.data.metadata.response)
+            this.tags.splice(index, 1)
+          }).catch(err => {
+            common.DisplayFailureToast('Failed to delete shopping tag' + ' - ' + err.response.data.metadata.response)
+            this.itemDeleting = false
+          })
+        }
+      })
+    }
+  },
+  async beforeMount () {
+    flatmates.GetFlatmate(this.tag.author).then(resp => {
+      this.authorNames = resp.data.spec.names
+      return flatmates.GetFlatmate(this.tag.authorLast)
+    }).then(resp => {
+      this.authorLastNames = resp.data.spec.names
+    }).catch(err => {
+      common.DisplayFailureToast('Unable to find author of tag' + '<br/>' + err.response.data.metadata.response)
+    })
+  }
+}
+</script>
+
+<style scoped>
+
+</style>
