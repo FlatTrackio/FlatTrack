@@ -5,6 +5,8 @@ begin;
 create table if not exists shopping_list_tag (
   id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
   name text not null,
+  author text not null,
+  authorLast text not null,
   creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
   modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
   deletionTimestamp int not null default 0,
