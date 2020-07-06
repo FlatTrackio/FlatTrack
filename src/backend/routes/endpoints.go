@@ -229,7 +229,7 @@ func GetEndpoints(db *sql.DB) types.Endpoints {
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/tags",
-			HandlerFunc:  HTTPuseMiddleware(CreateShoppingTag(db), HTTPvalidateJWT(db)),
+			HandlerFunc:  HTTPuseMiddleware(PostShoppingTag(db), HTTPvalidateJWT(db)),
 			HTTPMethod:   http.MethodPost,
 		},
 		{
