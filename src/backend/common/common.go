@@ -102,6 +102,12 @@ func GetAppHealthEnabled() (output string) {
 	return GetEnvOrDefault("APP_HEALTH_ENABLED", "true")
 }
 
+// GetAppEnvFile ...
+// location of an env file to load
+func GetAppEnvFile() (output string) {
+	return GetEnvOrDefault("APP_ENV_FILE", ".env")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {
