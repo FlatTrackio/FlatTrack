@@ -84,7 +84,8 @@ $colors: (
     "success": ($success, $success-invert),
     "warning": ($warning, $warning-invert),
     "danger": ($danger, $danger-invert),
-    "lightred": ($lightred, #b55c5c)
+    "lightred": ($lightred, #b55c5c),
+    "lightyellow": (#e2ab1f, #e2ab1f)
 );
 
 $link: hsl(217, 71%, 53%);
