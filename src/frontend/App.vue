@@ -84,7 +84,8 @@ $colors: (
     "success": ($success, $success-invert),
     "warning": ($warning, $warning-invert),
     "danger": ($danger, $danger-invert),
-    "lightred": ($lightred, #b55c5c)
+    "lightred": ($lightred, #b55c5c),
+    "lightyellow": (#e2ab1f, #e2ab1f)
 );
 
 $link: hsl(217, 71%, 53%);
@@ -134,18 +135,18 @@ html {
 .card {
     user-select: none;
     border: 1px dashed rgba(0, 0, 0, .0);
+    transition: box-shadow 0.4s;
 }
 
 .card:hover {
     background-color: #fbfbfb;
-    transition: box-shadow 0.4s;
+    transition: box-shadow 0.4s, background-color 0.3s;
     box-shadow: black 0 0px 45px -33px;
-    transition: box-shadow 0.1s;
 }
 
 .card:active {
     background-color: #f1f0f0;
-    transition: height 0.1s, width 0.1s, margin 0.1s;
+    transition: height 0.1s, width 0.1s, margin 0.1s, box-shadow 0.4s;
     height: calc(100% - 8px);
     border: 1px dashed #000000;
     box-shadow: black 0 0px 66px -27px;
@@ -159,6 +160,14 @@ html {
 .form-width {
     width: 380px;
     margin: auto;
+}
+
+.button {
+    box-shadow: #ffffff -1px -1px 4px 0px, #bababa 1px 1px 4px 0px;
+}
+
+.navbar-shadow {
+    box-shadow: 0px -9px 23px 4px #292929;
 }
 
 @media (max-width : 870px) {

@@ -6,7 +6,7 @@
     multilined>
     <b-icon
       icon="information-outline"
-      type="is-black"
+      type="is-lightyellow"
       custom-size="mdi-24px">
     </b-icon>
   </b-tooltip>

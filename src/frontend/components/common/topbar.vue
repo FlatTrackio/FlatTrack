@@ -1,6 +1,6 @@
 <template>
   <div id="topbar">
-    <b-navbar :fixed-top="ratherSmallerScreen !== true" type="is-info" class="gradient-blue" shadow="true" transparent="false">
+    <b-navbar class="navbar-shadow gradient-blue" :fixed-top="ratherSmallerScreen !== true" type="is-info" transparent="false">
       <template slot="brand">
         <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
           <!-- <img -->

@@ -68,6 +68,7 @@
             placeholder="Select groups"
             size="is-medium"
             @typing="GetFilteredGroups">
+          </b-taginput>
         </b-field>
       </section>
       <br/>
