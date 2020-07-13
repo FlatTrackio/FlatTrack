@@ -1,7 +1,7 @@
 <template>
   <div class="floating-add-button">
     <md-speed-dial md-direction="bottom md-bottom-right">
-      <md-speed-dial-target @click="goToRef(path)" class="floating-add-button-colour">
+      <md-speed-dial-target @click="goToRefOrRunFunc(path, func)" class="floating-add-button-colour">
         <md-icon>add</md-icon>
       </md-speed-dial-target>
     </md-speed-dial>
@@ -12,11 +12,21 @@
 export default {
   name: 'floating add button',
   props: {
-    path: String
+    path: String,
+    func: Function
   },
   methods: {
     goToRef (ref) {
       this.$router.push({ path: ref })
+    },
+    goToRefOrRunFunc (ref, func) {
+      if (ref !== '' && typeof ref !== 'undefined') {
+        this.goToRef(ref)
+        return
+      }
+      if (typeof func === 'function') {
+        func()
+      }
     }
   }
 }
