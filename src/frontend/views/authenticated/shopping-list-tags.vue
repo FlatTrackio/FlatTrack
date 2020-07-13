@@ -61,12 +61,12 @@
           </section>
         </div>
         <!-- TODO fix floating button -->
-        <floatingAddButton path="/apps/shopping-list/tags#newtag=prompt"/>
+        <floatingAddButton :func="AddNewTag" />
         <br/>
         <div v-if="tagsFiltered.length > 0">
           <!-- Card per-tag -->
-          <div v-for="(tag, index) in tags" v-bind:key="tag">
-            <tagCard :tag="tag" :index="index" />
+          <div v-for="(tag, index) in tagsFiltered" v-bind:key="tag">
+            <tagCard :tag="tag" :index="index" :tags="tags" />
           </div>
           <br/>
           <p>{{ tagsFiltered.length }} tag(s)</p>
