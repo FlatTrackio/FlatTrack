@@ -8,7 +8,7 @@
           fullheight="true"
           can-cancel="false"
           open="true">
-          <div class="hero is-info is-bold navbar-text">
+          <div class="hero is-info is-bold navbar-text navbar-shadow">
             <!-- <div class="block"> -->
             <!--   <img -->
             <!--     src="" -->
