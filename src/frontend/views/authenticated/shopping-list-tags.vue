@@ -142,27 +142,11 @@ export default {
         },
         trapFocus: true,
         onConfirm: (value) => {
-          shoppinglist.PostShoppingTag(value).catch(err => {
-            common.DisplayFailureToast(`Failed to create tag; ${err.response.data.metadata.response}`)
-          })
-        }
-      })
-    },
-    DeleteShoppingListTag (id, index) {
-      Dialog.confirm({
-        title: 'Delete tag',
-        message: 'Are you sure that you wish to delete this shopping list tag?' + '<br/>' + 'This action cannot be undone.',
-        confirmText: 'Delete tag',
-        type: 'is-danger',
-        hasIcon: true,
-        onConfirm: () => {
-          this.itemDeleting = true
-          shoppinglist.DeleteShoppingTag(id).then(resp => {
-            common.DisplaySuccessToast(resp.data.metadata.response)
-            this.list.splice(index, 1)
+          shoppinglist.PostShoppingTag(value).then(() => {
+            this.pageLoading = true
+            this.GetShoppingTags()
           }).catch(err => {
-            common.DisplayFailureToast('Failed to delete shopping tag' + ' - ' + err.response.data.metadata.response)
-            this.itemDeleting = false
+            common.DisplayFailureToast(`Failed to create tag; ${err.response.data.metadata.response}`)
           })
         }
       })
