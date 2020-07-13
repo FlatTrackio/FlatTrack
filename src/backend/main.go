@@ -37,7 +37,8 @@ import (
 func main() {
 	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
 
-	_ = godotenv.Load(".env")
+	envFile := common.GetAppEnvFile()
+	_ = godotenv.Load(envFile)
 
 	dbUsername := common.GetDBusername()
 	dbPassword := common.GetDBpassword()
