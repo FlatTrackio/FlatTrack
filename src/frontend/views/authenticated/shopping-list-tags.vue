@@ -104,7 +104,7 @@ export default {
       deviceIsMobile: false,
       tagSearch: '',
       pageLoading: true,
-      sortBy: 'recentlyUpdated'
+      sortBy: 'alphabeticalDescending'
     }
   },
   components: {
