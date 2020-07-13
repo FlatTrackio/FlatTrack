@@ -56,7 +56,7 @@ export default {
     DeleteShoppingListTag (id, index) {
       Dialog.confirm({
         title: 'Delete tag',
-        message: 'Are you sure that you wish to delete this shopping list tag?' + '<br/>' + 'This action cannot be undone.',
+        message: 'Are you sure that you wish to delete this shopping list tag?' + '<br/>' + 'This action cannot be undone.' + '<br/>' + '<br/>' + 'Please note: this will not alter existing items with this tag',
         confirmText: 'Delete tag',
         type: 'is-danger',
         hasIcon: true,
