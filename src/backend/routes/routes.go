@@ -1365,7 +1365,7 @@ func GetAllShoppingTags(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// CreateShoppingTag ...
+// PostShoppingTag ...
 // creates a tag name
 func PostShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

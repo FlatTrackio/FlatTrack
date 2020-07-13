@@ -91,7 +91,7 @@ func UpdateShoppingListTag(db *sql.DB, listID string, tag string, tagUpdate stri
 	return tagNew, err
 }
 
-// GetShoppingTags ...
+// GetShoppingTag ...
 // returns a tag, given an id
 func GetShoppingTag(db *sql.DB, id string) (tag types.ShoppingTag, err error) {
 	sqlStatement := `select * from shopping_list_tag where id = $1`
