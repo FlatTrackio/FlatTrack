@@ -227,10 +227,13 @@ function PostShoppingTag (name) {
 
 // GetShoppingTags
 // returns a list of shopping tags
-function GetShoppingTags () {
+function GetShoppingTags (sortBy) {
   return Request({
     url: `/api/apps/shoppinglist/tags`,
-    method: 'GET'
+    method: 'GET',
+    params: {
+      sortBy
+    }
   })
 }
 
