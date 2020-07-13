@@ -2494,7 +2494,7 @@ var _ = Describe("API e2e tests", func() {
 		Expect(shoppingItem.ListID).To(Equal(shoppingListCreated.ID), "shopping item must belong to a list")
 		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
-		shoppingItemTagUpdate := types.ShoppingItemTag{
+		shoppingItemTagUpdate := types.ShoppingTag{
 			Name: "Veges",
 		}
 		By("patching the tag")
@@ -2653,7 +2653,7 @@ var _ = Describe("API e2e tests", func() {
 		for _, item := range newShoppingListItems {
 			for _, templatedItem := range shoppingListItems {
 				if templatedItem.Name == item.Name {
-					foundTotal += 1
+					foundTotal++
 					continue
 				}
 			}
