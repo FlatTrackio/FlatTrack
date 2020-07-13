@@ -22,7 +22,6 @@
             <b-button
               type="is-danger"
               icon-right="delete"
-              :loading="itemDeleting"
               @click="DeleteShoppingListTag(tag.id, index)" />
           </b-tooltip>
         </div>
@@ -47,6 +46,7 @@ export default {
   },
   props: {
     tag: Object,
+    index: Number,
     tags: Object
   },
   methods: {
@@ -64,7 +64,7 @@ export default {
           this.itemDeleting = true
           shoppinglist.DeleteShoppingTag(id).then(resp => {
             common.DisplaySuccessToast(resp.data.metadata.response)
-            this.tags.splice(index, 1)
+            this.list.splice(index, 1)
           }).catch(err => {
             common.DisplayFailureToast('Failed to delete shopping tag' + ' - ' + err.response.data.metadata.response)
             this.itemDeleting = false
