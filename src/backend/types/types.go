@@ -187,6 +187,23 @@ type ShoppingTag struct {
 	DeletionTimestamp     int    `json:"deletionTimestamp"`
 }
 
+// ShoppingTagOptions ...
+// options for list items
+type ShoppingTagOptions struct {
+	SortBy   string               `json:"sortBy"`
+}
+
+// ShoppingTagSortTypes ...
+// ways of sorting shopping tags
+const (
+	ShoppingTagSortByRecentlyAdded          = "recentlyAdded"
+	ShoppingTagSortByRecentlyUpdated        = "recentlyUpdated"
+	ShoppingTagSortByLastAdded              = "lastAdded"
+	ShoppingTagSortByLastUpdated            = "lastUpdated"
+	ShoppingTagSortByAlphabeticalDescending = "alphabeticalDescending"
+	ShoppingTagSortByAlphabeticalAscending  = "alphabeticalAscending"
+)
+
 // UserCreationSecretSpec ...
 // values for a user to confirm their account with
 type UserCreationSecretSpec struct {

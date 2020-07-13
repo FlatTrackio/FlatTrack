@@ -1345,7 +1345,11 @@ func GetAllShoppingTags(db *sql.DB) http.HandlerFunc {
 		response := "Failed to fetch shopping list item tags"
 		code := http.StatusInternalServerError
 
-		tags, err := shoppinglist.GetAllShoppingTags(db)
+		options := types.ShoppingTagOptions{
+			SortBy: r.FormValue("sortBy"),
+		}
+
+		tags, err := shoppinglist.GetAllShoppingTags(db, options)
 		if err == nil {
 			response = "Fetched the shopping list item tags"
 			code = http.StatusOK
