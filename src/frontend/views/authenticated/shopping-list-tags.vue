@@ -19,7 +19,7 @@
               placeholder="Enter a tag name"
               type="search"
               expanded
-              v-model="listSearch"
+              v-model="tagSearch"
               ref="search">
             </b-input>
             <p class="control">
@@ -79,8 +79,8 @@
                   <b-icon icon="tag" size="is-medium" type="is-midgray"></b-icon>
                 </div>
                 <div class="media-content">
-                  <p class="subtitle is-4" v-if="listSearch === '' && tags.length === 0">No tags added yet.</p>
-                  <p class="subtitle is-4" v-else-if="listSearch !== ''">No tags found.</p>
+                  <p class="subtitle is-4" v-if="tagSearch === '' && tags.length === 0">No tags added yet.</p>
+                  <p class="subtitle is-4" v-else-if="tagSearch !== ''">No tags found.</p>
                 </div>
               </div>
             </div>
