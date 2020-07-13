@@ -126,11 +126,11 @@ export default {
       this.$router.push({ path: ref })
     },
     GetShoppingTags () {
-      shoppinglist.GetShoppingTags().then(resp => {
+      shoppinglist.GetShoppingTags(this.sortBy).then(resp => {
         this.tags = resp.data.list || []
         this.pageLoading = false
-      }).catch(() => {
-        common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping tags')
+      }).catch(err => {
+        common.DisplayFailureToast(`Hmmm seems somethings gone wrong loading the shopping tags; ${err.response.data.metadata.response}`)
       })
     },
     AddNewTag () {
