@@ -106,8 +106,35 @@ func GetShoppingTag(db *sql.DB, id string) (tag types.ShoppingTag, err error) {
 
 // GetAllShoppingTags ...
 // returns a list of all tags used in items across lists
-func GetAllShoppingTags(db *sql.DB) (tags []types.ShoppingTag, err error) {
-	sqlStatement := `select * from shopping_list_tag order by name`
+func GetAllShoppingTags(db *sql.DB, options types.ShoppingTagOptions) (tags []types.ShoppingTag, err error) {
+	sqlStatement := `select * from shopping_list_tag
+                         where deletionTimestamp = 0
+	                 order by name asc`
+	if options.SortBy == types.ShoppingTagSortByRecentlyUpdated {
+		sqlStatement = `select * from shopping_list_tag
+                         where deletionTimestamp = 0
+	                 order by modificationTimestamp desc`
+	} else if options.SortBy == types.ShoppingTagSortByLastUpdated {
+		sqlStatement = `select * from shopping_list_tag
+                         where deletionTimestamp = 0
+	                 order by modificationTimestamp asc`
+	} else if options.SortBy == types.ShoppingTagSortByRecentlyUpdated {
+		sqlStatement = `select * from shopping_list_tag
+                         where deletionTimestamp = 0
+                         order by creationTimestamp desc`
+	} else if options.SortBy == types.ShoppingTagSortByLastAdded {
+		sqlStatement = `select * from shopping_list_tag
+                         where deletionTimestamp = 0
+	                 order by creationTimestamp asc`
+	} else if options.SortBy == types.ShoppingTagSortByAlphabeticalDescending {
+		sqlStatement = `select * from shopping_list_tag
+                         where deletionTimestamp = 0
+	                 order by name asc`
+	} else if options.SortBy == types.ShoppingTagSortByAlphabeticalAscending {
+		sqlStatement = `select * from shopping_list_tag
+                         where deletionTimestamp = 0
+	                 order by name desc`
+	}
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
 		return tags, err
