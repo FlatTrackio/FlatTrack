@@ -139,7 +139,7 @@ lint_backend:
     - apk add git gcc
     - go get -u golang.org/x/lint/golint
   script:
-    - golint -set_exit_status src/backend/...
+    - golint -set_exit_status src/backend/... test/backend/e2e/...
 
 pages:
   image: python:3.8-buster
