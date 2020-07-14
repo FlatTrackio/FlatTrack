@@ -61,7 +61,7 @@
           </section>
         </div>
         <!-- TODO fix floating button -->
-        <floatingAddButton :func="AddNewTag" />
+        <floatingAddButton :func="AddNewTag" v-if="displayFloatingAddButton" />
         <br/>
         <div v-if="tagsFiltered.length > 0">
           <!-- Card per-tag -->
@@ -100,6 +100,7 @@ export default {
   name: 'Shopping Tags',
   data () {
     return {
+      displayFloatingAddButton: true,
       tags: [],
       deviceIsMobile: false,
       tagSearch: '',
@@ -134,6 +135,7 @@ export default {
       })
     },
     AddNewTag () {
+      this.displayFloatingAddButton = false
       Dialog.prompt({
         message: `Enter the name of a tag to create.`,
         inputAttrs: {
@@ -145,9 +147,14 @@ export default {
           shoppinglist.PostShoppingTag(value).then(() => {
             this.pageLoading = true
             this.GetShoppingTags()
+            this.displayFloatingAddButton = true
           }).catch(err => {
             common.DisplayFailureToast(`Failed to create tag; ${err.response.data.metadata.response}`)
+            this.displayFloatingAddButton = true
           })
+        },
+        onCancel: () => {
+          this.displayFloatingAddButton = true
         }
       })
     },
