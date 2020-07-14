@@ -135,13 +135,14 @@ html {
 .card {
     user-select: none;
     border: 1px dashed rgba(0, 0, 0, .0);
-    transition: box-shadow 0.4s;
+    transition: box-shadow 0.4s, border 0.2s;
 }
 
 .card:hover {
     background-color: #fbfbfb;
-    transition: box-shadow 0.4s, background-color 0.3s;
-    box-shadow: black 0 0px 45px -33px;
+    transition: box-shadow 0.4s, background-color 0.3s, border 0.2s;
+    box-shadow: black 0 0px 45px -30px;
+    border: 1px solid darkgray;
 }
 
 .card:active {
@@ -168,6 +169,10 @@ html {
 
 .navbar-shadow {
     box-shadow: 0px -9px 23px 4px #292929;
+}
+
+.remove-shadow {
+    box-shadow: none;
 }
 
 @media (max-width : 870px) {
