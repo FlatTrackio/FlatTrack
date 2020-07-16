@@ -137,7 +137,11 @@ export default {
     AddNewTag () {
       this.displayFloatingAddButton = false
       Dialog.prompt({
+        title: 'New tag',
         message: `Enter the name of a tag to create.`,
+        container: null,
+        icon: 'tag',
+        hasIcon: true,
         inputAttrs: {
           placeholder: 'e.g. Fruits and Veges',
           maxlength: 30
