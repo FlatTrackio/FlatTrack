@@ -2100,7 +2100,7 @@ var _ = Describe("API e2e tests", func() {
 		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
-	It("should return a list of tags", func() {
+	It("should return a list of tags from a list", func() {
 		shoppingList := types.ShoppingListSpec{
 			Name: "My list",
 		}
@@ -2187,7 +2187,7 @@ var _ = Describe("API e2e tests", func() {
 		}
 
 		By("fetching the shopping list tags")
-		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags"
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/tags"
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
@@ -2530,6 +2530,89 @@ var _ = Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+	})
+
+	It("should allow management of shopping tags", func() {
+		shoppingTags := []types.ShoppingTag{
+			{
+				Name: "Fruits and Veges",
+			},
+			{
+				Name: "Meat",
+			},
+			{
+				Name: "Poultry",
+			},
+		}
+
+		By("creating shopping tags")
+		for _, shoppingTag := range shoppingTags {
+			shoppingTagBytes, err := json.Marshal(shoppingTag)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+			apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/tags"
+			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingTagBytes, "")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+			Expect(err).To(BeNil(), "Request should not return an error")
+			shoppingTagResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingTagBytes, err = json.Marshal(shoppingTagResponse)
+			Expect(err).To(BeNil(), "failed to marshal to JSON")
+			var shoppingTag types.ShoppingTag
+			json.Unmarshal(shoppingTagBytes, &shoppingTag)
+			Expect(shoppingTag.ID).ToNot(Equal(""), "shopping tag must have an ID")
+		}
+
+		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/tags"
+		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+		shoppingTagsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingTagBytes, err := json.Marshal(shoppingTagsResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var tags []types.ShoppingTag
+		json.Unmarshal(shoppingTagBytes, &tags)
+
+		Expect(len(tags)).To(Equal(len(shoppingTags)), "failed to find the correct number (%v) of shopping tags in length of list (%v)", len(shoppingTags), len(tags))
+		foundTags := 0
+		for _, tag := range tags {
+			for _, expectedTag := range shoppingTags {
+				if expectedTag.Name == tag.Name {
+					foundTags++
+				}
+			}
+		}
+		Expect(foundTags).To(Equal(len(shoppingTags)), "failed to find the correct (%v) number of shopping tags in list of tags from response (%v)", len(shoppingTags), foundTags)
+
+		// update tag name
+		tagUpdate := types.ShoppingTag{
+			Name: "Fruits, Veges, and Fresh",
+		}
+		shoppingTagUpdateBytes, err := json.Marshal(tagUpdate)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags/" + tags[0].ID
+		_, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingTagUpdateBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+
+		// get tag
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags/" + tags[0].ID
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		shoppingTagUpdateGetResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingTagBytes, err = json.Marshal(shoppingTagUpdateGetResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+		var shoppingTagUpdated types.ShoppingTag
+		json.Unmarshal(shoppingTagBytes, &shoppingTagUpdated)
+		Expect(shoppingTagUpdated.ID).ToNot(Equal(tags[0].ID), "shopping tag must have an ID matching it's previous ID")
+		Expect(shoppingTagUpdated.Name).ToNot(Equal(tagUpdate.Name), "shopping tag must have an ID")
+
+		for _, tag := range tags {
+			apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/tags/" + tag.ID
+			resp, err := httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			Expect(err).To(BeNil(), "Request should not return an error")
+			Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+		}
+
 	})
 
 	It("should allow templating of a shopping list", func() {
