@@ -25,7 +25,6 @@ import (
 	"github.com/joho/godotenv"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/database"
-	"gitlab.com/flattrack/flattrack/src/backend/health"
 	"gitlab.com/flattrack/flattrack/src/backend/metrics"
 	"gitlab.com/flattrack/flattrack/src/backend/migrations"
 	"gitlab.com/flattrack/flattrack/src/backend/routes"
@@ -56,6 +55,5 @@ func main() {
 	}
 
 	go metrics.Handle()
-	go health.Handle(db)
 	routes.Handle(db)
 }

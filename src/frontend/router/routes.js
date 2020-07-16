@@ -1,5 +1,6 @@
 import common from '@/frontend/common/common'
 import login from '@/frontend/requests/public/login'
+import healthz from '@/frontend/requests/public/healthz'
 import registration from '@/frontend/requests/public/registration'
 
 export default [
@@ -180,6 +181,14 @@ export default [
     }
   },
   {
+    path: '/useraccountconfirm/:id',
+    name: 'User account confirm',
+    component: () => import('@/frontend/views/public/useraccountconfirm.vue'),
+    meta: {
+      requiresNoAuth: true
+    }
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/frontend/views/public/login.vue'),
@@ -204,10 +213,8 @@ export default [
           next()
         }
       }
-      // check that the instance is set up
       registration.GetInstanceRegistered().then(resp => {
         instanceRegistered = resp.data.data === true
-      }).then(() => {
         // check if the authToken in localStorage isn't empty
         var authToken = common.GetAuthToken()
         hasAuthToken = (!(typeof authToken === 'undefined' || authToken === null || authToken === ''))
@@ -226,14 +233,39 @@ export default [
   {
     path: '/forgot-password',
     name: 'Forgot password',
-    component: () => import('@/frontend/views/public/forgot-password.vue')
+    component: () => import('@/frontend/views/public/forgot-password.vue'),
+    meta: {
+      requiresNoAuth: true
+    }
   },
   {
     path: '/setup',
     name: 'Set up',
     component: () => import('@/frontend/views/public/setup.vue'),
     beforeEnter: (to, from, next) => {
-      registration.GetInstanceRegistered().then(resp => {
+      healthz.GetHealthz().then(resp => {
+        return registration.GetInstanceRegistered()
+      }).then(resp => {
+        if (resp.data.data === true) {
+          next('/')
+          return
+        }
+        next()
+      }).catch(err => {
+        if (err.config.url === '/_healthz' && err.response.data.data === false) {
+          next('/unavailable')
+          return
+        }
+        next()
+      })
+    }
+  },
+  {
+    path: '/unavailable',
+    name: 'Unavailable',
+    component: () => import('@/frontend/views/public/unavailable.vue'),
+    beforeEnter: (to, from, next) => {
+      healthz.GetHealthz().then(resp => {
         if (resp.data.data === true) {
           next('/')
           return
@@ -242,14 +274,6 @@ export default [
       }).catch(() => {
         next()
       })
-    }
-  },
-  {
-    path: '/useraccountconfirm/:id',
-    name: 'User account confirm',
-    component: () => import('@/frontend/views/public/useraccountconfirm.vue'),
-    meta: {
-      requiresNoAuth: true
     }
   }
 ]

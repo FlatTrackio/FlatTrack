@@ -111,6 +111,8 @@ func Handle(db *sql.DB) {
 	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./dist/robots.txt")
 	})
+
+	router.HandleFunc("/_healthz", Healthz(db)).Methods("GET")
 	router.PathPrefix("/").Handler(vue.Handler(common.GetAppDistFolder())).Methods("GET")
 
 	router.Use(Logging)
