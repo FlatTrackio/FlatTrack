@@ -77,22 +77,22 @@ Deploy the docker-compose stack:
 #+end_src
 
 * Plain Ubuntu server
-Set up FlatTrack on an Ubuntu 18.04 server using systemd, certbot, and nginx.
-This has been tested on Ubuntu 18.04 and will very likely work on later versions.
+Set up FlatTrack on an Ubuntu 20.04 server using systemd, certbot, and nginx.
+This has been tested on Ubuntu 20.04 and will very likely work on later versions.
 
 Commands are run as root.
 
 *** Install packages
   #+begin_src sh
     apt update && apt upgrade -y
-    apt install -y nginx postgresql software-properties-common
+    apt install -y nginx postgresql software-properties-common build-essential
 
     add-apt-repository universe
-    add-apt-repository ppa:certbot/certbot
-    add-apt-repository ppa:longsleep/golang-backports
+    curl -L https://golang.org/dl/go1.14.6.linux-amd64.tar.gz | tar --directory /usr/local --extract --ungzip
+    echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc && export PATH=$PATH:/usr/local/go/bin
     curl -sL https://deb.nodesource.com/setup_14.x | bash -
     apt update
-    apt install -y certbot python3-certbot-nginx golang-go nodejs
+    apt install -y certbot python3-certbot-nginx nodejs
   #+end_src
   
 *** DNS
@@ -184,7 +184,7 @@ Notes:
 
 *** Create FlatTrack user
    #+begin_src sh
-   useradd flattrack
+   useradd -m flattrack
    #+end_src
 
 Add a password:
@@ -263,7 +263,7 @@ Reload nginx
 *** Clone FlatTrack
     Also, check a version (for stability):
    #+begin_src sh
-     git clone -b 0.0.1-alpha7-1 https://gitlab.com/flattrack/flattrack /usr/src/flattrack
+     git clone -b 0.0.1-alpha8-2 https://gitlab.com/flattrack/flattrack /opt/flattrack
      cd $_
    #+end_src
    
@@ -288,15 +288,15 @@ Reload nginx
             -o flattrack \
             src/backend/main.go
     #+end_src
-    
-*** Move files into place
-   #+begin_src 
-   mkdir -p /opt/flattrack
 
-   mv /usr/src/flattrack/flattrack /opt/flattrack/flattrack
-   mv /usr/src/flattrack/dist /opt/flattrack/dist
-   cp -r /usr/src/flattrack/migrations /opt/flattrack/migrations
-   #+end_src
+*** Write the environment settings
+Install a custom environment file into ~/home/flattrack/.env~:
+#+begin_src sh
+  APP_DB_USER=flattrack
+  APP_DB_PASSWORD=flattrack
+  APP_DB_HOST=localhost
+  APP_DB_DATABASE=flattrack
+#+end_src
    
 *** Install a systemd service
    
@@ -313,11 +313,11 @@ Install a customized version of the following, in ~/etc/systemd/system/flattrack
      Restart=always
      User=flattrack
      Environment="APP_DB_MIGRATIONS_PATH=/opt/flattrack/migrations"
-     Environment="APP_DB_PASSWORD=flattrack"
      Environment="APP_PORT=127.0.0.1:8080"
      Environment="APP_PORT_METRICS=127.0.0.1:2112"
      Environment="APP_PORT_HEALTH=127.0.0.1:8081"
      Environment="APP_DIST_FOLDER=/opt/flattrack/dist"
+     Environment="APP_ENV_FILE=/home/flattrack/.env"
 
      [Install]
      WantedBy=default.target
@@ -327,6 +327,7 @@ The configuration above configures:
 - ports for FlatTrack, metrics, health
 - the database password; update ~APP_DB_PASSWORD~ it isn't ~flattrack~
 - the location of the built frontend
+- the location of the environment variables file, it is recommended to use this file for fields like database credentials instead of placing them inside the systemd unit file
    
 *** Start FlatTrack
    #+begin_src sh
