@@ -41,7 +41,7 @@ export default {
   data () {
     return {
       authorNames: '...',
-      authorNamesLast: ''
+      authorNamesLast: '...'
     }
   },
   props: {
