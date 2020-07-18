@@ -2604,8 +2604,8 @@ var _ = Describe("API e2e tests", func() {
 		json.Unmarshal(shoppingTagBytes, &shoppingTagUpdated)
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
 		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK", shoppingTagUpdateGetResponse.Metadata.Response)
-		Expect(shoppingTagUpdated.ID).ToNot(Equal(tags[0].ID), "shopping tag must have an ID matching it's previous ID")
-		Expect(shoppingTagUpdated.Name).ToNot(Equal(tagUpdate.Name), "shopping tag must have an ID")
+		Expect(shoppingTagUpdated.ID).To(Equal(tags[0].ID), "shopping tag must have an ID (%v) matching it's previous ID (%v)", shoppingTagUpdated.ID, tags[0].ID)
+		Expect(shoppingTagUpdated.Name).To(Equal(tagUpdate.Name), "shopping tag must have the new tag name")
 
 		for _, tag := range tags {
 			apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/tags/" + tag.ID
