@@ -2591,8 +2591,9 @@ var _ = Describe("API e2e tests", func() {
 		Expect(err).To(BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags/" + tags[0].ID
-		_, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingTagUpdateBytes, "")
+		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingTagUpdateBytes, "")
 		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		// get tag
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags/" + tags[0].ID
