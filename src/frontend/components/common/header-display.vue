@@ -1,6 +1,6 @@
 <template>
   <div>
-    <section class="hero is-info">
+    <section class="hero is-info navbar-shadow">
       <div class="hero-body">
         <p class="title">
           FlatTrack
