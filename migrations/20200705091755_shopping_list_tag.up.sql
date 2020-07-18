@@ -17,7 +17,7 @@ create table if not exists shopping_list_tag (
 comment on table shopping_list_tag is 'The table shopping_list_tag is used for storing tags to be used in shopping lists';
 
 -- migrate old values
-insert into shopping_list_tag (name, author, authorLast)
+insert into shopping_list_tag (name, author, author)
   select distinct tag, author, authorLast from shopping_item where tag <> '';
 
 commit;
