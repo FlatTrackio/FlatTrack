@@ -2598,12 +2598,12 @@ var _ = Describe("API e2e tests", func() {
 		// get tag
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags/" + tags[0].ID
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
-		shoppingTagUpdateGetResponse := routes.GetHTTPresponseBodyContents(resp).Spec
-		shoppingTagBytes, err = json.Marshal(shoppingTagUpdateGetResponse)
-		Expect(err).To(BeNil(), "failed to marshal to JSON")
-		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+		shoppingTagUpdateGetResponse := routes.GetHTTPresponseBodyContents(resp)
+		shoppingTagBytes, err = json.Marshal(shoppingTagUpdateGetResponse.Spec)
 		var shoppingTagUpdated types.ShoppingTag
 		json.Unmarshal(shoppingTagBytes, &shoppingTagUpdated)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK", shoppingTagUpdateGetResponse.Metadata.Response)
 		Expect(shoppingTagUpdated.ID).ToNot(Equal(tags[0].ID), "shopping tag must have an ID matching it's previous ID")
 		Expect(shoppingTagUpdated.Name).ToNot(Equal(tagUpdate.Name), "shopping tag must have an ID")
 
