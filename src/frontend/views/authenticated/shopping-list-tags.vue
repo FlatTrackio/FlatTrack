@@ -66,7 +66,7 @@
         <div v-if="tagsFiltered.length > 0">
           <!-- Card per-tag -->
           <div v-for="(tag, index) in tagsFiltered" v-bind:key="tag">
-            <tagCard :tag="tag" :index="index" :tags="tags" />
+            <tagCard :tag="tag" :index="index" :tags="tags" @displayFloatingAddButton="(value) => { displayFloatingAddButton = value }" />
           </div>
           <br/>
           <p>{{ tagsFiltered.length }} tag(s)</p>

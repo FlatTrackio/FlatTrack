@@ -1,18 +1,18 @@
 <template>
-  <div class="card">
+  <div class="card pointer-cursor-on-hover">
     <div class="card-content card-content-list">
       <div class="media">
-        <div class="media-left">
+        <div class="media-left" @click="UpdateTag(tag)">
           <b-icon icon="tag" size="is-medium" type="is-midgray"></b-icon>
         </div>
-        <div class="media-content">
+        <div class="media-content" @click="UpdateTag(tag)">
           <p class="title is-4"> {{ tag.name }} </p>
           <p class="subtitle is-6">
             <span v-if="tag.creationTimestamp == tag.modificationTimestamp">
               Created {{ TimestampToCalendar(tag.creationTimestamp) }}, by {{ authorNames }}
             </span>
             <span v-else>
-              Updated {{ TimestampToCalendar(tag.modificationTimestamp) }}, by {{ authorLastNames }}
+              Updated {{ TimestampToCalendar(tag.modificationTimestamp) }}, by {{ authorNamesLast }}
             </span>
           </p>
         </div>
@@ -41,19 +41,51 @@ export default {
   data () {
     return {
       authorNames: '...',
-      authorNamesLast: '...'
+      authorNamesLast: ''
     }
   },
   props: {
     tag: Object,
     index: Number,
-    tags: Object
+    tags: Object,
+    displayFloatingAddButton: Boolean
   },
   methods: {
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
     },
+    UpdateTag (tag) {
+      this.$emit('displayFloatingAddButton', false)
+      Dialog.prompt({
+        title: 'Edit tag',
+        message: `Enter the name of a tag to create.`,
+        container: null,
+        icon: 'tag',
+        hasIcon: true,
+        inputAttrs: {
+          placeholder: 'e.g. Fruits and Veges',
+          maxlength: 30,
+          value: tag.name
+        },
+        trapFocus: true,
+        onConfirm: (value) => {
+          shoppinglist.UpdateShoppingTag(tag.id, value).then(resp => {
+            this.pageLoading = true
+            tag.name = resp.data.spec.name
+            common.DisplaySuccessToast(resp.data.metadata.response)
+            this.$emit('displayFloatingAddButton', true)
+          }).catch(err => {
+            common.DisplayFailureToast(`Failed to create tag; ${err.response.data.metadata.response}`)
+            this.$emit('displayFloatingAddButton', true)
+          })
+        },
+        onCancel: () => {
+          this.$emit('displayFloatingAddButton', true)
+        }
+      })
+    },
     DeleteShoppingListTag (id, index) {
+      this.$emit('displayFloatingAddButton', false)
       Dialog.confirm({
         title: 'Delete tag',
         message: 'Are you sure that you wish to delete this shopping list tag?' + '<br/>' + 'This action cannot be undone.' + '<br/>' + '<br/>' + 'Please note: this will not alter existing items with this tag',
@@ -65,10 +97,15 @@ export default {
           shoppinglist.DeleteShoppingTag(id).then(resp => {
             common.DisplaySuccessToast(resp.data.metadata.response)
             this.list.splice(index, 1)
+            this.$emit('displayFloatingAddButton', true)
           }).catch(err => {
             common.DisplayFailureToast('Failed to delete shopping tag' + ' - ' + err.response.data.metadata.response)
             this.itemDeleting = false
+            this.$emit('displayFloatingAddButton', true)
           })
+        },
+        onCancel: () => {
+          this.$emit('displayFloatingAddButton', true)
         }
       })
     }
@@ -78,7 +115,7 @@ export default {
       this.authorNames = resp.data.spec.names
       return flatmates.GetFlatmate(this.tag.authorLast)
     }).then(resp => {
-      this.authorLastNames = resp.data.spec.names
+      this.authorNamesLast = resp.data.spec.names
     }).catch(err => {
       common.DisplayFailureToast('Unable to find author of tag' + '<br/>' + err.response.data.metadata.response)
     })
