@@ -15,13 +15,13 @@ import (
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/groups"
+	"gitlab.com/flattrack/flattrack/src/backend/health"
 	"gitlab.com/flattrack/flattrack/src/backend/registration"
 	"gitlab.com/flattrack/flattrack/src/backend/settings"
 	"gitlab.com/flattrack/flattrack/src/backend/shoppinglist"
 	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
-	"gitlab.com/flattrack/flattrack/src/backend/health"
 )
 
 // GetAllUsers ...
@@ -1448,8 +1448,10 @@ func UpdateShoppingTag(db *sql.DB) http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &tagUpdate)
 
+		userID, errID := users.GetIDFromJWT(db, r)
+		tagUpdate.AuthorLast = userID
 		tag, err := shoppinglist.UpdateShoppingTag(db, id, tagUpdate)
-		if err == nil {
+		if err == nil && errID == nil {
 			response = "Updated a shopping tag"
 			code = http.StatusOK
 		}
