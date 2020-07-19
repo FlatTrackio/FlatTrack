@@ -10,6 +10,7 @@ metadata:
 {{- end }}
 {{- end }}
   annotations:
+    checksum/config: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
 {{- if .Values.annotations }}
 {{- with .Values.annotations }}
     {{- toYaml . | nindent 4 }}
@@ -73,6 +74,8 @@ spec:
                 secretKeyRef:
                   name: {{ include "flattrack.fullname" . }}
                   key: app-db-database
+            - name: APP_DB_SSLMODE
+              value: {{ .Values.postgres.sslmode }}
             - name: APP_PORT
               value: {{ printf ":%v" .Values.service.port | toString | quote | default "8080" }}
         {{- with .Values.extraEnvVars }}
@@ -87,13 +90,10 @@ spec:
               containerPort: 2112
               protocol: TCP
             {{- end }}
-            - name: health
-              containerPort: 8081
-              protocol: TCP
           livenessProbe:
             httpGet:
               path: /_healthz
-              port: health
+              port: {{ .Values.service.port | default 8080 }}
             initialDelaySeconds: 2
             periodSeconds: 10
           readinessProbe:
