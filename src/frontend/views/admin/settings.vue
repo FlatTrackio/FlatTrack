@@ -21,6 +21,7 @@
               placeholder="Enter your flat's name"
               icon="textbox"
               size="is-medium"
+              @keyup.enter.native="PostFlatName"
               expanded
               required>
             </b-input>
@@ -29,7 +30,6 @@
                 type="is-primary"
                 size="is-medium"
                 icon-left="check"
-                @keyup.enter.native="PostFlatName"
                 @click="PostFlatName">
               </b-button>
             </p>

@@ -38,33 +38,39 @@
         <br />
 
         <b-field label="Name(s)">
-          <b-input type="text"
-                   v-model="names"
-                   maxlength="60"
-                   placeholder="Enter your name(s)"
-                   icon="textbox"
-                   size="is-medium"
-                   required>
+          <b-input
+            type="text"
+            v-model="names"
+            maxlength="60"
+            placeholder="Enter your name(s)"
+            icon="textbox"
+            size="is-medium"
+            @keyup.enter.native="PatchProfile"
+            required>
           </b-input>
         </b-field>
 
         <b-field label="Email">
-          <b-input type="email"
-                   v-model="email"
-                   maxlength="70"
-                   icon="email"
-                   size="is-medium"
-                   placeholder="Enter your email address"
-                   required>
+          <b-input
+            type="email"
+            v-model="email"
+            maxlength="70"
+            icon="email"
+            size="is-medium"
+            placeholder="Enter your email address"
+            @keyup.enter.native="PatchProfile"
+            required>
           </b-input>
         </b-field>
         <b-field label="Phone number (optional)">
-          <b-input type="tel"
-                   v-model="phoneNumber"
-                   placeholder="Enter your phone number"
-                   icon="phone"
-                   size="is-medium"
-                   maxlength="30">
+          <b-input
+            type="tel"
+            v-model="phoneNumber"
+            placeholder="Enter your phone number"
+            icon="phone"
+            size="is-medium"
+            @keyup.enter.native="PatchProfile"
+            maxlength="30">
           </b-input>
         </b-field>
 
@@ -87,7 +93,7 @@
           size="is-medium"
           icon-left="delta"
           native-type="submit"
-          @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday)">
+          @click="PatchProfile">
           Update profile
         </b-button>
       </section>
@@ -136,13 +142,13 @@ export default {
         this.pageLoading = false
       })
     },
-    PatchProfile (names, email, phoneNumber, password, passwordConfirm, jsBirthday) {
-      if (password !== passwordConfirm) {
+    PatchProfile () {
+      if (this.password !== this.passwordConfirm) {
         common.DisplayFailureToast('Unable to use password as they either do not match')
         return
       }
-      var birthday = new Date(jsBirthday || 0).getTime() / 1000 || 0
-      profile.PatchProfile(names, email, phoneNumber, birthday, password).then(resp => {
+      var birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0
+      profile.PatchProfile(this.names, this.email, this.phoneNumber, this.birthday, this.password).then(resp => {
         if (resp.data.spec.id === '') {
           common.DisplayFailureToast('Failed to update profile')
           return

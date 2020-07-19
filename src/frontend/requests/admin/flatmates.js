@@ -7,11 +7,18 @@ import Request from '@/frontend/requests/requests'
 
 // PostFlatmate
 // creates a user account
-function PostFlatmate (form) {
+function PostFlatmate (names, email, phoneNumber, birthday, groups, password) {
   return Request({
     url: `/api/admin/users`,
     method: 'POST',
-    data: form
+    data: {
+      names,
+      email,
+      phoneNumber,
+      birthday,
+      groups,
+      password
+    }
   })
 }
 

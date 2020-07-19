@@ -39,6 +39,7 @@
           placeholder="Enter your flatmate's name"
           icon="textbox"
           size="is-medium"
+          @keyup.enter.native="PatchUserAccount"
           required>
         </b-input>
       </b-field>
@@ -51,6 +52,7 @@
           placeholder="Enter your flatmate's email"
           icon="email"
           size="is-medium"
+          @keyup.enter.native="PatchUserAccount"
           required>
         </b-input>
       </b-field>
@@ -67,6 +69,7 @@
             icon="account-group"
             placeholder="Select groups"
             size="is-medium"
+            @keyup.enter.native="PatchUserAccount"
             @typing="GetFilteredGroups">
           </b-taginput>
         </b-field>
@@ -80,6 +83,7 @@
           placeholder="Enter your flatmate's phone number"
           icon="phone"
           size="is-medium"
+          @keyup.enter.native="PatchUserAccount"
           maxlength="30">
         </b-input>
       </b-field>
@@ -114,6 +118,7 @@
           icon="textbox-password"
           pattern="^([a-z]*)([A-Z]*).{10,}$"
           validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+          @keyup.enter.native="PatchUserAccount"
           size="is-medium">
         </b-input>
       </b-field>
@@ -128,6 +133,7 @@
           icon="textbox-password"
           pattern="^([a-z]*)([A-Z]*).{10,}$"
           validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+          @keyup.enter.native="PatchUserAccount"
           size="is-medium">
         </b-input>
       </b-field>
@@ -138,7 +144,7 @@
           icon-left="delta"
           native-type="submit"
           expanded
-          @click="PatchUserAccount(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">
+          @click="PatchUserAccount">
           Update user account
         </b-button>
         <p class="control">
@@ -251,21 +257,21 @@ export default {
         this.$router.push({ name: 'Admin accounts' })
       })
     },
-    PatchUserAccount (names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull) {
-      if (password !== passwordConfirm && password !== null && typeof password !== 'undefined') {
+    PatchUserAccount () {
+      if (this.password !== this.passwordConfirm && this.password !== null && typeof this.password !== 'undefined') {
         common.DisplayFailureToast('Passwords do not match')
         return
       }
-      birthday = new Date(jsBirthday || 0).getTime() / 1000 || 0
+      this.birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0
 
       var groups = []
-      groupsFull.map(group => {
+      this.groupsFull.map(group => {
         if (group === '' || group.name === '') {
           return
         }
         groups.push(group.name)
       })
-      adminFlatmates.PatchFlatmate(this.id, names, email, phoneNumber, birthday, groups, password).then(resp => {
+      adminFlatmates.PatchFlatmate(this.id, this.names, this.email, this.phoneNumber, this.birthday, this.groups, this.password).then(resp => {
         common.DisplaySuccessToast('Updated user account')
         setTimeout(() => {
           this.$router.push({ name: 'Admin accounts' })
