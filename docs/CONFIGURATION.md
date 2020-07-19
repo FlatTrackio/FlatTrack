@@ -1,6 +1,6 @@
 - [Configurable values](#sec-1)
 
-FlatTrack is solely configured to run with environment variables; Here are the variables to configure FlatTrack with.
+FlatTrack is solely configured to run with environment variables (or a `.env` file in the same directory as the FlatTrack binary, such as `/app/.env`); Here are the variables to configure FlatTrack with.
 
 # Configurable values<a id="sec-1"></a>
 
@@ -14,6 +14,9 @@ FlatTrack is solely configured to run with environment variables; Here are the v
 | `APP_DB_USERNAME`        | The Postgres role to connect as                                           | `flattrack`    |
 | `APP_DB_PASSWORD`        | The Postgres role's password to authenticate with                         | `flattrack`    |
 | `APP_DB_DATABASE`        | The Postgres database to write data to                                    | `flattrack`    |
+| `APP_DB_SSLMODE`         | The Postgres SSL mode to use                                              | `disable`      |
 | `APP_DB_MIGRATIONS_PATH` | The path to the database migrations to migrate the Postgres database with | `./migrations` |
+| `APP_METRICS_ENABLED`    | Serve Prometheus metrics endpoint                                         | `"true"`       |
+| `APP_HEALTH_ENABLED`     | Serve healthz endpoint                                                    | `"true"`       |
 
-\*all interfaces
+\*this port runs on all available interfaces - this may be better configured on a single host as `127.0.0.1:...` for security
