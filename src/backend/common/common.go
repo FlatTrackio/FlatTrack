@@ -156,6 +156,18 @@ func GetAppRealIPHeader() (output string) {
 	return GetEnvOrDefault("APP_HTTP_REAL_IP_HEADER", "")
 }
 
+// GetAppSiteURL ...
+// location of where the instance's site URL
+func GetAppSiteURL() (output string) {
+	return GetEnvOrDefault("APP_SITE_URL", "")
+}
+
+// GetAppAPIRoot ...
+// location of where the instance's API root path is
+func GetAppAPIRoot() (output string) {
+	return GetEnvOrDefault("APP_API_ROOT", "/api")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {
