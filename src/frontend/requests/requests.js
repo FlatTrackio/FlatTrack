@@ -1,6 +1,9 @@
 import axios from 'axios'
 import common from '@/frontend/common/common'
 
+var siteURL = document.head.querySelector('[name~=siteurl][content]').content || window.location.host
+var baseURL = `${window.location.protocol}//${siteURL}`
+
 function redirectToLogin (redirect) {
   if (redirect === false) {
     return
@@ -23,6 +26,7 @@ function Request (request, redirect = true, publicRoute = false) {
     if (publicRoute !== true) {
       request.headers.Authorization = `bearer ${authToken}`
     }
+    request.baseURL = baseURL
     axios(request)
       .then(resp => resolve(resp))
       .catch(err => {
