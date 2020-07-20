@@ -289,3 +289,9 @@ type JWTclaim struct {
 	AuthNonce string `json:"authNonce"`
 	jwt.StandardClaims
 }
+
+// HTMLTemplateOptions ...
+// options when templating the public HTML file
+type HTMLTemplateOptions struct {
+	SiteURL string
+}
