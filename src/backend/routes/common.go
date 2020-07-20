@@ -8,14 +8,16 @@ package routes
 
 import (
 	"encoding/json"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
 	"database/sql"
-	"github.com/ddo/go-vue-handler"
+
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
@@ -112,12 +114,42 @@ func RequireContentType(expectedContentType string) func(http.Handler) http.Hand
 	}
 }
 
+// FrontendHandler ...
+// handles rewriting and API root setting
+func FrontendHandler(publicDir string) http.Handler {
+	handler := http.FileServer(http.Dir(publicDir))
+
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		_path := req.URL.Path
+
+		// static files
+		if strings.Contains(_path, ".") {
+			handler.ServeHTTP(w, req)
+			return
+		}
+
+		// frontend views
+		indexPath := path.Join(publicDir, "/index.html")
+		tmpl, err := template.ParseFiles(indexPath)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		htmlTemplateOptions := types.HTMLTemplateOptions{
+			SiteURL: common.GetAppSiteURL(),
+		}
+		if err := tmpl.Execute(w, htmlTemplateOptions); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+}
+
 // Handle ...
 // manage the launching of the API's webserver
 func Handle(db *sql.DB) {
 	port := common.GetAppPort()
 	router := mux.NewRouter().StrictSlash(true)
-	apiEndpointPrefix := "/api"
+	apiEndpointPrefix := common.GetAppAPIRoot()
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
 	apiRouters.Use(RequireContentType("application/json"))
@@ -134,15 +166,15 @@ func Handle(db *sql.DB) {
 		http.ServeFile(w, r, "./dist/robots.txt")
 	})
 
-	router.HandleFunc("/_healthz", Healthz(db)).Methods("GET")
-	router.PathPrefix("/").Handler(vue.Handler(common.GetAppDistFolder())).Methods("GET")
+	router.HandleFunc("/_healthz", Healthz(db)).Methods(http.MethodGet)
+	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder())).Methods(http.MethodGet)
 
 	router.Use(Logging)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization", "User-Agent", "Accept-Encoding"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
 		AllowCredentials: true,
 	})
 
