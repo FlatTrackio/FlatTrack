@@ -56,6 +56,18 @@ func HTTPuseMiddleware(handler http.HandlerFunc, middlewares ...func(http.Handle
 	return handler
 }
 
+// HealthHandler ...
+func HealthHandler(db *sql.DB) {
+	if common.GetAppHealthEnabled() != "true" {
+		return
+	}
+
+	port := common.GetAppHealthPort()
+	http.Handle("/_healthz", Healthz(db))
+	log.Printf("Health listening on %v", port)
+	http.ListenAndServe(port, nil)
+}
+
 // Logging ...
 // log the HTTP requests
 func Logging(next http.Handler) http.Handler {
