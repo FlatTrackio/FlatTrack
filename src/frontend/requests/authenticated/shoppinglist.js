@@ -213,6 +213,60 @@ function UpdateShoppingListItemTag (listId, tagName, tagNameNew) {
   })
 }
 
+// PostShoppingTag
+// creates a shopping tag
+function PostShoppingTag (name) {
+  return Request({
+    url: `/api/apps/shoppinglist/tags`,
+    method: 'POST',
+    data: {
+      name
+    }
+  })
+}
+
+// GetShoppingTags
+// returns a list of shopping tags
+function GetShoppingTags (sortBy) {
+  return Request({
+    url: `/api/apps/shoppinglist/tags`,
+    method: 'GET',
+    params: {
+      sortBy
+    }
+  })
+}
+
+// GetShoppingTag
+// returns a list of shopping tag
+function GetShoppingTag (id) {
+  return Request({
+    url: `/api/apps/shoppinglist/tags/${id}`,
+    method: 'GET'
+  })
+}
+
+// UpdateShoppingTag
+// updates a shopping tag name
+function UpdateShoppingTag (id, name) {
+  return Request({
+    url: `/api/apps/shoppinglist/tags/${id}`,
+    method: 'PUT',
+    data: {
+      name
+    }
+  })
+}
+
+// DeleteShoppingTag
+// removes a shopping tag
+function DeleteShoppingTag (id) {
+  return Request({
+    url: `/api/apps/shoppinglist/tags/${id}`,
+    method: 'DELETE'
+  })
+}
+
 export default {
   GetShoppingLists,
   GetShoppingList,
@@ -221,14 +275,21 @@ export default {
   UpdateShoppingList,
   PatchShoppingListCompleted,
   DeleteShoppingList,
+
   GetShoppingListItems,
   GetShoppingListItem,
   PostShoppingListItem,
+  PatchShoppingListItem,
+  UpdateShoppingListItem,
+  PatchShoppingListItemObtained,
   DeleteShoppingListItem,
+
   GetAllShoppingListItemTags,
   GetShoppingListItemTags,
   UpdateShoppingListItemTag,
-  PatchShoppingListItem,
-  UpdateShoppingListItem,
-  PatchShoppingListItemObtained
+  PostShoppingTag,
+  GetShoppingTags,
+  GetShoppingTag,
+  UpdateShoppingTag,
+  DeleteShoppingTag
 }

@@ -10,6 +10,15 @@
         </nav>
         <h1 class="title is-1">Shopping list</h1>
         <p class="subtitle is-3">Manage your weekly shop</p>
+        <b-button
+          class="has-text-left"
+          @click="goToRef('/apps/shopping-list/tags')"
+          type="is-info"
+          icon-left="tag-multiple"
+          expanded>
+          Manage tags
+        </b-button>
+        <br />
         <div>
           <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block is-marginless" v-model="listDisplayState">
             <b-tab-item icon="format-list-checks" label="All"></b-tab-item>

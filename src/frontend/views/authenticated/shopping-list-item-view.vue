@@ -60,9 +60,14 @@
             </b-numberinput>
           </b-field>
           <div>
-            <label class="label">Tag (optional)</label>
+            <div class="field has-addons">
+              <label class="label">Tag (optional)</label>
+              <p class="control">
+                <infotooltip message="To manage tags, navigate to the Apps -> Shopping List -> Manage tags page"/>
+              </p>
+            </div>
             <b-field>
-              <p class="control" v-if="tags.length > 0">
+              <p class="control" v-if="tags.length > 0 || tagsList.length > 0">
                 <b-dropdown>
                   <b-button
                     icon-left="menu-down"
@@ -71,8 +76,13 @@
                     size="is-medium">
                   </b-button>
 
+                  <b-dropdown-item disabled v-if="tags.length > 0">Tags in all lists</b-dropdown-item>
                   <div v-for="existingTag in tags" v-bind:key="existingTag">
-                    <b-dropdown-item v-if="existingTag !== '' && existingTag.length > 0 && typeof existingTag !== 'undefined'" :value="existingTag" @click="tag = existingTag">{{ existingTag }}</b-dropdown-item>
+                    <b-dropdown-item v-if="existingTag.name !== '' && existingTag.name.length > 0 && typeof existingTag.name !== 'undefined'" :value="existingTag.name" @click="tag = existingTag.name">{{ existingTag.name }}</b-dropdown-item>
+                  </div>
+                  <b-dropdown-item disabled v-if="tagsList.length > 0">Tags in this list</b-dropdown-item>
+                  <div v-for="existingListTag in tagsList" v-bind:key="existingListTag">
+                    <b-dropdown-item v-if="existingListTag !== '' && existingListTag.length > 0 && typeof existingListTag !== 'undefined'" :value="existingListTag" @click="tag = existingListTag">{{ existingListTag }}</b-dropdown-item>
                   </div>
                 </b-dropdown>
               </p>
@@ -139,6 +149,9 @@ import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
   name: 'shopping-item-view',
+  components: {
+    infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
+  },
   data () {
     return {
       shoppingListId: this.$route.params.listId,
@@ -146,6 +159,7 @@ export default {
       authorNames: '',
       authorLastNames: '',
       tags: [],
+      tagsList: [],
       itemIsLoading: true,
       submitLoading: false,
       deleteLoading: false,
@@ -239,6 +253,9 @@ export default {
     }).then(resp => {
       this.itemIsLoading = false
       this.tags = resp.data.list || []
+      return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
+    }).then(resp => {
+      this.tagsList = resp.data.list || []
     }).catch(err => {
       if (err.response.status === 404) {
         common.DisplayFailureToast('Error item not found' + '<br/>' + err.response.data.metadata.response)

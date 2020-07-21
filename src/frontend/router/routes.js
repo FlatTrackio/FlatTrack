@@ -126,6 +126,14 @@ export default [
     }
   },
   {
+    path: '/apps/shopping-list/tags',
+    name: 'Manage shopping tags',
+    component: () => import('@/frontend/views/authenticated/shopping-list-tags.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
     path: '/admin',
     name: 'Admin home',
     component: () => import('@/frontend/views/admin/home.vue'),

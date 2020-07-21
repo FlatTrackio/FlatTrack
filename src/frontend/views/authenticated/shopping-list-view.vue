@@ -69,7 +69,7 @@
             </div>
           </div>
         </div>
-        <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true; editingMeta = true; FocusNotes() }" v-if="!editingMeta && notes.length == 0">Add notes</b-button>
+        <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true; editingMeta = true; FocusNotes() }" v-if="!editingMeta && notes.length == 0" class="remove-shadow">Add notes</b-button>
         <div v-if="editingMeta">
           <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, completed) }">Done</b-button>
           <br/>
@@ -181,7 +181,7 @@
                     <b-button
                       type="is-text"
                       size="medium"
-                      class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover is-paddingless"
+                      class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover is-paddingless remove-shadow"
                       @click="TagTmp = itemTag.tag; editingTag = itemTag.tag; editing = true">
                       {{ itemTag.tag }}
                     </b-button>

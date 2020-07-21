@@ -175,11 +175,34 @@ type ShoppingItemSelector struct {
 	TemplateListItemSelector string `json:"templateListItemSelector"`
 }
 
-// ShoppingItemTag ...
+// ShoppingTag ...
 // selects a tag
-type ShoppingItemTag struct {
-	Name string `json:"name"`
+type ShoppingTag struct {
+	ID                    string `json:"id"`
+	Name                  string `json:"name"`
+	Author                string `json:"author"`
+	AuthorLast            string `json:"authorLast"`
+	CreationTimestamp     int    `json:"creationTimestamp"`
+	ModificationTimestamp int    `json:"modificationTimestamp"`
+	DeletionTimestamp     int    `json:"deletionTimestamp"`
 }
+
+// ShoppingTagOptions ...
+// options for list items
+type ShoppingTagOptions struct {
+	SortBy   string               `json:"sortBy"`
+}
+
+// ShoppingTagSortTypes ...
+// ways of sorting shopping tags
+const (
+	ShoppingTagSortByRecentlyAdded          = "recentlyAdded"
+	ShoppingTagSortByRecentlyUpdated        = "recentlyUpdated"
+	ShoppingTagSortByLastAdded              = "lastAdded"
+	ShoppingTagSortByLastUpdated            = "lastUpdated"
+	ShoppingTagSortByAlphabeticalDescending = "alphabeticalDescending"
+	ShoppingTagSortByAlphabeticalAscending  = "alphabeticalAscending"
+)
 
 // UserCreationSecretSpec ...
 // values for a user to confirm their account with

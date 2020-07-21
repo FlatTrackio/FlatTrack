@@ -15,13 +15,13 @@ import (
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/groups"
+	"gitlab.com/flattrack/flattrack/src/backend/health"
 	"gitlab.com/flattrack/flattrack/src/backend/registration"
 	"gitlab.com/flattrack/flattrack/src/backend/settings"
 	"gitlab.com/flattrack/flattrack/src/backend/shoppinglist"
 	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 	"gitlab.com/flattrack/flattrack/src/backend/users"
-	"gitlab.com/flattrack/flattrack/src/backend/health"
 )
 
 // GetAllUsers ...
@@ -1320,7 +1320,7 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		var tagUpdate types.ShoppingItemTag
+		var tagUpdate types.ShoppingTag
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &tagUpdate)
 
@@ -1339,14 +1339,18 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 	}
 }
 
-// GetAllShoppingListItemTags ...
+// GetAllShoppingTags ...
 // responds with all tags used in shopping list items
-func GetAllShoppingListItemTags(db *sql.DB) http.HandlerFunc {
+func GetAllShoppingTags(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "Failed to fetch shopping list item tags"
 		code := http.StatusInternalServerError
 
-		tags, err := shoppinglist.GetAllShoppingListTags(db)
+		options := types.ShoppingTagOptions{
+			SortBy: r.FormValue("sortBy"),
+		}
+
+		tags, err := shoppinglist.GetAllShoppingTags(db, options)
 		if err == nil {
 			response = "Fetched the shopping list item tags"
 			code = http.StatusOK
@@ -1356,6 +1360,147 @@ func GetAllShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			List: tags,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PostShoppingTag ...
+// creates a tag name
+func PostShoppingTag(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to create a shopping tag"
+		code := http.StatusInternalServerError
+
+		var tag types.ShoppingTag
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &tag)
+
+		id, errID := users.GetIDFromJWT(db, r)
+		tag.Author = id
+		tag, err := shoppinglist.CreateShoppingTag(db, tag)
+		if err == nil && errID == nil {
+			response = "Updated a shopping tag"
+			code = http.StatusOK
+		} else {
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: tag,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetShoppingTag ...
+// gets a shopping tag by id
+func GetShoppingTag(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch a shopping tag"
+		code := http.StatusInternalServerError
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		tag, err := shoppinglist.GetShoppingTag(db, id)
+		if err == nil {
+			response = "Fetched a shopping tag"
+			code = http.StatusOK
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: tag,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// UpdateShoppingTag ...
+// updates a tag name
+func UpdateShoppingTag(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to update a shopping tag"
+		code := http.StatusInternalServerError
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		tagInDB, err := shoppinglist.GetShoppingTag(db, id)
+		if err != nil || tagInDB.ID == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping tag"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingTag{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		var tagUpdate types.ShoppingTag
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &tagUpdate)
+
+		userID, errID := users.GetIDFromJWT(db, r)
+		tagUpdate.AuthorLast = userID
+		tag, err := shoppinglist.UpdateShoppingTag(db, id, tagUpdate)
+		if err == nil && errID == nil {
+			response = "Updated a shopping tag"
+			code = http.StatusOK
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: tag,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// DeleteShoppingTag ...
+// deletes a shopping tag by id
+func DeleteShoppingTag(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := http.StatusInternalServerError
+		response := "Failed to delete the shopping tag"
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		tagInDB, err := shoppinglist.GetShoppingTag(db, id)
+		if err != nil || tagInDB.ID == "" {
+			code = http.StatusNotFound
+			response = "Failed to find shopping tag"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.ShoppingTag{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		err = shoppinglist.DeleteShoppingTag(db, id)
+		if err == nil {
+			code = http.StatusOK
+			response = "Successfully deleted the shopping tag"
+		} else {
+			code = http.StatusBadRequest
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}

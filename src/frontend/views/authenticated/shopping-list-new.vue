@@ -19,6 +19,7 @@
               icon="textbox"
               size="is-medium"
               placeholder="Enter a title for this list"
+              autofocus
               @keyup.enter.native="PostNewShoppingList"
               required>
             </b-input>
