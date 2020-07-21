@@ -24,6 +24,7 @@
             required
             icon="web"
             size="is-medium"
+            @keyup.enter.native="Register"
             expanded>
             <option value="English">English</option>
           </b-select>
@@ -36,6 +37,7 @@
             required
             icon="map-clock"
             size="is-medium"
+            @keyup.enter.native="Register"
             expanded>
             <option value="Pacific/Auckland">Pacific/Auckland</option>
           </b-select>
@@ -55,6 +57,7 @@
             placeholder="Enter your flat's name"
             icon="textbox"
             size="is-medium"
+            @keyup.enter.native="Register"
             required>
           </b-input>
         </b-field>
@@ -73,6 +76,7 @@
             placeholder="Enter your name(s)"
             icon="textbox"
             size="is-medium"
+            @keyup.enter.native="Register"
             required>
           </b-input>
         </b-field>
@@ -84,6 +88,7 @@
             placeholder="Enter your email address"
             icon="email"
             size="is-medium"
+            @keyup.enter.native="Register"
             required>
           </b-input>
         </b-field>
@@ -94,6 +99,7 @@
             placeholder="Enter your phone number"
             icon="phone"
             size="is-medium"
+            @keyup.enter.native="Register"
             maxlength="30">
           </b-input>
         </b-field>
@@ -108,6 +114,7 @@
             placeholder="Click to select birthday"
             icon="cake-variant"
             size="is-medium"
+            @keyup.enter.native="Register"
             trap-focus>
           </b-datepicker>
         </b-field>
@@ -129,6 +136,7 @@
             size="is-medium"
             pattern="^([a-z]*)([A-Z]*).{10,}$"
             validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+            @keyup.enter.native="Register"
             required>
           </b-input>
         </b-field>
@@ -139,7 +147,7 @@
             password-reveal
             placeholder="Confirm your password"
             icon="textbox-password"
-            @keyup.enter.native="Register({ language, timezone, flatName, user: { names, email, password, passwordConfirm, jsBirthday, phoneNumber } })"
+            @keyup.enter.native="Register"
             size="is-medium"
             maxlength="70"
             pattern="^([a-z]*)([A-Z]*).{10,}$"
@@ -154,7 +162,7 @@
           icon-left="check"
           native-type="submit"
           expanded
-          @click="Register({ language, timezone, flatName, user: { names, email, password, passwordConfirm, jsBirthday, phoneNumber } })">
+          @click="Register">
           Setup
         </b-button>
       </div>
@@ -198,18 +206,31 @@ export default {
     infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
   },
   methods: {
-    Register: (form) => {
-      if (form.user.password !== form.user.passwordConfirm) {
+    Register () {
+      if (this.password !== this.passwordConfirm) {
         common.DisplayFailureToast('Error passwords do not match')
         return
       }
 
-      form.user.birthday = new Date(form.user.jsBirthday || 0).getTime() / 1000 || 0
+      this.birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0
 
       const loadingComponent = Loading.open({
         container: null
       })
       setTimeout(() => loadingComponent.close(), 20 * 1000)
+      var form = {
+        language: this.language,
+        timezone: this.timezone,
+        flatName: this.flatName,
+        user: {
+          names: this.names,
+          email: this.email,
+          password: this.password,
+          passwordConfirm: this.passwordConfirm,
+          jsBirthday: this.jsBirthday,
+          phoneNumber: this.phoneNumber
+        }
+      }
       registration.PostAdminRegister(form).then(resp => {
         if (resp.data.data !== '' || typeof resp.data.data !== 'undefined') {
           localStorage.setItem('authToken', resp.data.data)
@@ -223,7 +244,6 @@ export default {
           window.location.href = '/'
         }, 3 * 1000)
       }).catch(err => {
-        console.log(err)
         loadingComponent.close()
         common.DisplayFailureToast(err.response.data.metadata.response || err)
       })
