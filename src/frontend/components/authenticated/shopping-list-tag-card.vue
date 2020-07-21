@@ -96,7 +96,7 @@ export default {
           this.itemDeleting = true
           shoppinglist.DeleteShoppingTag(id).then(resp => {
             common.DisplaySuccessToast(resp.data.metadata.response)
-            this.list.splice(index, 1)
+            this.tags.splice(index, 1)
             this.$emit('displayFloatingAddButton', true)
           }).catch(err => {
             common.DisplayFailureToast('Failed to delete shopping tag' + ' - ' + err.response.data.metadata.response)
