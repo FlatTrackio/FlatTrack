@@ -19,6 +19,7 @@
               maxlength="30"
               icon="text"
               placeholder="Enter a name for this item"
+              @keyup.enter.native="PostShoppingListItem"
               autofocus
               required>
             </b-input>
@@ -30,6 +31,7 @@
               size="is-medium"
               icon="text"
               placeholder="Enter information extra"
+              @keyup.enter.native="PostShoppingListItem"
               maxlength="40">
             </b-input>
           </b-field>
@@ -40,6 +42,7 @@
               placeholder="0.00"
               v-model="price"
               icon="currency-usd"
+              @keyup.enter.native="PostShoppingListItem"
               size="is-medium">
             </b-input>
           </b-field>
@@ -89,6 +92,7 @@
                 icon="tag"
                 maxlength="30"
                 placeholder="Enter a tag to group the item"
+                @keyup.enter.native="PostShoppingListItem"
                 size="is-medium">
               </b-input>
             </b-field>
@@ -101,7 +105,7 @@
             native-type="submit"
             expanded
             :loading="submitLoading"
-            @click="PostShoppingListItem(shoppingListId, name, notes, price, quantity, tag)">
+            @click="PostShoppingListItem">
             Add
           </b-button>
         </div>
@@ -134,18 +138,18 @@ export default {
     }
   },
   methods: {
-    PostShoppingListItem (listId, name, notes, price, quantity, tag) {
+    PostShoppingListItem () {
       this.submitLoading = true
-      if (notes === '') {
-        notes = undefined
+      if (this.notes === '') {
+        this.notes = undefined
       }
-      if (price === 0) {
-        price = undefined
+      if (this.price === 0) {
+        this.price = undefined
       } else {
-        price = parseFloat(price)
+        this.price = parseFloat(this.price)
       }
 
-      shoppinglist.PostShoppingListItem(listId, name, notes, price, quantity, tag).then(resp => {
+      shoppinglist.PostShoppingListItem(this.shoppingListId, this.name, this.notes, this.price, this.quantity, this.tag).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' || typeof item.id === 'undefined') {
           this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })

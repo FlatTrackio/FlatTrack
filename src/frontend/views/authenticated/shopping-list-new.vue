@@ -20,6 +20,7 @@
               size="is-medium"
               placeholder="Enter a title for this list"
               autofocus
+              @keyup.enter.native="PostNewShoppingList"
               required>
             </b-input>
           </b-field>
@@ -30,6 +31,7 @@
               v-model="notes"
               icon="text"
               placeholder="Enter extra information"
+              @keyup.enter.native="PostNewShoppingList"
               maxlength="100">
             </b-input>
           </b-field>
@@ -117,11 +119,11 @@ export default {
     }
   },
   methods: {
-    PostNewShoppingList (name, notes, listTemplate, templateListItemSelector) {
-      if (notes === '') {
-        notes = undefined
+    PostNewShoppingList () {
+      if (this.notes === '') {
+        this.notes = undefined
       }
-      shoppinglist.PostShoppingList(name, notes, listTemplate, templateListItemSelector).then(resp => {
+      shoppinglist.PostShoppingList(this.name, this.notes, this.listTemplate, this.templateListItemSelector).then(resp => {
         var list = resp.data.spec
         if (list.id !== '' || typeof list.id === 'undefined') {
           this.$router.push({ path: `/apps/shopping-list/list/${list.id}` })

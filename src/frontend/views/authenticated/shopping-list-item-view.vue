@@ -20,6 +20,7 @@
               maxlength="30"
               icon="text"
               placeholder="Enter a name for this item"
+              @keyup.enter.native="UpdateShoppingListItem"
               required>
             </b-input>
           </b-field>
@@ -30,6 +31,7 @@
               size="is-medium"
               maxlength="40"
               placeholder="Enter extra information as notes to this item"
+              @keyup.enter.native="UpdateShoppingListItem"
               icon="text">
             </b-input>
           </b-field>
@@ -40,6 +42,7 @@
               placeholder="0.00"
               v-model="price"
               icon="currency-usd"
+              @keyup.enter.native="UpdateShoppingListItem"
               size="is-medium">
             </b-input>
           </b-field>
@@ -52,6 +55,7 @@
               expanded
               required
               controls-position="compact"
+              @keyup.enter.native="UpdateShoppingListItem"
               icon="numeric">
             </b-numberinput>
           </b-field>
@@ -89,6 +93,7 @@
                 icon="tag"
                 maxlength="30"
                 placeholder="Enter a tag to group the item"
+                @keyup.enter.native="UpdateShoppingListItem"
                 size="is-medium">
               </b-input>
             </b-field>
@@ -110,7 +115,7 @@
               native-type="submit"
               expanded
               :loading="submitLoading"
-              @click="UpdateShoppingListItem(shoppingListId, id, name, notes, price, quantity, tag, obtained)">
+              @click="UpdateShoppingListItem">
               Update item
             </b-button>
             <p class="control">
@@ -172,17 +177,17 @@ export default {
     }
   },
   methods: {
-    UpdateShoppingListItem (listId, itemId, name, notes, price, quantity, tag, obtained) {
+    UpdateShoppingListItem () {
       this.submitLoading = true
-      if (notes === '') {
-        notes = undefined
+      if (this.notes === '') {
+        this.notes = undefined
       }
-      if (price === 0) {
-        price = undefined
+      if (this.price === 0) {
+        this.price = undefined
       }
 
-      price = Number(price)
-      shoppinglist.UpdateShoppingListItem(listId, itemId, name, notes, price, quantity, tag, obtained).then(resp => {
+      this.price = Number(this.price)
+      shoppinglist.UpdateShoppingListItem(this.shoppingListId, this.id, this.name, this.notes, this.price, this.quantity, this.tag, this.obtained).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' && typeof item.id !== 'undefined') {
           common.DisplaySuccessToast('Updated item successfully')

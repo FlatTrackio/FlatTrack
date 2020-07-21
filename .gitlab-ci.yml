@@ -32,20 +32,25 @@ variables:
   docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   apk add git
 
-.docker-pre-build-release-version: &docker-pre-build-release-version |
-  export APP_BUILD_VERSION="$CI_COMMIT_TAG"
-  export APP_BUILD_MODE=production
-  export DOCKER_EXTRA_DESTINATION="-t $CI_REGISTRY_IMAGE:$CI_COMMIT_TAG$PRINT_ARCH"
-
 .docker-build-taggable-name: &docker-build-taggable-name |
   set -x
+  if [[ ! "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]] && [[ -z "$CI_COMMIT_TAG" ]]; then
+    BRANCH_NAME="-$CI_COMMIT_BRANCH"
+  fi
   ARCH_TAGGABLE_NAME="$(echo $ARCH | sed -e 's,/,,g')"
   if [[ ! "$ARCH" = "$ARCH_DEFAULT" ]]; then
     PRINT_ARCH="-$ARCH_TAGGABLE_NAME"
   fi
 
+.docker-pre-build-release-version: &docker-pre-build-release-version |
+  if [[ ! -z "$CI_COMMIT_TAG" ]]; then
+    export APP_BUILD_VERSION="$CI_COMMIT_TAG"
+    export APP_BUILD_MODE=production
+    export DOCKER_EXTRA_DESTINATION="-t $CI_REGISTRY_IMAGE:$APP_BUILD_VERSION$PRINT_ARCH"
+  fi
+
 .docker-build: &docker-build |
-  docker buildx build --build-arg AppBuildVersion="$APP_BUILD_VERSION" --build-arg AppBuildDate="$(date -u +%Y-%m-%d_%I:%M:%S%p)" --build-arg AppBuildHash="$(git rev-parse --short HEAD)" --build-arg AppBuildMode="$APP_BUILD_MODE" --platform linux/$ARCH -f $CI_PROJECT_DIR/Dockerfile --push -t $CI_REGISTRY_IMAGE:latest$PRINT_ARCH $DOCKER_EXTRA_DESTINATION $CI_PROJECT_DIR
+  docker buildx build --build-arg AppBuildVersion="$APP_BUILD_VERSION" --build-arg AppBuildDate="$(date -u +%Y-%m-%d_%I:%M:%S%p)" --build-arg AppBuildHash="$(git rev-parse --short HEAD)" --build-arg AppBuildMode="$APP_BUILD_MODE" --platform linux/$ARCH -f $CI_PROJECT_DIR/Dockerfile --push -t $CI_REGISTRY_IMAGE:latest$BRANCH_NAME$PRINT_ARCH $DOCKER_EXTRA_DESTINATION $CI_PROJECT_DIR
 
 build-amd64:
   stage: build
@@ -62,31 +67,12 @@ build-amd64:
     - *docker-build-pre-script
   script:
     - *docker-build-taggable-name
+    - *docker-pre-build-release-version
     - *docker-build
   except:
     - tags
 
-build-amd64-release:
-  stage: build
-  image: docker:stable
-  retry: 2
-  services:
-    - docker:stable-dind
-  variables:
-    ARCH: "amd64"
-    DOCKER_HOST: tcp://docker:2375/
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
-  before_script:
-    - *docker-build-pre-script
-  script:
-    - *docker-build-taggable-name
-    - *docker-pre-build-release-version
-    - *docker-build
-  only:
-    - tags
-
-build-armv7-release:
+build-armv7:
   stage: build
   image: docker:stable
   services:

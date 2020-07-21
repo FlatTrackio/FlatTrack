@@ -14,7 +14,7 @@
               maxlength="70"
               autofocus
               placeholder="Enter your email"
-              @keyup.enter.native="postLogin(email, password)"
+              @keyup.enter.native="postLogin"
               size="is-medium"
               icon="email"
               required>
@@ -26,7 +26,7 @@
               v-model="password"
               password-reveal
               maxlength="70"
-              @keyup.enter.native="postLogin(email, password)"
+              @keyup.enter.native="postLogin"
               placeholder="Enter your password"
               size="is-medium"
               icon="textbox-password"
@@ -42,7 +42,7 @@
                 size="is-medium"
                 type="is-primary"
                 expanded
-                @click="postLogin(email, password)">
+                @click="postLogin">
                 Login
               </b-button>
               <b-button
@@ -80,16 +80,12 @@ export default {
     headerDisplay: () => import('@/frontend/components/common/header-display')
   },
   methods: {
-    postLogin (email, password) {
+    postLogin () {
       const loadingComponent = Loading.open({
         container: null
       })
       setTimeout(() => loadingComponent.close(), 20 * 1000)
-      var form = {
-        email: email,
-        password: password
-      }
-      login.PostUserAuth(form)
+      login.PostUserAuth(this.email, this.password)
         .then(resp => {
           localStorage.setItem('authToken', resp.data.data)
           setTimeout(() => {

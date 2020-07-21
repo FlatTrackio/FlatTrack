@@ -7,11 +7,18 @@ import Request from '@/frontend/requests/requests'
 
 // GetAllFlatmates
 // get a list of all Flatmates
-function GetAllFlatmates (params) {
+function GetAllFlatmates (names, email, phoneNumber, birthday, groups, password) {
   return Request({
     url: '/api/users',
     method: 'GET',
-    params: params
+    params: {
+      names,
+      email,
+      phoneNumber,
+      birthday,
+      groups,
+      password
+    }
   })
 }
 

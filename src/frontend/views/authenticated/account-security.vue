@@ -27,6 +27,7 @@
             size="is-medium"
             pattern="^([a-z]*)([A-Z]*).{10,}$"
             validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+            @keyup.enter.native="PatchProfile"
             maxlength="70">
           </b-input>
         </b-field>
@@ -40,6 +41,7 @@
             size="is-medium"
             pattern="^([a-z]*)([A-Z]*).{10,}$"
             validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+            @keyup.enter.native="PatchProfile"
             icon="textbox-password">
           </b-input>
         </b-field>
@@ -48,7 +50,7 @@
           size="is-medium"
           icon-left="delta"
           native-type="submit"
-          @click="PatchProfile(names, email, phoneNumber, password, passwordConfirm, jsBirthday)">
+          @click="PatchProfile">
           Update password
         </b-button>
 
@@ -143,13 +145,13 @@ export default {
         this.creationTimestamp = resp.data.spec.creationTimestamp
       })
     },
-    PatchProfile (names, email, phoneNumber, password, passwordConfirm, jsBirthday) {
-      if (password !== passwordConfirm) {
+    PatchProfile () {
+      if (this.password !== this.passwordConfirm) {
         common.DisplayFailureToast('Unable to use password as they either do not match')
         return
       }
-      var birthday = new Date(jsBirthday || 0).getTime() / 1000 || 0
-      profile.PatchProfile(names, email, phoneNumber, birthday, password).then(resp => {
+      var birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0
+      profile.PatchProfile(this.names, this.email, this.phoneNumber, this.birthday, this.password).then(resp => {
         if (resp.data.spec.id === '') {
           common.DisplayFailureToast('Failed to update profile')
           return

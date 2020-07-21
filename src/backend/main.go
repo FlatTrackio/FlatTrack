@@ -55,5 +55,6 @@ func main() {
 	}
 
 	go metrics.Handle()
+	go routes.HealthHandler(db)
 	routes.Handle(db)
 }

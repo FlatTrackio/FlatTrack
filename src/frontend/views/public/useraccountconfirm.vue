@@ -32,6 +32,7 @@
               placeholder="Enter your phone number"
               icon="phone"
               size="is-medium"
+              @keyup.enter.native="PostUserConfirm"
               maxlength="30">
             </b-input>
           </b-field>
@@ -68,6 +69,7 @@
               size="is-medium"
               pattern="^([a-z]*)([a-z]*).{10,}$"
               validation-message="password is invalid. passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              @keyup.enter.native="PostUserConfirm"
               required>
             </b-input>
           </b-field>
@@ -83,6 +85,7 @@
               size="is-medium"
               pattern="^([a-z]*)([A-Z]*).{10,}$"
               validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              @keyup.enter.native="PostUserConfirm"
               required>
             </b-input>
           </b-field>
@@ -93,7 +96,7 @@
             icon-left="check"
             native-type="submit"
             expanded
-            @click="PostUserConfirm(id, secret, phoneNumber, password, passwordConfirm, jsBirthday)">
+            @click="PostUserConfirm">
             Confirm my account
           </b-button>
         </div>
@@ -134,17 +137,17 @@ export default {
     infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
   },
   methods: {
-    PostUserConfirm (id, secret, phoneNumber, password, passwordConfirm, jsBirthday) {
-      if (password !== passwordConfirm && password !== '') {
+    PostUserConfirm () {
+      if (this.password !== this.passwordConfirm && this.password !== '') {
         common.DisplayFailureToast('Passwords do not match')
         return
       }
-      var birthday = Number(moment(jsBirthday).format('X')) || 0
+      var birthday = Number(moment(this.jsBirthday).format('X')) || 0
 
       const loadingComponent = Loading.open({
         container: null
       })
-      confirm.PostUserConfirm(id, secret, phoneNumber, birthday, password).then(resp => {
+      confirm.PostUserConfirm(this.id, this.secret, this.phoneNumber, this.birthday, this.password).then(resp => {
         if (resp.data.data === '') {
           common.DisplayFailureToast(resp.data.metadata.response)
           return

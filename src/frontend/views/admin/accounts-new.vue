@@ -12,25 +12,29 @@
         <p class="subtitle is-4">Add a new flatmate</p>
 
         <b-field label="Names">
-          <b-input type="text"
-                   v-model="names"
-                   maxlength="60"
-                   placeholder="Enter your flatmate's name"
-                   icon="textbox"
-                   size="is-medium"
-                   autofocus
-                   required>
+          <b-input
+            type="text"
+            v-model="names"
+            maxlength="60"
+            placeholder="Enter your flatmate's name"
+            icon="textbox"
+            size="is-medium"
+            @keyup.enter.native="PostUserAccount"
+            autofocus
+            required>
           </b-input>
         </b-field>
 
         <b-field label="Email">
-          <b-input type="email"
-                   v-model="email"
-                   maxlength="70"
-                   placeholder="Enter your flatmate's email"
-                   icon="email"
-                   size="is-medium"
-                   required>
+          <b-input
+            type="email"
+            v-model="email"
+            maxlength="70"
+            placeholder="Enter your flatmate's email"
+            icon="email"
+            size="is-medium"
+            @keyup.enter.native="PostUserAccount"
+            required>
           </b-input>
         </b-field>
 
@@ -46,6 +50,7 @@
               icon="account-group"
               placeholder="Select groups"
               size="is-medium"
+              @keyup.enter.native="PostUserAccount"
               @typing="GetFilteredGroups" />
           </b-field>
         </section>
@@ -61,6 +66,7 @@
                      placeholder="Enter your flatmate's phone number"
                      icon="phone"
                      size="is-medium"
+                     @keyup.enter.native="PostUserAccount"
                      maxlength="30">
             </b-input>
           </b-field>
@@ -96,6 +102,7 @@
               size="is-medium"
               pattern="^([a-z]*)([A-Z]*).{10,}$"
               validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              @keyup.enter.native="PostUserAccount"
               required>
             </b-input>
           </b-field>
@@ -111,6 +118,7 @@
               size="is-medium"
               pattern="^([a-z]*)([A-Z]*).{10,}$"
               validation-message="password is invalid. passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              @keyup.enter.native="PostUserAccount"
               required>
             </b-input>
           </b-field>
@@ -127,7 +135,7 @@
           icon-left="plus"
           native-type="submit"
           expanded
-          @click="PostNewUser(names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull)">
+          @click="PostUserAccount">
           Create user account
         </b-button>
       </section>
@@ -191,21 +199,21 @@ export default {
           .indexOf(text.toLowerCase()) >= 0
       })
     },
-    PostNewUser (names, email, phoneNumber, birthday, password, passwordConfirm, jsBirthday, groupsFull) {
-      if (password !== passwordConfirm && password !== '') {
+    PostUserAccount () {
+      if (this.password !== this.passwordConfirm && this.password !== '') {
         common.DisplayFailureToast('Passwords do not match')
         return
       }
-      birthday = new Date(jsBirthday || 0).getTime() / 1000 || 0
+      this.birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0
 
       var groups = []
-      groupsFull.map(group => {
+      this.groupsFull.map(group => {
         if (group === '' || group.name === '') {
           return
         }
         groups.push(group.name)
       })
-      adminFlatmates.PostFlatmate({ names, email, phoneNumber, birthday, groups, password }).then(resp => {
+      adminFlatmates.PostFlatmate(this.names, this.email, this.phoneNumber, this.birthday, groups, this.password).then(resp => {
         common.DisplaySuccessToast('Created user account')
         setTimeout(() => {
           if (this.setOnlyRequiredFields === true) {

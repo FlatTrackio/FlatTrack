@@ -61,6 +61,7 @@ postgres:
   password: flattrack
   host: postgres
   database: flattrack
+  sslmode: disable
 
 # add labels to all resources
 labels: {}

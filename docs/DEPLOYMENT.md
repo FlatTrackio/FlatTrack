@@ -58,6 +58,7 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
     | postgres.password                                     | the password for an existing Postgres databse                | flattrack                               |
     | postgres.host                                         | the host for an existing Postgres databse                    | flattrack                               |
     | postgres.database                                     | the database for an existing Postgres databse                | flattrack                               |
+    | postgres.sslmode                                      | the sslmode for an existing Postgres databse                 | disable                                 |
     | labels                                                | declare labels for all resources                             | `{}`                                    |
     | annotations                                           | declare annotations for all resources                        | `{}`                                    |
     | ingress.enabled                                       | create an ingress manifests                                  | false                                   |

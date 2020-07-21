@@ -16,20 +16,17 @@ import (
 
 // Database connection fields
 var (
-	DbUsername = common.GetDBusername()
-	DbPassword = common.GetDBpassword()
-	DbHostname = common.GetDBhost()
-	DbDatabase = common.GetDBdatabase()
+	username = common.GetDBusername()
+	password = common.GetDBpassword()
+	hostname = common.GetDBhost()
+	database = common.GetDBdatabase()
+	sslmode = common.GetDBsslMode()
 )
 
 // DB ...
 // given database credentials, return a database connection
 func DB(username string, password string, hostname string, database string) (*sql.DB, error) {
-	username = common.SetFirstOrSecond(username, DbUsername)
-	password = common.SetFirstOrSecond(password, DbPassword)
-	hostname = common.SetFirstOrSecond(hostname, DbHostname)
-	database = common.SetFirstOrSecond(database, DbDatabase)
-	connStr := fmt.Sprintf("postgres://%v:%v@%v/%v?sslmode=disable", username, password, hostname, database)
+	connStr := fmt.Sprintf("postgres://%v:%v@%v/%v?sslmode=%v", username, password, hostname, database, sslmode)
 	return sql.Open("postgres", connStr)
 }
 
