@@ -4,8 +4,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link :to="'/apps/shopping-list/list/' + shoppingListId">{{ shoppingListName }}</router-link></li>
-              <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + shoppingListId + '/new'">New shopping item</router-link></li>
+              <li><router-link :to="{ name: 'View shopping list', params: { id: shoppingListId }}">{{ shoppingListName }}</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'New shopping list', params: { id: shoppingListId }}">New shopping item</router-link></li>
             </ul>
         </nav>
         <div>
@@ -161,7 +161,7 @@ export default {
       shoppinglist.PostShoppingListItem(this.shoppingListId, this.name, this.notes, this.price, this.quantity, this.tag, this.obtained).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' || typeof item.id === 'undefined') {
-          this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
+          this.$router.push({ name: 'View shopping list', params: { id: this.shoppingListId } })
         } else {
           this.submitLoading = false
           common.DisplayFailureToast('Unable to find created shopping item')

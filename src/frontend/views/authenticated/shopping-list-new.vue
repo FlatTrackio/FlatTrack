@@ -4,8 +4,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/apps/shopping-list">Shopping list</router-link></li>
-              <li class="is-active"><router-link to="/apps/shopping-list/new">New shopping list</router-link></li>
+              <li><router-link :to="{ name: 'Shopping list' }">Shopping list</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'New shopping list' }">New shopping list</router-link></li>
             </ul>
         </nav>
         <div>
@@ -129,7 +129,7 @@ export default {
         this.submitLoading = false
         var list = resp.data.spec
         if (list.id !== '' || typeof list.id === 'undefined') {
-          this.$router.push({ path: `/apps/shopping-list/list/${list.id}` })
+          this.$router.push({ name: 'View shopping list', params: { id: list.id } })
         } else {
           common.DisplayFailureToast('Unable to find created shopping list')
         }

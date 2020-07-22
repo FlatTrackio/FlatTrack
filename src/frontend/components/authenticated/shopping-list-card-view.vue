@@ -2,6 +2,7 @@
   <div>
     <section>
       <div class="card pointer-cursor-on-hover">
+      <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
         <div class="card-content">
           <div class="media">
             <div class="media-left" @click="goToRef('/apps/shopping-list/list/' + list.id)">
@@ -85,9 +86,6 @@ export default {
     }
   },
   methods: {
-    goToRef (ref) {
-      this.$router.push({ path: ref })
-    },
     PreviewNotes (notes) {
       if (notes.length <= 35) {
         return notes

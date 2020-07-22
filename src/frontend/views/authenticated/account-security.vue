@@ -4,8 +4,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/account">My account</router-link></li>
-              <li class="is-active"><router-link to="/account/security">Security</router-link></li>
+              <li><router-link :to="{ name: 'Account' }">My account</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'Account Security' }">Security</router-link></li>
             </ul>
         </nav>
         <h1 class="title is-1">Security</h1>
@@ -174,7 +174,7 @@ export default {
         onConfirm: () => {
           profile.PostAuthReset().then(resp => {
             common.DisplaySuccessToast('Successfully signed out of all devices')
-            window.location.href = '/login'
+            this.$router.push({ name: 'Login' })
           }).catch(err => {
             common.DisplayFailureToast('Failed to sign out of all devices' + '<br/>' + err.response.data.metadata.response)
           })

@@ -96,7 +96,7 @@ export default {
               this.$router.push({ path: this.redirect })
               return
             }
-            window.location.href = '/'
+            this.$router.push({ name: 'Home' })
           }, 2 * 1000)
         }).catch(err => {
           loadingComponent.close()
@@ -119,7 +119,7 @@ export default {
               this.$router.push({ path: this.redirect })
               return
             }
-            window.location.href = '/'
+            this.$router.push({ name: 'Home' })
           }, 2 * 1000)
         })
       }

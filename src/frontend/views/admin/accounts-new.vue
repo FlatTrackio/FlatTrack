@@ -4,8 +4,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/admin/accounts">Accounts</router-link></li>
-              <li class="is-active"><router-link to="/admin/accounts/new">New account</router-link></li>
+              <li><router-link :to="{ name: 'Admin accounts' }">Accounts</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'View user account' }">New account</router-link></li>
             </ul>
         </nav>
         <h1 class="title is-1">New account</h1>
@@ -220,7 +220,7 @@ export default {
         common.DisplaySuccessToast('Created user account')
         setTimeout(() => {
           if (this.setOnlyRequiredFields === true) {
-            this.$router.push({ path: '/admin/accounts/edit/' + resp.data.spec.id })
+            this.$router.push({ name: 'View user account', params: { id: resp.data.spec.id } })
           } else {
             this.$router.push({ name: 'Admin accounts' })
           }

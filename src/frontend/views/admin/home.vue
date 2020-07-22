@@ -42,20 +42,20 @@ export default {
           name: 'Accounts',
           description: 'Manage your flatmates accounts',
           icon: 'account-group',
-          ref: '/admin/accounts'
+          ref: 'Admin accounts'
         },
         {
           name: 'Settings',
           description: 'General FlatTrack settings',
           icon: 'settings',
-          ref: '/admin/settings'
+          ref: 'Admin settings'
         }
       ]
     }
   },
   methods: {
     goToApp (ref) {
-      this.$router.push({ path: ref })
+      this.$router.push({ name: ref })
     }
   }
 }

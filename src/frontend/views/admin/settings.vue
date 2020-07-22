@@ -4,8 +4,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/admin">Admin</router-link></li>
-              <li class="is-active"><router-link to="/admin/settings">Settings</router-link></li>
+              <li><router-link :to="{ name: 'Admin home' }">Admin</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'Admin settings' }">Settings</router-link></li>
             </ul>
         </nav>
         <h1 class="title is-1">Settings</h1>
@@ -61,9 +61,6 @@ export default {
     })
   },
   methods: {
-    goToRef (ref) {
-      this.$router.push({ path: ref })
-    },
     PostFlatName () {
       if (this.flatName === '') {
         common.DisplayFailureToast('Error: Flat name must not be empty')

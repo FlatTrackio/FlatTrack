@@ -49,7 +49,7 @@ function DisplayFailureToast (message) {
 
 // SignoutDialog
 // shows a dialog prompt to signout
-function SignoutDialog () {
+function SignoutDialog (vm) {
   Dialog.confirm({
     message: 'Are you sure you want to sign out?',
     type: 'is-danger',
@@ -60,7 +60,8 @@ function SignoutDialog () {
       })
       setTimeout(() => {
         DeleteAuthToken()
-        window.location.href = '/login'
+        vm.$router.push({ name: 'Login' })
+        loadingComponent.close()
       }, 1 * 1000)
     }
   })

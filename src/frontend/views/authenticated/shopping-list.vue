@@ -4,8 +4,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/apps">Apps</router-link></li>
-              <li class="is-active"><router-link to="/apps/shopping-list">Shopping list</router-link></li>
+              <li><router-link :to="{ name: 'Apps' }">Apps</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'Shopping list' }">Shopping list</router-link></li>
             </ul>
         </nav>
         <h1 class="title is-1">Shopping list</h1>
@@ -65,7 +65,7 @@
           </b-field>
           <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
           <section>
-            <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/new')">
+            <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'New shopping list' })">
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
@@ -150,9 +150,6 @@ export default {
     }
   },
   methods: {
-    goToRef (ref) {
-      this.$router.push({ path: ref })
-    },
     GetShoppingLists () {
       shoppinglist.GetShoppingLists(undefined, this.sortBy).then(resp => {
         this.pageLoading = false

@@ -156,7 +156,7 @@ export default {
         common.DisplaySuccessToast(resp.data.metadata.response)
         setTimeout(() => {
           loadingComponent.close()
-          window.location.href = '/'
+          this.$router.push({ name: 'Home' })
         }, 2 * 1000)
       }).catch(err => {
         loadingComponent.close()

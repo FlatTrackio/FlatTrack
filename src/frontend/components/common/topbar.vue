@@ -54,7 +54,7 @@ export default {
   },
   methods: {
     signOut () {
-      common.SignoutDialog()
+      common.SignoutDialog(this)
     },
     GetFlatInfo () {
       flatInfo.GetFlatName().then(resp => {

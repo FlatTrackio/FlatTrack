@@ -6,7 +6,7 @@ import cani from '@/frontend/requests/authenticated/can-i'
 function requireAuthToken (to, from, next) {
   var authToken = common.GetAuthToken()
   if (typeof authToken === 'undefined' || authToken === null || authToken === '') {
-    next({ path: '/login', query: { redirect: to.fullPath } })
+    next({ name: 'Login', query: { redirect: to.fullPath } })
     return
   }
   next()
@@ -20,7 +20,7 @@ function requireNoAuthToken (to, from, next) {
     next()
     return
   }
-  window.location.href = '/'
+  this.$router.push({ name: 'Home' })
 }
 
 function requireGroup (to, from, next) {

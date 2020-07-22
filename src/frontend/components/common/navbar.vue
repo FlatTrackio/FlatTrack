@@ -20,7 +20,7 @@
           <div class="p-1">
             <b-menu>
               <b-menu-list label="General">
-                <b-menu-item icon="home" label="Home" tag="router-link" to="/"></b-menu-item>
+                <b-menu-item icon="home" label="Home" tag="router-link" :to="{ name: 'Home' }"></b-menu-item>
                 <b-menu-item icon="information-outline" label="My flat" tag="router-link" :to="{ name: 'My Flat' }"></b-menu-item>
                 <b-menu-item icon="information-outline" label="About FlatTrack" tag="router-link" :to="{ name: 'About FlatTrack' }"></b-menu-item>
               </b-menu-list>
@@ -71,7 +71,7 @@ export default {
   },
   methods: {
     signOut () {
-      common.SignoutDialog()
+      common.SignoutDialog(this)
     }
   },
   async beforeMount () {

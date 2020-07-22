@@ -241,7 +241,7 @@ export default {
         common.DisplaySuccessToast('Welcome to FlatTrack!')
         setTimeout(() => {
           loadingComponent.close()
-          window.location.href = '/'
+          this.$router.push({ name: 'Home' })
         }, 3 * 1000)
       }).catch(err => {
         loadingComponent.close()

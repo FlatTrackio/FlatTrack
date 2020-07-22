@@ -59,20 +59,20 @@ export default {
           name: 'Profile',
           description: 'Manage your general information',
           icon: 'account-circle',
-          ref: '/account/profile'
+          ref: 'Account Profile'
         },
         {
           name: 'Security',
           description: 'Manage your account security',
           icon: 'lock-question',
-          ref: '/account/security'
+          ref: 'Account Security'
         }
       ]
     }
   },
   methods: {
     goToApp (ref) {
-      this.$router.push({ path: ref })
+      this.$router.push({ name: ref })
     }
   },
   computed: {

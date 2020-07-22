@@ -4,8 +4,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/admin">Admin</router-link></li>
-              <li class="is-active"><router-link to="/admin/accounts">Accounts</router-link></li>
+              <li><router-link :to="{ name: 'Admin home' }">Admin</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'Admin account' }">Accounts</router-link></li>
             </ul>
         </nav>
         <h1 class="title is-1">Accounts</h1>
@@ -13,7 +13,7 @@
         <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <div>
           <section>
-            <div class="card pointer-cursor-on-hover" @click="goToRef('/admin/accounts/new')">
+            <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'Admin new account' })">
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
@@ -35,7 +35,7 @@
         </div>
         <br/>
         <div v-if="members && members.length">
-          <div class="card-margin pointer-cursor-on-hover" v-for="member of members" v-bind:key="member" @click="goToRef('/admin/accounts/edit/' + member.id)">
+          <div class="card-margin pointer-cursor-on-hover" v-for="member of members" v-bind:key="member" @click="$router.push({ name: 'View user account', params: { id: member.id } })">
             <div class="card">
               <div class="card-content">
                 <div class="media">
@@ -129,9 +129,6 @@ export default {
     floatingAddButton: () => import('@/frontend/components/common/floating-add-button.vue')
   },
   methods: {
-    goToRef (ref) {
-      this.$router.push({ path: ref })
-    },
     FetchAllFlatmates () {
       if (typeof this.groupQuery !== 'undefined') {
         var group = this.groupQuery

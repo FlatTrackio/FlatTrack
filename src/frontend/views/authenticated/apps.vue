@@ -42,20 +42,20 @@ export default {
           name: 'Shopping list',
           description: 'Create and manage lists to use for your next shop',
           icon: 'format-list-checks',
-          ref: '/apps/shopping-list'
+          ref: 'Shopping list'
         },
         {
           name: 'Flatmates',
           description: 'View your flatmates and their contact details',
           icon: 'account-group',
-          ref: '/apps/flatmates'
+          ref: 'My Flatmates'
         }
       ]
     }
   },
   methods: {
     goToApp (ref) {
-      this.$router.push({ path: ref })
+      this.$router.push({ name: ref })
     }
   }
 }

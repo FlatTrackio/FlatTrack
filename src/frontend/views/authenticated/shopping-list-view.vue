@@ -14,8 +14,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
-            <li><router-link to="/apps/shopping-list">Shopping list</router-link></li>
-            <li v-if="hasInitialLoaded || name !== '' || typeof name !== 'undefined'" class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">{{ name || 'Unnamed list' }}</router-link></li>
+            <li><router-link :to="{ name: 'Shopping list' }">Shopping list</router-link></li>
+            <li v-if="hasInitialLoaded || name !== '' || typeof name !== 'undefined'" class="is-active"><router-link :to="{ name: 'View shopping list', params: { id } }">{{ name || 'Unnamed list' }}</router-link></li>
             <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
           </ul>
         </nav>
@@ -118,7 +118,7 @@
         </b-field>
         <div>
           <section>
-            <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/new')">
+            <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'New shopping list item', params: { id } })">
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
