@@ -294,4 +294,5 @@ type JWTclaim struct {
 // options when templating the public HTML file
 type HTMLTemplateOptions struct {
 	SiteURL string
+	SiteSubPath string
 }

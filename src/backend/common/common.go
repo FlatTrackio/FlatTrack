@@ -168,6 +168,12 @@ func GetAppAPIRoot() (output string) {
 	return GetEnvOrDefault("APP_API_ROOT", "/api")
 }
 
+// GetAppSiteSubPath ...
+// location of the subpath where the instance should be hosted
+func GetAppSiteSubPath() (output string) {
+	return GetEnvOrDefault("APP_SITE_SUB_PATH", "/")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {

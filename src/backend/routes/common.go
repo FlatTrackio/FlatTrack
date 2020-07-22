@@ -116,11 +116,15 @@ func RequireContentType(expectedContentType string) func(http.Handler) http.Hand
 
 // FrontendHandler ...
 // handles rewriting and API root setting
-func FrontendHandler(publicDir string) http.Handler {
+func FrontendHandler(publicDir string, subPath string) http.Handler {
 	handler := http.FileServer(http.Dir(publicDir))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		_path := req.URL.Path
+		_path = "/" + strings.Replace(_path, subPath, "", 1)
+		req.URL.Path = _path
+
+		// TODO redirect to subPath + /unknown-page if _path does not include subPath at the front
 
 		// static files
 		if strings.Contains(_path, ".") {
@@ -136,7 +140,7 @@ func FrontendHandler(publicDir string) http.Handler {
 			return
 		}
 		htmlTemplateOptions := types.HTMLTemplateOptions{
-			SiteURL: common.GetAppSiteURL(),
+			SiteSubPath: subPath,
 		}
 		if err := tmpl.Execute(w, htmlTemplateOptions); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -149,7 +153,8 @@ func FrontendHandler(publicDir string) http.Handler {
 func Handle(db *sql.DB) {
 	port := common.GetAppPort()
 	router := mux.NewRouter().StrictSlash(true)
-	apiEndpointPrefix := common.GetAppAPIRoot()
+	siteSubPath := common.GetAppSiteSubPath()
+	apiEndpointPrefix := path.Join(siteSubPath, "api")
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
 	apiRouters.Use(RequireContentType("application/json"))
@@ -162,12 +167,12 @@ func Handle(db *sql.DB) {
 	router.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)
 	// TODO implement /healthz for healthiness checks
 	// TODO implement /readyz for readiness checks
-	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc(siteSubPath + "robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./dist/robots.txt")
 	})
 
-	router.HandleFunc("/_healthz", Healthz(db)).Methods(http.MethodGet)
-	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder())).Methods(http.MethodGet)
+	router.HandleFunc(siteSubPath + "_healthz", Healthz(db)).Methods(http.MethodGet)
+	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder(), siteSubPath)).Methods(http.MethodGet)
 
 	router.Use(Logging)
 
