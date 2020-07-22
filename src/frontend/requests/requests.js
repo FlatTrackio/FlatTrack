@@ -1,15 +1,15 @@
 import axios from 'axios'
 import common from '@/frontend/common/common'
 
-var siteURL = document.head.querySelector('[name~=siteurl][content]').content || window.location.host
-var baseURL = `${window.location.protocol}//${siteURL}`
+const siteSubPath = document.head.querySelector('[name~=sitesubpath][content]').content || window.location.host
 
 function redirectToLogin (redirect) {
   if (redirect === false) {
     return
   }
-  if (window.location.pathname !== '/login') {
-    window.location.href = '/login'
+  if (window.location.pathname !== siteSubPath + '/login') {
+    // TODO direct by name instead of URL
+    window.location.pathname = siteSubPath + '/login'
   }
 }
 
@@ -26,7 +26,7 @@ function Request (request, redirect = true, publicRoute = false) {
     if (publicRoute !== true) {
       request.headers.Authorization = `bearer ${authToken}`
     }
-    request.baseURL = baseURL
+    request.baseURL = window.location.origin + siteSubPath
     axios(request)
       .then(resp => resolve(resp))
       .catch(err => {
