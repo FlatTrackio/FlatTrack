@@ -5,9 +5,11 @@ import routerCommon from './common'
 
 Vue.use(VueRouter)
 
+const subpath = document.head.querySelector('[name~=sitesubpath][content]').content || ''
+
 const router = new VueRouter({
   mode: 'history',
-  base: process.env.BASE_URL,
+  base: process.env.BASE_URL + subpath,
   routes,
   scrollBehavior (to, from, savedPosition) {
     if (savedPosition) {
