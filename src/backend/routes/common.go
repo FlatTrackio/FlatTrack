@@ -120,14 +120,15 @@ func FrontendHandler(publicDir string, subPath string) http.Handler {
 	handler := http.FileServer(http.Dir(publicDir))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		_path := req.URL.Path
-		_path = "/" + strings.Replace(_path, subPath, "", 1)
-		req.URL.Path = _path
+		req.URL.Path = strings.Replace(req.URL.Path, subPath, "", 1)
+		if req.URL.Path[:1] != "/" {
+			req.URL.Path = "/" + req.URL.Path
+		}
 
 		// TODO redirect to subPath + /unknown-page if _path does not include subPath at the front
 
 		// static files
-		if strings.Contains(_path, ".") {
+		if strings.Contains(req.URL.Path, ".") {
 			handler.ServeHTTP(w, req)
 			return
 		}
