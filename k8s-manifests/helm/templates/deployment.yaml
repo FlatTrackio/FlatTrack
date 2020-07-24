@@ -85,6 +85,9 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port | default 8080 }}
               protocol: TCP
+            - name: health
+              containerPort: 2112
+              protocol: TCP
             {{- if "flattrack.prometheus.enabled" }}
             - name: prometheus
               containerPort: 2112
@@ -93,7 +96,7 @@ spec:
           livenessProbe:
             httpGet:
               path: /_healthz
-              port: {{ .Values.service.port | default 8080 }}
+              port: health
             initialDelaySeconds: 2
             periodSeconds: 10
           readinessProbe:
