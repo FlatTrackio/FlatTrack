@@ -1,7 +1,7 @@
 import axios from 'axios'
 import common from '@/frontend/common/common'
 
-const siteSubPath = document.head.querySelector('[name~=sitesubpath][content]').content || window.location.host
+const siteSubPath = common.GetSiteSubPath()
 
 function redirectToLogin (redirect) {
   if (redirect === false) {

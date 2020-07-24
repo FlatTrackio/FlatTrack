@@ -2,10 +2,11 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import routes from './routes'
 import routerCommon from './common'
+import common from '@/frontend/common/common'
 
 Vue.use(VueRouter)
 
-const subpath = document.head.querySelector('[name~=sitesubpath][content]').content || ''
+const subpath = common.GetSiteSubPath()
 
 const router = new VueRouter({
   mode: 'history',

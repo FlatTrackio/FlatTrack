@@ -91,6 +91,12 @@ function WriteFlatnameToCache (name) {
   localStorage.setItem('flatname', name)
 }
 
+// GetSiteSubPath
+// returns the subpath for serving on
+function GetSiteSubPath () {
+  return document.head.querySelector('[name~=sitesubpath][content]').content || ''
+}
+
 export default {
   GetAuthToken,
   DeleteAuthToken,
@@ -100,5 +106,6 @@ export default {
   TimestampToCalendar,
   DeviceIsMobile,
   GetFlatnameFromCache,
-  WriteFlatnameToCache
+  WriteFlatnameToCache,
+  GetSiteSubPath
 }
