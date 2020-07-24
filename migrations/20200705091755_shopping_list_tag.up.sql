@@ -18,6 +18,6 @@ comment on table shopping_list_tag is 'The table shopping_list_tag is used for s
 
 -- migrate old values
 insert into shopping_list_tag (name, author, authorLast)
-  select distinct tag, author, author from shopping_item where tag <> '';
+  select distinct on (tag) tag, author, author from shopping_item where tag <> '' order by tag;
 
 commit;
