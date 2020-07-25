@@ -2845,6 +2845,18 @@ var _ = Describe("API e2e tests", func() {
 		Expect(err).To(BeNil(), "Request should not return an error")
 		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 		Expect(routes.GetHTTPresponseBodyContents(resp).Spec.(string)).To(Equal(notesUpdate.Notes), "notes should be empty")
+
+		By("resetting the notes")
+		notesUpdate = types.ShoppingListNotes{
+			Notes: "",
+		}
+		notesUpdateBytes, err = json.Marshal(notesUpdate)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		apiEndpoint = apiServerAPIprefix + "/admin/settings/shoppingListNotes"
+		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), notesUpdateBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
 	It("should not allow invalid shopping list notes", func() {
