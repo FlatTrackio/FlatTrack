@@ -38,6 +38,16 @@ func GetEndpoints(db *sql.DB) types.Endpoints {
 			HTTPMethod:   http.MethodPost,
 		},
 		{
+			EndpointPath: "/apps/shoppinglist/settings/notes",
+			HandlerFunc:  HTTPuseMiddleware(GetSettingsShoppingListNotes(db), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: "/admin/settings/shoppingListNotes",
+			HandlerFunc:  HTTPuseMiddleware(PutSettingsShoppingList(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromID(db, "admin")),
+			HTTPMethod:   http.MethodPut,
+		},
+		{
 			EndpointPath: "/admin/register",
 			HandlerFunc:  HTTPuseMiddleware(PostAdminRegister(db)),
 			HTTPMethod:   http.MethodPost,
