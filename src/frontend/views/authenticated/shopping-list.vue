@@ -10,6 +10,17 @@
         </nav>
         <h1 class="title is-1">Shopping list</h1>
         <p class="subtitle is-3">Manage your weekly shop</p>
+        <div v-if="notes !== '' || canUserAccountAdmin">
+          <div class="content">
+            <label class="label">Notes</label>
+            <p :class="canUserAccountAdmin ? 'display-is-editable pointer-cursor-on-hover' : ''" class="subtitle is-4 notes-highlight" @click="EditShoppingListNotes">
+              <i>
+                {{ notes || "Add notes" }}
+              </i>
+            </p>
+          </div>
+          <br />
+        </div>
         <b-button
           class="has-text-left"
           @click="goToRef('/apps/shopping-list/tags')"
@@ -74,7 +85,7 @@
             </div>
           </section>
         </div>
-        <floatingAddButton path="/apps/shopping-list/new"/>
+        <floatingAddButton path="/apps/shopping-list/new" v-if="displayFloatingAddButton"/>
         <br/>
         <div v-if="listsFiltered.length > 0">
           <shoppingListCardView :list="list" :authors="authors" v-for="list in listsFiltered" v-bind:key="list" />
@@ -107,11 +118,16 @@
 import common from '@/frontend/common/common'
 import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
 import flatmates from '@/frontend/requests/authenticated/flatmates'
+import cani from '@/frontend/requests/authenticated/can-i'
+import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
   name: 'Shopping List',
   data () {
     return {
+      displayFloatingAddButton: true,
+      canUserAccountAdmin: false,
+      notes: '',
       lists: [],
       authors: {},
       listDisplayState: 0,
@@ -142,6 +158,47 @@ export default {
         this.lists = resp.data.list || []
       }).catch(() => {
         common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping lists')
+      })
+    },
+    GetShoppingListNotes () {
+      shoppinglist.GetShoppingListNotes().then(resp => {
+        this.notes = resp.data.spec || ''
+        this.pageLoading = false
+      }).catch(() => {
+        common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the notes for shopping lists')
+      })
+    },
+    EditShoppingListNotes () {
+      if (this.canUserAccountAdmin !== true) {
+        return
+      }
+      this.displayFloatingAddButton = false
+      Dialog.prompt({
+        title: 'Shopping list notes',
+        message: `Enter notes that are useful for shopping in your flat.`,
+        container: null,
+        icon: 'text',
+        hasIcon: true,
+        inputAttrs: {
+          placeholder: 'e.g. Our budget is $200/w. Please make sure to bring the supermarket card.',
+          maxlength: 80,
+          required: false,
+          value: this.notes || undefined
+        },
+        trapFocus: true,
+        onConfirm: (value) => {
+          shoppinglist.PutShoppingListNotes(value).then(() => {
+            this.pageLoading = true
+            this.displayFloatingAddButton = true
+            this.GetShoppingListNotes()
+          }).catch(err => {
+            common.DisplayFailureToast('Failed to update notes' + `<br/>${err.response.data.metadata.response}`)
+            this.displayFloatingAddButton = true
+          })
+        },
+        onCancel: () => {
+          this.displayFloatingAddButton = true
+        }
       })
     },
     GetFlatmateName (id) {
@@ -177,7 +234,11 @@ export default {
     }
   },
   async beforeMount () {
+    cani.GetCanIgroup('admin').then(resp => {
+      this.canUserAccountAdmin = resp.data.data
+    })
     this.GetShoppingLists()
+    this.GetShoppingListNotes()
   },
   async created () {
     this.CheckDeviceIsMobile()

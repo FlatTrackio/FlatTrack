@@ -267,6 +267,27 @@ function DeleteShoppingTag (id) {
   })
 }
 
+// GetShoppingListNotes
+// returns a notes of shopping lists
+function GetShoppingListNotes () {
+  return Request({
+    url: `/api/apps/shoppinglist/settings/notes`,
+    method: 'GET'
+  })
+}
+
+// PutShoppingListNotes
+// updates a notes of shopping lists
+function PutShoppingListNotes (notes) {
+  return Request({
+    url: `/api/admin/settings/shoppingListNotes`,
+    method: 'PUT',
+    data: {
+      notes
+    }
+  })
+}
+
 export default {
   GetShoppingLists,
   GetShoppingList,
@@ -291,5 +312,8 @@ export default {
   GetShoppingTags,
   GetShoppingTag,
   UpdateShoppingTag,
-  DeleteShoppingTag
+  DeleteShoppingTag,
+
+  GetShoppingListNotes,
+  PutShoppingListNotes
 }

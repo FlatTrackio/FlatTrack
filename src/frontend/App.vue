@@ -175,6 +175,13 @@ html {
     box-shadow: none;
 }
 
+.notes-highlight {
+    background-color: #fff;
+    padding: 10px;
+    box-shadow: 0 0 30px -35px #000;
+    border-radius: 5px;
+}
+
 @media (max-width : 870px) {
     .form-width {
         width: calc(100% - 25px);
