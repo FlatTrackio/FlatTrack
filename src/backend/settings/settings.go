@@ -79,3 +79,30 @@ func SetLanguage(db *sql.DB, language string) (err error) {
 	defer rows.Close()
 	return err
 }
+
+// GetShoppingListNotes ...
+// returns the shopping list notes
+func GetShoppingListNotes(db *sql.DB) (notes string, err error) {
+	sqlStatement := `select value from settings where name = 'shoppingListNotes'`
+	rows, err := db.Query(sqlStatement)
+	if err != nil {
+		return notes, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(&notes)
+	}
+	return notes, err
+}
+
+// SetShoppingListNotes ...
+// sets shoppingListNotes
+func SetShoppingListNotes(db *sql.DB, notes string) (err error) {
+	if len(notes) > 80 {
+		return fmt.Errorf("Unable to set shopping list notes as it is either invalid, too short, or too long")
+	}
+	sqlStatement := `update settings set value = $1 where name = 'shoppingListNotes';`
+	rows, err := db.Query(sqlStatement, notes)
+	defer rows.Close()
+	return err
+}

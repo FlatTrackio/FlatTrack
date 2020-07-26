@@ -204,6 +204,12 @@ const (
 	ShoppingTagSortByAlphabeticalAscending  = "alphabeticalAscending"
 )
 
+// ShoppingListNotes ...
+// notes for shopping lists
+type ShoppingListNotes struct {
+	Notes string `json:"notes"`
+}
+
 // UserCreationSecretSpec ...
 // values for a user to confirm their account with
 type UserCreationSecretSpec struct {

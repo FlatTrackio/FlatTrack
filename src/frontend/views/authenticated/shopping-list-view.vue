@@ -635,11 +635,4 @@ export default {
 .ListBarTop {
     top: 0;
 }
-
-.notes-highlight {
-    background-color: #fff;
-    padding: 10px;
-    box-shadow: 0 0 30px -35px #000;
-    border-radius: 5px;
-}
 </style>
