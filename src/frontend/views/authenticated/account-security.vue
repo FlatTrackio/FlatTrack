@@ -50,6 +50,7 @@
           size="is-medium"
           icon-left="delta"
           native-type="submit"
+          expanded
           @click="PatchProfile">
           Update password
         </b-button>
@@ -83,6 +84,7 @@
             type="is-success"
             size="is-medium"
             rounded
+            expanded
             native-type="submit">
             Enable
           </b-button>
@@ -95,6 +97,7 @@
           type="is-danger"
           size="is-medium"
           icon-left="close"
+          expanded
           @click="ResetAuth">
           Revoke access for all devices
         </b-button>
