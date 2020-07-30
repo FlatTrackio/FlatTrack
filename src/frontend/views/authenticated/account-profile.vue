@@ -93,6 +93,7 @@
           size="is-medium"
           icon-left="delta"
           native-type="submit"
+          expanded
           @click="PatchProfile">
           Update profile
         </b-button>
