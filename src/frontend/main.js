@@ -4,6 +4,7 @@ import router from './router'
 import Buefy from 'buefy'
 import VueMaterial from 'vue-material'
 import 'vue-material/dist/vue-material.min.css'
+import './registerServiceWorker'
 
 Vue.use(VueMaterial)
 Vue.use(Buefy, {
