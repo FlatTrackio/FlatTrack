@@ -1,0 +1,10 @@
+{
+  "short_name": "FlatTrack",
+  "name": "FlatTrack",
+  "icons": [],
+  "start_url": "/",
+  "background_color": "#FFFFFF",
+  "display": "standalone",
+  "scope": "/",
+  "theme_color": "#209cee"
+}

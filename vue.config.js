@@ -8,6 +8,9 @@ module.exports = {
     manifestOptions: {
       background_color: "#000000"
     },
+    workboxOptions: {
+      swSrc: 'service-worker.js'
+    },
     workboxPluginMode: "InjectManifest"
   }
 }
