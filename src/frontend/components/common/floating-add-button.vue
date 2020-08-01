@@ -1,5 +1,5 @@
 <template>
-  <div class="floating-add-button">
+  <div :class="deviceIsMobile ? 'floating-add-button-mobile' : ''" class="floating-add-button">
     <md-speed-dial md-direction="bottom md-bottom-right">
       <md-speed-dial-target @click="goToRefOrRunFunc(path, func)" class="floating-add-button-colour">
         <md-icon>add</md-icon>
@@ -9,8 +9,15 @@
 </template>
 
 <script>
+import common from '@/frontend/common/common'
+
 export default {
   name: 'floating add button',
+  data () {
+    return {
+      deviceIsMobile: false
+    }
+  },
   props: {
     path: String,
     func: Function
@@ -28,6 +35,9 @@ export default {
         func()
       }
     }
+  },
+  async beforeMount () {
+    this.deviceIsMobile = common.DeviceIsMobile()
   }
 }
 </script>
@@ -38,8 +48,11 @@ export default {
     position: fixed;
     bottom: 0;
     right: 0;
-    margin-bottom: 50px;
     z-index: 100;
+}
+
+.floating-add-button-mobile {
+    margin-bottom: 50px;
 }
 
 .floating-add-button-colour {
