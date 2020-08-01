@@ -100,10 +100,11 @@
                   <b-icon icon="cart-remove" size="is-medium" type="is-midgray"></b-icon>
                 </div>
                 <div class="media-content">
-                  <p class="subtitle is-4" v-if="listSearch === '' && lists.length === 0">No lists added yet.</p>
-                  <p class="subtitle is-4" v-else-if="listSearch === '' && listDisplayState === 1 && lists.length > 0">All lists have been completed.</p>
-                  <p class="subtitle is-4" v-else-if="listSearch === '' && listDisplayState === 2 && lists.length > 0">No lists have been completed yet.</p>
-                  <p class="subtitle is-4" v-else-if="listSearch !== ''">No lists found.</p>
+                  <p class="subtitle is-4" v-if="listSearch === '' && lists.length === 0 && !pageLoading">No lists added yet.</p>
+                  <p class="subtitle is-4" v-else-if="listSearch === '' && listDisplayState === 1 && lists.length > 0 && !pageLoading">All lists have been completed.</p>
+                  <p class="subtitle is-4" v-else-if="listSearch === '' && listDisplayState === 2 && lists.length > 0 && !pageLoading">No lists have been completed yet.</p>
+                  <p class="subtitle is-4" v-else-if="listSearch !== '' && !pageLoading">No lists found.</p>
+                  <p class="subtitle is-4" v-else-if="pageLoading">Loading lists...</p>
                 </div>
               </div>
             </div>

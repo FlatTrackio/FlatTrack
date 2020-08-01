@@ -239,10 +239,11 @@
                   <b-icon icon="cart-remove" size="is-medium" type="is-midgray"></b-icon>
                 </div>
                 <div class="media-content">
-                  <p class="subtitle is-4" v-if="itemSearch === '' && list.length === 0">No items added yet.</p>
-                  <p class="subtitle is-4" v-else-if="itemSearch === '' && itemDisplayState === 1 && list.length > 0">All items have been obtained.</p>
-                  <p class="subtitle is-4" v-else-if="itemSearch === '' && itemDisplayState === 2 && list.length > 0">No items have been obtained yet.</p>
-                  <p class="subtitle is-4" v-else-if="itemSearch !== ''">No items found.</p>
+                  <p class="subtitle is-4" v-if="itemSearch === '' && list.length === 0 && !pageLoading">No items added yet.</p>
+                  <p class="subtitle is-4" v-else-if="itemSearch === '' && itemDisplayState === 1 && list.length > 0 && !pageLoading">All items have been obtained.</p>
+                  <p class="subtitle is-4" v-else-if="itemSearch === '' && itemDisplayState === 2 && list.length > 0 && !pageLoading">No items have been obtained yet.</p>
+                  <p class="subtitle is-4" v-else-if="itemSearch !== '' && !pageLoading">No items found.</p>
+                  <p class="subtitle is-4" v-else-if="pageLoading">Loading items...</p>
                 </div>
               </div>
             </div>

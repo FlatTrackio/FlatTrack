@@ -79,8 +79,9 @@
                   <b-icon icon="tag" size="is-medium" type="is-midgray"></b-icon>
                 </div>
                 <div class="media-content">
-                  <p class="subtitle is-4" v-if="tagSearch === '' && tags.length === 0">No tags added yet.</p>
-                  <p class="subtitle is-4" v-else-if="tagSearch !== ''">No tags found.</p>
+                  <p class="subtitle is-4" v-if="tagSearch === '' && tags.length === 0 && !pageLoading">No tags added yet.</p>
+                  <p class="subtitle is-4" v-else-if="tagSearch !== '' && !pageLoading">No tags found.</p>
+                  <p class="subtitle is-4" v-else-if="pageLoading">Loading tags...</p>
                 </div>
               </div>
             </div>
