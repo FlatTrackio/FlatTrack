@@ -71,7 +71,8 @@
                   </b-icon>
                 </div>
                 <div class="media-content">
-                  <p class="title is-4">No flatmates found</p>
+                  <p class="subtitle is-4" v-if="!pageLoading">No flatmates found.</p>
+                  <p class="subtitle is-4" v-else-if="pageLoading">Loading flatmates...</p>
                 </div>
               </div>
               <p class="content subtitle is-6">
