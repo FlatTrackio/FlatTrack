@@ -132,15 +132,14 @@ export default {
       this.$router.push({ path: ref })
     },
     FetchAllFlatmates () {
-      var params = {}
       if (typeof this.groupQuery !== 'undefined') {
-        params.group = this.groupQuery
+        var group = this.groupQuery
       }
-      flatmates.GetAllFlatmates(params).then(resp => {
+      flatmates.GetAllFlatmates(undefined, undefined, group).then(resp => {
         this.pageLoading = false
         this.members = resp.data.list
       }).catch(err => {
-        common.DisplayFailureToast('Failed to list flatmates' + `<br/>${err}`)
+        common.DisplayFailureToast('Failed to list flatmates' + `<br/>${err.response.data.metadata.response}`)
       })
     },
     TimestampToCalendar (timestamp) {

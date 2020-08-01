@@ -18,7 +18,7 @@
           </span>
         </p>
         <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
-        <div v-if="members && members.length">
+        <div v-if="members && members.length > 0">
           <div class="card-margin" v-for="member of members" v-bind:key="member">
             <div class="card">
               <div class="card-content">
@@ -56,6 +56,13 @@
               </div>
             </div>
           </div>
+          <b-button
+            type="is-warning"
+            @click="ClearFilter"
+            v-if="$route.query.id || $route.query.group"
+            expanded>
+            Clear filter
+          </b-button>
           <div class="section">
             <p>{{ members.length }} {{ members.length === 1 ? 'flatmate' : 'flatmates' }}</p>
           </div>
@@ -112,19 +119,21 @@ export default {
   },
   methods: {
     FetchAllFlatmates () {
-      var params = {}
       if (typeof this.GroupQuery !== 'undefined') {
-        params.group = this.GroupQuery
+        var group = this.GroupQuery
       } else if (typeof this.IdQuery !== 'undefined') {
-        params.id = this.IdQuery
+        var id = this.IdQuery
       }
-      params.notSelf = true
-      flatmates.GetAllFlatmates(params).then(resp => {
+      var notSelf = true
+      flatmates.GetAllFlatmates(id, notSelf, group).then(resp => {
         this.pageLoading = false
         this.members = resp.data.list
       }).catch(err => {
         common.DisplayFailureToast('Failed to list flatmates' + `<br/>${err}`)
       })
+    },
+    ClearFilter () {
+      this.$router.replace({ name: 'My Flatmates' })
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
