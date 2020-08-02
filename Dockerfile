@@ -1,10 +1,11 @@
-FROM node:12.10.0-alpine AS ui
+FROM node:14.7.0-alpine3.11 AS ui
 LABEL maintainer="Caleb Woodbine <calebwoodbine.public@gmail.com>"
 ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
 ARG AppBuildDate="???"
 ARG AppBuildMode="development"
 
+RUN apk add python2 make g++
 WORKDIR /app
 COPY src /app/src
 COPY public /app/public
@@ -12,7 +13,7 @@ COPY *.js *.json /app/
 RUN npm i
 RUN npm run build:frontend
 
-FROM golang:1.14.4-alpine3.12 AS api
+FROM golang:1.14.6-alpine3.11 AS api
 RUN apk add tzdata
 WORKDIR /app
 COPY src /app/src
