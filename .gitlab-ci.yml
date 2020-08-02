@@ -37,7 +37,7 @@ variables:
   if [[ ! "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]] && [[ -z "$CI_COMMIT_TAG" ]]; then
     BRANCH_NAME="-$CI_COMMIT_BRANCH"
   fi
-  PRINT_ARCH="$(echo $ARCH | sed -e 's,/,,g')"
+  ARCH_TAGGABLE_NAME="$(echo $ARCH | sed -e 's,/,,g')"
   if [[ ! "$ARCH" = "$ARCH_DEFAULT" ]]; then
     PRINT_ARCH="-$ARCH_TAGGABLE_NAME"
   fi
