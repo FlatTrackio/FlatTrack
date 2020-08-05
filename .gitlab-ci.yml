@@ -2,6 +2,7 @@ stages:
   - lint
   - test
   - build
+  - pages
 
 cache:
   key: shared-cache
@@ -129,6 +130,7 @@ lint_backend:
 
 pages:
   image: python:3.8-buster
+  stage: pages
   before_script:
     - pip install mkdocs-material
   script:
