@@ -64,6 +64,42 @@ func GetDBsslMode() (output string) {
 	return GetEnvOrDefault("APP_DB_SSLMODE", "disable")
 }
 
+// GetInstanceURL ...
+// return URL of the instance
+func GetInstanceURL() (output string) {
+	return GetEnvOrDefault("APP_URL", "")
+}
+
+// GetSMTPEnabled ...
+// return if the instance should send emails
+func GetSMTPEnabled() (output string) {
+	return GetEnvOrDefault("APP_SMTP_ENABLED", "false")
+}
+
+// GetSMTPUsername ...
+// return the username to send emails with
+func GetSMTPUsername() (output string) {
+	return GetEnvOrDefault("APP_SMTP_USERNAME", "")
+}
+
+// GetSMTPPassword ...
+// return the password to send emails with
+func GetSMTPPassword() (output string) {
+	return GetEnvOrDefault("APP_SMTP_PASSWORD", "")
+}
+
+// GetSMTPHost ...
+// return the host to send emails with
+func GetSMTPHost() (output string) {
+	return GetEnvOrDefault("APP_SMTP_HOST", "")
+}
+
+// GetSMTPPort ...
+// return the port to send emails with
+func GetSMTPPort() (output string) {
+	return GetEnvOrDefault("APP_SMTP_PORT", "")
+}
+
 // GetMigrationsPath ...
 // return the path of the database migrations to use
 func GetMigrationsPath() (output string) {

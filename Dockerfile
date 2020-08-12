@@ -4,8 +4,7 @@ ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
 ARG AppBuildDate="???"
 ARG AppBuildMode="development"
-
-RUN apk add python2 make g++
+RUN apk add python2 make g++ tzdata
 WORKDIR /app
 COPY src /app/src
 COPY public /app/public
@@ -14,7 +13,6 @@ RUN npm i
 RUN npm run build:frontend
 
 FROM golang:1.14.6-alpine3.11 AS api
-RUN apk add tzdata
 WORKDIR /app
 COPY src /app/src
 COPY go.* /app/
@@ -41,11 +39,12 @@ WORKDIR /app
 ENV PATH=/app
 COPY --from=ui /app/dist /app/dist
 COPY --from=ui /app/package.json .
+COPY --from=ui /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=api /app/flattrack .
 COPY --from=api /etc/passwd /etc/passwd
 COPY --from=api /etc/group /etc/group
-COPY --chown=user migrations /app/migrations
-COPY --from=api /usr/share/zoneinfo /usr/share/zoneinfo
+COPY migrations /app/migrations
+COPY templates /app/templates
 EXPOSE 8080
 USER user
 ENTRYPOINT ["/app/flattrack"]
