@@ -1,3 +1,5 @@
+siteURL: ""
+
 # how many flattrack pods there should be
 replicaCount: 1
 
@@ -62,6 +64,13 @@ postgres:
   host: postgres
   database: flattrack
   sslmode: disable
+
+smtp:
+  enabled: false
+  username: ""
+  password: ""
+  host: ""
+  port: ""
 
 # add labels to all resources
 labels: {}

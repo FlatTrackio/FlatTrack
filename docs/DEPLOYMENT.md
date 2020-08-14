@@ -59,6 +59,11 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
     | postgres.host                                         | the host for an existing Postgres databse                    | flattrack                               |
     | postgres.database                                     | the database for an existing Postgres databse                | flattrack                               |
     | postgres.sslmode                                      | the sslmode for an existing Postgres databse                 | disable                                 |
+    | smtp.enabled                                          | enable SMTP for messages and notifications                   | false                                   |
+    | smtp.username                                         | SMTP username                                                | `""`                                    |
+    | smtp.password                                         | SMTP password                                                | `""`                                    |
+    | smtp.host                                             | SMTP host                                                    | `""`                                    |
+    | smtp.port                                             | SMTP port                                                    | `""`                                    |
     | labels                                                | declare labels for all resources                             | `{}`                                    |
     | annotations                                           | declare annotations for all resources                        | `{}`                                    |
     | ingress.enabled                                       | create an ingress manifests                                  | false                                   |
