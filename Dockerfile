@@ -4,7 +4,7 @@ ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
 ARG AppBuildDate="???"
 ARG AppBuildMode="development"
-RUN apk add python2 make g++ tzdata
+RUN apk add python2 make g++
 WORKDIR /app
 COPY src /app/src
 COPY public /app/public
@@ -34,15 +34,19 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
   -o flattrack \
   src/backend/main.go
 
+FROM alpine:3.11 as extras
+RUN apk add tzdata ca-certificates
+
 FROM scratch
 WORKDIR /app
 ENV PATH=/app
 COPY --from=ui /app/dist /app/dist
 COPY --from=ui /app/package.json .
-COPY --from=ui /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=api /app/flattrack .
 COPY --from=api /etc/passwd /etc/passwd
 COPY --from=api /etc/group /etc/group
+COPY --from=extras /usr/share/zoneinfo /usr/share/zoneinfo
+COPY --from=extras /etc/ssl /etc/ssl
 COPY migrations /app/migrations
 COPY templates /app/templates
 EXPOSE 8080
