@@ -182,6 +182,11 @@ html {
     border-radius: 5px;
 }
 
+.modal-background {
+    backdrop-filter: blur(5px);
+    background-color: rgb(85 85 85 / 86%);
+}
+
 @media (max-width : 870px) {
     .form-width {
         width: calc(100% - 25px);

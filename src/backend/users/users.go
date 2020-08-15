@@ -8,6 +8,7 @@ package users
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -16,6 +17,7 @@ import (
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
+	"gitlab.com/flattrack/flattrack/src/backend/emails"
 	"gitlab.com/flattrack/flattrack/src/backend/groups"
 	"gitlab.com/flattrack/flattrack/src/backend/system"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
@@ -113,6 +115,14 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
 		if userCreationSecretInserted.ID == "" {
 			return userInserted, fmt.Errorf("Failed to created a user creation secret")
 		}
+	}
+	if common.GetSMTPEnabled() == "true" {
+		go func() {
+			err := emails.SendAccountSignup(db, user, userCreationSecretInserted)
+			if err != nil {
+				log.Println(err)
+			}
+		}()
 	}
 
 	return userInserted, err

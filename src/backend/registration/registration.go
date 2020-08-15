@@ -20,34 +20,30 @@ var (
 
 // Register ...
 // perform initial FlatTrack instance setup
-func Register(db *sql.DB, registration types.Registration) (successful bool, jwt string, err error) {
+func Register(db *sql.DB, registration types.Registration) (successful bool, err error) {
 	// TODO add timezone validation
 	err = settings.SetTimezone(db, registration.Timezone)
 	if err != nil {
-		return successful, jwt, err
+		return successful, err
 	}
 	// TODO add language validation
 	err = settings.SetTimezone(db, registration.Language)
 	if err != nil {
-		return successful, jwt, err
+		return successful, err
 	}
 	err = settings.SetFlatName(db, registration.FlatName)
 	if err != nil {
-		return successful, jwt, err
+		return successful, err
 	}
 	registration.User.Groups = defaultInitalizationGroups
 	registration.User.Registered = true
-	user, err := users.CreateUser(db, registration.User, false)
+	user, err := users.CreateUser(db, registration.User, true)
 	if err != nil || user.ID == "" {
-		return successful, jwt, err
-	}
-	jwt, err = users.GenerateJWTauthToken(db, user.ID, user.AuthNonce, 0)
-	if err != nil {
-		return successful, "", err
+		return successful, err
 	}
 	err = system.SetHasInitialized(db)
 	if err != nil {
-		return successful, "", err
+		return successful, err
 	}
-	return true, jwt, err
+	return true, err
 }

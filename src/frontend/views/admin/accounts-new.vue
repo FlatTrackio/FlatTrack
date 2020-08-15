@@ -216,11 +216,7 @@ export default {
       adminFlatmates.PostFlatmate(this.names, this.email, this.phoneNumber, this.birthday, groups, this.password).then(resp => {
         common.DisplaySuccessToast('Created user account')
         setTimeout(() => {
-          if (this.setOnlyRequiredFields === true) {
-            this.$router.push({ path: '/admin/accounts/edit/' + resp.data.spec.id })
-          } else {
-            this.$router.push({ name: 'Admin accounts' })
-          }
+          this.$router.push({ name: 'Admin accounts' })
         }, 1.5 * 1000)
       }).catch(err => {
         common.DisplayFailureToast('Failed to create user account' + `<br/>${err.response.data.metadata.response}`)

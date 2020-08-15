@@ -601,7 +601,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &registrationForm)
 
-		registered, jwt, err := registration.Register(db, registrationForm)
+		registered, err := registration.Register(db, registrationForm)
 		if err == nil {
 			code = http.StatusOK
 			response = "Successfully registered the FlatTrack instance"
@@ -614,7 +614,6 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Spec: registered,
-			Data: jwt,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}
@@ -1603,58 +1602,6 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Spec: group,
-		}
-		JSONResponse(r, w, code, JSONresp)
-	}
-}
-
-// GetUserConfirms ...
-// returns a list of account confirms
-func GetUserConfirms(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		response := "Failed to fetch user account creation secrets"
-		code := http.StatusInternalServerError
-
-		userIDSelector := r.FormValue("userId")
-		userCreationSecretSelector := types.UserCreationSecretSelector{
-			UserID: userIDSelector,
-		}
-
-		creationSecrets, err := users.GetAllUserCreationSecrets(db, userCreationSecretSelector)
-		if err == nil {
-			response = "Fetched the user account creation secrets"
-			code = http.StatusOK
-		}
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: response,
-			},
-			List: creationSecrets,
-		}
-		JSONResponse(r, w, code, JSONresp)
-	}
-}
-
-// GetUserConfirm ...
-// returns an account confirm by id
-func GetUserConfirm(db *sql.DB) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		response := "Failed to fetch user account creation secret"
-		code := http.StatusNotFound
-
-		vars := mux.Vars(r)
-		id := vars["id"]
-
-		creationSecret, err := users.GetUserCreationSecret(db, id)
-		if err == nil && creationSecret.ID != "" {
-			response = "Fetched the user account creation secret"
-			code = http.StatusOK
-		}
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: response,
-			},
-			Spec: creationSecret,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}

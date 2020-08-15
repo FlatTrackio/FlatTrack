@@ -11,26 +11,6 @@
       <h1 class="title is-1">Edit account</h1>
       <p class="subtitle is-4">Edit an existing user account</p>
       <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
-      <div v-if="registered !== true">
-        <div class="notification is-warning">
-          <p class="subtitle is-6">This account doesn't appear to be registered</p>
-          <b-button @click="showRegistrationCompletionDetails = !showRegistrationCompletionDetails">{{ showRegistrationCompletionDetails === false ? 'Show' : 'Hide' }} registration details</b-button>
-          <div v-if="showRegistrationCompletionDetails === true">
-            <br/>
-            <div class="notification">
-              <div class="content">
-                <qrcode-vue :value="windowOrigin + '/useraccountconfirm/' + userAccountConfirmId + '?secret=' + userAccountConfirmSecret" :size="200" level="H"></qrcode-vue>
-                <br/>
-                <p>
-                  Have your flatmate scan the QR code above, or <a type="is-text" @click="CopyRegistrationLink">click here</a> to copy the registration link for you to send to your flatmate
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <br/>
-      </div>
-
       <b-field label="Name(s)">
         <b-input
           type="text"
@@ -188,8 +168,6 @@ export default {
       maxDate: maxDate,
       minDate: minDate,
       showRegistrationCompletionDetails: false,
-      userAccountConfirmId: null,
-      userAccountConfirmSecret: null,
       pageLoading: true,
       id: this.$route.params.id,
       names: null,
@@ -197,7 +175,7 @@ export default {
       phoneNumber: null,
       birthday: 0,
       groups: [],
-      registered: null,
+      registered: true,
       password: null,
       passwordConfirm: null,
       availableGroups: [],
@@ -206,7 +184,6 @@ export default {
     }
   },
   components: {
-    QrcodeVue: () => import('qrcode.vue'),
     infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
   },
   methods: {
@@ -298,27 +275,11 @@ export default {
           })
         }
       })
-    },
-    CopyRegistrationLink () {
-      var registrationLink = `${window.location.origin}/useraccountconfirm/${this.userAccountConfirmId}?secret=${this.userAccountConfirmSecret}`
-      window.prompt('Copy the following link', registrationLink)
     }
   },
   async beforeMount () {
     this.GetAvailableGroups()
     this.GetUserAccount()
-    if (this.registered !== true) {
-      adminFlatmates.GetUserAccountConfirms(this.id).then(resp => {
-        var confirmsList = resp.data.list
-        for (var confirmItem in confirmsList) {
-          if (confirmsList[confirmItem].userId !== this.id) {
-            continue
-          }
-          this.userAccountConfirmId = confirmsList[confirmItem].id
-          this.userAccountConfirmSecret = confirmsList[confirmItem].secret
-        }
-      })
-    }
   }
 }
 </script>

@@ -12,6 +12,7 @@ import (
 	"os"
 	"regexp"
 	"time"
+	"io/ioutil"
 )
 
 // AppVars ...
@@ -250,4 +251,14 @@ func StringInStringSlice(input string, list []string) bool {
 		}
 	}
 	return false
+}
+
+// GetFileNamesFromFolder ...
+// returns the names of files in a folder
+func GetFileNamesFromFolder(folderName string) (names []string, err error) {
+	namesFileInfo, err := ioutil.ReadDir(folderName)
+	for _, name := range namesFileInfo {
+		names = append(names, name.Name())
+	}
+	return names, err
 }

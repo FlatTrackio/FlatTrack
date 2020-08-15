@@ -92,69 +92,6 @@
             required>
           </b-input>
         </b-field>
-        <b-field label="Phone number (optional)">
-          <b-input
-            type="tel"
-            v-model="phoneNumber"
-            placeholder="Enter your phone number"
-            icon="phone"
-            size="is-medium"
-            @keyup.enter.native="Register"
-            maxlength="30">
-          </b-input>
-        </b-field>
-
-        <b-field label="Birthday (optional)">
-          <b-datepicker
-            v-model="jsBirthday"
-            :max-date="maxDate"
-            :min-date="minDate"
-            :show-week-numbers="true"
-            :focused-date="focusedDate"
-            placeholder="Click to select birthday"
-            icon="cake-variant"
-            size="is-medium"
-            @keyup.enter.native="Register"
-            trap-focus>
-          </b-datepicker>
-        </b-field>
-        <br/>
-        <div class="field has-addons">
-          <label class="label">Password</label>
-          <p class="control">
-            <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
-          </p>
-        </div>
-        <b-field>
-          <b-input
-            type="password"
-            v-model="password"
-            password-reveal
-            maxlength="70"
-            placeholder="Enter a password"
-            icon="textbox-password"
-            size="is-medium"
-            pattern="^([a-z]*)([A-Z]*).{10,}$"
-            validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
-            @keyup.enter.native="Register"
-            required>
-          </b-input>
-        </b-field>
-        <b-field label="Confirm password">
-          <b-input
-            type="password"
-            v-model="passwordConfirm"
-            password-reveal
-            placeholder="Confirm your password"
-            icon="textbox-password"
-            @keyup.enter.native="Register"
-            size="is-medium"
-            maxlength="70"
-            pattern="^([a-z]*)([A-Z]*).{10,}$"
-            validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
-            required>
-          </b-input>
-        </b-field>
 
         <b-button
           type="is-success"
@@ -165,6 +102,24 @@
           @click="Register">
           Setup
         </b-button>
+
+        <b-modal :active.sync="isSetupSync" :can-cancel="false">
+          <div class="card">
+            <div class="card-content">
+              <div class="media">
+                <div class="media-left">
+                  <b-icon icon="party-popper" size="is-medium" type="is-success"></b-icon>
+                </div>
+                <div class="media-content">
+                  <h1 class="title is-3">Set up complete</h1>
+                  <p class="subtitle is-5">
+                    Please check your email for a confirmation.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </b-modal>
       </div>
     </section>
   </div>
@@ -188,30 +143,21 @@ export default {
     return {
       language: 'English',
       timezone: 'Pacific/Auckland',
+      isSetupSync: false,
       maxDate: maxDate,
       minDate: minDate,
       focusedDate: focusedDate,
       jsBirthday: null,
-      passwordConfirm: '',
       flatName: null,
       names: null,
-      email: null,
-      phoneNumber: null,
-      birthday: null,
-      password: null
+      email: null
     }
   },
   components: {
-    headerDisplay: () => import('@/frontend/components/common/header-display.vue'),
-    infotooltip: () => import('@/frontend/components/common/info-tooltip.vue')
+    headerDisplay: () => import('@/frontend/components/common/header-display.vue')
   },
   methods: {
     Register () {
-      if (this.password !== this.passwordConfirm) {
-        common.DisplayFailureToast('Error passwords do not match')
-        return
-      }
-
       this.birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0
 
       const loadingComponent = Loading.open({
@@ -224,11 +170,7 @@ export default {
         flatName: this.flatName,
         user: {
           names: this.names,
-          email: this.email,
-          password: this.password,
-          passwordConfirm: this.passwordConfirm,
-          jsBirthday: this.jsBirthday,
-          phoneNumber: this.phoneNumber
+          email: this.email
         }
       }
       registration.PostAdminRegister(form).then(resp => {
@@ -238,10 +180,9 @@ export default {
           common.DisplayFailureToast('Failed to find login token after registration')
           return
         }
-        common.DisplaySuccessToast('Welcome to FlatTrack!')
         setTimeout(() => {
           loadingComponent.close()
-          window.location.href = '/'
+          this.isSetupSync = true
         }, 3 * 1000)
       }).catch(err => {
         loadingComponent.close()
