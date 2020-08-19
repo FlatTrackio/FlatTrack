@@ -59,10 +59,11 @@ extraEnvVars:
 
 # connect to an existing postgres database
 postgres:
-  username: flattrack
-  password: flattrack
-  host: postgres
-  database: flattrack
+  enabled: true
+  username: ""
+  password: ""
+  host: ""
+  database: ""
   sslmode: disable
 
 smtp:

@@ -5,7 +5,11 @@ yaml = helm(
   set=[
       'service.type=NodePort',
       'prometheus.enabled=false',
-      'horizonalPodAutoscaler.enabled=false'
+      'horizonalPodAutoscaler.enabled=false',
+      'postgres.username=flattrack',
+      'postgres.password=flattrack',
+      'postgres.host=postgres',
+      'postgres.database=flattrack'
   ]
   )
 k8s_yaml(yaml)

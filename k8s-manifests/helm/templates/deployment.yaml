@@ -54,6 +54,7 @@ spec:
           securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 12 }}
           env:
+            {{- if .Values.postgres.enabled }}
             - name: APP_DB_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -76,6 +77,7 @@ spec:
                   key: app-db-database
             - name: APP_DB_SSLMODE
               value: {{ .Values.postgres.sslmode }}
+            {{- end }}
             - name: APP_PORT
               value: {{ printf ":%v" .Values.service.port | toString | quote | default "8080" }}
             {{- if .Values.smtp.enabled }}
