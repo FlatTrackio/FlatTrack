@@ -115,7 +115,7 @@ function GetShoppingListItem (listId, itemId) {
 
 // PostShoppingListItem
 // adds to the shopping list
-function PostShoppingListItem (id, name, notes, price, quantity, tag) {
+function PostShoppingListItem (id, name, notes, price, quantity, tag, obtained) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}/items`,
     method: 'POST',
@@ -124,7 +124,8 @@ function PostShoppingListItem (id, name, notes, price, quantity, tag) {
       notes,
       price,
       quantity,
-      tag
+      tag,
+      obtained
     }
   })
 }

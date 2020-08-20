@@ -98,7 +98,6 @@
               </b-input>
             </b-field>
           </div>
-          <br/>
           <b-field
             label="Obtained">
             <b-checkbox
@@ -191,7 +190,7 @@ export default {
         var item = resp.data.spec
         if (item.id !== '' && typeof item.id !== 'undefined') {
           common.DisplaySuccessToast('Updated item successfully')
-          this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
+          this.$router.push({ name: 'View shopping list', params: { id: this.shoppingListId }, query: { itemId: this.id } })
         } else {
           this.submitLoading = false
           common.DisplayFailureToast('Unable to find created shopping item')
