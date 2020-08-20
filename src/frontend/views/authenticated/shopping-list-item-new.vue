@@ -97,7 +97,14 @@
               </b-input>
             </b-field>
           </div>
-          <br/>
+          <b-field
+            label="Obtained">
+            <b-checkbox
+              size="is-medium"
+              v-model="obtained">
+              Obtained
+            </b-checkbox>
+          </b-field>
           <b-button
             type="is-success"
             size="is-medium"
@@ -134,7 +141,8 @@ export default {
       notes: '',
       price: 0,
       quantity: 1,
-      tag: undefined
+      tag: undefined,
+      obtained: false
     }
   },
   methods: {
@@ -149,7 +157,7 @@ export default {
         this.price = parseFloat(this.price)
       }
 
-      shoppinglist.PostShoppingListItem(this.shoppingListId, this.name, this.notes, this.price, this.quantity, this.tag).then(resp => {
+      shoppinglist.PostShoppingListItem(this.shoppingListId, this.name, this.notes, this.price, this.quantity, this.tag, this.obtained).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' || typeof item.id === 'undefined') {
           this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })

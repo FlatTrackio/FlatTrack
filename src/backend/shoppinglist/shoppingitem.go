@@ -106,10 +106,10 @@ func AddItemToList(db *sql.DB, listID string, item types.ShoppingItemSpec) (item
 
 	item.AuthorLast = item.Author
 
-	sqlStatement := `insert into shopping_item (listId, name, price, quantity, notes, author, authorLast, tag)
-                         values ($1, $2, $3, $4, $5, $6, $7, $8)
+	sqlStatement := `insert into shopping_item (listId, name, price, quantity, notes, author, authorLast, tag, obtained)
+                         values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
                          returning *`
-	rows, err := db.Query(sqlStatement, listID, item.Name, item.Price, item.Quantity, item.Notes, item.Author, item.AuthorLast, item.Tag)
+	rows, err := db.Query(sqlStatement, listID, item.Name, item.Price, item.Quantity, item.Notes, item.Author, item.AuthorLast, item.Tag, item.Obtained)
 	if err != nil {
 		return itemInserted, err
 	}
