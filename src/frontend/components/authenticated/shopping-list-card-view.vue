@@ -93,12 +93,14 @@ export default {
   async beforeMount () {
     var list = this.list
     var userId = list.author
-
+    if (list.creationTimestamp !== list.modificationTimestamp) {
+      userId = list.authorLast
+    }
     flatmates.GetFlatmate(userId).then(resp => {
       this.authorNames = resp.data.spec.names
-      return flatmates.GetFlatmate(this.list.authorLast)
-    }).then(resp => {
-      this.authorLastNames = resp.data.spec.names
+      if (list.creationTimestamp !== list.modificationTimestamp) {
+        this.authorLastNames = resp.data.spec.names
+      }
     }).catch(err => {
       common.DisplayFailureToast('Unable to find author of list' + '<br/>' + err.response.data.metadata.response)
     })
