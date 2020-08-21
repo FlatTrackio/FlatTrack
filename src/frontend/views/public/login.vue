@@ -9,6 +9,7 @@
           </p>
           <b-field label="Email" class="is-marginless">
             <b-input
+              name="email"
               type="email"
               v-model="email"
               maxlength="70"
@@ -22,6 +23,7 @@
           </b-field>
           <b-field label="Password" class="is-marginless">
             <b-input
+              name="password"
               type="password"
               v-model="password"
               password-reveal
