@@ -54,6 +54,7 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
     | networkPolicy.ingress                                 | configure Ingress policy rules                               | {}                                      |
     | networkPolicy.egress                                  | configure Egress policy rules                                | {}                                      |
     | extraEnvVars                                          | declare extra environment variables                          |                                         |
+    | postgres.enabled                                      | use the helm chart to set the database credentials           | true                                    |
     | postgres.username                                     | the username for an existing Postgres databse                | flattrack                               |
     | postgres.password                                     | the password for an existing Postgres databse                | flattrack                               |
     | postgres.host                                         | the host for an existing Postgres databse                    | flattrack                               |
