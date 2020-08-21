@@ -112,8 +112,9 @@
             native-type="submit"
             expanded
             :loading="submitLoading"
+            :disabled="submitLoading"
             @click="PostShoppingListItem">
-            Add
+            Add item
           </b-button>
         </div>
       </section>
@@ -132,6 +133,7 @@ export default {
   },
   data () {
     return {
+      submitLoading: false,
       shoppingListId: this.$route.params.id,
       shoppingListName: '',
       tags: [],

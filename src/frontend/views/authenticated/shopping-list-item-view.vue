@@ -114,6 +114,7 @@
               native-type="submit"
               expanded
               :loading="submitLoading"
+              :disabled="submitLoading"
               @click="UpdateShoppingListItem">
               Update item
             </b-button>
@@ -153,6 +154,7 @@ export default {
   },
   data () {
     return {
+      prevRoute: null,
       shoppingListId: this.$route.params.listId,
       shoppingListName: '',
       authorNames: '',
