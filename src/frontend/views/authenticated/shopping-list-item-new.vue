@@ -133,7 +133,6 @@ export default {
   },
   data () {
     return {
-      submitLoading: false,
       shoppingListId: this.$route.params.id,
       shoppingListName: '',
       tags: [],
