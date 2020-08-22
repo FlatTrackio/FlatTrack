@@ -87,13 +87,14 @@
               </b-radio>
             </div>
           </div>
-          <br/>
           <b-button
             icon-left="plus"
             type="is-success"
             size="is-medium"
             native-type="submit"
             expanded
+            :loading="submitLoading"
+            :disabled="submitLoading"
             @click="PostNewShoppingList(name, notes, listTemplate, templateListItemSelector)">
             Create list
           </b-button>
@@ -123,7 +124,9 @@ export default {
       if (this.notes === '') {
         this.notes = undefined
       }
+      this.submitLoading = true
       shoppinglist.PostShoppingList(this.name, this.notes, this.listTemplate, this.templateListItemSelector).then(resp => {
+        this.submitLoading = false
         var list = resp.data.spec
         if (list.id !== '' || typeof list.id === 'undefined') {
           this.$router.push({ path: `/apps/shopping-list/list/${list.id}` })
@@ -131,6 +134,7 @@ export default {
           common.DisplayFailureToast('Unable to find created shopping list')
         }
       }).catch(err => {
+        this.submitLoading = false
         common.DisplayFailureToast(`Failed to create shopping list - ${err.response.data.metadata.response}`)
       })
     }

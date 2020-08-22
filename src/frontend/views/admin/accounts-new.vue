@@ -135,6 +135,8 @@
           icon-left="plus"
           native-type="submit"
           expanded
+          :loading="pageLoading"
+          :disabled="pageLoading"
           @click="PostUserAccount">
           Create user account
         </b-button>
@@ -156,6 +158,7 @@ export default {
     const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDay())
 
     return {
+      pageLoading: false,
       focusedDate: maxDate,
       maxDate: maxDate,
       minDate: minDate,

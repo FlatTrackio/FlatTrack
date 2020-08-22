@@ -112,8 +112,9 @@
             native-type="submit"
             expanded
             :loading="submitLoading"
+            :disabled="submitLoading"
             @click="PostShoppingListItem">
-            Add
+            Add item
           </b-button>
         </div>
       </section>
