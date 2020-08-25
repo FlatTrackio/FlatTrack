@@ -8,24 +8,22 @@
 function RestructureShoppingListToTags (responseList) {
   var currentTag = ''
   var list = []
-  for (var item in responseList) {
-    if (currentTag !== responseList[item].tag) {
-      currentTag = responseList[item].tag
+  responseList.forEach(item => {
+    if (currentTag !== item.tag) {
+      currentTag = item.tag
       var newItem = {
         tag: currentTag || 'Untagged',
-        items: [responseList[item]],
-        price: responseList[item].price * responseList[item].quantity || 0
+        items: [item],
+        price: item.price * item.quantity || 0
       }
-
       list = [...list, newItem]
-    } else {
-      var currentListPosition = list.length - 1
-      var currentSubListItems = list[currentListPosition].items
-
-      list[currentListPosition].items = [...currentSubListItems, responseList[item]]
-      list[currentListPosition].price += (responseList[item].price * responseList[item].quantity || 0)
+      return
     }
-  }
+    var currentListPosition = list.length - 1
+    var currentSubListItems = list[currentListPosition].items
+    list[currentListPosition].items = [...currentSubListItems, item]
+    list[currentListPosition].price += (item.price * item.quantity || 0)
+  })
   return list
 }
 

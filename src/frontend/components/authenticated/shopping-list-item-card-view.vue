@@ -84,12 +84,14 @@ export default {
   },
   methods: {
     goToRef (ref) {
+      if (itemDeleting === true) {
+        return
+      }
       this.$router.push({ path: ref })
     },
     PatchItemObtained (itemId, obtained) {
       shoppinglist.PatchShoppingListItemObtained(this.listId, itemId, obtained).then(() => {
         var displayAll = typeof this.itemDisplayState === 'number' && this.itemDisplayState === 0
-        console.log({ displayAll }, this.itemDisplayState)
         if (displayAll === true) {
           return
         }

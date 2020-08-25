@@ -342,14 +342,17 @@ export default {
     floatingAddButton: () => import('@/frontend/components/common/floating-add-button.vue')
   },
   computed: {
+    ItemId () {
+      return this.$route.query.itemId
+    },
     listItemsFromTags () {
       return this.RestructureShoppingListToTags(this.list.filter((item) => {
-        return this.ItemDisplayState(item)
+        return this.ItemByNameInList(item)
       }))
     },
     listItemsFromPlainList () {
       return this.list.filter((item) => {
-        return this.ItemDisplayState(item)
+        return this.ItemByNameInList(item)
       })
     },
     obtainedCount () {
@@ -406,9 +409,6 @@ export default {
     ItemByNameInList (item) {
       var vm = this
       return item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
-    },
-    ItemDisplayState (item) {
-      return this.ItemByNameInList(item)
     },
     goToRef (ref) {
       this.$router.push({ path: ref })
