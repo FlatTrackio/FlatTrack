@@ -79,14 +79,22 @@ export default {
     list: Object,
     index: Number,
     displayTag: Boolean,
-    deviceIsMobile: Boolean
+    deviceIsMobile: Boolean,
+    itemDisplayState: Number
   },
   methods: {
     goToRef (ref) {
       this.$router.push({ path: ref })
     },
     PatchItemObtained (itemId, obtained) {
-      shoppinglist.PatchShoppingListItemObtained(this.listId, itemId, obtained).catch(err => {
+      shoppinglist.PatchShoppingListItemObtained(this.listId, itemId, obtained).then(() => {
+        var displayAll = typeof this.itemDisplayState === 'number' && this.itemDisplayState === 0
+        console.log({ displayAll }, this.itemDisplayState)
+        if (displayAll === true) {
+          return
+        }
+        this.list.splice(this.index, 1)
+      }).catch(err => {
         common.DisplayFailureToast('Failed to patch the obtained field of this item' + '<br/>' + err.response.data.metadata.response)
       })
     },
@@ -101,7 +109,7 @@ export default {
           this.itemDeleting = true
           shoppinglist.DeleteShoppingListItem(this.listId, itemId).then(resp => {
             common.DisplaySuccessToast(resp.data.metadata.response)
-            this.list.splice(index, 1)
+            this.list.splice(this.index, 1)
           }).catch(err => {
             common.DisplayFailureToast('Failed to delete shopping list item' + ' - ' + err.response.data.metadata.response)
             this.itemDeleting = false

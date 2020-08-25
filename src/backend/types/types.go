@@ -173,6 +173,7 @@ type ShoppingItemOptions struct {
 // options for creating and selecting lists
 type ShoppingItemSelector struct {
 	TemplateListItemSelector string `json:"templateListItemSelector"`
+	Obtained                 string `json:"obtained"`
 }
 
 // ShoppingTag ...

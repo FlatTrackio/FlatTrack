@@ -9,6 +9,7 @@ package shoppinglist
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/imdario/mergo"
 
@@ -37,30 +38,43 @@ func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bo
 // returns a list of items on a shopping list
 func GetShoppingListItems(db *sql.DB, listID string, options types.ShoppingItemOptions) (items []types.ShoppingItemSpec, err error) {
 	// sort by tags
-	sqlStatement := `select * from shopping_item where listId = $1 order by tag asc, name asc`
-	if options.SortBy == types.ShoppingItemSortByHighestPrice {
-		sqlStatement = `select * from shopping_item where listId = $1 order by price desc, name asc`
-	} else if options.SortBy == types.ShoppingItemSortByHighestQuantity {
-		sqlStatement = `select * from shopping_item where listId = $1 order by quantity desc, name desc`
-	} else if options.SortBy == types.ShoppingItemSortByLowestPrice {
-		sqlStatement = `select * from shopping_item where listId = $1 order by price asc, name asc`
-	} else if options.SortBy == types.ShoppingItemSortByLowestQuantity {
-		sqlStatement = `select * from shopping_item where listId = $1 order by quantity asc, name desc`
-	} else if options.SortBy == types.ShoppingItemSortByRecentlyAdded {
-		sqlStatement = `select * from shopping_item where listId = $1 order by creationTimestamp desc`
-	} else if options.SortBy == types.ShoppingItemSortByRecentlyUpdated {
-		sqlStatement = `select * from shopping_item where listId = $1 order by modificationTimestamp desc`
-	} else if options.SortBy == types.ShoppingItemSortByLastAdded {
-		sqlStatement = `select * from shopping_item where listId = $1 order by creationTimestamp asc`
-	} else if options.SortBy == types.ShoppingItemSortByLastUpdated {
-		sqlStatement = `select * from shopping_item where listId = $1 order by modificationTimestamp asc`
-	} else if options.SortBy == types.ShoppingItemSortByAlphabeticalDescending {
-		sqlStatement = `select * from shopping_item where listId = $1 order by name asc`
-	} else if options.SortBy == types.ShoppingItemSortByAlphabeticalAscending {
-		sqlStatement = `select * from shopping_item where listId = $1 order by name desc`
+	var obtained sql.NullBool
+	obtained.Scan(options.Selector.Obtained)
+
+	sqlQueryValues := []interface{}{
+		listID,
 	}
-	rows, err := db.Query(sqlStatement, listID)
+	sqlStatement := `select * from shopping_item where listId = $1`
+	if options.Selector.Obtained != "" {
+		sqlStatement += ` and obtained = $2`
+		sqlQueryValues = append(sqlQueryValues, obtained)
+	}
+	if options.SortBy == types.ShoppingItemSortByHighestPrice {
+		sqlStatement += ` order by price desc, name asc`
+	} else if options.SortBy == types.ShoppingItemSortByHighestQuantity {
+		sqlStatement += ` order by quantity desc, name desc`
+	} else if options.SortBy == types.ShoppingItemSortByLowestPrice {
+		sqlStatement += ` order by price asc, name asc`
+	} else if options.SortBy == types.ShoppingItemSortByLowestQuantity {
+		sqlStatement += ` order by quantity asc, name desc`
+	} else if options.SortBy == types.ShoppingItemSortByRecentlyAdded {
+		sqlStatement += ` order by creationTimestamp desc`
+	} else if options.SortBy == types.ShoppingItemSortByRecentlyUpdated {
+		sqlStatement += ` order by modificationTimestamp desc`
+	} else if options.SortBy == types.ShoppingItemSortByLastAdded {
+		sqlStatement += ` order by creationTimestamp asc`
+	} else if options.SortBy == types.ShoppingItemSortByLastUpdated {
+		sqlStatement += ` order by modificationTimestamp asc`
+	} else if options.SortBy == types.ShoppingItemSortByAlphabeticalDescending {
+		sqlStatement += ` order by name asc`
+	} else if options.SortBy == types.ShoppingItemSortByAlphabeticalAscending {
+		sqlStatement += ` order by name desc`
+	} else {
+		sqlStatement += ` order by tag asc, name asc`
+	}
+	rows, err := db.Query(sqlStatement, sqlQueryValues...)
 	if err != nil {
+		log.Println(err)
 		return items, err
 	}
 	defer rows.Close()
@@ -68,15 +82,6 @@ func GetShoppingListItems(db *sql.DB, listID string, options types.ShoppingItemO
 		item, err := GetItemObjectFromRows(rows)
 		if err != nil {
 			return items, err
-		}
-		if options.Selector.TemplateListItemSelector == "obtained" {
-			if item.Obtained != true {
-				continue
-			}
-		} else if options.Selector.TemplateListItemSelector == "unobtained" {
-			if item.Obtained != false {
-				continue
-			}
 		}
 		items = append(items, item)
 	}
