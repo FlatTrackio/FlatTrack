@@ -36,7 +36,7 @@
               <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
             </div>
           </div>
-          <div class="content">
+          <div class="content" @click="goToRef('/apps/shopping-list/list/' + list.id)">
             <div>
               <b-tag type="is-info" v-if="list.completed">Completed</b-tag>
               <b-tag type="is-warning" v-if="!list.completed">Uncompleted</b-tag>
