@@ -115,6 +115,9 @@ build-zip-frontend:
     - npm i
   script:
     - ./node_modules/.bin/vue-cli-service build --dest $RELEASE_FOLDER_NAME/dist src/frontend/main.js
+  only:
+    - tags
+    - master
   artifacts:
     expire_in: 1 day
     paths:
@@ -151,6 +154,9 @@ build-zip-backend:
           -o $RELEASE_FOLDER_NAME/flattrack$PRINTABLE_ARCH \
           src/backend/main.go
       done
+  only:
+    - tags
+    - master
   artifacts:
     expire_in: 1 day
     paths:
@@ -167,6 +173,9 @@ build-zip-copy-extras:
   script:
     - cp -r migrations $RELEASE_FOLDER_NAME/migrations
     - cp -r templates $RELEASE_FOLDER_NAME/templates
+  only:
+    - tags
+    - master
   artifacts:
     expire_in: 1 day
     paths:
@@ -186,6 +195,9 @@ build-zip:
     - *zip-prepare
   script:
     - tar cvf $RELEASE_FOLDER_NAME.tar.gz $RELEASE_FOLDER_NAME
+  only:
+    - tags
+    - master
   artifacts:
     paths:
       - flattrack*.tar.gz
