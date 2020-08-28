@@ -150,6 +150,12 @@ func GetAppEnvFile() (output string) {
 	return GetEnvOrDefault("APP_ENV_FILE", ".env")
 }
 
+// GetAppRealIPHeader ...
+// the header to use instead of r.RemoteAddr
+func GetAppRealIPHeader() (output string) {
+	return GetEnvOrDefault("APP_HTTP_REAL_IP_HEADER", "")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {

@@ -68,21 +68,30 @@ func HealthHandler(db *sql.DB) {
 	http.ListenAndServe(port, nil)
 }
 
+// GetRequestIP ...
+// returns r.RemoteAddr unless RealIPHeader is set
+func GetRequestIP(r *http.Request) (requestIP string) {
+	realIPHeader := common.GetAppRealIPHeader()
+	if realIPHeader == "" || r.Header.Get(realIPHeader) == "" {
+		return r.RemoteAddr
+	}
+	return realIPHeader
+}
+
 // Logging ...
 // log the HTTP requests
 func Logging(next http.Handler) http.Handler {
 	// log all requests
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var pathSection string
+		pathSection := "frontend"
 		requestPath := strings.Split(r.URL.Path, "/")
 		if len(requestPath) >= 1 && requestPath[1] == "api" {
 			pathSection = "backend "
 		} else if len(requestPath) >= 1 && requestPath[1] == "metrics" {
 			pathSection = "metrics "
-		} else {
-			pathSection = "frontend"
 		}
-		log.Printf("[%v] %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, r.RemoteAddr)
+		requestIP := GetRequestIP(r)
+		log.Printf("[%v] %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, requestIP)
 		next.ServeHTTP(w, r)
 	})
 }
