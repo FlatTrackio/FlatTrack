@@ -16,7 +16,6 @@ FROM golang:1.14.6-alpine3.11 AS api
 WORKDIR /app
 COPY src /app/src
 COPY go.* /app/
-RUN adduser -D user
 # TODO build the version, git hash, and build date into the binary from build-args or env
 ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
@@ -36,6 +35,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
 
 FROM alpine:3.11 as extras
 RUN apk add tzdata ca-certificates
+RUN adduser -D user
 
 FROM scratch
 WORKDIR /app
@@ -43,8 +43,8 @@ ENV PATH=/app
 COPY --from=ui /app/dist /app/dist
 COPY --from=ui /app/package.json .
 COPY --from=api /app/flattrack .
-COPY --from=api /etc/passwd /etc/passwd
-COPY --from=api /etc/group /etc/group
+COPY --from=extras /etc/passwd /etc/passwd
+COPY --from=extras /etc/group /etc/group
 COPY --from=extras /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=extras /etc/ssl /etc/ssl
 COPY migrations /app/migrations
