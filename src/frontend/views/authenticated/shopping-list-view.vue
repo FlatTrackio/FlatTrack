@@ -311,18 +311,18 @@ export default {
       editing: false,
       editingMeta: false,
       notesFromEmpty: false,
-      itemSearch: '',
+      itemSearch: shoppinglistCommon.GetShoppingListSearch(this.id) || '',
       authorNames: '',
       authorLastNames: '',
       totalItems: 0,
       loopCreated: new Date(),
       sortBy: shoppinglistCommon.GetShoppingListSortBy() || 'tags',
-      itemDisplayState: null,
+      itemDisplayState: shoppinglistCommon.GetShoppingListObtainedFilter(this.id) || 0,
       deviceIsMobile: false,
       HeaderIsSticky: false,
       TagTmp: '',
       editingTag: '',
-      listIsLoading: true,
+      listIsLoading: shoppinglistCommon.GetShoppingListFromCache(this.id).length > 0,
       hasInitialLoaded: false,
       deleteLoading: false,
       ratherSmallerScreen: false,
@@ -334,7 +334,7 @@ export default {
       completed: false,
       creationTimestamp: 0,
       modificationTimestamp: 0,
-      list: []
+      list: shoppinglistCommon.GetShoppingListFromCache(this.id) || []
     }
   },
   components: {
@@ -342,17 +342,23 @@ export default {
     floatingAddButton: () => import('@/frontend/components/common/floating-add-button.vue')
   },
   computed: {
+    ItemId () {
+      return this.$route.query.itemId
+    },
     listItemsFromTags () {
       return this.RestructureShoppingListToTags(this.list.filter((item) => {
-        return this.ItemDisplayState(item)
+        return this.ItemByNameInList(item)
       }))
     },
     listItemsFromPlainList () {
       return this.list.filter((item) => {
-        return this.ItemDisplayState(item)
+        return this.ItemByNameInList(item)
       })
     },
     obtainedCount () {
+      if (this.list.length === 0) {
+        return
+      }
       var obtained = 0
       var list = this.RestructureShoppingListToTags(this.list)
       for (var itemTag in list) {
@@ -365,6 +371,9 @@ export default {
       return obtained
     },
     currentPrice () {
+      if (this.list.length === 0) {
+        return
+      }
       var currentPrice = 0
       var list = this.RestructureShoppingListToTags(this.list)
       for (var itemTag in list) {
@@ -380,6 +389,9 @@ export default {
       return currentPrice
     },
     totalPrice () {
+      if (this.list.length === 0) {
+        return
+      }
       var totalPrice = 0
       var list = this.RestructureShoppingListToTags(this.list)
       for (var itemTag in list) {
@@ -397,16 +409,6 @@ export default {
     ItemByNameInList (item) {
       var vm = this
       return item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
-    },
-    ItemDisplayState (item) {
-      var vm = this
-      if (this.itemDisplayState === 1 && item.obtained === false) {
-        return this.ItemByNameInList(item)
-      } else if (this.itemDisplayState === 2 && item.obtained === true) {
-        return this.ItemByNameInList(item)
-      } else if (this.itemDisplayState === 0) {
-        return this.ItemByNameInList(item)
-      }
     },
     goToRef (ref) {
       this.$router.push({ path: ref })
@@ -482,7 +484,17 @@ export default {
       })
     },
     GetShoppingListItems () {
-      shoppinglist.GetShoppingListItems(this.id, this.sortBy).then(resp => {
+      var obtained
+      switch (this.itemDisplayState) {
+        case 1:
+          obtained = false
+          break
+        case 2:
+          obtained = true
+          break
+      }
+
+      shoppinglist.GetShoppingListItems(this.id, this.sortBy, obtained).then(resp => {
         var responseList = resp.data.list
         this.totalItems = responseList === null ? 0 : responseList.length
         if (this.list === null) {
@@ -571,6 +583,8 @@ export default {
       this.LoopStart()
     },
     itemDisplayState () {
+      this.listIsLoading = true
+      this.GetShoppingListItems()
       shoppinglistCommon.WriteShoppingListObtainedFilter(this.id, this.itemDisplayState)
     },
     itemSearch () {
@@ -578,8 +592,6 @@ export default {
     }
   },
   async beforeMount () {
-    this.list = shoppinglistCommon.GetShoppingListFromCache(this.id) || []
-    this.itemSearch = shoppinglistCommon.GetShoppingListSearch(this.id) || ''
     this.GetShoppingList()
     this.GetShoppingListItems()
     if (window.innerWidth <= 330) {
@@ -587,12 +599,19 @@ export default {
     }
   },
   async created () {
-    this.itemDisplayState = shoppinglistCommon.GetShoppingListObtainedFilter(this.id) || 0
     this.CheckDeviceIsMobile()
     window.addEventListener('resize', this.CheckDeviceIsMobile, true)
     window.addEventListener('scroll', this.ManageStickyHeader, true)
     this.LoopStart()
     window.addEventListener('focus', this.ResetLoopTime, true)
+  },
+  mounted () {
+    if (typeof this.ItemId !== 'undefined') {
+      console.log(this.$refs)
+      console.log(this.$refs[this.ItemId])
+      var el = this.$refs[this.ItemId][0].$el
+      window.scrollTo(0, el.offsetTop)
+    }
   },
   beforeDestroy () {
     this.LoopStop()

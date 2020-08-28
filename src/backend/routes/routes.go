@@ -859,6 +859,9 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 
 		options := types.ShoppingItemOptions{
 			SortBy: r.FormValue("sortBy"),
+			Selector: types.ShoppingItemSelector{
+				Obtained: r.FormValue("obtained"),
+			},
 		}
 
 		list, err := shoppinglist.GetShoppingList(db, id)
