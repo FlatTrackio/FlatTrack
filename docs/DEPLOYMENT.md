@@ -65,6 +65,8 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
     | smtp.password                                         | SMTP password                                                | `""`                                    |
     | smtp.host                                             | SMTP host                                                    | `""`                                    |
     | smtp.port                                             | SMTP port                                                    | `""`                                    |
+    | siteURL                                               | the URL of the site                                          | `""`                                    |
+    | realIPHeader                                          | a HTTP header to use for forwarding the real IP address      | `""`                                    |
     | labels                                                | declare labels for all resources                             | `{}`                                    |
     | annotations                                           | declare annotations for all resources                        | `{}`                                    |
     | ingress.enabled                                       | create an ingress manifests                                  | false                                   |
