@@ -1,17 +1,17 @@
 <template>
   <div>
     <section>
-      <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + list.id)">
+      <div class="card pointer-cursor-on-hover">
         <div class="card-content">
           <div class="media">
-            <div class="media-left">
+            <div class="media-left" @click="goToRef('/apps/shopping-list/list/' + list.id)">
               <b-icon
                 icon="cart-outline"
                 :type="list.completed === true ? 'is-success' : ''"
                 size="is-medium">
               </b-icon>
             </div>
-            <div class="media-content">
+            <div class="media-content" @click="goToRef('/apps/shopping-list/list/' + list.id)">
               <div class="display-items-on-the-same-line">
                 <p class="title is-4">{{ list.name }}</p>
               </div>
@@ -25,6 +25,14 @@
               </p>
             </div>
             <div class="media-right">
+              <b-tooltip label="Delete" class="is-paddingless" :delay="200">
+                <b-button
+                  type="is-danger"
+                  icon-right="delete"
+                  :loading="itemDeleting"
+                  v-if="deviceIsMobile === false"
+                  @click="DeleteShoppingList(list.id)" />
+              </b-tooltip>
               <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
             </div>
           </div>
@@ -56,16 +64,22 @@
 </template>
 
 <script>
+import { DialogProgrammatic as Dialog } from 'buefy'
 import common from '@/frontend/common/common'
-import flatmates from '@/frontend/requests/authenticated/flatmates'
+import shoppinglist from '@/frontend/requests/authenticated/shoppinglist'
+import shoppinglistCommon from '@/frontend/common/shoppinglist'
 
 export default {
   name: 'shopping-list-card-view',
   props: {
+    deviceIsMobile: Boolean,
+    index: Number,
+    lists: Object,
     list: Object
   },
   data () {
     return {
+      deleteLoading: false,
       authorNames: '',
       authorLastNames: ''
     }
@@ -85,6 +99,27 @@ export default {
         }
       })
       return notesBytesValid.join('') + '...'
+    },
+    DeleteShoppingList (id) {
+      Dialog.confirm({
+        title: 'Delete shopping list',
+        message: 'Are you sure that you wish to delete this shopping list?' + '<br/>' + 'This action cannot be undone.',
+        confirmText: 'Delete shopping list',
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: () => {
+          this.deleteLoading = true
+          window.clearInterval(this.intervalLoop)
+          shoppinglist.DeleteShoppingList(id).then(resp => {
+            this.lists.splice(this.index, 1)
+            common.DisplaySuccessToast('Deleted the shopping list')
+            shoppinglistCommon.DeleteShoppingListFromCache(id)
+          }).catch(err => {
+            this.deleteLoading = false
+            common.DisplayFailureToast('Failed to delete the shopping list' + '<br/>' + err.response.data.metadata.response)
+          })
+        }
+      })
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)

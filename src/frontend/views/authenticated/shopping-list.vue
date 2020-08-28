@@ -88,7 +88,7 @@
         <floatingAddButton path="/apps/shopping-list/new" v-if="displayFloatingAddButton"/>
         <br/>
         <div v-if="listsFiltered.length > 0">
-          <shoppingListCardView :list="list" :authors="authors" v-for="list in listsFiltered" v-bind:key="list" />
+          <shoppingListCardView :list="list" :authors="authors" :lists="lists" :index="index" v-for="(list, index) in listsFiltered" v-bind:key="list" :deviceIsMobile="deviceIsMobile" />
           <br/>
           <p>{{ listsFiltered.length }} shopping list(s)</p>
         </div>
