@@ -104,8 +104,14 @@ spec:
                   name: {{ include "flattrack.fullname" . }}
                   key: app-smtp-port
             {{- end }}
+            {{- if .Values.siteURL }}
             - name: APP_URL
               value: {{ .Values.siteURL }}
+            {{- end }}
+            {{- if .Values.realIPHeader }}
+            - name: APP_HTTP_REAL_IP_HEADER
+              value: {{ .Values.realIPHeader }}
+            {{- end }}
         {{- with .Values.extraEnvVars }}
             {{- toYaml . | nindent 12 }}
         {{- end }}
