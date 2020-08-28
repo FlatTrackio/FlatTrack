@@ -9,8 +9,9 @@ module.exports = {
       background_color: "#000000"
     },
     workboxOptions: {
-      swSrc: 'service-worker.js'
+      swSrc: 'service-worker.js',
+      skipWaiting: true
     },
-    workboxPluginMode: "InjectManifest"
+    workboxPluginMode: "GenerateSW"
   }
 }

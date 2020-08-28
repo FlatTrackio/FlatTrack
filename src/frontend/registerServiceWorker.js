@@ -1,4 +1,5 @@
 import { register } from 'register-service-worker'
+import { SnackbarProgrammatic as Snackbar, ToastProgrammatic as Toast } from 'buefy'
 
 if (process.env.NODE_ENV === 'production') {
   register(`${process.env.BASE_URL}service-worker.js`, {
@@ -9,25 +10,11 @@ if (process.env.NODE_ENV === 'production') {
     cached () {
     },
     updatefound () {
-      this.$buefy.snackbar.open({
-        message: 'New FlatTrack version available, click to update',
-        actionText: 'Update',
-        type: 'is-white',
-        position: 'is-right',
-        indefinite: true,
-        onAction: () => {
-          const loadingComponent = this.$buefy.snackbar.open({
-            container: null
-          })
-          setTimeout(() => {
-            window.location.reload(true)
-          }, 500)
-        }
-      })
+      window.location.reload(true)
     },
     updated () {
       console.log('Updated')
-      this.$buefy.toast.open({
+      Toast.open({
         message: 'FlatTrack was updated',
         type: 'is-success'
       })
