@@ -72,10 +72,11 @@ func HealthHandler(db *sql.DB) {
 // returns r.RemoteAddr unless RealIPHeader is set
 func GetRequestIP(r *http.Request) (requestIP string) {
 	realIPHeader := common.GetAppRealIPHeader()
-	if realIPHeader == "" || r.Header.Get(realIPHeader) == "" {
+	headerValue := r.Header.Get(realIPHeader)
+	if realIPHeader == "" || headerValue == "" {
 		return r.RemoteAddr
 	}
-	return realIPHeader
+	return headerValue
 }
 
 // Logging ...
