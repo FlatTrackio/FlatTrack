@@ -84,7 +84,7 @@ export default {
   },
   methods: {
     goToRef (ref) {
-      if (itemDeleting === true) {
+      if (this.itemDeleting === true) {
         return
       }
       this.$router.push({ path: ref })

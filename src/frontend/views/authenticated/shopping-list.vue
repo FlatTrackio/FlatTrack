@@ -241,9 +241,12 @@ export default {
     this.GetShoppingLists()
     this.GetShoppingListNotes()
   },
+  beforeDestroy () {
+    window.removeEventListener('resize', this.CheckDeviceIsMobile, true)
+  },
   async created () {
     this.CheckDeviceIsMobile()
-    window.addEventListener('resize', this.CheckDeviceIsMobile.bind(this))
+    window.addEventListener('resize', this.CheckDeviceIsMobile, true)
   }
 }
 </script>

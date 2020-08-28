@@ -17,10 +17,10 @@
               </div>
               <p class="subtitle is-6">
                 <span v-if="list.creationTimestamp == list.modificationTimestamp">
-                  Created {{ TimestampToCalendar(list.creationTimestamp) }}, by {{ authorNames }}
+                  Created {{ TimestampToCalendar(list.creationTimestamp) }}
                 </span>
                 <span v-else>
-                  Updated {{ TimestampToCalendar(list.modificationTimestamp) }}, by {{ authorLastNames }}
+                  Updated {{ TimestampToCalendar(list.modificationTimestamp) }}
                 </span>
               </p>
             </div>
@@ -91,19 +91,6 @@ export default {
     }
   },
   async beforeMount () {
-    var list = this.list
-    var userId = list.author
-    if (list.creationTimestamp !== list.modificationTimestamp) {
-      userId = list.authorLast
-    }
-    flatmates.GetFlatmate(userId).then(resp => {
-      this.authorNames = resp.data.spec.names
-      if (list.creationTimestamp !== list.modificationTimestamp) {
-        this.authorLastNames = resp.data.spec.names
-      }
-    }).catch(err => {
-      common.DisplayFailureToast('Unable to find author of list' + '<br/>' + err.response.data.metadata.response)
-    })
   }
 }
 </script>
