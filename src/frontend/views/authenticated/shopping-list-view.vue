@@ -27,7 +27,7 @@
               size="is-medium"
               ref="name"
               placeholder="Enter a title for this list"
-              @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, completed)"
+              @keyup.enter.native="UpdateShoppingList(name, notes, completed)"
               @keyup.esc.native="editing = false; editingMeta = false"
               v-model="name"
               required>
@@ -71,7 +71,7 @@
         </div>
         <b-button type="is-text" @click="() => { notesFromEmpty = true; editing = true; editingMeta = true; FocusNotes() }" v-if="!editingMeta && notes.length == 0" class="remove-shadow">Add notes</b-button>
         <div v-if="editingMeta">
-          <b-button type="is-info" @click="() => { notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes, completed) }">Done</b-button>
+          <b-button type="is-info" @click="UpdateShoppingList(name, notes, completed)">Done</b-button>
           <br/>
         </div>
         <br/>
@@ -202,7 +202,8 @@
                 v-on:enter="ItemAppear"
                 v-on:leave="ItemDisappear">
                 <div v-for="(item, index) in itemTag.items" v-bind:key="item">
-                  <itemCard :list="list" :item="item" :index="index" :listId="id" :deviceIsMobile="deviceIsMobile"/>
+                  <a :id="item.id"></a>
+                  <itemCard :list="list" :item="item" :index="index" :listId="id" :deviceIsMobile="deviceIsMobile" :id="item.id" :itemDisplayState="itemDisplayState" />
                 </div>
                 <br/>
               </transition-group>
@@ -220,7 +221,8 @@
           </div>
           <div v-else-if="sortBy !== 'tag'">
             <div v-for="(item, index) in listItemsFromPlainList" v-bind:key="item">
-              <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true" :deviceIsMobile="deviceIsMobile"/>
+              <a :id="item.id"></a>
+              <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true" :deviceIsMobile="deviceIsMobile" :id="item.id" :itemDisplayState="itemDisplayState" />
             </div>
             <section>
               <br/>
@@ -357,50 +359,42 @@ export default {
     },
     obtainedCount () {
       if (this.list.length === 0) {
-        return
+        return 0
       }
       var obtained = 0
-      var list = this.RestructureShoppingListToTags(this.list)
-      for (var itemTag in list) {
-        for (var item in list[itemTag].items) {
-          if (list[itemTag].items[item].obtained === true) {
-            obtained += 1
-          }
-        }
-      }
+      this.list.forEach(item => {
+        obtained += item.obtained === true ? 1 : 0
+      })
       return obtained
     },
     currentPrice () {
       if (this.list.length === 0) {
-        return
+        return 0
       }
       var currentPrice = 0
-      var list = this.RestructureShoppingListToTags(this.list)
-      for (var itemTag in list) {
-        for (var item in list[itemTag].items) {
-          var itemInList = list[itemTag].items[item]
-          itemInList.price = typeof itemInList.price === 'undefined' ? 0 : itemInList.price
-          if (itemInList.obtained === true) {
-            currentPrice += itemInList.price * itemInList.quantity
-          }
+      this.list.forEach(item => {
+        if (item.obtained !== true) {
+          return
         }
-      }
+        if (typeof item.price !== 'number') {
+          item.price = 0
+        }
+        currentPrice += (item.price || 0) * item.quantity
+      })
       currentPrice = Math.round(currentPrice * 100) / 100
       return currentPrice
     },
     totalPrice () {
       if (this.list.length === 0) {
-        return
+        return 0
       }
       var totalPrice = 0
-      var list = this.RestructureShoppingListToTags(this.list)
-      for (var itemTag in list) {
-        for (var item in list[itemTag].items) {
-          var itemInList = list[itemTag].items[item]
-          itemInList.price = typeof itemInList.price === 'undefined' ? 0 : itemInList.price
-          totalPrice += itemInList.price * itemInList.quantity
+      this.list.forEach(item => {
+        if (typeof item.price !== 'number') {
+          item.price = 0
         }
-      }
+        totalPrice += (item.price || 0) * item.quantity
+      })
       totalPrice = Math.round(totalPrice * 100) / 100
       return totalPrice
     }
@@ -448,6 +442,10 @@ export default {
       })
     },
     UpdateShoppingList (name, notes, completed) {
+      this.notesFromEmpty = false
+      this.editing = false
+      this.editingMeta = false
+
       var id = this.id
       shoppinglist.UpdateShoppingList(id, name, notes, completed).catch(err => {
         common.DisplayFailureToast('Failed to update shopping list' + '<br/>' + err.response.data.metadata.response)
