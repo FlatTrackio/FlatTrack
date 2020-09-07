@@ -20,46 +20,36 @@ variables:
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
 
-.docker-build-pre-script: &docker-build-pre-script |
+.kaniko-build-pre-script: &kaniko-build-pre-script |
   set -x
-  if ! docker info &>/dev/null; then
-    if [ -z "$DOCKER_HOST" -a "$KUBERNETES_PORT" ]; then
-      export DOCKER_HOST='tcp://localhost:2375'
-    fi
-  fi
-  mkdir -p $HOME/.docker/cli-plugins
-  wget -O $HOME/.docker/cli-plugins/docker-buildx https://github.com/docker/buildx/releases/download/v0.3.1/buildx-v0.3.1.linux-amd64
-  chmod +x $HOME/.docker/cli-plugins/docker-buildx 
-  docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-  docker buildx create --use --name builder
-  docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  mkdir -p /kaniko/.docker
+  echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
 
-.docker-build-taggable-name: &docker-build-taggable-name |
-  apk add git
+.kaniko-build-taggable-name: &kaniko-build-taggable-name |
   set -x
   COMMIT_HASH="???"
   BUILD_DATE="$(date -u +%Y-%m-%d_%I:%M:%S%p)"
   if [[ -z "$CI_COMMIT_TAG" ]]; then
-    COMMIT_HASH="$(git rev-parse --short HEAD)"
+    COMMIT_HASH="$CI_COMMIT_SHORT_SHA"
     PRINTABLE_COMMIT_HASH="-$COMMIT_HASH"
   fi
   if [[ ! "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]] && [[ -z "$CI_COMMIT_TAG" ]]; then
     BRANCH_NAME="-$CI_COMMIT_BRANCH"
   fi
-  ARCH_TAGGABLE_NAME="$(echo $ARCH | sed -e 's,/,,g')"
+  ARCH_TAGGABLE_NAME="$(echo $ARCH | tr -d '/')"
   if [[ ! "$ARCH" = "$ARCH_DEFAULT" ]]; then
     PRINT_ARCH="-$ARCH_TAGGABLE_NAME"
   fi
 
-.docker-pre-build-release-version: &docker-pre-build-release-version |
+.kaniko-pre-build-release-version: &kaniko-pre-build-release-version |
   if [[ ! -z "$CI_COMMIT_TAG" ]]; then
     export APP_BUILD_VERSION="$CI_COMMIT_TAG"
     export APP_BUILD_MODE=production
-    export DOCKER_EXTRA_DESTINATION="-t $CI_REGISTRY_IMAGE:$APP_BUILD_VERSION$PRINT_ARCH"
+    export KANIKO_EXTRA_DESTINATION="--destination $CI_REGISTRY_IMAGE:$APP_BUILD_VERSION$PRINT_ARCH"
   fi
 
-.docker-build: &docker-build |
-  docker buildx build --build-arg AppBuildVersion="$APP_BUILD_VERSION" --build-arg AppBuildDate="$BUILD_DATE" --build-arg AppBuildHash="$(git rev-parse --short HEAD)" --build-arg AppBuildMode="$APP_BUILD_MODE" --platform linux/$ARCH -f $CI_PROJECT_DIR/Dockerfile --push -t $CI_REGISTRY_IMAGE:latest$BRANCH_NAME$PRINT_ARCH $DOCKER_EXTRA_DESTINATION $CI_PROJECT_DIR
+.kaniko-build: &kaniko-build |
+  /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest$BRANCH_NAME$PRINT_ARCH $KANIKO_EXTRA_DESTINATION --build-arg GOARCH="ARCH" --build-arg AppBuildVersion="$APP_BUILD_VERSION" --build-arg AppBuildDate="$BUILD_DATE" --build-arg AppBuildHash="$COMMIT_HASH" --build-arg AppBuildMode="$APP_BUILD_MODE"
 
 .zip-prepare: &zip-prepare |
   export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
@@ -67,50 +57,41 @@ variables:
 
 build-container-amd64:
   stage: build
-  image: docker:stable
+  image: gcr.io/kaniko-project/executor:debug-v1.0.0
   retry: 2
-  services:
-    - docker:stable-dind
   variables:
     ARCH: "amd64"
-    DOCKER_HOST: tcp://docker:2375/
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
   before_script:
-    - *docker-build-pre-script
-    - *docker-build-taggable-name
-    - *docker-pre-build-release-version
+    - *kaniko-build-pre-script
+    - *kaniko-build-taggable-name
+    - *kaniko-pre-build-release-version
   script:
-    - *docker-build
+    - *kaniko-build
 
 build-container-arm64:
   stage: build
   image: docker:stable
+  image: gcr.io/kaniko-project/executor:debug-v1.0.0
   retry: 2
-  services:
-    - docker:stable-dind
   variables:
     ARCH: "arm64/v8"
-    DOCKER_HOST: tcp://docker:2375/
-    DOCKER_DRIVER: overlay2
-    DOCKER_TLS_CERTDIR: ""
   only:
     - tags
     - master
   before_script:
-    - *docker-build-pre-script
-    - *docker-build-taggable-name
-    - *docker-pre-build-release-version
+    - *kaniko-build-pre-script
+    - *kaniko-build-taggable-name
+    - *kaniko-pre-build-release-version
   script:
-    - *docker-build
+    - *kaniko-build
 
 build-zip-frontend:
   stage: build
   retry: 2
   image: node:14.7.0-alpine3.11
   before_script:
-    - *docker-build-taggable-name
-    - *docker-pre-build-release-version
+    - *kaniko-build-taggable-name
+    - *kaniko-pre-build-release-version
     - *zip-prepare
     - npm i
   script:
@@ -128,8 +109,8 @@ build-zip-backend:
   retry: 2
   image: golang:1.14.6-alpine3.11
   before_script:
-    - *docker-build-taggable-name
-    - *docker-pre-build-release-version
+    - *kaniko-build-taggable-name
+    - *kaniko-pre-build-release-version
     - *zip-prepare
   script:
     - |
@@ -167,8 +148,8 @@ build-zip-copy-extras:
   retry: 2
   image: alpine:3.11
   before_script:
-    - *docker-build-taggable-name
-    - *docker-pre-build-release-version
+    - *kaniko-build-taggable-name
+    - *kaniko-pre-build-release-version
     - *zip-prepare
   script:
     - cp -r migrations $RELEASE_FOLDER_NAME/migrations
@@ -190,8 +171,8 @@ build-zip:
     - build-zip-backend
     - build-zip-copy-extras
   before_script:
-    - *docker-build-taggable-name
-    - *docker-pre-build-release-version
+    - *kaniko-build-taggable-name
+    - *kaniko-pre-build-release-version
     - *zip-prepare
   script:
     - tar cvf $RELEASE_FOLDER_NAME.tar.gz $RELEASE_FOLDER_NAME
