@@ -5,12 +5,6 @@ stages:
   - zip
   - pages
 
-cache:
-  key: shared-cache
-  paths:
-    - .npm
-    - /go
-
 variables:
   ARCH_DEFAULT: "amd64"
   ARCHES: amd64 arm64
