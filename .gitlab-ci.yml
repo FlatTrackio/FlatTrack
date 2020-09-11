@@ -90,7 +90,7 @@ build-container-arm64:
   services:
     - docker:stable-dind
   variables:
-    ARCH: "arm64/v8"
+    ARCH: "arm64"
     DOCKER_HOST: tcp://docker:2375/
     DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
