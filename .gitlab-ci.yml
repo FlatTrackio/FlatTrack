@@ -68,7 +68,7 @@ build-container-arm64:
   image: gcr.io/kaniko-project/executor:debug-v1.0.0
   retry: 2
   variables:
-    ARCH: "arm64/v8"
+    ARCH: "arm64"
   only:
     - tags
     - master
