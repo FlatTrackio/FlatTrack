@@ -193,6 +193,8 @@ test_backend_e2e:
     - ./flattrack &
   script:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
+  after_script:
+    - kill $(jobs -l | awk '{print $2}')
     
 lint_frontend:
   stage: lint
