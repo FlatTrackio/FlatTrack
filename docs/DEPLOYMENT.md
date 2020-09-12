@@ -73,10 +73,10 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
     | ingress.annotations                                   | set annotations for the ingress manifest                     | `{}`                                    |
     | ingress.hosts                                         | the hosts which the ingress endpoint should be accessed from |                                         |
     | ingress.tls                                           | references to TLS secrets                                    | `[]`                                    |
-    | resources.limits.cpu                                  | max amount of CPU                                            | 1m                                      |
-    | resources.limits.memory                               | max amount of memory                                         | 20Mi                                    |
-    | resources.resources.cpu                               | requested amount of CPU                                      | 1m                                      |
-    | resources.limits.memory                               | max amount of memory                                         | 20Mi                                    |
+    | resources.limits.cpu                                  | max amount of CPU                                            | 250m                                    |
+    | resources.limits.memory                               | max amount of memory                                         | 40Mi                                    |
+    | resources.resources.cpu                               | requested amount of CPU                                      | 250m                                    |
+    | resources.limits.memory                               | max amount of memory                                         | 40Mi                                    |
     | nodeSelector                                          | delcare the node labels for Pod scheduling                   | `{}`                                    |
     | tolerations                                           | declare the toleration labels for Pod scheduling             | `[]`                                    |
     | affinity                                              | declare the affinity settings for the Pod scheduling         | `{}`                                    |
