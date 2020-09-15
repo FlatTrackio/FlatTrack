@@ -77,7 +77,7 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
     | resources.limits.memory                               | max amount of memory                                         | 40Mi                                    |
     | resources.resources.cpu                               | requested amount of CPU                                      | 250m                                    |
     | resources.limits.memory                               | max amount of memory                                         | 40Mi                                    |
-    | nodeSelector                                          | delcare the node labels for Pod scheduling                   | `{}`                                    |
+    | nodeSelector                                          | declare the node labels for Pod scheduling                   | `{}`                                    |
     | tolerations                                           | declare the toleration labels for Pod scheduling             | `[]`                                    |
     | affinity                                              | declare the affinity settings for the Pod scheduling         | `{}`                                    |
 
