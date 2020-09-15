@@ -64,7 +64,6 @@ build-container-amd64:
 
 build-container-arm64:
   stage: build
-  image: docker:stable
   image: gcr.io/kaniko-project/executor:debug-v1.0.0
   retry: 2
   variables:
@@ -194,6 +193,15 @@ test_backend_e2e:
   script:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
     - pkill flattrack || true
+
+spell_check:
+  stage: lint
+  image: golang:1.13.10-alpine3.11
+  allow_failure: true
+  before_script:
+    - go get -u github.com/client9/misspell/cmd/misspell
+  script:
+    - misspell -error src docs migrations pubic template k8s-manifests README*
     
 lint_frontend:
   stage: lint
