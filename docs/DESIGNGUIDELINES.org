@@ -12,7 +12,7 @@ The project must be:
 - reliable: it must be built for strong-reliablity
 - secure: it must be secure by default; there must be large security focus
 - private: it must not communicate with third-parties for app resources and functions (exception of things like authentication via OAuth); information in the attached database must not leave where it resides
-- accessable: there must be many ways to run it or get an instance
+- accessible: there must be many ways to run it or get an instance
 - portable: it must be easy to pick up an instance and take it somewhere else
 - conformant: no matter where it runs, it should be expected to be the same
 - tested: it should be well-tested and audited for quality and consistency
