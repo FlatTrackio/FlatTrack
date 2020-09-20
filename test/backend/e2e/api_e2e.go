@@ -694,6 +694,91 @@ var _ = Describe("API e2e tests", func() {
 		Expect(userAccountLoginValid).To(Equal(false), "JWT should be valid")
 	})
 
+	It("should disallow a disabled account to log in", func() {
+		account := types.UserSpec{
+			Names:       "Joe Bloggs",
+			Email:       "user123@example.com",
+			Password:    "Password123!",
+			PhoneNumber: "64200000000",
+			Birthday:    43200,
+			Groups:      []string{"flatmember"},
+		}
+		accountBytes, err := json.Marshal(account)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+
+		By("creating a user account")
+		apiEndpoint := apiServerAPIprefix + "/admin/users"
+		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountJSON, err := json.Marshal(userAccountResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var userAccount types.UserSpec
+		json.Unmarshal(userAccountJSON, &userAccount)
+
+		By("checking the response")
+		Expect(userAccount.ID).ToNot(Equal(""), "User account ID must not be empty")
+		Expect(userAccount.Names).To(Equal(account.Names), "User account names must match what was posted")
+		Expect(userAccount.Password).To(Equal(""), "User account password must return an empty string")
+
+		By("logging in")
+		apiEndpoint = apiServerAPIprefix + "/user/auth"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		Expect(userAccountLoginResponseData).ToNot(Equal(""), "JWT in response must not be empty")
+
+		By("checking validation of the token")
+		apiEndpoint = apiServerAPIprefix + "/user/auth"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+		userAccountLoginValid := routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+		Expect(userAccountLoginValid).To(Equal(true), "JWT should be valid")
+
+		By("patching the account")
+		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID + "/disabled"
+		profilePatch := types.UserSpec{
+			Disabled: true,
+		}
+		profilePatchData, err := json.Marshal(profilePatch)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		response := routes.GetHTTPresponseBodyContents(resp)
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+		profileResponse := response.Spec
+		profileJSON, err := json.Marshal(profileResponse)
+		Expect(err).To(BeNil(), "failed to marshal to JSON")
+		var profile types.UserSpec
+		json.Unmarshal(profileJSON, &profile)
+		Expect(profile.Disabled).To(Equal(profilePatch.Disabled), "profile disabled does not match profilePatch disabled")
+
+		By("checking validation of the token")
+		apiEndpoint = apiServerAPIprefix + "/user/auth"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
+		userAccountLoginValid = routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+		Expect(userAccountLoginValid).To(Equal(false), "JWT should be valid")
+
+		By("deleting the account")
+		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(http.StatusOK), "api have return code of http.StatusOK")
+
+		By("checking validation of the token")
+		apiEndpoint = apiServerAPIprefix + "/user/auth"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		Expect(err).To(BeNil(), "Request should not return an error")
+		Expect(resp.StatusCode).To(Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
+		userAccountLoginValid = routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+		Expect(userAccountLoginValid).To(Equal(false), "JWT should be valid")
+	})
+
 	It("should disallow login in after reset auth nonce", func() {
 		account := types.UserSpec{
 			Names:       "Joe Bloggs",

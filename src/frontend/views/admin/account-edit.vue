@@ -157,6 +157,41 @@
           </b-button>
         </p>
       </b-field>
+
+      <b-collapse
+        class="card"
+        animation="slide"
+        aria-id="contentIdForA11y3"
+        :open="accountAdvancedOpen">
+        <div
+          slot="trigger"
+          slot-scope="props"
+          class="card-header"
+          role="button"
+          aria-controls="contentIdForA11y3">
+          <p class="card-header-title">
+            Advanced options
+          </p>
+          <a class="card-header-icon">
+            <b-icon
+              :icon="props.open ? 'menu-down' : 'menu-up'">
+            </b-icon>
+          </a>
+        </div>
+        <div class="card-content">
+          <div class="content">
+            <b-button
+              size="is-medium"
+              type="is-warning"
+              :loading="disabledLoading"
+              :icon-left="disabled ? 'check-box-outline' : 'checkbox-blank-outline'"
+              @click="PatchUserAccountDisabled">
+              Disable
+            </b-button>
+          </div>
+        </div>
+      </b-collapse>
+      <br />
       <p class="subtitle is-6">
         Created {{ TimestampToCalendar(creationTimestamp) }} <br />
         <span v-if="creationTimestamp !== modificationTimestamp">
@@ -191,6 +226,8 @@ export default {
       userAccountConfirmId: null,
       userAccountConfirmSecret: null,
       pageLoading: true,
+      disabledLoading: false,
+      accountAdvancedOpen: false,
       id: this.$route.params.id,
       names: null,
       email: null,
@@ -198,6 +235,7 @@ export default {
       birthday: 0,
       groups: [],
       registered: null,
+      disabled: false,
       password: null,
       passwordConfirm: null,
       availableGroups: [],
@@ -241,6 +279,7 @@ export default {
         this.phoneNumber = user.phoneNumber
         this.birthday = user.birthday
         this.registered = user.registered
+        this.disabled = user.disabled
         this.groups = user.groups
         this.groupsFull = []
         this.creationTimestamp = user.creationTimestamp
@@ -277,7 +316,18 @@ export default {
           this.$router.push({ name: 'Admin accounts' })
         }, 1 * 1000)
       }).catch(err => {
-        common.DisplayFailureToast('Failed to create user account' + '<br/>' + (err.response.data.metadata.response || err))
+        common.DisplayFailureToast('Failed to patch user account' + '<br/>' + (err.response.data.metadata.response || err))
+      })
+    },
+    PatchUserAccountDisabled () {
+      this.disabledLoading = true
+      adminFlatmates.PatchFlatmateDisabled(this.id, !this.disabled).then(resp => {
+        this.disabled = resp.data.spec.disabled
+        this.disabledLoading = false
+        common.DisplaySuccessToast(`${this.disabled ? 'Disabled' : 'Enabled'} user account`)
+      }).catch(err => {
+        this.disabledLoading = false
+        common.DisplayFailureToast('Failed to patch user account disabled field' + '<br/>' + (err.response.data.metadata.response || err))
       })
     },
     DeleteUserAccount (id) {

@@ -231,6 +231,52 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// PatchUserDisabled ...
+// patches a user account's disabled field by their id
+func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := http.StatusInternalServerError
+		response := "Failed to patch the user account as disabled"
+
+		var userAccount types.UserSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &userAccount)
+
+		vars := mux.Vars(r)
+		userID := vars["id"]
+
+		user, err := users.GetUserByID(db, userID, false)
+		if err != nil || user.ID == "" {
+			code = http.StatusNotFound
+			response = "Failed to find user"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.UserSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		userAccountPatched, err := users.PatchUserDisabledAdmin(db, userID, userAccount.Disabled)
+		if err == nil {
+			code = http.StatusOK
+			response = "Successfully patched the user account disabled field"
+		} else {
+			code = http.StatusBadRequest
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: userAccountPatched,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // DeleteUser ...
 // delete a user
 func DeleteUser(db *sql.DB) http.HandlerFunc {
@@ -405,6 +451,10 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 		}
 		if userInDB.ID != "" && userInDB.Registered == false {
 			response = "Account not yet registered"
+			code = http.StatusForbidden
+		}
+		if userInDB.Disabled == true {
+			response = "User account has been disabled"
 			code = http.StatusForbidden
 		}
 		// Check password locally, fall back to remote if incorrect

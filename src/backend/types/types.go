@@ -55,7 +55,7 @@ type UserSpec struct {
 	PhoneNumber           string   `json:"phoneNumber,omitempty"`
 	Birthday              int64    `json:"birthday,omitempty"`
 	ContractAgreement     bool     `json:"contractAgreement,omitempty"`
-	Disabled              bool     `json:"disabled,omitempty"`
+	Disabled              bool     `json:"disabled"`
 	Registered            bool     `json:"registered"`
 	LastLogin             int      `json:"lastLogin,omitempty"`
 	AuthNonce             string   `json:"-"`

@@ -339,6 +339,10 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 		return false, fmt.Errorf("Authentication has been invalidated, please log in again")
 	}
 
+	if user.Disabled == true {
+		return false, fmt.Errorf("Your user account is disabled")
+	}
+
 	return token.Valid, nil
 }
 
@@ -422,9 +426,9 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 		passwordHashed = userAccount.Password
 	}
 
-	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $7
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, disabled = $7, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
                          returning id, names, email, phoneNumber, birthday, contractAgreement, disabled, registered, lastLogin, creationTimestamp, modificationTimestamp, deletionTimestamp`
-	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, id)
+	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.Disabled)
 	if err != nil {
 		// TODO add roll back, if there's failure
 		return userAccountPatched, err
@@ -729,4 +733,20 @@ func GenerateNewAuthNonce(db *sql.DB, id string) (err error) {
 	rows.Next()
 	_, err = UserObjectFromRows(rows)
 	return err
+}
+
+// PatchUserDisabledAdmin ...
+// patches is user account to be disabled
+func PatchUserDisabledAdmin(db *sql.DB, id string, disabled bool) (userAccount types.UserSpec, err error) {
+	sqlStatement := `update users set disabled = $2 where id = $1
+                         returning *`
+	rows, err := db.Query(sqlStatement, id, disabled)
+	if err != nil {
+		return userAccount, err
+	}
+	defer rows.Close()
+	rows.Next()
+	userAccount, err = UserObjectFromRows(rows)
+	return userAccount, err
+
 }

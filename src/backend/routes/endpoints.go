@@ -73,6 +73,11 @@ func GetEndpoints(db *sql.DB) types.Endpoints {
 			HTTPMethod:   http.MethodPatch,
 		},
 		{
+			EndpointPath: "/admin/users/{id}/disabled",
+			HandlerFunc:  HTTPuseMiddleware(PatchUserDisabled(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromID(db, "admin")),
+			HTTPMethod:   http.MethodPatch,
+		},
+		{
 			EndpointPath: "/admin/users/{id}",
 			HandlerFunc:  HTTPuseMiddleware(PutUser(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromID(db, "admin")),
 			HTTPMethod:   http.MethodPut,
