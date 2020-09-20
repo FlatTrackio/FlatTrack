@@ -39,6 +39,18 @@ function PatchFlatmate (id, names, email, phoneNumber, birthday, groups, passwor
   })
 }
 
+// PatchFlatmateDisabled
+// patches a user account disabled field
+function PatchFlatmateDisabled (id, disabled) {
+  return Request({
+    url: `/api/admin/users/${id}/disabled`,
+    method: 'PATCH',
+    data: {
+      disabled
+    }
+  })
+}
+
 // PatchFlatmate
 // updates a user account
 function UpdateFlatmate (id, names, email, phoneNumber, birthday, groups, password) {
@@ -77,4 +89,10 @@ function GetUserAccountConfirms (userId) {
   })
 }
 
-export default { PostFlatmate, PatchFlatmate, DeleteFlatmate, GetUserAccountConfirms }
+export default {
+  PostFlatmate,
+  PatchFlatmate,
+  PatchFlatmateDisabled,
+  DeleteFlatmate,
+  GetUserAccountConfirms
+}
