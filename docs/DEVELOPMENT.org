@@ -30,7 +30,7 @@ Install frontend dependencies:
 Build the frontend:
     #+name: Build the frontend
     #+begin_src shell
-    npm run build:frontend
+    npm run build
     #+end_src
 
 *** Auto build and launch with Tilt
