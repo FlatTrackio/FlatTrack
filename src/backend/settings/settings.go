@@ -98,7 +98,7 @@ func GetShoppingListNotes(db *sql.DB) (notes string, err error) {
 // SetShoppingListNotes ...
 // sets shoppingListNotes
 func SetShoppingListNotes(db *sql.DB, notes string) (err error) {
-	if len(notes) > 80 {
+	if len(notes) > 250 {
 		return fmt.Errorf("Unable to set shopping list notes as it is either invalid, too short, or too long")
 	}
 	sqlStatement := `update settings set value = $1 where name = 'shoppingListNotes';`
