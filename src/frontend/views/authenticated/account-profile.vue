@@ -16,7 +16,7 @@
             <div class="media">
               <div class="media-content">
                 <figure class="image is-128x128">
-                  <img src="@/frontend/assets/256x256.png" alt="Placeholder image">
+                  <img :src="profilePicture" alt="Placeholder image">
                 </figure>
                 <br/>
                 <p class="title is-3">{{ names }}</p>
@@ -120,6 +120,7 @@ export default {
       passwordConfirm: '',
       jsBirthday: null,
       pageLoading: true,
+      profilePicture: require('@/frontend/assets/256x256.png'),
       names: '',
       email: '',
       phoneNumber: '',
@@ -165,6 +166,9 @@ export default {
   },
   async beforeMount () {
     this.GetProfile()
+    profile.GetProfilePicture().then(resp => {
+      this.profilePicture = resp.data
+    })
   }
 }
 </script>
