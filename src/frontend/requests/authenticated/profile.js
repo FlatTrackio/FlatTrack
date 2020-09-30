@@ -39,8 +39,18 @@ function PostAuthReset () {
   })
 }
 
+// GetProfilePicture
+// get the profile picture for an account
+function GetProfilePicture () {
+  return Request({
+    url: `/api/user/profile/picture`,
+    method: 'GET'
+  })
+}
+
 export default {
   GetProfile,
   PatchProfile,
-  PostAuthReset
+  PostAuthReset,
+  GetProfilePicture
 }
