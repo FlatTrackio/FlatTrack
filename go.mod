@@ -14,6 +14,7 @@ require (
 	github.com/imdario/mergo v0.3.9
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.3.0
+	github.com/minio/minio-go/v7 v7.0.5
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
 	github.com/prometheus/client_golang v0.9.3

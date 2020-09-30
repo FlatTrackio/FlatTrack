@@ -18,6 +18,7 @@ import (
 	"github.com/ddo/go-vue-handler"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	minio "github.com/minio/minio-go/v7"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
@@ -114,15 +115,15 @@ func RequireContentType(expectedContentType string) func(http.Handler) http.Hand
 
 // Handle ...
 // manage the launching of the API's webserver
-func Handle(db *sql.DB) {
+func Handle(db *sql.DB, minioClient *minio.Client) {
 	port := common.GetAppPort()
 	router := mux.NewRouter().StrictSlash(true)
 	apiEndpointPrefix := "/api"
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
-	apiRouters.Use(RequireContentType("application/json"))
+	// apiRouters.Use(RequireContentType("application/json"))
 	apiRouters.HandleFunc("", Root)
-	for _, endpoint := range GetEndpoints(db) {
+	for _, endpoint := range GetEndpoints(db, minioClient) {
 		apiRouters.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HTTPMethod, http.MethodOptions)
 	}
 

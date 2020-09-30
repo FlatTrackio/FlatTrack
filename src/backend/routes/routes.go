@@ -12,8 +12,11 @@ import (
 	"io/ioutil"
 	"net/http"
 	"runtime"
+	"fmt"
+	"context"
 
 	"github.com/gorilla/mux"
+	minio "github.com/minio/minio-go/v7"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/groups"
 	"gitlab.com/flattrack/flattrack/src/backend/health"
@@ -403,6 +406,113 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Spec: userAccountPatched,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetProfilePicture ...
+// gets user account profile picture from file storage
+func GetProfilePicture(db *sql.DB, minioClient *minio.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := http.StatusInternalServerError
+		response := "Failed to get profile picture"
+
+		id, errID := users.GetIDFromJWT(db, r)
+		if errID != nil {
+			fmt.Println(errID)
+			response = "Failed to find user account ID in JWT"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: false,
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		objectPath := fmt.Sprintf("users/%v/profile", id)
+		object, err := minioClient.GetObject(context.TODO(), common.GetAppMinioBucket(), objectPath, minio.GetObjectOptions{})
+		if err != nil {
+			fmt.Println(err)
+			response := "Failed to find profile picture"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+		defer object.Close()
+		objectBytes, err := ioutil.ReadAll(object)
+		if err != nil {
+			fmt.Println(err)
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+		w.Header().Set("Content-Type", "image/png")
+		w.WriteHeader(200)
+		w.Write(objectBytes)
+	}
+}
+
+// UploadProfilePicture ...
+// uploads a profile picture to file storage
+func UploadProfilePicture(db *sql.DB, minioClient *minio.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := http.StatusInternalServerError
+		response := "Failed to upload profile picture"
+
+		id, errID := users.GetIDFromJWT(db, r)
+		if errID != nil {
+			fmt.Println(errID)
+			response = "Failed to find user account ID in JWT"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: false,
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		r.ParseMultipartForm(10 * 1024 * 1024)
+		file, _, err := r.FormFile("file")
+		if err != nil {
+			fmt.Println(err)
+			response = "Failed to read file in request"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: false,
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+		defer file.Close()
+
+		objectPath := fmt.Sprintf("users/%v/profile", id)
+		_, err = minioClient.PutObject(context.TODO(), common.GetAppMinioBucket(), objectPath, file, -1, minio.PutObjectOptions{ContentType: "image/png"})
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			response = "Successfully uploaded profile picture"
+			code = http.StatusOK
+		}
+
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}

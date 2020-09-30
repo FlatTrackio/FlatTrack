@@ -10,12 +10,13 @@ import (
 	"net/http"
 
 	"database/sql"
+	minio "github.com/minio/minio-go/v7"
 	"gitlab.com/flattrack/flattrack/src/backend/types"
 )
 
 // GetEndpoints ...
 // group all API endpoints
-func GetEndpoints(db *sql.DB) types.Endpoints {
+func GetEndpoints(db *sql.DB, minioClient *minio.Client) types.Endpoints {
 	return types.Endpoints{
 		{
 			EndpointPath: "/system/initialized",
@@ -136,6 +137,16 @@ func GetEndpoints(db *sql.DB) types.Endpoints {
 			EndpointPath: "/user/profile",
 			HandlerFunc:  HTTPuseMiddleware(PatchProfile(db), HTTPvalidateJWT(db)),
 			HTTPMethod:   http.MethodPatch,
+		},
+		{
+			EndpointPath: "/user/profile/picture",
+			HandlerFunc:  HTTPuseMiddleware(GetProfilePicture(db, minioClient), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: "/user/profile/picture",
+			HandlerFunc:  HTTPuseMiddleware(UploadProfilePicture(db, minioClient), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodPut,
 		},
 		{
 			EndpointPath: "/users",

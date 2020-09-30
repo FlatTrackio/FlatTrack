@@ -1,0 +1,68 @@
+#+TITLE: Minio for development
+
+* Preparations
+
+#+begin_src shell
+  helm repo add minio https://helm.min.io/
+#+end_src
+
+#+RESULTS:
+#+begin_example
+"minio" has been added to your repositories
+#+end_example
+
+* Install
+
+#+begin_src shell
+  helm install minio \
+    -n flattrack-dev \
+    --set accessKey=flattrack  \
+    --set secretKey=flattrack \
+    --set defaultBucket.enabled=true \
+    --set defaultBucket.name=flattrack \
+    --set resources.requests.memory=1Gi \
+    minio/minio
+#+end_src
+
+#+RESULTS:
+#+begin_example
+NAME: minio
+LAST DEPLOYED: Thu Sep 24 20:53:08 2020
+NAMESPACE: flattrack-dev
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Minio can be accessed via port 9000 on the following DNS name from within your cluster:
+minio.flattrack-dev.svc.cluster.local
+
+To access Minio from localhost, run the below commands:
+
+  1. export POD_NAME=$(kubectl get pods --namespace flattrack-dev -l "release=minio" -o jsonpath="{.items[0].metadata.name}")
+
+  2. kubectl port-forward $POD_NAME 9000 --namespace flattrack-dev
+
+Read more about port forwarding here: http://kubernetes.io/docs/user-guide/kubectl/kubectl_port-forward/
+
+You can now access Minio server on http://localhost:9000. Follow the below steps to connect to Minio server with mc client:
+
+  1. Download the Minio mc client - https://docs.minio.io/docs/minio-client-quickstart-guide
+
+  2. Get the ACCESS_KEY=$(kubectl get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode) and the SECRET_KEY=$(kubectl get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
+
+	3. mc alias set minio-local http://<External-IP>:9000 "$ACCESS_KEY" "$SECRET_KEY" --api s3v4
+
+  4. mc ls minio-local
+
+Alternately, you can use your browser or the Minio SDK to access the server - https://docs.minio.io/categories/17
+#+end_example
+
+* Uninstall
+
+#+begin_src shell
+  helm uninstall minio -n flattrack-dev
+#+end_src
+
+#+RESULTS:
+#+begin_example
+#+end_example

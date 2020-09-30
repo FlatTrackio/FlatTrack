@@ -22,13 +22,17 @@
 package main
 
 import (
+	"context"
 	"github.com/joho/godotenv"
+	minio "github.com/minio/minio-go/v7"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/database"
+	"gitlab.com/flattrack/flattrack/src/backend/files"
 	"gitlab.com/flattrack/flattrack/src/backend/metrics"
 	"gitlab.com/flattrack/flattrack/src/backend/migrations"
 	"gitlab.com/flattrack/flattrack/src/backend/routes"
 	"log"
+	"strconv"
 )
 
 // main
@@ -54,7 +58,28 @@ func main() {
 		return
 	}
 
+	var minioClient *minio.Client = nil
+	minioEnabled := common.GetAppMinioEnabled()
+	minioHost := common.GetAppMinioHost()
+	minioAccessKey := common.GetAppMinioAccessKey()
+	minioSecretKey := common.GetAppMinioSecretKey()
+	minioUseSSL := common.GetAppMinioUseSSL()
+	minioUseSSLBool, err := strconv.ParseBool(minioUseSSL)
+	if err != nil {
+		log.Println(err)
+	}
+	if minioEnabled == "true" {
+		minioClient, err = files.Open(minioHost, minioAccessKey, minioSecretKey, minioUseSSLBool)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println(minioClient)
+		buckets, _ := minioClient.ListBuckets(context.TODO())
+		log.Println(buckets)
+	}
+
 	go metrics.Handle()
 	go routes.HealthHandler(db)
-	routes.Handle(db)
+	routes.Handle(db, minioClient)
 }
