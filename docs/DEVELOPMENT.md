@@ -53,7 +53,7 @@ npm i
 Build the frontend:
 
 ```shell
-npm run build:frontend
+npm run build
 ```
 
 ### Auto build and launch with Tilt<a id="sec-1-0-6"></a>

@@ -109,7 +109,7 @@
 import { LoadingProgrammatic as Loading } from 'buefy'
 import common from '@/frontend/common/common'
 import confirm from '@/frontend/requests/public/useraccountconfirm'
-import moment from 'moment'
+import dayjs from 'dayjs'
 
 export default {
   name: 'Account confirmation',
@@ -142,7 +142,7 @@ export default {
         common.DisplayFailureToast('Passwords do not match')
         return
       }
-      var birthday = Number(moment(this.jsBirthday).format('X')) || 0
+      var birthday = Number(dayjs(this.jsBirthday).unix()) || 0
 
       const loadingComponent = Loading.open({
         container: null

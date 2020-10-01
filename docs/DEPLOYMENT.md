@@ -315,7 +315,7 @@ cd $_
 
 ```sh
 npm i
-npm run build:frontend
+npm run build
 ```
 
 ### Build the backend<a id="sec-3-0-10"></a>

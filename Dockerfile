@@ -10,7 +10,7 @@ COPY src /app/src
 COPY public /app/public
 COPY *.js *.json /app/
 RUN npm i
-RUN npm run build:frontend
+RUN npm run build
 
 FROM golang:1.14.6-alpine3.11 AS api
 WORKDIR /app

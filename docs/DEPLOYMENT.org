@@ -279,7 +279,7 @@ Reload nginx
 *** Build the frontend
     #+begin_src sh
       npm i
-      npm run build:frontend
+      npm run build
     #+end_src
 
 *** Build the backend
