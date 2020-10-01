@@ -4,7 +4,10 @@
 */
 
 import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog, LoadingProgrammatic as Loading } from 'buefy'
-import moment from 'moment'
+import dayjs from 'dayjs'
+import dayjsCalendar from 'dayjs/plugin/calendar'
+
+dayjs.extend(dayjsCalendar)
 
 // GetAuthToken
 // returns the JWT from localStorage
@@ -66,7 +69,7 @@ function SignoutDialog () {
 // TimestampToCalendar
 // converts a unix timestamp to a human readable string
 function TimestampToCalendar (timestamp) {
-  return moment.unix(timestamp).calendar().toLowerCase()
+  return dayjs(timestamp * 1000).calendar(null, {}).toLowerCase()
 }
 
 // DeviceIsMobile
