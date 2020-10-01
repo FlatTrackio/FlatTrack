@@ -182,7 +182,7 @@ export default {
         hasIcon: true,
         inputAttrs: {
           placeholder: 'e.g. Our budget is $200/w. Please make sure to bring the supermarket card.',
-          maxlength: 80,
+          maxlength: 250,
           required: false,
           value: this.notes || undefined
         },
