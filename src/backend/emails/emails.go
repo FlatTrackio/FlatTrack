@@ -7,12 +7,16 @@ import (
 	"log"
 )
 
-type SmtpTemplateData struct {
+// SMTPTemplateData ...
+// basic email template
+type SMTPTemplateData struct {
 	Subject string
 }
 
+// SendTestEmail ...
+// sends a test email from a template
 func SendTestEmail(recipient string) (err error) {
-	context := &SmtpTemplateData{
+	context := &SMTPTemplateData{
 		Subject: "FlatTrack SMTP test",
 	}
 	emailReportTemplate, err := template.ParseFiles("templates/test.html")

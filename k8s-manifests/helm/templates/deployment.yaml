@@ -42,7 +42,6 @@ spec:
         prometheus.io/scrape: "true"
     {{- end }}
     spec:
-      automountServiceAccountToken: false
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}

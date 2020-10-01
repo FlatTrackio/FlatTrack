@@ -7,6 +7,8 @@ import (
 	"net/smtp"
 )
 
+// EmailUser ...
+// fields for authenticating to an SMTP server
 type EmailUser struct {
 	Username string
 	Password string
@@ -14,6 +16,8 @@ type EmailUser struct {
 	Port     string
 }
 
+// SendEmail ...
+// send a HTML email to a subject
 func SendEmail(content string, subject string, recipient string) error {
 	smtpConfiguration := &EmailUser{
 		Username: common.GetSMTPUsername(),
