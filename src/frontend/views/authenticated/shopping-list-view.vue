@@ -605,7 +605,7 @@ export default {
     },
     completed () {
       var enableAnimations = common.GetEnableAnimations()
-      if (this.completed === true && enableAnimations === 'true') {
+      if (this.completed === true && enableAnimations === 'true' && this.hasInitialLoaded === true) {
         common.Hooray()
       }
     }
