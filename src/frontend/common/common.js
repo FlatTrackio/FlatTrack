@@ -6,6 +6,7 @@
 import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog, LoadingProgrammatic as Loading } from 'buefy'
 import dayjs from 'dayjs'
 import dayjsCalendar from 'dayjs/plugin/calendar'
+import confetti from 'canvas-confetti'
 
 dayjs.extend(dayjsCalendar)
 
@@ -90,6 +91,33 @@ function WriteFlatnameToCache (name) {
   localStorage.setItem('flatname', name)
 }
 
+// GetEnableAnimations
+// returns if animations is enabled
+function GetEnableAnimations () {
+  var enabled = localStorage.getItem('enableAnimations')
+  if (typeof enabled === 'undefined') {
+    WriteEnableAnimations(true)
+  }
+  return enabled
+}
+
+// WriteEnableAnimations
+// sets animations to enabled or disabled
+function WriteEnableAnimations (enable) {
+  return localStorage.setItem('enableAnimations', enable)
+}
+
+// Hooray
+// launch the confetti
+function Hooray () {
+  confetti({
+    particleCount: 100,
+    spread: 70,
+    origin: { y: 1 },
+    zIndex: 19
+  })
+}
+
 export default {
   GetAuthToken,
   DeleteAuthToken,
@@ -99,5 +127,8 @@ export default {
   TimestampToCalendar,
   DeviceIsMobile,
   GetFlatnameFromCache,
-  WriteFlatnameToCache
+  WriteFlatnameToCache,
+  GetEnableAnimations,
+  WriteEnableAnimations,
+  Hooray
 }

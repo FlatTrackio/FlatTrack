@@ -61,6 +61,14 @@ export default [
     }
   },
   {
+    path: '/account/settings',
+    name: 'Account Settings',
+    component: () => import('@/frontend/views/authenticated/settings.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
     path: '/apps',
     name: 'Apps',
     component: () => import('@/frontend/views/authenticated/apps.vue'),

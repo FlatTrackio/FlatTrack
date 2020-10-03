@@ -602,6 +602,12 @@ export default {
     },
     itemSearch () {
       shoppinglistCommon.WriteShoppingListSearch(this.id, this.itemSearch)
+    },
+    completed () {
+      var enableAnimations = common.GetEnableAnimations()
+      if (this.completed === true && enableAnimations === 'true') {
+        common.Hooray()
+      }
     }
   },
   async beforeMount () {

@@ -66,6 +66,12 @@ export default {
           description: 'Manage your account security',
           icon: 'lock-question',
           ref: '/account/security'
+        },
+        {
+          name: 'Settings',
+          description: 'Manage settings for this device',
+          icon: 'account-cog',
+          ref: '/account/settings'
         }
       ]
     }
