@@ -409,9 +409,6 @@ export default {
       var vm = this
       return item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
     },
-    goToRef (ref) {
-      this.$router.push({ path: ref })
-    },
     FocusSearchBox () {
       this.$refs.search.$el.focus()
     },

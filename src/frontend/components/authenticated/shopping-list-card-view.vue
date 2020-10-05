@@ -5,14 +5,14 @@
       <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
         <div class="card-content">
           <div class="media">
-            <div class="media-left" @click="goToRef('/apps/shopping-list/list/' + list.id)">
+            <div class="media-left" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
               <b-icon
                 icon="cart-outline"
                 :type="list.completed === true ? 'is-success' : ''"
                 size="is-medium">
               </b-icon>
             </div>
-            <div class="media-content" @click="goToRef('/apps/shopping-list/list/' + list.id)">
+            <div class="media-content" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
               <div class="display-items-on-the-same-line">
                 <p class="title is-4">{{ list.name }}</p>
               </div>

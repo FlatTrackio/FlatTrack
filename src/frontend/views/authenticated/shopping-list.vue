@@ -23,7 +23,7 @@
         </div>
         <b-button
           class="has-text-left"
-          @click="goToRef('/apps/shopping-list/tags')"
+          @click="$router.push({ name: 'Manage shopping tags' })"
           type="is-info"
           icon-left="tag-multiple"
           expanded>
