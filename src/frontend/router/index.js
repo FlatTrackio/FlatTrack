@@ -3,6 +3,7 @@ import VueRouter from 'vue-router'
 import routes from './routes'
 import routerCommon from './common'
 import common from '@/frontend/common/common'
+import path from 'path'
 
 Vue.use(VueRouter)
 
@@ -10,7 +11,7 @@ const subpath = common.GetSiteSubPath()
 
 const router = new VueRouter({
   mode: 'history',
-  base: process.env.BASE_URL + subpath,
+  base: path.join(process.env.BASE_URL, subpath),
   routes,
   scrollBehavior (to, from, savedPosition) {
     if (savedPosition) {
