@@ -1,7 +1,6 @@
 <template>
   <div>
     <section>
-      <div class="card pointer-cursor-on-hover">
       <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
         <div class="card-content">
           <div class="media">
