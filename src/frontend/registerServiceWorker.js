@@ -1,8 +1,11 @@
 import { register } from 'register-service-worker'
 import { SnackbarProgrammatic as Snackbar, ToastProgrammatic as Toast } from 'buefy'
+import path from 'path'
+import common from '@/frontend/common/common'
+const subpath = common.GetSiteSubPath()
 
 if (process.env.NODE_ENV === 'production') {
-  register(`${process.env.BASE_URL}service-worker.js`, {
+  register(path.join(subpath, '/service-worker.js'), {
     ready () {
     },
     registered () {
