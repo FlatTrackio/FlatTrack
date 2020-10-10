@@ -1,7 +1,7 @@
 <template>
   <div :class="deviceIsMobile ? 'floating-add-button-mobile' : ''" class="floating-add-button">
     <md-speed-dial md-direction="bottom md-bottom-right">
-      <md-speed-dial-target @click="goToRefOrRunFunc(path, func)" class="floating-add-button-colour">
+      <md-speed-dial-target @click="goToRouterLinkOrRunFunc" class="floating-add-button-colour">
         <md-icon>add</md-icon>
       </md-speed-dial-target>
     </md-speed-dial>
@@ -19,19 +19,18 @@ export default {
     }
   },
   props: {
-    path: String,
+    routerLink: Object,
     func: Function
   },
   methods: {
-    goToRef (ref) {
-      this.$router.push({ path: ref })
-    },
-    goToRefOrRunFunc (ref, func) {
-      if (ref !== '' && typeof ref !== 'undefined') {
-        this.goToRef(ref)
-        return
-      }
-      if (typeof func === 'function') {
+    goToRouterLinkOrRunFunc () {
+      // TODO remove print
+      var routerLink = this.routerLink
+      var func = this.func
+      console.log({ routerLink, func })
+      if (routerLink !== '' && typeof routerLink !== 'undefined') {
+        this.$router.push(routerLink)
+      } else if (typeof func === 'function') {
         func()
       }
     }

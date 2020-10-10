@@ -100,7 +100,7 @@
             </div>
           </div>
         </div>
-        <floatingAddButton path="/admin/accounts/new"/>
+        <floatingAddButton :routerLink="{ name: 'Admin new account' }" />
       </section>
     </div>
   </div>

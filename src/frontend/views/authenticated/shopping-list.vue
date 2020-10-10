@@ -85,7 +85,7 @@
             </div>
           </section>
         </div>
-        <floatingAddButton path="/apps/shopping-list/new" v-if="displayFloatingAddButton"/>
+        <floatingAddButton :routerLink="{ name: 'New shopping list' }" v-if="displayFloatingAddButton"/>
         <br/>
         <div v-if="listsFiltered.length > 0">
           <shoppingListCardView :list="list" :authors="authors" :lists="lists" :index="index" v-for="(list, index) in listsFiltered" v-bind:key="list" :deviceIsMobile="deviceIsMobile" />

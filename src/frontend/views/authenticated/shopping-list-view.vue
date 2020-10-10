@@ -252,7 +252,7 @@
           </div>
           <br/>
         </div>
-        <floatingAddButton :path="'/apps/shopping-list/list/' + id + '/new'"/>
+        <floatingAddButton :routerLink="{ name: 'New shopping list item', params: { id: id } }"/>
         <p class="subtitle is-4">
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br/>
