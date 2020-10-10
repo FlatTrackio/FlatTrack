@@ -121,8 +121,8 @@ func FrontendHandler(publicDir string, subPath string) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		req.URL.Path = strings.Replace(req.URL.Path, subPath, "", 1)
-		if req.URL.Path[:1] != "/" {
-			req.URL.Path = "/" + req.URL.Path
+		if len(req.URL.Path) > 0 && req.URL.Path[len(req.URL.Path)-1:] != "/" {
+			req.URL.Path = path.Join("/", req.URL.Path)
 		}
 
 		// TODO redirect to subPath + /unknown-page if _path does not include subPath at the front

@@ -171,7 +171,11 @@ func GetAppAPIRoot() (output string) {
 // GetAppSiteSubPath ...
 // location of the subpath where the instance should be hosted
 func GetAppSiteSubPath() (output string) {
-	return GetEnvOrDefault("APP_SITE_SUB_PATH", "/")
+	bareEnv := GetEnvOrDefault("APP_SITE_SUB_PATH", "/")
+	if bareEnv[len(bareEnv)-1:] != "/" {
+		bareEnv += "/"
+	}
+	return bareEnv
 }
 
 // GetAppBuildVersion ...
