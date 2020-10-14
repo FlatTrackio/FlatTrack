@@ -191,7 +191,7 @@ type ShoppingTag struct {
 // ShoppingTagOptions ...
 // options for list items
 type ShoppingTagOptions struct {
-	SortBy   string               `json:"sortBy"`
+	SortBy string `json:"sortBy"`
 }
 
 // ShoppingTagSortTypes ...
@@ -247,10 +247,11 @@ type Registration struct {
 // SystemVersion ...
 // values for the release of FlatTrack
 type SystemVersion struct {
-	Version    string `json:"version"`
-	CommitHash string `json:"commitHash"`
-	Mode       string `json:"mode"`
-	Date       string `json:"date"`
+	Version       string `json:"version"`
+	CommitHash    string `json:"commitHash"`
+	Mode          string `json:"mode"`
+	Date          string `json:"date"`
+	GolangVersion string `json:"golangVersion"`
 }
 
 // JSONResponseMetadata ...
