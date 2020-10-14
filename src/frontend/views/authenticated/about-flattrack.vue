@@ -22,16 +22,24 @@
         <b-message type="is-warning" has-icon icon="information-outline">
           <p class="is-size-5">
             <b>Version</b>: {{ version || 'Unknown' }}
+            <span v-if="version !== versionFrontend">(frontend {{ versionFrontend }})</span>
             <br/>
             <b>Commit hash</b>:
             <a v-if="commitHash !== '???' && typeof commitHash !== 'undefined'" :href="'https://gitlab.com/flattrack/flattrack/-/commit/' + commitHash" target="_blank" rel="noreferrer">{{ commitHash }}</a>
             <span v-else>
               Unknown
             </span>
+            <a v-if="commitHash !== commitHashFrontend" :href="'https://gitlab.com/flattrack/flattrack/-/commit/' + commitHashFrontend" target="_blank" rel="noreferrer">{{ commitHashFrontend }}</a>
             <br/>
             <b>Mode</b>: {{ mode || 'Unknown' }}
+            <span v-if="mode !== modeFrontend">(frontend {{ modeFrontend }})</span>
             <br/>
             <b>Date</b>: {{ date || 'Unknown' }}
+            <span v-if="date !== dateFrontend">(frontend {{ dateFrontend }})</span>
+            <br/>
+            <b>Golang version</b>: {{ golangVersion || 'Unknown' }}
+            <br/>
+            <b>Vue.js Version</b>: {{ vuejsVersion || 'Unknown' }}
           </p>
         </b-message>
       </section>
@@ -42,6 +50,8 @@
 <script>
 import system from '@/frontend/requests/authenticated/system'
 import common from '@/frontend/common/common'
+import constants from '@/frontend/constants/constants'
+import vue from 'vue'
 
 export default {
   name: 'flat',
@@ -51,7 +61,13 @@ export default {
       version: '',
       commitHash: '',
       mode: '',
-      date: ''
+      date: '',
+      golangVersion: '',
+      vuejsVersion: vue.version,
+      versionFrontend: constants.appBuildVersion,
+      commitHashFrontend: constants.appBuildHash,
+      modeFrontend: constants.appBuildMode,
+      dateFrontend: constants.appBuildDate
     }
   },
   methods: {
@@ -62,6 +78,7 @@ export default {
         this.commitHash = resp.data.data.commitHash
         this.mode = resp.data.data.mode
         this.date = resp.data.data.date
+        this.golangVersion = resp.data.data.golangVersion
       })
     }
   },

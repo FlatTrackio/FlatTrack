@@ -10,6 +10,10 @@ COPY src /app/src
 COPY public /app/public
 COPY *.js *.json /app/
 RUN npm i
+ENV VUE_APP_AppBuildVersion=$AppBuildVersion \
+  VUE_APP_AppBuildHash=$AppBuildHash \
+  VUE_APP_AppBuildDate=$AppBuildDate \
+  VUE_APP_AppBuildMode=$AppBuildMode
 RUN npm run build
 
 FROM golang:1.14.6-alpine3.11 AS api

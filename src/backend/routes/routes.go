@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"runtime"
 
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
@@ -1779,16 +1780,18 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 	commitHash := common.GetAppBuildHash()
 	mode := common.GetAppBuildMode()
 	date := common.GetAppBuildDate()
+	golangVersion := runtime.Version()
 
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "Fetched version information",
 		},
 		Data: types.SystemVersion{
-			Version:    version,
-			CommitHash: commitHash,
-			Mode:       mode,
-			Date:       date,
+			Version:       version,
+			CommitHash:    commitHash,
+			Mode:          mode,
+			Date:          date,
+			GolangVersion: golangVersion,
 		},
 	}
 	JSONResponse(r, w, http.StatusOK, JSONresp)
