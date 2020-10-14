@@ -182,6 +182,18 @@ html {
     border-radius: 5px;
 }
 
+*::-webkit-scrollbar {
+    width: 12px;
+}
+*::-webkit-scrollbar-track {
+    background: white;
+}
+*::-webkit-scrollbar-thumb {
+    background-color: #c3c3c3;
+    border-radius: 20px;
+    border: 3px solid white;
+}
+
 @media (max-width : 870px) {
     .form-width {
         width: calc(100% - 25px);
