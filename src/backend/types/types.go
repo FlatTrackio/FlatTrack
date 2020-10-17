@@ -137,6 +137,7 @@ type ShoppingItemSpec struct {
 	Tag                   string  `json:"tag,omitempty"`
 	Author                string  `json:"author"`
 	AuthorLast            string  `json:"authorLast"`
+	TemplateID            string  `json:"templateId,omitempty"`
 	CreationTimestamp     int     `json:"creationTimestamp"`
 	ModificationTimestamp int     `json:"modificationTimestamp"`
 	DeletionTimestamp     int     `json:"deletionTimestamp"`

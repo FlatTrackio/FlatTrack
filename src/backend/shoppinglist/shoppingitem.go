@@ -31,6 +31,12 @@ func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bo
 	if item.Quantity < 1 {
 		return valid, fmt.Errorf("Item quantity must be at least one")
 	}
+	if item.TemplateID != "" {
+		list, err := GetShoppingList(db, item.TemplateID)
+		if err != nil || list.ID == "" {
+			return valid, fmt.Errorf("Unable to find list to use as template from provided id")
+		}
+	}
 	return true, err
 }
 
@@ -111,10 +117,10 @@ func AddItemToList(db *sql.DB, listID string, item types.ShoppingItemSpec) (item
 
 	item.AuthorLast = item.Author
 
-	sqlStatement := `insert into shopping_item (listId, name, price, quantity, notes, author, authorLast, tag, obtained)
-                         values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+	sqlStatement := `insert into shopping_item (listId, name, price, quantity, notes, author, authorLast, tag, obtained, templateId)
+                         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
                          returning *`
-	rows, err := db.Query(sqlStatement, listID, item.Name, item.Price, item.Quantity, item.Notes, item.Author, item.AuthorLast, item.Tag, item.Obtained)
+	rows, err := db.Query(sqlStatement, listID, item.Name, item.Price, item.Quantity, item.Notes, item.Author, item.AuthorLast, item.Tag, item.Obtained, &item.TemplateID)
 	if err != nil {
 		return itemInserted, err
 	}
@@ -219,7 +225,7 @@ func SetItemObtained(db *sql.DB, listID string, itemID string, obtained bool, au
 // GetItemObjectFromRows ...
 // returns an item object from rows
 func GetItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, err error) {
-	rows.Scan(&item.ID, &item.ListID, &item.Name, &item.Price, &item.Quantity, &item.Notes, &item.Obtained, &item.Tag, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp)
+	rows.Scan(&item.ID, &item.ListID, &item.Name, &item.Price, &item.Quantity, &item.Notes, &item.Obtained, &item.Tag, &item.Author, &item.AuthorLast, &item.CreationTimestamp, &item.ModificationTimestamp, &item.DeletionTimestamp, &item.TemplateID)
 	err = rows.Err()
 	return item, err
 }

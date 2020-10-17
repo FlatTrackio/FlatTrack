@@ -2843,6 +2843,99 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
 	})
 
+	ginkgo.It("should retain template origin shopping list id in items and list", func() {
+		shoppingList := types.ShoppingListSpec{
+			Name: "My list",
+		}
+		shoppingListBytes, err := json.Marshal(shoppingList)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+		ginkgo.By("creating a shopping list")
+		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
+		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
+		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListBytes, err = json.Marshal(shoppingListResponse)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		var shoppingListCreated types.ShoppingListSpec
+		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+
+		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
+		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
+
+		ginkgo.By("creating an item on the origin list")
+		newShoppingListItem := types.ShoppingItemSpec{
+			Name: "Lettuce",
+			Price: 3,
+			Quantity: 2,
+			Notes: "Not plastic bagged ones",
+			Tag: "Fruits and veges",
+		}
+
+		shoppingListItemBytes, err := json.Marshal(newShoppingListItem)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListItemBytes, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListItemsBytes, err := json.Marshal(shoppingItemResponse)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		var shoppingItem types.ShoppingItemSpec
+		json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+		gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
+
+		shoppingListFromTemplate := types.ShoppingListSpec{
+			Name: "My list (from template)",
+			Notes: "This is a templated list",
+			TemplateID: shoppingListCreated.ID,
+		}
+		shoppingListBytes, err = json.Marshal(shoppingListFromTemplate)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+		ginkgo.By("creating a templated shopping list")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
+		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
+		templatedShoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		templatedShoppingListBytes, err := json.Marshal(templatedShoppingListResponse)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		var shoppingListTemplatedCreated types.ShoppingListSpec
+		json.Unmarshal(templatedShoppingListBytes, &shoppingListTemplatedCreated)
+
+		gomega.Expect(shoppingListTemplatedCreated.TemplateID).To(gomega.Equal(shoppingListCreated.ID), "templated list must have templateID field matching origin ID")
+
+		ginkgo.By("listing items of the templated shopping list")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListTemplatedCreated.ID + "/items"
+		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
+		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		shoppingListItems := []types.ShoppingItemSpec{}
+		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+
+		for _, item := range shoppingListItems {
+			gomega.Expect(item.TemplateID).To(gomega.Equal(shoppingListCreated.ID), "templated list item must have templateID field matching origin ID")
+		}
+
+		ginkgo.By("deleting the shopping list")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
+
+		ginkgo.By("deleting the template shopping list")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListTemplatedCreated.ID
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
+	})
+
 	ginkgo.It("should require authorization for protected routes", func() {
 		apiEndpoint := apiServer + "/" + apiServerAPIprefix + "/user/profile"
 		req, err := http.NewRequest("GET", apiEndpoint, nil)
