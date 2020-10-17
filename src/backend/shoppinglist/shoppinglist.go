@@ -125,10 +125,10 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, options
 	shoppingList.AuthorLast = shoppingList.Author
 	shoppingList.Completed = false
 
-	sqlStatement := `insert into shopping_list (name, notes, author, authorLast, completed)
-                         values ($1, $2, $3, $4, $5)
+	sqlStatement := `insert into shopping_list (name, notes, author, authorLast, completed, templateId)
+                         values ($1, $2, $3, $4, $5, $6)
                          returning *`
-	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.Author, shoppingList.AuthorLast, shoppingList.Completed)
+	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.Author, shoppingList.AuthorLast, shoppingList.Completed, shoppingList.TemplateID)
 	if err != nil {
 		return shoppingListInserted, err
 	}
@@ -157,6 +157,7 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, options
 			Tag:        item.Tag,
 			Author:     shoppingList.Author,
 			AuthorLast: shoppingList.Author,
+			TemplateID: shoppingList.TemplateID,
 		}
 		newItem, err := AddItemToList(db, shoppingListInserted.ID, newItem)
 		if err != nil || newItem.ID == "" {
@@ -243,7 +244,7 @@ func SetListCompleted(db *sql.DB, listID string, completed bool, userID string) 
 // GetListObjectFromRows ...
 // returns a shopping list object from rows
 func GetListObjectFromRows(rows *sql.Rows) (list types.ShoppingListSpec, err error) {
-	rows.Scan(&list.ID, &list.Name, &list.Notes, &list.Author, &list.AuthorLast, &list.Completed, &list.CreationTimestamp, &list.ModificationTimestamp, &list.DeletionTimestamp)
+	rows.Scan(&list.ID, &list.Name, &list.Notes, &list.Author, &list.AuthorLast, &list.Completed, &list.CreationTimestamp, &list.ModificationTimestamp, &list.DeletionTimestamp, &list.TemplateID)
 	err = rows.Err()
 	return list, err
 }
