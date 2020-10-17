@@ -130,10 +130,13 @@
             </p>
           </b-field>
           <p>
-            Added {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author"> {{ authorNames }} </router-link>
+            Added {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author">{{ authorNames }}</router-link>
+            <span v-if="templateId">
+              (templated from <router-link tag="a" :to="{ name: 'View shopping list', params: { id: templateId } }">{{ templateListName }}</router-link>)
+            </span>
           </p>
           <p v-if="creationTimestamp !== modificationTimestamp">
-            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast"> {{ authorLastNames }} </router-link>
+            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast">{{ authorLastNames }}</router-link>
           </p>
         </div>
       </section>
@@ -164,6 +167,7 @@ export default {
       itemIsLoading: true,
       submitLoading: false,
       deleteLoading: false,
+      templateListName: '',
       id: this.$route.params.itemId,
       name: '',
       notes: '',
@@ -173,6 +177,7 @@ export default {
       obtained: false,
       author: '',
       authorLast: '',
+      templateId: undefined,
       creationTimestamp: 0,
       modificationTimestamp: 0
     }
@@ -244,6 +249,7 @@ export default {
       this.authorLast = item.authorLast
       this.creationTimestamp = item.creationTimestamp
       this.modificationTimestamp = item.modificationTimestamp
+      this.templateId = item.templateId
       return flatmates.GetFlatmate(item.author)
     }).then(resp => {
       this.authorNames = resp.data.spec.names
@@ -257,6 +263,15 @@ export default {
       return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
     }).then(resp => {
       this.tagsList = resp.data.list || []
+      if (typeof this.templateId === 'undefined' || this.templateId === '') {
+        return
+      }
+      return shoppinglist.GetShoppingList(this.templateId)
+    }).then(resp => {
+      if (typeof this.templateId === 'undefined' || this.templateId === '') {
+        return
+      }
+      this.templateListName = resp.data.spec.name
     }).catch(err => {
       if (err.response.status === 404) {
         common.DisplayFailureToast('Error item not found' + '<br/>' + err.response.data.metadata.response)

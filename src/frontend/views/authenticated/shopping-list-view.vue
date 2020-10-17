@@ -282,15 +282,18 @@
           <span v-if="hasInitialLoaded || typeof authorName !== 'undefined'">{{ TimestampToCalendar(creationTimestamp) }}, by</span>
           <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
           <router-link v-if="hasInitialLoaded || typeof authorName !== 'undefined'" tag="a" :to="{ name: 'My Flatmates', query: { 'id': author }}"> {{ authorNames }} </router-link>
+          <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
+          <span v-if="templateId">
+            (templated from <router-link tag="a" :to="{ name: 'View shopping list', params: { id: templateId } }">{{ templateListName }}</router-link>)
+          </span>
+          <span v-if="creationTimestamp !== modificationTimestamp">
+            <br/>
+            Last updated
+            <span v-if="hasInitialLoaded || typeof authorName !== 'undefined'">{{ TimestampToCalendar(modificationTimestamp) }}, by</span>
             <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
-            <span v-if="creationTimestamp !== modificationTimestamp">
-              <br/>
-              Last updated
-              <span v-if="hasInitialLoaded || typeof authorName !== 'undefined'">{{ TimestampToCalendar(modificationTimestamp) }}, by</span>
-              <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
-              <router-link v-if="hasInitialLoaded || typeof authorName !== 'undefined'" tag="a" :to="{ name: 'My Flatmates', query: { 'id': author }}"> {{ authorLastNames }} </router-link>
+            <router-link v-if="hasInitialLoaded || typeof authorName !== 'undefined'" tag="a" :to="{ name: 'My Flatmates', query: { 'id': author }}"> {{ authorLastNames }} </router-link>
             <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
-            </span>
+          </span>
         </p>
         <br/>
       </section>
@@ -328,6 +331,7 @@ export default {
       hasInitialLoaded: false,
       deleteLoading: false,
       ratherSmallerScreen: false,
+      templateListName: '',
       id: this.$route.params.id,
       name: 'Unnamed list',
       notes: '',
@@ -336,6 +340,7 @@ export default {
       completed: false,
       creationTimestamp: 0,
       modificationTimestamp: 0,
+      templateId: undefined,
       list: shoppinglistCommon.GetShoppingListFromCache(this.id) || []
     }
   },
@@ -426,12 +431,22 @@ export default {
         this.completed = resp.data.spec.completed
         this.creationTimestamp = resp.data.spec.creationTimestamp
         this.modificationTimestamp = resp.data.spec.modificationTimestamp
+        this.templateId = resp.data.spec.templateId
         return flatmates.GetFlatmate(this.author)
       }).then(resp => {
         this.authorNames = resp.data.spec.names
         return flatmates.GetFlatmate(this.authorLast)
       }).then(resp => {
         this.authorLastNames = resp.data.spec.names
+        if (typeof this.templateId === 'undefined' || this.templateId === '') {
+          return
+        }
+        return shoppinglist.GetShoppingList(this.templateId)
+      }).then(resp => {
+        if (typeof this.templateId === 'undefined' || this.templateId === '') {
+          return
+        }
+        this.templateListName = resp.data.spec.name
       }).catch(err => {
         if (err.response.status === 404) {
           common.DisplayFailureToast('Error list not found' + '<br/>' + err.response.data.metadata.response)
