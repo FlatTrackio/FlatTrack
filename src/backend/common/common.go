@@ -156,12 +156,6 @@ func GetAppRealIPHeader() (output string) {
 	return GetEnvOrDefault("APP_HTTP_REAL_IP_HEADER", "")
 }
 
-// GetAppMinioEnabled ...
-// return if MINIO is enabled
-func GetAppMinioEnabled() (output string) {
-	return GetEnvOrDefault("APP_MINIO_ENABLED", "false")
-}
-
 // GetAppMinioAccessKey ...
 // return the accessKey for file storage
 func GetAppMinioAccessKey() (output string) {

@@ -22,9 +22,7 @@
 package main
 
 import (
-	"context"
 	"github.com/joho/godotenv"
-	minio "github.com/minio/minio-go/v7"
 	"gitlab.com/flattrack/flattrack/src/backend/common"
 	"gitlab.com/flattrack/flattrack/src/backend/database"
 	"gitlab.com/flattrack/flattrack/src/backend/files"
@@ -58,8 +56,6 @@ func main() {
 		return
 	}
 
-	var minioClient *minio.Client = nil
-	minioEnabled := common.GetAppMinioEnabled()
 	minioHost := common.GetAppMinioHost()
 	minioAccessKey := common.GetAppMinioAccessKey()
 	minioSecretKey := common.GetAppMinioSecretKey()
@@ -68,15 +64,10 @@ func main() {
 	if err != nil {
 		log.Println(err)
 	}
-	if minioEnabled == "true" {
-		minioClient, err = files.Open(minioHost, minioAccessKey, minioSecretKey, minioUseSSLBool)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		log.Println(minioClient)
-		buckets, _ := minioClient.ListBuckets(context.TODO())
-		log.Println(buckets)
+	minioClient, err := files.Open(minioHost, minioAccessKey, minioSecretKey, minioUseSSLBool)
+	if err != nil {
+		log.Println(err)
+		return
 	}
 
 	go metrics.Handle()
