@@ -96,7 +96,8 @@ function WriteFlatnameToCache (name) {
 function GetEnableAnimations () {
   var enabled = localStorage.getItem('enableAnimations')
   if (typeof enabled === 'undefined') {
-    WriteEnableAnimations(true)
+    WriteEnableAnimations('false')
+    enabled = 'false'
   }
   return enabled
 }
