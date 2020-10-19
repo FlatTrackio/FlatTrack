@@ -20,3 +20,5 @@ dist
 /flattrack
 .log
 site
+/.helm
+/tilt_modules
