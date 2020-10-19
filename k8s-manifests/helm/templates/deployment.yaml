@@ -103,6 +103,33 @@ spec:
                   name: {{ include "flattrack.fullname" . }}
                   key: app-smtp-port
             {{- end }}
+            {{- if .Values.minio.enabled }}
+            - name: APP_MINIO_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "flattrack.fullname" . }}
+                  key: host
+            - name: APP_MINIO_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "flattrack.fullname" . }}
+                  key: accessKey
+            - name: APP_MINIO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "flattrack.fullname" . }}
+                  key: secretKey
+            - name: APP_MINIO_BUCKET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "flattrack.fullname" . }}
+                  key: bucket
+            - name: APP_MINIO_USE_SSL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "flattrack.fullname" . }}
+                  key: use-ssl
+            {{- end }}
             {{- if .Values.siteURL }}
             - name: APP_URL
               value: {{ .Values.siteURL }}

@@ -74,6 +74,16 @@ smtp:
   host: ""
   port: ""
 
+minio:
+  # configures env using values
+  enabled: true
+  host: ""
+  accessKey: ""
+  secretKey: ""
+  bucket: bucket
+  SSL:
+    enable: false
+
 # add labels to all resources
 labels: {}
 
