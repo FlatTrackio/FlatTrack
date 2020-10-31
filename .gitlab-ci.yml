@@ -231,7 +231,7 @@ lint_helm_chart:
   allow_failure: true
   before_script:
     - curl -L -o helm.tar.gz $HELM_LINK
-     - |
+    - |
         if [ ! $(sha256sum helm.tar.gz) = $HELM_HASH ]; then
           exit 1
         fi
