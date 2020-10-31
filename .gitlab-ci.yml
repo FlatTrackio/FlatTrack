@@ -224,12 +224,13 @@ lint_backend:
 
 lint_helm_chart:
   stage: lint
-  image: golang:1.13.10-alpine3.11
+  image: alpine:3.11
   variables:
     HELM_LINK: https://get.helm.sh/helm-v3.4.0-linux-amd64.tar.gz
     HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
   allow_failure: true
   before_script:
+    - apk add curl
     - curl -L -o helm.tar.gz $HELM_LINK
     - |
         if [ ! $(sha256sum helm.tar.gz) = $HELM_HASH ]; then
