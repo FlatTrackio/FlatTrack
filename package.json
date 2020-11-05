@@ -14,7 +14,7 @@
     "@mdi/font": "^4.9.95",
     "@mdi/js": "^5.6.55",
     "axios": "^0.19.2",
-    "buefy": "^0.8.20",
+    "buefy": "^0.9.4",
     "dayjs": "^1.9.1",
     "material-icons": "^0.3.1",
     "node-emoji": "^1.10.0",
