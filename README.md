@@ -1,5 +1,5 @@
 <a href="http://www.gnu.org/licenses/agpl-3.0.html">
-    <img src="https://img.shields.io/badge/License-AGPL-3.0-blue.svg" alt="License: AGPL-3.0" />
+    <img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License: AGPL-3.0" />
 </a>
 <a href="https://gitlab.com/flattrack/flattrack/releases">
     <img src="https://img.shields.io/badge/version-0.0.1--alpha6-brightgreen.svg" alt="Version 0.0.1-alpha6" />
