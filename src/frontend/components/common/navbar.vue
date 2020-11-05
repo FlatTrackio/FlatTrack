@@ -89,12 +89,12 @@ export default {
 }
 
 .p-1 {
-    padding-left: 1em;
-    padding-bottom: 1em;
-    padding-right: 1em;
+    padding-left: 1em!important;
+    padding-bottom: 1em!important;
+    padding-right: 1em!important;
 }
 
-.p-1 .menu {
+  .p-1 .menu {
     margin-top: 23px;
 }
 

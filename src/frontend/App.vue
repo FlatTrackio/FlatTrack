@@ -117,7 +117,7 @@ $breadcrumb-item-color: $link;
 }
 
 .pad-bottom {
-    margin-bottom: 40px;
+    margin-bottom: 100px;
 }
 
 .full-height {
