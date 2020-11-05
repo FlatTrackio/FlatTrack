@@ -14,5 +14,5 @@ yaml = helm(
   )
 k8s_yaml(yaml)
 k8s_yaml(kustomize('k8s-manifests/development'))
-docker_build('registry.gitlab.com/flattrack/flattrack', '.')
+docker_build('registry.gitlab.com/flattrack/flattrack', '.', dockerfile="dev.Dockerfile")
 allow_k8s_contexts('in-cluster')

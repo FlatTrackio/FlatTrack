@@ -1,10 +1,10 @@
 - [Development cycle](#sec-1)
-    - [Bring up the deployments](#sec-1-0-1)
-    - [Port-forward the database connection](#sec-1-0-2)
-    - [Quick development patterns](#sec-1-0-3)
-    - [Backend](#sec-1-0-4)
-    - [Frontend](#sec-1-0-5)
-    - [Auto build and launch with Tilt](#sec-1-0-6)
+  - [(almost) Automatic](#sec-1-1)
+  - [Manual](#sec-1-2)
+    - [Bring up the deployments](#sec-1-2-1)
+    - [Port-forward the database connection](#sec-1-2-2)
+    - [Backend](#sec-1-2-3)
+    - [Frontend](#sec-1-2-4)
 - [Additional](#sec-2)
     - [Manually connecting to the Postgres database](#sec-2-0-1)
     - [Remove migrations](#sec-2-0-2)
@@ -22,27 +22,54 @@
 
 In-cluster local development is recommended, use [minikube](https://minikube.sigs.k8s.io) or [kind](https://kind.sigs.k8s.io/).
 
-### Bring up the deployments<a id="sec-1-0-1"></a>
+## (almost) Automatic<a id="sec-1-1"></a>
+
+Get tilt from [Tilt.dev](https://tilt.dev).
+
+```shell
+tilt up --host 0.0.0.0
+```
+
+Build the backend:
+
+```shell
+CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags "-extldflags '-static' -s -w" -o flattrack src/backend/main.go
+```
+
+Build the frontend:
+
+```shell
+npm run build
+```
+
+Notes:
+
+-   this is the quickest development cycle factoring:
+    -   multi-stage build
+    -   components
+    -   setup
+
+## Manual<a id="sec-1-2"></a>
+
+### Bring up the deployments<a id="sec-1-2-1"></a>
 
 ```shell
 kubectl apply -k k8s-manifests/development/postgres
 ```
 
-### Port-forward the database connection<a id="sec-1-0-2"></a>
+### Port-forward the database connection<a id="sec-1-2-2"></a>
 
 ```shell
 kubectl -n flattrack-dev port-forward service/postgres 5432:5432
 ```
 
-### Quick development patterns<a id="sec-1-0-3"></a>
-
-### Backend<a id="sec-1-0-4"></a>
+### Backend<a id="sec-1-2-3"></a>
 
 ```shell
 go build -o flattrack src/backend/main.go && ./flattrack
 ```
 
-### Frontend<a id="sec-1-0-5"></a>
+### Frontend<a id="sec-1-2-4"></a>
 
 Install frontend dependencies:
 
@@ -55,16 +82,6 @@ Build the frontend:
 ```shell
 npm run build
 ```
-
-### Auto build and launch with Tilt<a id="sec-1-0-6"></a>
-
-Get tilt from [Tilt.dev](https://tilt.dev).
-
-```shell
-tilt up --host 0.0.0.0
-```
-
-Note: Due to multi-stage container builds, this isn't the fastest method.
 
 # Additional<a id="sec-2"></a>
 
