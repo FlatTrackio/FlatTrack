@@ -332,6 +332,7 @@ export default {
       deleteLoading: false,
       ratherSmallerScreen: false,
       templateListName: '',
+      canAnimate: false,
       id: this.$route.params.id,
       name: 'Unnamed list',
       notes: '',
@@ -603,9 +604,12 @@ export default {
     itemSearch () {
       shoppinglistCommon.WriteShoppingListSearch(this.id, this.itemSearch)
     },
+    hasInitialLoaded () {
+      this.canAnimate = true
+    },
     completed () {
       var enableAnimations = common.GetEnableAnimations()
-      if (this.completed === true && enableAnimations === 'true' && this.hasInitialLoaded === true) {
+      if (this.completed === true && enableAnimations === 'true' && this.canAnimate === true) {
         common.Hooray()
       }
     }
