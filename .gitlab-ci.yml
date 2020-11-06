@@ -43,7 +43,16 @@ variables:
   fi
 
 .kaniko-build: &kaniko-build |
-  /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest$BRANCH_NAME$PRINT_ARCH $KANIKO_EXTRA_DESTINATION --build-arg GOARCH="$ARCH" --build-arg AppBuildVersion="$APP_BUILD_VERSION" --build-arg AppBuildDate="$BUILD_DATE" --build-arg AppBuildHash="$COMMIT_HASH" --build-arg AppBuildMode="$APP_BUILD_MODE"
+  /kaniko/executor \
+    --context $CI_PROJECT_DIR \
+    --dockerfile $CI_PROJECT_DIR/build/Dockerfile \
+    --destination $CI_REGISTRY_IMAGE:latest$BRANCH_NAME$PRINT_ARCH \
+    $KANIKO_EXTRA_DESTINATION \
+    --build-arg GOARCH="$ARCH" \
+    --build-arg AppBuildVersion="$APP_BUILD_VERSION" \
+    --build-arg AppBuildDate="$BUILD_DATE" \
+    --build-arg AppBuildHash="$COMMIT_HASH" \
+    --build-arg AppBuildMode="$APP_BUILD_MODE"
 
 .zip-prepare: &zip-prepare |
   export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
