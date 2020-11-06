@@ -54,7 +54,7 @@ Notes:
 ### Bring up the deployments<a id="sec-1-2-1"></a>
 
 ```shell
-kubectl apply -k k8s-manifests/development/postgres
+kubectl apply -k deployments/k8s-manifests/development/postgres
 ```
 
 ### Port-forward the database connection<a id="sec-1-2-2"></a>

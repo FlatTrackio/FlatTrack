@@ -30,7 +30,7 @@ Notes:
 ** Manual
 *** Bring up the deployments
    #+begin_src shell
-   kubectl apply -k k8s-manifests/development/postgres
+   kubectl apply -k deployments/k8s-manifests/development/postgres
    #+end_src
    
 *** Port-forward the database connection   
