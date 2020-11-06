@@ -130,12 +130,12 @@ build-zip-backend:
           -a \
           -installsuffix cgo \
           -ldflags "-extldflags '-static' -s -w \
-          -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildVersion=$AppBuildVersion \
-          -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildHash=$AppBuildHash \
-          -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildDate=$AppBuildDate \
-          -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildMode=$AppBuildMode" \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildVersion=$AppBuildVersion \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash=$AppBuildHash \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$AppBuildDate \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=$AppBuildMode" \
           -o $RELEASE_FOLDER_NAME/flattrack$PRINTABLE_ARCH \
-          src/backend/main.go
+          main.go
       done
   only:
     - tags
@@ -197,7 +197,7 @@ test_backend_e2e:
     - apk add git gcc
     - go get github.com/onsi/ginkgo/ginkgo
     - go get github.com/onsi/gomega/...
-    - go build -o flattrack src/backend/main.go
+    - go build -o flattrack main.go
     - ./flattrack &
   script:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
@@ -229,7 +229,7 @@ lint_backend:
     - apk add git gcc
     - go get -u golang.org/x/lint/golint
   script:
-    - golint -set_exit_status src/backend/... test/backend/e2e/...
+    - golint -set_exit_status ./...
 
 lint_helm_chart:
   stage: lint
