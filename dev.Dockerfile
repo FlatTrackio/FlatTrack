@@ -5,8 +5,8 @@ RUN adduser -D user
 FROM scratch
 WORKDIR /app
 ENV PATH=/app
-COPY dist /app/dist
-COPY package.json /app/package.json
+COPY web/dist /app/dist
+COPY web/package.json /app/package.json
 COPY flattrack /app/flattrack
 COPY --from=extras /etc/passwd /etc/passwd
 COPY --from=extras /etc/group /etc/group

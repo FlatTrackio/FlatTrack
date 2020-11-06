@@ -5,10 +5,8 @@ ARG AppBuildHash="???"
 ARG AppBuildDate="???"
 ARG AppBuildMode="development"
 RUN apk add python2 make g++
-WORKDIR /app
-COPY src /app/src
-COPY public /app/public
-COPY *.js *.json /app/
+COPY web /app/web
+WORKDIR /app/web
 RUN npm i
 ENV VUE_APP_AppBuildVersion=$AppBuildVersion \
   VUE_APP_AppBuildHash=$AppBuildHash \
@@ -44,8 +42,8 @@ RUN adduser -D user
 FROM scratch
 WORKDIR /app
 ENV PATH=/app
-COPY --from=ui /app/dist /app/dist
-COPY --from=ui /app/package.json .
+COPY --from=ui /app/web/dist /app/dist
+COPY --from=ui /app/web/package.json .
 COPY --from=api /app/flattrack .
 COPY --from=extras /etc/passwd /etc/passwd
 COPY --from=extras /etc/group /etc/group
