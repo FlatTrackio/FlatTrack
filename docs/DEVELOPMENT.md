@@ -33,7 +33,7 @@ tilt up --host 0.0.0.0
 Build the backend:
 
 ```shell
-CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags "-extldflags '-static' -s -w" -o flattrack src/backend/main.go
+CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags "-extldflags '-static' -s -w" -o flattrack ./main.go
 ```
 
 Build the frontend:
@@ -66,7 +66,7 @@ kubectl -n flattrack-dev port-forward service/postgres 5432:5432
 ### Backend<a id="sec-1-2-3"></a>
 
 ```shell
-go build -o flattrack src/backend/main.go && ./flattrack
+go build -o flattrack ./main.go && ./flattrack
 ```
 
 ### Frontend<a id="sec-1-2-4"></a>
@@ -103,7 +103,7 @@ gomigrate -source "file://$(pwd)/migrations" -database postgres://flattrack:flat
 
 ### API<a id="sec-3-0-2"></a>
 
-Written in golang, the API is located in [src/backend](https://gitlab.com/flattrack/flattrack/-/tree/master/test/backend).
+Written in golang, the API is located in [pkg/routes](https://gitlab.com/flattrack/flattrack/-/tree/master/pkg/routes).
 
 The features and areas are separated into packages.
 
@@ -113,7 +113,7 @@ The features and areas are separated into packages.
 
 ### Frontend<a id="sec-3-0-3"></a>
 
-Written in Vue.js + JavaScript, the frontend is located in [src/frontend](https://gitlab.com/flattrack/flattrack/-/tree/master/test/frontend).
+Written in Vue.js + JavaScript, the frontend is located in [web](https://gitlab.com/flattrack/flattrack/-/tree/master/test/frontend).
 
 The frontend makes requests to the backend to perform actions.
 
@@ -123,7 +123,7 @@ The migrations and database structuring is located in [migrations](https://gitla
 
 ### Assets<a id="sec-3-0-5"></a>
 
-Images are located in [src/frontend/assets](https://gitlab.com/flattrack/flattrack/-/tree/master/src/frontend/assets), these are used throughout the project (such as in the frontend, and readme).
+Images are located in [web/assets](https://gitlab.com/flattrack/flattrack/-/tree/master/web/assets), these are used throughout the project (such as in the frontend, and readme).
 
 # Docs<a id="sec-4"></a>
 

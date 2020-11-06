@@ -295,7 +295,7 @@ Reload nginx
             -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$(date -u +%Y-%m-%d_%I:%M:%S%p) \
             -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=production" \
             -o flattrack \
-            src/backend/main.go
+            ./main.go
     #+end_src
 
 *** Write the environment settings

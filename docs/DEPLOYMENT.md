@@ -332,7 +332,7 @@ go build \
       -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$(date -u +%Y-%m-%d_%I:%M:%S%p) \
       -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=production" \
       -o flattrack \
-      src/backend/main.go
+      ./main.go
 ```
 
 ### Write the environment settings<a id="sec-3-0-11"></a>

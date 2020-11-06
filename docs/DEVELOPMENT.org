@@ -12,7 +12,7 @@ tilt up --host 0.0.0.0
 
 Build the backend:
 #+begin_src shell
-CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags "-extldflags '-static' -s -w" -o flattrack src/backend/main.go
+CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags "-extldflags '-static' -s -w" -o flattrack ./main.go
 #+end_src
 
 Build the frontend:
@@ -40,7 +40,7 @@ Notes:
 
 *** Backend
     #+begin_src shell
-    go build -o flattrack src/backend/main.go && ./flattrack
+    go build -o flattrack ./main.go && ./flattrack
     #+end_src
 
 *** Frontend
@@ -71,7 +71,7 @@ Build the frontend:
 * Project structure and details
 *** Code
 *** API
-Written in golang, the API is located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/test/backend][src/backend]].
+Written in golang, the API is located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/pkg/routes][pkg/routes]].
 
 The features and areas are separated into packages.
 
@@ -79,7 +79,7 @@ The features and areas are separated into packages.
 Tests are located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/test/backend/e2e][test/backend/e2e]]. So far there are only e2e tests for FlatTrack's API.
 
 *** Frontend
-Written in Vue.js + JavaScript, the frontend is located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/test/frontend][src/frontend]].
+Written in Vue.js + JavaScript, the frontend is located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/test/frontend][web]].
 
 The frontend makes requests to the backend to perform actions.
 
@@ -88,7 +88,7 @@ The migrations and database structuring is located in [[https://gitlab.com/flatt
 Each table is created with [[https://github.com/golang-migrate/migrate][golang-migrate]].
 
 *** Assets
-Images are located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/src/frontend/assets][src/frontend/assets]], these are used throughout the project (such as in the frontend, and readme).
+Images are located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/src/frontend/assets][web/assets]], these are used throughout the project (such as in the frontend, and readme).
 * Docs
 To run the docs in development, use:
 #+begin_src sh
