@@ -15,7 +15,7 @@ import (
 	// allow file-based migrations
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 
-	"gitlab.com/flattrack/flattrack/src/backend/common"
+	"gitlab.com/flattrack/flattrack/pkg/common"
 )
 
 // Migrate ...

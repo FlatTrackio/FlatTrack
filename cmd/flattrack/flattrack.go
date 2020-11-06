@@ -1,6 +1,6 @@
 /*
-  main
-    initialize the app
+  flattrack
+    backend cmd
 */
 
 // Package classification for FlatTrack API.
@@ -19,21 +19,21 @@
 //     - application/json
 //
 // swagger:meta
-package main
+package flattrack
 
 import (
 	"github.com/joho/godotenv"
-	"gitlab.com/flattrack/flattrack/src/backend/common"
-	"gitlab.com/flattrack/flattrack/src/backend/database"
-	"gitlab.com/flattrack/flattrack/src/backend/metrics"
-	"gitlab.com/flattrack/flattrack/src/backend/migrations"
-	"gitlab.com/flattrack/flattrack/src/backend/routes"
+	"gitlab.com/flattrack/flattrack/pkg/common"
+	"gitlab.com/flattrack/flattrack/pkg/database"
+	"gitlab.com/flattrack/flattrack/pkg/metrics"
+	"gitlab.com/flattrack/flattrack/pkg/migrations"
+	"gitlab.com/flattrack/flattrack/pkg/routes"
 	"log"
 )
 
 // main
 // initialise the app
-func main() {
+func Start() {
 	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
 
 	envFile := common.GetAppEnvFile()

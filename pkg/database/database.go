@@ -11,7 +11,7 @@ import (
 
 	// include Pg
 	_ "github.com/lib/pq"
-	"gitlab.com/flattrack/flattrack/src/backend/common"
+	"gitlab.com/flattrack/flattrack/pkg/common"
 )
 
 // Database connection fields

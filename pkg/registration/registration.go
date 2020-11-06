@@ -7,10 +7,10 @@ package registration
 
 import (
 	"database/sql"
-	"gitlab.com/flattrack/flattrack/src/backend/settings"
-	"gitlab.com/flattrack/flattrack/src/backend/system"
-	"gitlab.com/flattrack/flattrack/src/backend/types"
-	"gitlab.com/flattrack/flattrack/src/backend/users"
+	"gitlab.com/flattrack/flattrack/pkg/settings"
+	"gitlab.com/flattrack/flattrack/pkg/system"
+	"gitlab.com/flattrack/flattrack/pkg/types"
+	"gitlab.com/flattrack/flattrack/pkg/users"
 )
 
 // Default groups

@@ -16,8 +16,9 @@ RUN npm run build
 
 FROM golang:1.14.6-alpine3.11 AS api
 WORKDIR /app
-COPY src /app/src
-COPY go.* /app/
+COPY pkg /app/pkg
+COPY cmd /app/cmd
+COPY go.* *.go /app/
 # TODO build the version, git hash, and build date into the binary from build-args or env
 ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
@@ -28,12 +29,12 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
   -a \
   -installsuffix cgo \
   -ldflags "-extldflags '-static' -s -w \
-    -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildVersion=$AppBuildVersion \
-    -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildHash=$AppBuildHash \
-    -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildDate=$AppBuildDate \
-    -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildMode=$AppBuildMode" \
+    -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildVersion=$AppBuildVersion \
+    -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash=$AppBuildHash \
+    -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$AppBuildDate \
+    -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=$AppBuildMode" \
   -o flattrack \
-  src/backend/main.go
+  main.go
 
 FROM alpine:3.11 as extras
 RUN apk add tzdata ca-certificates

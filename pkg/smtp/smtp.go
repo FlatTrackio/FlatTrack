@@ -2,7 +2,7 @@ package smtp
 
 import (
 	"fmt"
-	"gitlab.com/flattrack/flattrack/src/backend/common"
+	"gitlab.com/flattrack/flattrack/pkg/common"
 	"log"
 	"net/smtp"
 )

@@ -2,7 +2,7 @@ package health
 
 import (
 	"database/sql"
-	"gitlab.com/flattrack/flattrack/src/backend/database"
+	"gitlab.com/flattrack/flattrack/pkg/database"
 )
 
 // Healthy ...

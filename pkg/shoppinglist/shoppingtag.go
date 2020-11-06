@@ -10,7 +10,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"gitlab.com/flattrack/flattrack/src/backend/types"
+	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
 // CreateShoppingTag ...

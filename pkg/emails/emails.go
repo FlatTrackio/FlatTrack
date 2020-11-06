@@ -2,7 +2,7 @@ package emails
 
 import (
 	"bytes"
-	"gitlab.com/flattrack/flattrack/src/backend/smtp"
+	"gitlab.com/flattrack/flattrack/pkg/smtp"
 	"html/template"
 	"log"
 )

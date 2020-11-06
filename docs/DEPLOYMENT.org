@@ -290,10 +290,10 @@ Reload nginx
             -a \
             -installsuffix cgo \
             -ldflags "-extldflags '-static' -s -w \
-            -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildVersion=$(git symbolic-ref HEAD | sed 's!refs\/heads\/!!') \
-            -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildHash=$(git rev-parse --short HEAD) \
-            -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildDate=$(date -u +%Y-%m-%d_%I:%M:%S%p) \
-            -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildMode=production" \
+            -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildVersion=$(git symbolic-ref HEAD | sed 's!refs\/heads\/!!') \
+            -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash=$(git rev-parse --short HEAD) \
+            -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$(date -u +%Y-%m-%d_%I:%M:%S%p) \
+            -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=production" \
             -o flattrack \
             src/backend/main.go
     #+end_src

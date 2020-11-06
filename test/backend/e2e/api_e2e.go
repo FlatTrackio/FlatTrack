@@ -11,12 +11,12 @@ import (
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
-	"gitlab.com/flattrack/flattrack/src/backend/common"
-	"gitlab.com/flattrack/flattrack/src/backend/database"
-	"gitlab.com/flattrack/flattrack/src/backend/migrations"
-	"gitlab.com/flattrack/flattrack/src/backend/registration"
-	"gitlab.com/flattrack/flattrack/src/backend/routes"
-	"gitlab.com/flattrack/flattrack/src/backend/types"
+	"gitlab.com/flattrack/flattrack/pkg/common"
+	"gitlab.com/flattrack/flattrack/pkg/database"
+	"gitlab.com/flattrack/flattrack/pkg/migrations"
+	"gitlab.com/flattrack/flattrack/pkg/registration"
+	"gitlab.com/flattrack/flattrack/pkg/routes"
+	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
 var jwtToken string

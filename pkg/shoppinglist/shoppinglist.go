@@ -12,7 +12,7 @@ import (
 
 	"github.com/imdario/mergo"
 
-	"gitlab.com/flattrack/flattrack/src/backend/types"
+	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
 // ValidateShoppingList ...

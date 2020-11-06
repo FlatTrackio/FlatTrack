@@ -8,8 +8,8 @@ package groups
 import (
 	"database/sql"
 
-	"gitlab.com/flattrack/flattrack/src/backend/common"
-	"gitlab.com/flattrack/flattrack/src/backend/types"
+	"gitlab.com/flattrack/flattrack/pkg/common"
+	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
 // AddUserToGroup ...

@@ -14,15 +14,15 @@ import (
 	"runtime"
 
 	"github.com/gorilla/mux"
-	"gitlab.com/flattrack/flattrack/src/backend/common"
-	"gitlab.com/flattrack/flattrack/src/backend/groups"
-	"gitlab.com/flattrack/flattrack/src/backend/health"
-	"gitlab.com/flattrack/flattrack/src/backend/registration"
-	"gitlab.com/flattrack/flattrack/src/backend/settings"
-	"gitlab.com/flattrack/flattrack/src/backend/shoppinglist"
-	"gitlab.com/flattrack/flattrack/src/backend/system"
-	"gitlab.com/flattrack/flattrack/src/backend/types"
-	"gitlab.com/flattrack/flattrack/src/backend/users"
+	"gitlab.com/flattrack/flattrack/pkg/common"
+	"gitlab.com/flattrack/flattrack/pkg/groups"
+	"gitlab.com/flattrack/flattrack/pkg/health"
+	"gitlab.com/flattrack/flattrack/pkg/registration"
+	"gitlab.com/flattrack/flattrack/pkg/settings"
+	"gitlab.com/flattrack/flattrack/pkg/shoppinglist"
+	"gitlab.com/flattrack/flattrack/pkg/system"
+	"gitlab.com/flattrack/flattrack/pkg/types"
+	"gitlab.com/flattrack/flattrack/pkg/users"
 )
 
 // GetAllUsers ...
