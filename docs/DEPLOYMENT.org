@@ -7,7 +7,7 @@ To configure FlatTrack, please refer to the [[./CONFIGURATION.md][configuration 
 * Kubernetes (recommended)
 *** Helm
 ***** Configuration
-Chart values are located in [[https://gitlab.com/flattrack/flattrack/-/blob/master/k8s-manifests/helm/values.yaml][../k8s-manifests/helm/values.yaml]].
+Chart values are located in [[https://gitlab.com/flattrack/flattrack/-/blob/master/deployments/flattrack/values.yaml][../deployments/flattrack/values.yaml]].
 
 | Parameter                                             | Description                                                  | Default                                 |
 |-------------------------------------------------------+--------------------------------------------------------------+-----------------------------------------|
@@ -71,7 +71,7 @@ Create the namespace:
 
 Install the release with Helm:
 #+begin_src sh :src ../
-  helm install flattrack-myflat --namespace flattrack-myflat k8s-manifests/helm
+  helm install flattrack-myflat --namespace flattrack-myflat deployments/flattrack
 #+end_src
 
 * Docker-compose

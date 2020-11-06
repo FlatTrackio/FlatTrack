@@ -1,5 +1,5 @@
 yaml = helm(
-  'k8s-manifests/helm',
+  'deployments/flattrack',
   name='flattrack-dev',
   namespace='flattrack-dev',
   set=[

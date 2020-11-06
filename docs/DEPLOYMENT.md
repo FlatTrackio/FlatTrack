@@ -25,7 +25,7 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
 
 1.  Configuration
 
-    Chart values are located in [../k8s-manifests/helm/values.yaml](https://gitlab.com/flattrack/flattrack/-/blob/master/k8s-manifests/helm/values.yaml).
+    Chart values are located in [../deployments/flattrack/values.yaml](https://gitlab.com/flattrack/flattrack/-/blob/master/deployments/flattrack/values.yaml).
     
     | Parameter                                             | Description                                                  | Default                                 |
     |----------------------------------------------------- |------------------------------------------------------------ |--------------------------------------- |
@@ -92,7 +92,7 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
     Install the release with Helm:
     
     ```sh
-    helm install flattrack-myflat --namespace flattrack-myflat k8s-manifests/helm
+    helm install flattrack-myflat --namespace flattrack-myflat deployments/flattrack
     ```
 
 # Docker-compose<a id="sec-2"></a>
