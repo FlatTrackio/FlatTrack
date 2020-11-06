@@ -25,7 +25,7 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
 
 1.  Configuration
 
-    Chart values are located in [../k8s-manifests/helm/values.yaml](https://gitlab.com/flattrack/flattrack/-/blob/master/k8s-manifests/helm/values.yaml).
+    Chart values are located in [../deployments/flattrack/values.yaml](https://gitlab.com/flattrack/flattrack/-/blob/master/deployments/flattrack/values.yaml).
     
     | Parameter                                             | Description                                                  | Default                                 |
     |----------------------------------------------------- |------------------------------------------------------------ |--------------------------------------- |
@@ -92,12 +92,12 @@ To configure FlatTrack, please refer to the [configuration guide](./CONFIGURATIO
     Install the release with Helm:
     
     ```sh
-    helm install flattrack-myflat --namespace flattrack-myflat k8s-manifests/helm
+    helm install flattrack-myflat --namespace flattrack-myflat deployments/flattrack
     ```
 
 # Docker-compose<a id="sec-2"></a>
 
-The example set up in Docker-compose for FlatTrack is located in [../docker-compose.yml](https://gitlab.com/flattrack/flattrack/-/blob/master/docker-compose.yml). This configuration is not considered production-ready, but for some may be a good enough option. `Important notes`:
+The example set up in Docker-compose for FlatTrack is located in [../deployments/docker-compose.yml](https://gitlab.com/flattrack/flattrack/-/blob/master/deployments/docker-compose.yml). This configuration is not considered production-ready, but for some may be a good enough option. `Important notes`:
 
 -   the docker-compose deployment doesn't include SSL/TLS in the stack, so if you wish to deploy it you will need to add a reverse-proxy to handle SSL/TLS - this isn't something that FlatTrack implements.
 -   ensure that the credentials are updated
@@ -327,12 +327,12 @@ go build \
       -a \
       -installsuffix cgo \
       -ldflags "-extldflags '-static' -s -w \
-      -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildVersion=$(git symbolic-ref HEAD | sed 's!refs\/heads\/!!') \
-      -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildHash=$(git rev-parse --short HEAD) \
-      -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildDate=$(date -u +%Y-%m-%d_%I:%M:%S%p) \
-      -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildMode=production" \
+      -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildVersion=$(git symbolic-ref HEAD | sed 's!refs\/heads\/!!') \
+      -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash=$(git rev-parse --short HEAD) \
+      -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$(date -u +%Y-%m-%d_%I:%M:%S%p) \
+      -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=production" \
       -o flattrack \
-      src/backend/main.go
+      ./main.go
 ```
 
 ### Write the environment settings<a id="sec-3-0-11"></a>

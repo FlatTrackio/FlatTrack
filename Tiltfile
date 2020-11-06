@@ -1,5 +1,5 @@
 yaml = helm(
-  'k8s-manifests/helm',
+  'deployments/flattrack',
   name='flattrack-dev',
   namespace='flattrack-dev',
   set=[
@@ -13,6 +13,6 @@ yaml = helm(
   ]
   )
 k8s_yaml(yaml)
-k8s_yaml(kustomize('k8s-manifests/development'))
-docker_build('registry.gitlab.com/flattrack/flattrack', '.', dockerfile="dev.Dockerfile")
+k8s_yaml(kustomize('deployments/k8s-manifests/development'))
+docker_build('registry.gitlab.com/flattrack/flattrack', '.', dockerfile="build/dev.Dockerfile")
 allow_k8s_contexts('in-cluster')

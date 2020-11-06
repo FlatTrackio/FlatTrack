@@ -43,7 +43,16 @@ variables:
   fi
 
 .kaniko-build: &kaniko-build |
-  /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CI_REGISTRY_IMAGE:latest$BRANCH_NAME$PRINT_ARCH $KANIKO_EXTRA_DESTINATION --build-arg GOARCH="$ARCH" --build-arg AppBuildVersion="$APP_BUILD_VERSION" --build-arg AppBuildDate="$BUILD_DATE" --build-arg AppBuildHash="$COMMIT_HASH" --build-arg AppBuildMode="$APP_BUILD_MODE"
+  /kaniko/executor \
+    --context $CI_PROJECT_DIR \
+    --dockerfile $CI_PROJECT_DIR/build/Dockerfile \
+    --destination $CI_REGISTRY_IMAGE:latest$BRANCH_NAME$PRINT_ARCH \
+    $KANIKO_EXTRA_DESTINATION \
+    --build-arg GOARCH="$ARCH" \
+    --build-arg AppBuildVersion="$APP_BUILD_VERSION" \
+    --build-arg AppBuildDate="$BUILD_DATE" \
+    --build-arg AppBuildHash="$COMMIT_HASH" \
+    --build-arg AppBuildMode="$APP_BUILD_MODE"
 
 .zip-prepare: &zip-prepare |
   export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
@@ -121,12 +130,12 @@ build-zip-backend:
           -a \
           -installsuffix cgo \
           -ldflags "-extldflags '-static' -s -w \
-          -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildVersion=$AppBuildVersion \
-          -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildHash=$AppBuildHash \
-          -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildDate=$AppBuildDate \
-          -X gitlab.com/flattrack/flattrack/src/backend/common.AppBuildMode=$AppBuildMode" \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildVersion=$AppBuildVersion \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash=$AppBuildHash \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$AppBuildDate \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=$AppBuildMode" \
           -o $RELEASE_FOLDER_NAME/flattrack$PRINTABLE_ARCH \
-          src/backend/main.go
+          main.go
       done
   only:
     - tags
@@ -188,7 +197,7 @@ test_backend_e2e:
     - apk add git gcc
     - go get github.com/onsi/ginkgo/ginkgo
     - go get github.com/onsi/gomega/...
-    - go build -o flattrack src/backend/main.go
+    - go build -o flattrack main.go
     - ./flattrack &
   script:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
@@ -208,6 +217,7 @@ lint_frontend:
   image: node:12.10.0-alpine
   allow_failure: true
   before_script:
+    - cd web
     - npm i
   script:
     - npm run lint
@@ -220,7 +230,7 @@ lint_backend:
     - apk add git gcc
     - go get -u golang.org/x/lint/golint
   script:
-    - golint -set_exit_status src/backend/... test/backend/e2e/...
+    - golint -set_exit_status ./...
 
 lint_helm_chart:
   stage: lint
@@ -238,7 +248,7 @@ lint_helm_chart:
         fi
     - cat helm.tar.gz | tar --directory /usr/local/bin --extract -xz --strip-components 1 linux-amd64/helm
   script:
-    - helm lint k8s-manifests/helm
+    - helm lint deployments/flattrack
 
 pages:
   image: python:3.8-buster
