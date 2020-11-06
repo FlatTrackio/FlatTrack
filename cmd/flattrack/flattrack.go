@@ -31,7 +31,7 @@ import (
 	"log"
 )
 
-// main
+// Start ...
 // initialise the app
 func Start() {
 	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())

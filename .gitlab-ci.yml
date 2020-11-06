@@ -217,6 +217,7 @@ lint_frontend:
   image: node:12.10.0-alpine
   allow_failure: true
   before_script:
+    - cd web
     - npm i
   script:
     - npm run lint
@@ -247,7 +248,7 @@ lint_helm_chart:
         fi
     - cat helm.tar.gz | tar --directory /usr/local/bin --extract -xz --strip-components 1 linux-amd64/helm
   script:
-    - helm lint k8s-manifests/helm
+    - helm lint deployments/flattrack
 
 pages:
   image: python:3.8-buster
