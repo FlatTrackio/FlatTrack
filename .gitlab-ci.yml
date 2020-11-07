@@ -95,6 +95,7 @@ build-zip-frontend:
     - *kaniko-build-taggable-name
     - *kaniko-pre-build-release-version
     - *zip-prepare
+    - cd web
     - npm i
   script:
     - ./node_modules/.bin/vue-cli-service build --dest $RELEASE_FOLDER_NAME/dist src/frontend/main.js
