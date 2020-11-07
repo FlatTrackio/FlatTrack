@@ -1,9 +1,9 @@
 stages:
   - lint
   - test
+  - pages
   - build
   - zip
-  - pages
 
 variables:
   ARCH_DEFAULT: "amd64"
@@ -257,7 +257,6 @@ pages:
   before_script:
     - pip install mkdocs-material
   script:
-  - rm -r public
   - mkdocs build
   - mv site public
   artifacts:
