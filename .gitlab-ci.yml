@@ -3,7 +3,6 @@ stages:
   - test
   - pages
   - build
-  - zip
 
 variables:
   ARCH_DEFAULT: "amd64"
@@ -98,7 +97,7 @@ build-zip-frontend:
     - cd web
     - npm i
   script:
-    - ./node_modules/.bin/vue-cli-service build --dest $RELEASE_FOLDER_NAME/dist ./main.js
+    - ./node_modules/.bin/vue-cli-service build --dest $RELEASE_FOLDER_NAME/dist ./src/main.js
   only:
     - tags
     - master
@@ -166,7 +165,7 @@ build-zip-copy-extras:
       - flattrack*
 
 build-zip:
-  stage: zip
+  stage: build
   retry: 2
   image: alpine:3.11
   dependencies:
@@ -182,6 +181,10 @@ build-zip:
   only:
     - tags
     - master
+  needs:
+    - build-zip-frontend
+    - build-zip-backend
+    - build-zip-copy-extras
   artifacts:
     paths:
       - flattrack*.tar.gz
