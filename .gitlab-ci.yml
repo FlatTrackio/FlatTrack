@@ -3,6 +3,7 @@ stages:
   - test
   - pages
   - build
+  - zip
 
 variables:
   ARCH_DEFAULT: "amd64"
@@ -165,7 +166,7 @@ build-zip-copy-extras:
       - flattrack*
 
 build-zip:
-  stage: build
+  stage: zip
   retry: 2
   image: alpine:3.11
   dependencies:
@@ -181,10 +182,6 @@ build-zip:
   only:
     - tags
     - master
-  needs:
-    - build-zip-frontend
-    - build-zip-backend
-    - build-zip-copy-extras
   artifacts:
     paths:
       - flattrack*.tar.gz
