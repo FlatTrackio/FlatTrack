@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: registry.gitlab.com/flattrack/flattrack
   # uncomment to use specified tag instead of appVersion 
-  # tag: 0.0.1-alpha6
+  # tag: 0.0.1-alpha11-1
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

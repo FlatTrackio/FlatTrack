@@ -307,7 +307,7 @@ systemctl reload nginx
 Also, check a version (for stability):
 
 ```sh
-git clone -b 0.0.1-alpha8-2 https://gitlab.com/flattrack/flattrack /opt/flattrack
+git clone -b 0.0.1-alpha11-1 https://gitlab.com/flattrack/flattrack /opt/flattrack
 cd $_
 ```
 
