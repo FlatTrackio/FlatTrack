@@ -2,7 +2,7 @@
     <img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License: AGPL-3.0" />
 </a>
 <a href="https://gitlab.com/flattrack/flattrack/releases">
-    <img src="https://img.shields.io/badge/version-0.0.1--alpha6-brightgreen.svg" alt="Version 0.0.1-alpha6" />
+    <img src="https://img.shields.io/badge/version-0.0.1--alpha11-1-brightgreen.svg" alt="Version 0.0.1-alpha11-1" />
 </a>
 <a href='https://ind.ie/ethical-design'>
     <img style='margin-left: auto; margin-right: auto;' alt='We practice Ethical Design' src='https://img.shields.io/badge/Ethical_Design-_▲_❤_-blue.svg'>
