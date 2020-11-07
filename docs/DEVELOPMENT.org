@@ -88,7 +88,7 @@ The migrations and database structuring is located in [[https://gitlab.com/flatt
 Each table is created with [[https://github.com/golang-migrate/migrate][golang-migrate]].
 
 *** Assets
-Images are located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/src/frontend/assets][web/assets]], these are used throughout the project (such as in the frontend, and readme).
+Images are located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/web/assets][web/assets]], these are used throughout the project (such as in the frontend, and readme).
 * Docs
 To run the docs in development, use:
 #+begin_src sh
