@@ -50,7 +50,9 @@ Looking for something to do? Check out the [FlatTrack issues](https://gitlab.com
 
 ## Community
 Join FlatTrack's community to chip in and improve it!  
-Please read [community docs](docs/COMMUNITY.org)
+Please read:
+- [community docs](docs/COMMUNITY.org).
+- [contributing docs](docs/contributing.org)
 
 ## License
 Copyright 2019-2020 Caleb Woodbine.  
