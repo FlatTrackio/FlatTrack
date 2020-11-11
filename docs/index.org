@@ -1,0 +1,12 @@
+#+TITLE: Home
+#+FIRN_ORDER: 0
+
+* FlatTrack
+
+#+begin_quote
+Collaborate with your flatmates
+#+end_quote
+
+** What is FlatTrack?
+
+A [[https://simple.wikipedia.org/wiki/Free_and_open-source_software][Free and Open Source]] collaboration software for flats / community houses and homes with the goals of **easing common tasks** in living environments, *enabling closer collaboration*, and *empowering humans who live together*.

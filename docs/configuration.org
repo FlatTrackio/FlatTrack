@@ -1,4 +1,3 @@
-# -*- ii: flattrack; -*-
 #+TITLE: Configuring FlatTrack
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
 
