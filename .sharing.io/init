@@ -24,8 +24,8 @@ if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
          --set ingress.hosts[0].paths[0]="/" \
          --set siteURL="http://$FLATTRACK_DEV_HOSTNAME" \
          --set realIPHeader=X-Real-Ip \
+         deployments/flattrack
          # --set ingress.annotations."cert-manager.io/cluster-issuer"=flattrack-dev \
          # --set ingress.tls[0].secretName=flattrack-dev \
          # --set ingress.tls[0].hosts[0]=$FLATTRACK_DEV_HOSTNAME \
-         deployments/flattrack
 fi
