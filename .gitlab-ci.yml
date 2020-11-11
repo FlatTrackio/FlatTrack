@@ -261,7 +261,7 @@ pages:
           curl -s https://raw.githubusercontent.com/theiceshelf/firn/master/install -o install-firn
           chmod +x install-firn && ./install-firn
         )
-  - cd docs
+    - cd docs
   script:
   - firn build
   - mv _firn/_site ../public
