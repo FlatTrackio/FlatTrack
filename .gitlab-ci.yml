@@ -255,6 +255,7 @@ pages:
   image: alpine:3.11
   stage: pages
   before_script:
+    - apk add --no-cache curl
     - |
         (
           cd /root
