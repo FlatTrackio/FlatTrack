@@ -254,13 +254,18 @@ lint_helm_chart:
 pages:
   image: alpine:3.11
   stage: pages
+  variables:
+    FIRN_VERSION: v0.0.12
   before_script:
-    - apk add --no-cache curl bash
     - |
         (
           cd /root
-          curl -s https://raw.githubusercontent.com/theiceshelf/firn/master/install -o install-firn
-          chmod +x install-firn && ./install-firn
+          apt update
+          apt install -y wget unzip
+          wget https://github.com/theiceshelf/firn/releases/download/$FIRN_VERSION/firn-linux.zip
+          unzip firn-linux.zip
+          chmod +x firn
+          mv firn /usr/local/bin/firn
         )
     - cd docs
   script:
