@@ -252,7 +252,7 @@ lint_helm_chart:
     - helm lint deployments/flattrack
 
 pages:
-  image: alpine:3.11
+  image: ubuntu:20.04
   stage: pages
   variables:
     FIRN_VERSION: v0.0.12
