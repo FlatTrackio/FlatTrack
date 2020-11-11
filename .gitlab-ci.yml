@@ -263,9 +263,8 @@ pages:
           chmod +x install-firn && ./install-firn
         )
     - cd docs
-    - export PATH=$PATH:/usr/local/bin
   script:
-  - firn build
+  - /usr/local/bin/firn build
   - mv _firn/_site ../public
   artifacts:
     paths:
