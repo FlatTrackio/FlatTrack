@@ -1,0 +1,31 @@
+#!/bin/bash -x
+
+DEFAULT_SUBDOMAIN_NAME=flattrack-dev
+
+if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
+    kubectl create ns flattrack-dev
+
+    echo "Installing Postgres"
+    kubectl -n flattrack-dev apply -k deployments/k8s-manifests/development/postgres
+
+    echo "Waiting for Postgres to be ready"
+    kubectl -n flattrack-dev --for=condition=ready pod --selector=app=postgres --timeout=90s
+
+    FLATTRACK_DEV_HOSTNAME="$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_HOSTNAME"
+    echo "Installing FlatTrack"
+    helm install flattrack-dev -n flattrack-dev \
+         --set horizonalPodAutoscaler.enabled=false \
+         --set postgres.username=flattrack \
+         --set postgres.password=flattrack \
+         --set postgres.host=postgres \
+         --set postgres.database=flattrack \
+         --set ingress.enabled=true \
+         --set ingress.hosts[0].host=$FLATTRACK_DEV_HOSTNAME \
+         --set ingress.hosts[0].paths[0]="/" \
+         --set siteURL="http://$FLATTRACK_DEV_HOSTNAME" \
+         --set realIPHeader=X-Real-Ip \
+         # --set ingress.annotations."cert-manager.io/cluster-issuer"=flattrack-dev \
+         # --set ingress.tls[0].secretName=flattrack-dev \
+         # --set ingress.tls[0].hosts[0]=$FLATTRACK_DEV_HOSTNAME \
+         deployments/flattrack
+fi
