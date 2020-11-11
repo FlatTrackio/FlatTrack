@@ -252,13 +252,19 @@ lint_helm_chart:
     - helm lint deployments/flattrack
 
 pages:
-  image: python:3.8-buster
+  image: alpine:3.11
   stage: pages
   before_script:
-    - pip install mkdocs-material
+    - |
+        (
+          cd /root
+          curl -s https://raw.githubusercontent.com/theiceshelf/firn/master/install -o install-firn
+          chmod +x install-firn && ./install-firn
+        )
+    - cd docs
   script:
-  - mkdocs build
-  - mv site public
+  - firn build
+  - mv _firn/_site ../public
   artifacts:
     paths:
     - public
