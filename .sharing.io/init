@@ -11,7 +11,7 @@ if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
     echo "Waiting for Postgres to be ready"
     kubectl -n flattrack-dev --for=condition=ready pod --selector=app=postgres --timeout=90s
 
-    FLATTRACK_DEV_HOSTNAME="$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_HOSTNAME"
+    FLATTRACK_DEV_HOSTNAME="$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME"
     echo "Installing FlatTrack"
     helm install flattrack-dev -n flattrack-dev \
          --set horizonalPodAutoscaler.enabled=false \
