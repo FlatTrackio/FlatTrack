@@ -39,7 +39,7 @@ To view the documentation, please check out the GitLab-hosted [[https://flattrac
 ** Contribution
 *** Development
 From code, to assets/artwork, to community, to documentation, there are many ways to contribute.  
-To learn how to contribute, please refer to the [development+contribution documentation](docs/DEVELOPMENT.org).  
+To learn how to contribute, please refer to the [[./docs/development.org][development+contribution documentation]].
 Looking for something to do? Check out the [[https://gitlab.com/flattrack/flattrack/-/issues][FlatTrack issues]] page.
 
 ** Community
