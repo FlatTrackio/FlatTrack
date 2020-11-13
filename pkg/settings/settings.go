@@ -124,3 +124,30 @@ func SetShoppingListNotes(db *sql.DB, notes string) (err error) {
 	defer rows.Close()
 	return err
 }
+
+// GetFlatNotes ...
+// returns the flat notes
+func GetFlatNotes(db *sql.DB) (notes string, err error) {
+	sqlStatement := `select value from settings where name = 'flatNotes'`
+	rows, err := db.Query(sqlStatement)
+	if err != nil {
+		return notes, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		rows.Scan(&notes)
+	}
+	return notes, err
+}
+
+// SetFlatNotes ...
+// sets flat notes
+func SetFlatNotes(db *sql.DB, notes string) (err error) {
+	if len(notes) > 500 {
+		return fmt.Errorf("Unable to set flat notes as it is either invalid, too short, or too long")
+	}
+	sqlStatement := `update settings set value = $1 where name = 'flatNotes';`
+	rows, err := db.Query(sqlStatement, notes)
+	defer rows.Close()
+	return err
+}

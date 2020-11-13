@@ -23,10 +23,13 @@
               <li class="is-active"><router-link to="/flat">My flat</router-link></li>
             </ul>
         </nav>
-        <h1 v-if="hasInitialLoaded || flatName !== ''" class="title is-1">{{ flatName }}</h1>
+        <h1 v-if="hasInitialLoaded || name !== ''" class="title is-1">{{ name }}</h1>
         <b-skeleton v-else size="is-medium" width="35%" :animated="true"></b-skeleton>
         <p class="subtitle is-3">About your flat</p>
-        <b-message type="is-warning">
+        <b-message type="is-primary" v-if="notes !== ''">
+          {{ notes }}
+        </b-message>
+        <b-message type="is-warning" v-else>
           This section for describing such things as, but not limited to:
           <br/>
           <ul style="list-style-type: disc;">
@@ -49,24 +52,23 @@ export default {
   name: 'flat',
   data () {
     return {
-      flatName: '',
+      name: '',
+      notes: '',
       hasInitialLoaded: false
     }
   },
-  methods: {
-    GetFlatName () {
-      flatInfo.GetFlatName().then(resp => {
-        if (this.flatName !== resp.data.spec) {
-          this.hasInitialLoaded = true
-          this.flatName = resp.data.spec
-          common.WriteFlatnameToCache(resp.data.spec)
-        }
-      })
-    }
-  },
   async beforeMount () {
-    this.flatName = common.GetFlatnameFromCache() || this.flatName
-    this.GetFlatName()
+    this.name = common.GetFlatnameFromCache() || this.name
+    flatInfo.GetFlatName().then(resp => {
+      if (this.name !== resp.data.spec) {
+        this.name = resp.data.spec
+        common.WriteFlatnameToCache(resp.data.spec)
+      }
+      return flatInfo.GetFlatNotes()
+    }).then(resp => {
+      this.notes = resp.data.spec.notes
+      this.hasInitialLoaded = true
+    })
   }
 }
 </script>

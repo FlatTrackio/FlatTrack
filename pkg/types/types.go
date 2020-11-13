@@ -225,6 +225,12 @@ type ShoppingListNotes struct {
 	Notes string `json:"notes"`
 }
 
+// FlatNotes ...
+// notes for the flat
+type FlatNotes struct {
+	Notes string `json:"notes"`
+}
+
 // UserCreationSecretSpec ...
 // values for a user to confirm their account with
 type UserCreationSecretSpec struct {
