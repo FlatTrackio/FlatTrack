@@ -48,7 +48,29 @@
                 @click="PostFlatName">
               </b-button>
             </p>
-        </b-field>
+          </b-field>
+        </div>
+        <div>
+          <label class="label">Flat notes</label>
+          <b-field>
+            <b-input
+              type="textarea"
+              v-model="flatNotes"
+              minlength="0"
+              maxlength="500"
+              placeholder="Enter notes about your flat. e.g: living space, rules, obligations, etc..."
+              size="is-medium"
+              expanded>
+            </b-input>
+            <p class="control">
+              <b-button
+                type="is-primary"
+                size="is-medium"
+                icon-left="check"
+                @click="PutFlatNotes">
+              </b-button>
+            </p>
+          </b-field>
         </div>
         <br/>
       </section>
@@ -66,12 +88,16 @@ export default {
   data () {
     return {
       pageLoading: true,
-      flatName: ''
+      flatName: '',
+      flatNotes: ''
     }
   },
   async beforeMount () {
     flatInfo.GetFlatName().then(resp => {
       this.flatName = resp.data.spec
+      return flatInfo.GetFlatNotes()
+    }).then(resp => {
+      this.flatNotes = resp.data.spec.notes
       this.pageLoading = false
     })
   },
@@ -88,6 +114,17 @@ export default {
         common.DisplaySuccessToast('Set flat name')
       }).catch(err => {
         common.DisplayFailureToast('Failed set the flat name' + '<br/>' + (err.response.data.metadata.response || err))
+      })
+    },
+    PutFlatNotes () {
+      if (this.flatName === '') {
+        common.DisplayFailureToast('Error: Flat notes must not be empty')
+        return
+      }
+      settings.PutFlatNotes(this.flatNotes).then(resp => {
+        common.DisplaySuccessToast('Set flat notes')
+      }).catch(err => {
+        common.DisplayFailureToast('Failed set the flat notes' + '<br/>' + (err))
       })
     },
     TimestampToCalendar (timestamp) {

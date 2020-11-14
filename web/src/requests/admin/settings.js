@@ -30,6 +30,19 @@ function PostFlatName (flatName) {
   })
 }
 
+// PutFlatNotes
+// changes the FlatNotes
+function PutFlatNotes (notes) {
+  return Request({
+    url: `/api/admin/settings/flatNotes`,
+    method: 'PUT',
+    data: {
+      notes
+    }
+  })
+}
+
 export default {
-  PostFlatName
+  PostFlatName,
+  PutFlatNotes
 }

@@ -27,4 +27,16 @@ function GetFlatName () {
   })
 }
 
-export default { GetFlatName }
+// GetFlatNotes
+// gets the notes of the flat
+function GetFlatNotes () {
+  return Request({
+    url: '/api/flat/info',
+    method: 'GET'
+  })
+}
+
+export default {
+  GetFlatName,
+  GetFlatNotes
+}

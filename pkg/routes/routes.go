@@ -1628,6 +1628,63 @@ func PutSettingsShoppingList(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// GetSettingsFlatNotes ...
+// responds with the notes for flat
+func GetSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch the flat notes"
+		code := http.StatusInternalServerError
+
+		notes, err := settings.GetFlatNotes(db)
+		if notes == "" {
+			response = "There are no notes set for the flat"
+			code = http.StatusOK
+		} else if err == nil {
+			response = "Fetched the flat notes"
+			code = http.StatusOK
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: types.FlatNotes{
+				Notes: notes,
+			},
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PutSettingsFlatNotes ...
+// update the notes for flat
+func PutSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := http.StatusInternalServerError
+		response := "Failed to update the notes the flat"
+
+		var notes types.FlatNotes
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &notes)
+
+		err := settings.SetFlatNotes(db, notes.Notes)
+		if err == nil {
+			code = http.StatusOK
+			response = "Successfully set flat notes"
+		} else {
+			code = http.StatusBadRequest
+			response = err.Error()
+			notes.Notes = ""
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: notes.Notes,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // GetAllGroups ...
 // returns a list of all groups
 func GetAllGroups(db *sql.DB) http.HandlerFunc {

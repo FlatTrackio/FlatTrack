@@ -51,13 +51,18 @@ func GetEndpoints(db *sql.DB) types.Endpoints {
 			HTTPMethod:   http.MethodPost,
 		},
 		{
-			EndpointPath: "/apps/shoppinglist/settings/notes",
-			HandlerFunc:  HTTPuseMiddleware(GetSettingsShoppingListNotes(db), HTTPvalidateJWT(db)),
+			EndpointPath: "/admin/settings/shoppingListNotes",
+			HandlerFunc:  HTTPuseMiddleware(PutSettingsShoppingList(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromID(db, "admin")),
+			HTTPMethod:   http.MethodPut,
+		},
+		{
+			EndpointPath: "/admin/settings/flatNotes",
+			HandlerFunc:  HTTPuseMiddleware(GetSettingsFlatNotes(db), HTTPvalidateJWT(db)),
 			HTTPMethod:   http.MethodGet,
 		},
 		{
-			EndpointPath: "/admin/settings/shoppingListNotes",
-			HandlerFunc:  HTTPuseMiddleware(PutSettingsShoppingList(db), HTTPvalidateJWT(db), HTTPcheckGroupsFromID(db, "admin")),
+			EndpointPath: "/admin/settings/flatNotes",
+			HandlerFunc:  HTTPuseMiddleware(PutSettingsFlatNotes(db), HTTPvalidateJWT(db)),
 			HTTPMethod:   http.MethodPut,
 		},
 		{
@@ -176,6 +181,11 @@ func GetEndpoints(db *sql.DB) types.Endpoints {
 			HTTPMethod:   http.MethodGet,
 		},
 		{
+			EndpointPath: "/apps/shoppinglist/settings/notes",
+			HandlerFunc:  HTTPuseMiddleware(GetSettingsShoppingListNotes(db), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodGet,
+		},
+		{
 			EndpointPath: "/apps/shoppinglist/lists",
 			HandlerFunc:  HTTPuseMiddleware(GetShoppingLists(db), HTTPvalidateJWT(db)),
 			HTTPMethod:   http.MethodGet,
@@ -279,6 +289,11 @@ func GetEndpoints(db *sql.DB) types.Endpoints {
 			EndpointPath: "/apps/shoppinglist/tags/{id}",
 			HandlerFunc:  HTTPuseMiddleware(DeleteShoppingTag(db), HTTPvalidateJWT(db)),
 			HTTPMethod:   http.MethodDelete,
+		},
+		{
+			EndpointPath: "/flat/info",
+			HandlerFunc:  HTTPuseMiddleware(GetSettingsFlatNotes(db), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodGet,
 		},
 	}
 }
