@@ -27,7 +27,10 @@
         <b-skeleton v-else size="is-medium" width="35%" :animated="true"></b-skeleton>
         <p class="subtitle is-3">About your flat</p>
         <b-message type="is-primary" v-if="notes !== ''">
-          {{ notes }}
+          <span v-for="line in notesSplit" v-bind:key="line">
+            {{ line }}
+            <br/>
+          </span>
         </b-message>
         <b-message type="is-warning" v-else>
           This section for describing such things as, but not limited to:
@@ -54,6 +57,7 @@ export default {
     return {
       name: '',
       notes: '',
+      notesSplit: '',
       hasInitialLoaded: false
     }
   },
@@ -67,6 +71,7 @@ export default {
       return flatInfo.GetFlatNotes()
     }).then(resp => {
       this.notes = resp.data.spec.notes
+      this.notesSplit = this.notes.split('\n')
       this.hasInitialLoaded = true
     })
   }
