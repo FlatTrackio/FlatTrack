@@ -157,6 +157,7 @@ build-zip-copy-extras:
   script:
     - cp -r migrations $RELEASE_FOLDER_NAME/migrations
     - cp -r templates $RELEASE_FOLDER_NAME/templates
+    - cp -r web/dist $RELEASE_FOLDER_NAME/dist
   only:
     - tags
     - master
