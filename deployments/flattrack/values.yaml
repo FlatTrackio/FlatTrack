@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: registry.gitlab.com/flattrack/flattrack
   # uncomment to use specified tag instead of appVersion 
-  # tag: 0.0.1-alpha11-1
+  tag: ""
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []
@@ -25,14 +25,14 @@ service:
   port: 8080
 
 horizonalPodAutoscaler:
-  enabled: true
-  minReplicas: 2
+  enabled: false
+  minReplicas: 1
   maxReplicas: 5
   targetCPUUtilizationPercentage: 80
 
 podDisruptionBudget:
-  enabled: true
-  minAvailable: 2
+  enabled: false
+  minAvailable: 1
   # maxUnavailable: 3
 
 prometheus:
