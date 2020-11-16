@@ -98,7 +98,7 @@ build-zip-frontend:
     - cd web
     - npm i
   script:
-    - ./node_modules/.bin/vue-cli-service build --dest $RELEASE_FOLDER_NAME/dist ./src/main.js
+    - ./node_modules/.bin/vue-cli-service build --dest $CI_PROJECT_DIR/$RELEASE_FOLDER_NAME/dist ./src/main.js
   only:
     - tags
     - master
