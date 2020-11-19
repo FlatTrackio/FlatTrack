@@ -170,7 +170,10 @@ html {
 }
 
 .hero-body, .section {
-    padding: 3rem 1rem;
+    padding-top: 2rem;
+    padding-right: 1rem;
+    padding-bottom: 5rem;
+    padding-left: 1rem;
 }
 
 .form-width {
