@@ -3,23 +3,29 @@
 * Install Termux
 Termux can be found in the [[https://f-droid.org/en/packages/com.termux/][F-Droid store]] or Google Play.
 
-* Getting a release
+* Obtaining FlatTrack
+** Getting a release
 
-Head over to GitLab
+Head over to [[https://gitlab.com/flattrack/flattrack/-/pipelines][GitLab pipelines]] and find the latest tagged release.
+The pipeline will contain a ~build-zip~ job which has artifacts to download.
 
-* Manual installation
+e.g:
+#+begin_src shell
+wget https://gitlab.com/flattrack/flattrack/-/jobs/723836116/artifacts/raw/flattrack.tar.gz
+#+end_src
 
-** Install Dependencies
+** Manual installation
+*** Install Dependencies
 #+begin_src shell
   pkg add postgresql nodejs golang git python2
 #+end_src
 
-** Clone the repo
+*** Clone the repo
 #+begin_src shell
   git clone https://gitlab.com/flattrack/flattrack
 #+end_src
 
-** Remove testing dependencies from the frontend
+*** Remove testing dependencies from the frontend
 #+begin_src patch :tangle flattrack-remove-deps.patch
 diff --git a/package.json b/package.json
 index 442781e..0dfecc7 100644
@@ -52,7 +58,7 @@ index 442781e..0dfecc7 100644
   git patch < flattrack-remove-deps.patch
 #+end_src
 
-** Build components
+*** Build components
 *** Frontend
 Fetch dependencies:
 #+begin_src shell
