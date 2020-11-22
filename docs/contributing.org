@@ -1,30 +1,34 @@
 #+TITLE: Contibuting
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
+#+FIRN_UNDER: Community
+#+FIRN_ORDER: 0
+
+* Contributing
 
 How to contribute to FlatTrack.  
 
-* Code
+** Code
 For a dive into getting started in development, please read the [[./DEVELOPMENT.md][development docs]].
 A good place to start is the [[https://gitlab.com/flattrack/flattrack/-/issues?scope=all&utf8=%25E2%259C%2593&state=opened&label_name%5B%5D=Good%2520for%2520new%2520contributors][GitLab issues, filtering by issues which are good for new contributors]].
 
-** Testing
+*** Testing
 Tests are written for the backend and frontend, please read the [[./TESTING.md][testing docs]].
 
-* Community
-** Engagement
+** Community
+*** Engagement
 Let others in the larger [[https://simple.wikipedia.org/wiki/Free_and_open-source_software][FOSS]] community know about FlatTrack.
 
 Outside of the FOSS community:
 - finding the needs of those living in flats
 - get others to try it and find their thoughts on the project
 
-** Guidelines
+*** Guidelines
 You may wish to contribute to the [[./COMMUNITY.md][community guidelines]].
 
-* Artwork & Design
+** Artwork & Design
 Although not essential, it is a good idea to have an idea for frontend web development technologies.
 
-* Documentation
+** Documentation
 Wanna help improve the documentation of FlatTrack?
 For code related documentation the cycle is similar to the [[./DEVELOPMENT.md][development docs]].
 

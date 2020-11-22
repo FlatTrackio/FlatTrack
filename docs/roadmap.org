@@ -1,7 +1,13 @@
 #+TITLE: Roadmap
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
+#+FIRN_UNDER: Community
+#+FIRN_ORDER: 1
 
-Goals for future version of FlatTrack
+* Roadmap
+
+Goals for future version of FlatTrack.
+
+TODO: Consider roadmap
 
 * Versions
 ** 0.0.1
