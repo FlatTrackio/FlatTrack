@@ -1,7 +1,7 @@
-#+TITLE: FlatTrack development
+#+TITLE: Development
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
 
-* Development cycle
+* Development
 In-cluster local development is recommended, use [[https://minikube.sigs.k8s.io][minikube]] or [[https://kind.sigs.k8s.io/][kind]].
 
 ** (almost) Automatic
@@ -57,7 +57,7 @@ Build the frontend:
     #+end_src
 
 
-* Additional
+** Additional
 *** Manually connecting to the Postgres database
    #+begin_src shell
    kubectl -n flattrack-dev exec -it postgres-0 -- psql
@@ -68,7 +68,7 @@ Build the frontend:
    gomigrate -source "file://$(pwd)/migrations" -database postgres://flattrack:flattrack@localhost/flattrack?sslmode=disable down
    #+end_src
 
-* Project structure and details
+** Project structure and details
 *** Code
 *** API
 Written in golang, the API is located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/pkg/routes][pkg/routes]].
@@ -89,12 +89,12 @@ Each table is created with [[https://github.com/golang-migrate/migrate][golang-m
 
 *** Assets
 Images are located in [[https://gitlab.com/flattrack/flattrack/-/tree/master/web/assets][web/assets]], these are used throughout the project (such as in the frontend, and readme).
-* Docs
+** Docs
 To run the docs in development, use:
 #+begin_src sh
 docker run --rm -it -p 8000:8000 -v ${PWD}:/docs:ro,Z squidfunk/mkdocs-material
 #+end_src
-* Making a release checklist
+** Making a release checklist
 Things to do before making a release:
 - update helm chart version
 - ensure docs represent the latest changes
