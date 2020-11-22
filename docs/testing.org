@@ -1,9 +1,11 @@
 #+TITLE: Testing
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
 
+* Testing
+
 Learn how to test FlatTrack.
 
-* API
+** Backend
 The API uses [[https://onsi.github.io/ginkgo][Ginkgo]] as the e2e testing framework.
 
 *** e2e tests
@@ -11,7 +13,7 @@ The API uses [[https://onsi.github.io/ginkgo][Ginkgo]] as the e2e testing framew
   ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
   #+end_src
 
-* Frontend
+** Frontend
 The frontend uses [[https://mochajs.org/][Mocha]] as the testing framework.
 
 *** e2e tests

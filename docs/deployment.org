@@ -1,11 +1,13 @@
-#+TITLE: Deploying FlatTrack
+#+TITLE: Deployment
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
+
+* Deployment
 
 To configure FlatTrack, please refer to the [[./CONFIGURATION.md][configuration guide]].
 
-* Kubernetes (recommended)
+** Kubernetes (recommended)
 *** Helm
-***** Configuration
+**** Configuration
 Chart values are located in [[https://gitlab.com/flattrack/flattrack/-/blob/master/deployments/flattrack/values.yaml][../deployments/flattrack/values.yaml]].
 
 | Parameter                                             | Description                                                  | Default                                 |
@@ -62,7 +64,7 @@ Chart values are located in [[https://gitlab.com/flattrack/flattrack/-/blob/mast
 | tolerations                                           | declare the toleration labels for Pod scheduling             | ~[]~                                    |
 | affinity                                              | declare the affinity settings for the Pod scheduling         | ~{}~                                    |
 
-***** Installation
+**** Installation
 Create the namespace:
 #+begin_src sh :src ../
   kubectl create namespace flattrack-myflat
@@ -73,7 +75,7 @@ Install the release with Helm:
   helm install flattrack-myflat --namespace flattrack-myflat deployments/flattrack
 #+end_src
 
-* Docker-compose
+** Docker-compose
 The example set up in Docker-compose for FlatTrack is located in [[https://gitlab.com/flattrack/flattrack/-/blob/master/deployments/docker-compose.yml][../deployments/docker-compose.yml]]. This configuration is not considered production-ready, but for some may be a good enough option.
 ~Important notes~:
 - the docker-compose deployment doesn't include SSL/TLS in the stack, so if you wish to deploy it you will need to add a reverse-proxy to handle SSL/TLS - this isn't something that FlatTrack implements.
@@ -84,7 +86,7 @@ Deploy the docker-compose stack:
   docker-compose up -d
 #+end_src
 
-* Plain Ubuntu server
+** Plain Ubuntu server
 Set up FlatTrack on an Ubuntu 20.04 server using systemd, certbot, and nginx.
 This has been tested on Ubuntu 20.04 and will very likely work on later versions.
 
