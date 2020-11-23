@@ -4,19 +4,18 @@
 # script for initialisation with https://github.com/sharingio/pair instances
 #
 
+export TMATE_SOCKET="${TMATE_SOCKET:-/tmp/ii.default.target.iisocket}"
+
 if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
-    kubectl create ns flattrack-dev
+    kubectl get ns flattrack-dev || kubectl create ns flattrack-dev
 
-    echo "Installing Postgres"
-    kubectl -n flattrack-dev apply -k deployments/k8s-manifests/development/postgres
-
-    echo "Waiting for Postgres to be ready"
-    kubectl -n flattrack-dev --for=condition=ready pod --selector=app=postgres --timeout=90s
+    /usr/local/bin/tmate-wait-for-socket.sh
+    kubectl -n powerdns get secret letsencrypt-prod -o yaml | grep -v '^\s*namespace:\s' | kubectl -n flattrack-dev apply -f -
 
     echo "Building and installing FlatTrack"
     echo "Starting Tilt"
     tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n tilt bash
-    tmate -S $TMATE_SOCKET send-keys -t tilt "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\"" Enter
+    tmate -S $TMATE_SOCKET send-keys -t tilt "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"\$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\"" Enter
     tmate -S $TMATE_SOCKET send-keys -t tilt "tilt up --host 0.0.0.0 --hud" Enter
 
     echo "Building Backend"
