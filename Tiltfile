@@ -27,11 +27,15 @@ if os.getenv('SHARINGIO_PAIR_NAME'):
         'realIPHeader=X-Real-Ip'
     ]
 
+namespace='flattrack-dev'
+if os.getenv('FLATTRACK_NAMESPACE'):
+    namespace = os.get('FLATTRACK_NAMESPACE')
+
 # prepare and use Helm chart
 yaml = helm(
   'deployments/flattrack',
   name='flattrack-dev',
-  namespace='flattrack-dev',
+  namespace=namespace,
   set=helmSet
   )
 k8s_yaml(yaml)
