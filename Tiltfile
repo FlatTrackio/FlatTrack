@@ -19,6 +19,9 @@ if os.getenv('SHARINGIO_PAIR_NAME'):
     helmSet = helmSet + [
         'ingress.enabled=true',
         'ingress.hosts[0].host=' + devHostname,
+        'ingress.annotations.cert-manager\\.io/cluster-issuer=letsencrypt-prod',
+        'ingress.tls[0].secretName=letsencrypt-prod',
+        'ingress.tls[0].hosts[0]=' + devHostname,
         'ingress.hosts[0].paths[0]=/',
         'siteURL=http://' + devHostname,
         'realIPHeader=X-Real-Ip'
