@@ -5,12 +5,23 @@
 #
 
 export TMATE_SOCKET="${TMATE_SOCKET:-/tmp/ii.default.target.iisocket}"
+export FLATTRACK_NAMESPACE=flattrack-dev
 
 if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
-    kubectl get ns flattrack-dev || kubectl create ns flattrack-dev
+    kubectl get ns $FLATTRACK_NAMESPACE || kubectl create ns $FLATTRACK_NAMESPACE
 
     /usr/local/bin/tmate-wait-for-socket.sh
-    kubectl -n powerdns get secret letsencrypt-prod -o yaml | grep -v '^\s*namespace:\s' | kubectl -n flattrack-dev apply -f -
+    (
+        while true; do
+            conditions=$(kubectl -n powerdns get cert letsencrypt-prod -o=jsonpath='{.status.conditions[0]}')
+            if [ "$(echo $conditions | jq -r .type)" = "Ready" ] && [ "$(echo $conditions | jq -r .status)" = "True" ]; then
+                break
+            fi
+            echo "Waiting for valid TLS cert to use in FlatTrack dev deploy"
+            sleep 1
+        done
+        kubectl -n powerdns get secret letsencrypt-prod -o yaml | grep -v '^\s*namespace:\s' | kubectl -n $FLATTRACK_NAMESPACE apply -f -
+    ) &
 
     echo "Building and installing FlatTrack"
     echo "Starting Tilt"
