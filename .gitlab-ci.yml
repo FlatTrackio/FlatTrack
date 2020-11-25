@@ -60,7 +60,9 @@ variables:
 
 build-container-amd64:
   stage: build
-  image: gcr.io/kaniko-project/executor:debug-v1.0.0
+  image:
+    name: gcr.io/kaniko-project/executor:debug-v1.0.0
+    entrypoint: [""]
   retry: 2
   variables:
     ARCH: "amd64"
@@ -73,7 +75,9 @@ build-container-amd64:
 
 build-container-arm64:
   stage: build
-  image: gcr.io/kaniko-project/executor:debug-v1.0.0
+  image:
+    name: gcr.io/kaniko-project/executor:debug-v1.0.0
+    entrypoint: [""]
   retry: 2
   variables:
     ARCH: "arm64"
