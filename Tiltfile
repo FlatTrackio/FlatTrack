@@ -40,6 +40,10 @@ yaml = helm(
   )
 k8s_yaml(yaml)
 
+# port-forward FlatTrack and Postgres to ports on the localhost
+k8s_resource(workload='flattrack-dev', port_forwards=8080)
+k8s_resource(workload='postgres', port_forwards=5432)
+
 # use misc development manifests (postgres, etc...)
 k8s_yaml(kustomize('deployments/k8s-manifests/development'))
 # if using Kind with Podman
@@ -54,7 +58,3 @@ else:
 
 # disallow production clusters
 allow_k8s_contexts('in-cluster')
-
-# port-forward FlatTrack and Postgres to ports on the localhost
-local_resource(name="flattrack-port-forward", serve_cmd='kubectl -n flattrack-dev port-forward svc/flattrack-dev 8080:8080')
-local_resource(name="postgres-port-forward", serve_cmd='kubectl -n flattrack-dev port-forward svc/postgres 5432:5432')

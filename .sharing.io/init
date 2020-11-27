@@ -5,9 +5,10 @@
 #
 
 export TMATE_SOCKET="${TMATE_SOCKET:-/tmp/ii.default.target.iisocket}"
-export FLATTRACK_NAMESPACE=flattrack-dev
 
 if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
+    export FLATTRACK_NAMESPACE="${FLATTRACK_NAMESPACE:-flattrack-dev}"
+
     kubectl get ns $FLATTRACK_NAMESPACE || kubectl create ns $FLATTRACK_NAMESPACE
     kubectl label ns $FLATTRACK_NAMESPACE cert-manager-tls=sync
 
