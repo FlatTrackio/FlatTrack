@@ -1,4 +1,13 @@
-#+TITLE: Running FlatTrack in Termux on Android
+#+TITLE: Android
+#+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
+#+FIRN_UNDER: Deployment
+#+FIRN_ORDER: 0
+
+* Android
+
+#+begin_quote
+Running FlatTrack on Android with Termux
+#+end_quote
 
 * Install Termux
 Termux can be found in the [[https://f-droid.org/en/packages/com.termux/][F-Droid store]] or Google Play.
