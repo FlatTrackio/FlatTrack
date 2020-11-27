@@ -29,9 +29,9 @@ Collaborate with your flatmates
 ** Getting started
 Various options are available for running a FlatTrack instance:
 - [[https://flattrack.io][FlatTrack.io hosting]] (recommended; coming soon)
-- [[./docs/deployment.org][Self-hosted Kubernetes]] (recommended)
-- [[./docs/deployment.org][Self-hosted Docker-Compose]]
-- [[./docs/deployment.org][Self-hosted plain Ubuntu server]]
+- [[file:docs/deployment.org::*Kubernetes (recommended)][Self-hosted Kubernetes]] (recommended)
+- [[file:docs/deployment.org::*Docker-compose][Self-hosted Docker-Compose]]
+- [[file:docs/deployment.org::*Plain Ubuntu server][Self-hosted plain Ubuntu server]]
 
 ** Documentation
 To view the documentation, please check out the GitLab-hosted [[https://flattrack.gitlab.io/flattrack][FlatTrack docs]]

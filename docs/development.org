@@ -16,6 +16,9 @@ Requirements:
 - [[https://nodejs.org/en/download/][nodejs]]
 - a [[https://www.postgresql.org/download/][Postgres]] database
 
+Notes:
+- work nice and easy off of your plain host with basic utilities available
+
 *** Set up Postgres
 
 Docker:
@@ -101,6 +104,7 @@ Contains:
 
 Notes:
 - will automatically build a container with local Docker or Podman, push it into the cluster. Will be accessible from a NodePort or http://localhost:8080
+- this will use ~dev.Dockerfile~ which only copies built resources into a scratch container
 
 Create a local cluster with kind or minikube according to their respective instructions.
 
@@ -126,7 +130,7 @@ Notes:
   - components
   - setup
 
-** Manual
+** Manual flow
 
 Why use this flow?
 #+begin_quote
@@ -134,6 +138,10 @@ This flow is similar to the standard flow, except it uses a Postgres database ou
 #+end_quote
 
 Develop on a localhost with a Postgres instance existing in a Kubernetes cluster
+
+Note:
+- this flow does not deal with any container images
+- Postgres can be local or remote, it just should be available
 
 *** Bring up the deployments
    #+begin_src shell
