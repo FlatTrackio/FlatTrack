@@ -4,7 +4,7 @@ ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
 ARG AppBuildDate="???"
 ARG AppBuildMode="development"
-RUN apk add python2 make g++
+RUN apk add --no-cache python2 make g++
 COPY web /app/web
 WORKDIR /app/web
 RUN npm i
@@ -37,7 +37,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
   main.go
 
 FROM alpine:3.11 as extras
-RUN apk add tzdata ca-certificates
+RUN apk add --no-cache tzdata ca-certificates
 RUN adduser -D user
 
 FROM scratch
