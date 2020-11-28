@@ -133,7 +133,7 @@
         </b-field>
         <div>
           <section>
-            <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + id + '/new')">
+            <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'New shopping list item', query: { 'name': itemSearch } })">
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
@@ -267,7 +267,7 @@
           </div>
           <br/>
         </div>
-        <floatingAddButton :path="'/apps/shopping-list/list/' + id + '/new'"/>
+        <floatingAddButton :func="GoToNewItemPage" />
         <p class="subtitle is-4">
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br/>
@@ -421,6 +421,10 @@ export default {
     }
   },
   methods: {
+    GoToNewItemPage () {
+      var itemSearch = this.itemSearch
+      this.$router.push({ name: 'New shopping list item', query: { 'name': itemSearch } })
+    },
     ItemByNameInList (item) {
       var vm = this
       return item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
