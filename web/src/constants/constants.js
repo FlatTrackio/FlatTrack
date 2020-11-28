@@ -20,5 +20,5 @@ export default {
   appBuildHash: process.env.VUE_APP_AppBuildHash || '???',
   appBuildDate: process.env.VUE_APP_AppBuildDate || '???',
   appBuildMode: process.env.VUE_APP_AppBuildMode || 'development',
-  appWebpackHotUpdate: webpackHotUpdate && process.env.NODE_ENV === 'development'
+  appWebpackHotUpdate: typeof webpackHotUpdate === 'function' && process.env.NODE_ENV === 'development'
 }
