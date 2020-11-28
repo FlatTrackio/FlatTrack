@@ -4,7 +4,8 @@ RUN adduser -D user
 
 FROM scratch
 WORKDIR /app
-ENV PATH=/app
+ENV PATH=/app \
+  APP_DIST_FOLDER=./dist
 COPY web/dist /app/dist
 COPY flattrack /app/flattrack
 COPY --from=extras /etc/passwd /etc/passwd
