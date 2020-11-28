@@ -81,25 +81,23 @@
               </p>
             </div>
             <b-field class="is-marginless">
-              <p class="control" v-if="tags.length > 0 || tagsList.length > 0">
-                <b-dropdown>
-                  <b-button
-                    icon-left="menu-down"
-                    type="is-primary"
-                    slot="trigger"
-                    size="is-medium">
-                  </b-button>
+              <b-dropdown>
+                <b-button
+                  icon-left="menu-down"
+                  type="is-primary"
+                  slot="trigger"
+                  size="is-medium">
+                </b-button>
 
-                  <b-dropdown-item disabled v-if="tags.length > 0">Tags in all lists</b-dropdown-item>
-                  <div v-for="existingTag in tags" v-bind:key="existingTag">
-                    <b-dropdown-item v-if="existingTag.name !== '' && existingTag.name.length > 0 && typeof existingTag.name !== 'undefined'" :value="existingTag.name" @click="tag = existingTag.name">{{ existingTag.name }}</b-dropdown-item>
-                  </div>
-                  <b-dropdown-item disabled v-if="tagsList.length > 0">Tags in this list</b-dropdown-item>
-                  <div v-for="existingListTag in tagsList" v-bind:key="existingListTag">
-                    <b-dropdown-item v-if="existingListTag !== '' && existingListTag.length > 0 && typeof existingListTag !== 'undefined'" :value="existingListTag" @click="tag = existingListTag">{{ existingListTag }}</b-dropdown-item>
-                  </div>
-                </b-dropdown>
-              </p>
+                <b-dropdown-item disabled v-if="tags.length > 0">Tags in all lists</b-dropdown-item>
+                <div v-for="existingTag in tags" v-bind:key="existingTag">
+                  <b-dropdown-item v-if="existingTag.name !== '' && existingTag.name.length > 0 && typeof existingTag.name !== 'undefined'" :value="existingTag.name" @click="tag = existingTag.name">{{ existingTag.name }}</b-dropdown-item>
+                </div>
+                <b-dropdown-item disabled v-if="tagsList.length > 0">Tags in this list</b-dropdown-item>
+                <div v-for="existingListTag in tagsList" v-bind:key="existingListTag">
+                  <b-dropdown-item v-if="existingListTag !== '' && existingListTag.length > 0 && typeof existingListTag !== 'undefined'" :value="existingListTag" @click="tag = existingListTag">{{ existingListTag }}</b-dropdown-item>
+                </div>
+              </b-dropdown>
               <b-input
                 expanded
                 type="text"
