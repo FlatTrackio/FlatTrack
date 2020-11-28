@@ -201,6 +201,9 @@ export default {
     if (this.$route.query.tag) {
       this.tag = this.$route.query.tag
     }
+    if (this.$route.query.name) {
+      this.name = this.$route.query.name
+    }
   }
 }
 </script>
