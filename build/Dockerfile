@@ -44,7 +44,6 @@ FROM scratch
 WORKDIR /app
 ENV PATH=/app
 COPY --from=ui /app/web/dist /app/dist
-COPY --from=ui /app/web/package.json .
 COPY --from=api /app/flattrack .
 COPY --from=extras /etc/passwd /etc/passwd
 COPY --from=extras /etc/group /etc/group
