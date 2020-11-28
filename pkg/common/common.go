@@ -205,7 +205,7 @@ func SetFirstOrSecond(first string, second string) string {
 // GetAppDistFolder ...
 // return the path to the folder containing the frontend assets
 func GetAppDistFolder() string {
-	return GetEnvOrDefault("APP_DIST_FOLDER", "./dist")
+	return GetEnvOrDefault("APP_DIST_FOLDER", "./web/dist")
 }
 
 // RegexMatchName ...

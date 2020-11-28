@@ -13,6 +13,7 @@
 
 import axios from 'axios'
 import common from '@/common/common'
+import constants from '@/constants/constants'
 
 function redirectToLogin (redirect) {
   if (redirect === false) {
@@ -35,6 +36,9 @@ function Request (request, redirect = true, publicRoute = false) {
     }
     if (publicRoute !== true) {
       request.headers.Authorization = `bearer ${authToken}`
+    }
+    if (constants.appWebpackHotUpdate) {
+      request.baseURL = 'http://localhost:8080'
     }
     axios(request)
       .then(resp => resolve(resp))
