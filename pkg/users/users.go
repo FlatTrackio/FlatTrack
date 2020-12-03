@@ -21,6 +21,7 @@ package users
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -342,7 +343,10 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 		return false, err
 	}
 
-	reqClaims := token.Claims.(*types.JWTclaim)
+	reqClaims, ok := token.Claims.(*types.JWTclaim)
+	if ok == false {
+		return false, fmt.Errorf("Unable to read JWT claims")
+	}
 	user, err := GetUserByID(db, reqClaims.ID, true)
 	if err != nil || user.ID == "" || user.DeletionTimestamp != 0 {
 		return false, fmt.Errorf("Unable to find the user account which the authentication token belongs to")
