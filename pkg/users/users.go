@@ -21,7 +21,6 @@ package users
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
