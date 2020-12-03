@@ -27,10 +27,18 @@
         <p class="subtitle is-3">What is FlatTrack?</p>
         <b-message type="is-primary" has-icon icon="help">
           <p class="is-size-5">
-            FlatTrack is a
+            <a href="https://flattrack.io" target="_blank" rel="noreferrer">FlatTrack</a> is a
             <a href="https://simple.wikipedia.org/wiki/Free_and_open-source_software" target="_blank" rel="noreferrer">Free and Open Source</a>
             collaboration software for flats / community houses and homes
             with the goals of <b>easing common tasks</b> in living environments, <b>enabling closer collaboration</b>, and <b>empowering humans who live together</b>.
+          </p>
+        </b-message>
+        <p class="subtitle is-3">Collaborate</p>
+        <b-message type="is-primary" has-icon icon="help">
+          <p class="is-size-5">
+            FlatTrack is all about community.<br/>
+            Together, we can define the standards on technology's assistance in flat life.<br/>
+            Contribution is welcome and you are too! Please join the community over on <a href="https://gitlab.com/flattrack/flattrack" target="_blank" rel="noreferrer">GitLab</a>.
           </p>
         </b-message>
         <p class="subtitle is-3">This FlatTrack instance</p>
