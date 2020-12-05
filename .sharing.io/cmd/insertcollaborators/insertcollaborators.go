@@ -54,31 +54,14 @@ func main() {
 	for _, user := range userAccounts {
 		user.Groups = defaultUserAccountGroups
 		user.Password = defaultUserPassword
+		user.Registered = true
 		log.Printf("Inserting '%v'/'%v'\n", user.Names, user.Email)
-		userInDB, err := users.CreateUser(db, user, false)
+		_, err = users.CreateUser(db, user, false)
 		if err != nil {
 			log.Fatalln(err)
 			return
 		}
 		log.Printf("Inserted '%v'/'%v'\n", user.Names, user.Email)
-		userAccountPatch := types.UserSpec{
-			Names:       user.Names,
-			Email:       user.Email,
-			Password:    defaultUserPassword,
-			Birthday:    user.Birthday,
-			PhoneNumber: user.PhoneNumber,
-			Registered:  true,
-		}
-		log.Println("Patching account to be registered")
-		userConfirmed, err := users.PatchProfileAdmin(db, userInDB.ID, userAccountPatch)
-		if err != nil {
-			log.Fatalln(err)
-			return
-		}
-		if userConfirmed.ID == "" || userConfirmed.Registered == false {
-			log.Fatalln("Failed to patch profile")
-			return
-		}
 		log.Println("Completed processing account")
 	}
 
