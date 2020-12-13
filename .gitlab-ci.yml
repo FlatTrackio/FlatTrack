@@ -256,28 +256,17 @@ lint_helm_chart:
     - helm lint deployments/flattrack
 
 pages:
-  image: ubuntu:20.04
+  image:
+    name: theiceshelf/firn:latest
+    entrypoint: [""]
   stage: pages
-  variables:
-    FIRN_VERSION: v0.0.12
   before_script:
-    - |
-        (
-          cd /root
-          apt update
-          apt install -y wget unzip
-          wget https://github.com/theiceshelf/firn/releases/download/$FIRN_VERSION/firn-linux.zip
-          unzip firn-linux.zip
-          chmod +x firn
-          mv firn /usr/local/bin/firn
-        )
     - cd docs
   script:
-  - /usr/local/bin/firn build
+  - firn build
   - mv _firn/_site ../public
   artifacts:
     paths:
     - public
   only:
     - master
-
