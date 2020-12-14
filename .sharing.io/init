@@ -44,13 +44,14 @@ metadata:
 spec:
   rules:
     - host: flattrack-docs.${SHARINGIO_PAIR_BASE_DNS_NAME}
-      paths:
-        - backend:
-            service:
-              name: flattrack-docs
-              port:
-                number: 8080
-          path: /
+      http:
+        paths:
+          - backend:
+              service:
+                name: flattrack-docs
+                port:
+                  number: 8080
+            path: /
   tls:
     - hosts:
         - flattrack-docs.${SHARINGIO_PAIR_BASE_DNS_NAME}
