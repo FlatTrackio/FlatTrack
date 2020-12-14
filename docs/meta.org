@@ -4,31 +4,32 @@
 Various information about the project
 
 * Lines
-  #+begin_src shell :dir ..
+  #+begin_src bash :dir ..
     cloc --vcs=git --ignored=node_modules .
   #+end_src
 
   #+RESULTS:
-  #+begin_example
-       166 text files.
-  classified 166 filesDuplicate file check 166 files (161 known unique)Unique:      100 files                                               165 unique files.                              
-  Counting:  100      29 files ignored.
-
-  github.com/AlDanial/cloc v 1.82  T=0.19 s (757.9 files/s, 167804.4 lines/s)
-  -------------------------------------------------------------------------------
-  Language                     files          blank        comment           code
-  -------------------------------------------------------------------------------
-  JSON                             4              0              0          16385
-  Go                              19            690            483           5947
-  Vuejs Component                 33            183              7           4336
-  JavaScript                      31            122            254           1003
-  YAML                            23             41             38            873
-  Markdown                        12            214              0            562
-  SQL                             16             59              9            155
-  Dockerfile                       1              3              1             46
-  TypeScript                       2              1              2             14
-  HTML                             1              0              1             12
-  -------------------------------------------------------------------------------
-  SUM:                           142           1313            795          29333
-  -------------------------------------------------------------------------------
-  #+end_example
+  #+begin_src bash
+github.com/AlDanial/cloc v 1.82  T=0.19 s (845.0 files/s, 185394.3 lines/s)
+--------------------------------------------------------------------------------
+Language                      files          blank        comment           code
+--------------------------------------------------------------------------------
+JSON                              5              0              0          16461
+Go                               25            892            817           6919
+Vuejs Component                  37            317            467           5226
+JavaScript                       35            217            538           1244
+YAML                             22             44             37           1014
+CSS                               1             91             52            417
+SQL                              24             79             11            201
+Dockerfile                        1              3              1             53
+Python                            1              8             11             41
+Clojure                           3              0              2             35
+HTML                              2              0              1             25
+Bourne Again Shell                1              9              3             23
+TypeScript                        2              7             22             14
+Bourne Shell                      1              3              1             10
+Markdown                          1              4              0              5
+--------------------------------------------------------------------------------
+SUM:                            161           1674           1963          31688
+--------------------------------------------------------------------------------
+  #+end_src
