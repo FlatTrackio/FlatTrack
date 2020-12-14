@@ -11,4 +11,4 @@ done
 echo "FlatTrack API is now ready"
 
 export APP_DB_MIGRATIONS_PATH="$SCRIPT_PATH/../migrations"
-go run cmd/insertcollaborators/insertcollaborators.go
+go run "$SCRIPT_PATH"/cmd/insertcollaborators/insertcollaborators.go

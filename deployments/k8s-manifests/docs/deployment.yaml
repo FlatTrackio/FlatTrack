@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flattrack-docs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flattrack-docs
+  template:
+    metadata:
+      labels:
+        app: flattrack-docs
+    spec:
+      restartPolicy: Always
+      containers:
+      - name: flattrack-docs
+        image: registry.gitlab.com/flattrack/flattrack/docs:latest
+        ports:
+        - containerPort: 8080
