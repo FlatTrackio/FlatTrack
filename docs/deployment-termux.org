@@ -1,9 +1,9 @@
-#+TITLE: Android
+#+TITLE: Termux on Android
 #+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
 #+FIRN_UNDER: Deployment
-#+FIRN_ORDER: 0
+#+FIRN_ORDER: 4
 
-* Android
+* Termux on Android
 
 #+begin_quote
 Running FlatTrack on Android with Termux
