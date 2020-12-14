@@ -1,9 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"log"
 	"os"
+	"strings"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/database"
@@ -17,17 +17,28 @@ var (
 	defaultUserPassword      = "P@ssw0rd123!"
 )
 
+func guestsUserAccountsFromFlatString(input string, hostname string) (guests []types.UserSpec) {
+	usernames := strings.Split(input, " ")
+	for _, username := range usernames {
+		guests = append(guests, types.UserSpec{
+			Names: username,
+			Email: username + "@" + hostname,
+		})
+	}
+	return guests
+}
+
 func main() {
 	log.Println("Preparing to add new guests")
-	userAccountsRaw := os.Getenv("SHARINGIO_PAIR_GUESTS")
-	if userAccountsRaw == "" {
-		log.Fatalln("No guests declared to create")
-		return
-	}
+	flattrackDevHostname := os.Getenv("FLATTRACK_DEV_HOSTNAME")
+	userAccountsNamesFlat := os.Getenv("SHARINGIO_PAIR_GUEST_NAMES")
+	userAccountFromFlatNames := guestsUserAccountsFromFlatString(userAccountsNamesFlat, flattrackDevHostname)
+
 	var userAccounts []types.UserSpec
-	err := json.Unmarshal([]byte(userAccountsRaw), &userAccounts)
-	if err != nil {
-		log.Fatalln(err)
+	if len(userAccountFromFlatNames) > 0 {
+		userAccounts = userAccountFromFlatNames
+	} else {
+		log.Fatalln("No guests declared to create")
 		return
 	}
 
