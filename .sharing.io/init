@@ -5,12 +5,14 @@
 #
 
 export TMATE_SOCKET="${TMATE_SOCKET:-/tmp/ii.default.target.iisocket}"
+export SCRIPT_PATH="$(dirname $(realpath $0))"
+export FLATTRACK_DEV_HOSTNAME="$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME"
 
 if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
-    export FLATTRACK_NAMESPACE="${FLATTRACK_NAMESPACE:-flattrack-dev}"
+    export SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE="${SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE:-flattrack-dev}"
 
-    kubectl get ns $FLATTRACK_NAMESPACE || kubectl create ns $FLATTRACK_NAMESPACE
-    kubectl label ns $FLATTRACK_NAMESPACE cert-manager-tls=sync
+    kubectl get ns $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE || kubectl create ns $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE
+    kubectl label ns $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE cert-manager-tls=sync
 
     /usr/local/bin/tmate-wait-for-socket.sh
 
@@ -30,6 +32,14 @@ if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
     tmate -S $TMATE_SOCKET send-keys -t frontend "npm run build" Enter
 
     echo "Postgres"
-    tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD/web" -n postgres bash
+    tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n postgres bash
+    tmate -S $TMATE_SOCKET send-keys -t postgres "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=Ready pod -l app=postgres --timeout=200s" Enter
     tmate -S $TMATE_SOCKET send-keys -t postgres "psql \"postgres://flattrack:flattrack@postgres.flattrack-dev/flattrack\"" Enter
+
+    if [ ! "$FLATTRACK_INIT_COLLABORATORS_DISABLE" ]; then
+        echo "Init Collaborators"
+        tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n init-collaborators bash
+        tmate -S $TMATE_SOCKET send-keys -t init-collaborators "export FLATTRACK_DEV_HOSTNAME=$FLATTRACK_DEV_HOSTNAME" Enter
+        tmate -S $TMATE_SOCKET send-keys -t init-collaborators "$SCRIPT_PATH/insert-collaborators.sh" Enter
+    fi
 fi
