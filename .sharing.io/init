@@ -52,6 +52,7 @@ spec:
                 port:
                   number: 8080
             path: /
+            pathType: ImplementationSpecific
   tls:
     - hosts:
         - flattrack-docs.${SHARINGIO_PAIR_BASE_DNS_NAME}
