@@ -1,4 +1,4 @@
-siteURL: ""
+siteURLOverride: ""
 realIPHeader: ""
 
 # how many flattrack pods there should be
