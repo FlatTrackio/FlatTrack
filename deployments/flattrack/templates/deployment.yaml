@@ -103,9 +103,11 @@ spec:
                   name: {{ include "flattrack.fullname" . }}
                   key: app-smtp-port
             {{- end }}
-            {{- if .Values.siteURL }}
             - name: APP_URL
-              value: {{ .Values.siteURL }}
+            {{- if .Values.siteURLOverride }}
+              value: {{ .Values.siteURLOverride }}
+            {{- else }}
+              value: "http{{ if $.Values.ingress.tls }}s{{ end }}://{{ (first .Values.ingress.hosts).host }}"
             {{- end }}
             {{- if .Values.realIPHeader }}
             - name: APP_HTTP_REAL_IP_HEADER
