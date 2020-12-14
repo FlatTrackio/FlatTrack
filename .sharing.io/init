@@ -36,6 +36,28 @@ if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
     tmate -S $TMATE_SOCKET send-keys -t postgres "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=Ready pod -l app=postgres --timeout=200s" Enter
     tmate -S $TMATE_SOCKET send-keys -t postgres "psql \"postgres://flattrack:flattrack@postgres.flattrack-dev/flattrack\"" Enter
 
+    cat <<EOF | kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flattrack-docs
+spec:
+  rules:
+    - host: flattrack-docs.${SHARINGIO_PAIR_BASE_DNS_NAME}
+      paths:
+        - backend:
+            service:
+              name: flattrack-docs
+              port:
+                number: 8080
+          path: /
+  tls:
+    - hosts:
+        - flattrack-docs.${SHARINGIO_PAIR_BASE_DNS_NAME}
+      secretName: letsencrypt-prod
+
+EOF
+
     if [ ! "$FLATTRACK_INIT_COLLABORATORS_DISABLE" ]; then
         echo "Init Collaborators"
         tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n init-collaborators bash
