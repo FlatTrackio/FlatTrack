@@ -16,14 +16,19 @@
 <template>
   <div>
     <div v-if="HeaderIsSticky && !editing" :class="ratherSmallerScreen ? 'ListBar ListBarTop' : 'ListBar'">
-      <p class="subtitle is-5">
-        <b>{{ name }}</b>
-        ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
-        <span @click="PatchShoppingListCompleted(id, !completed)" class="display-is-editable pointer-cursor-on-hover">
-          <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
-          <b-tag type="is-success" v-else-if="completed">Completed</b-tag>
-        </span>
-      </p>
+      <div class="level">
+        <p class="subtitle is-5 mb-0" style="float: left;">
+          <b>{{ name }}</b>
+          ${{ currentPrice }}/${{ totalPrice }} ({{ Math.round(currentPrice / totalPrice * 100 * 100) / 100 || 0 }}%)
+          <span @click="PatchShoppingListCompleted(id, !completed)" class="display-is-editable pointer-cursor-on-hover">
+            <b-tag type="is-warning" v-if="!completed">Uncompleted</b-tag>
+            <b-tag type="is-success" v-else-if="completed">Completed</b-tag>
+          </span>
+        </p>
+        <div style="float: right;">
+          <b-button icon-right="magnify" size="is-small" @click="FocusSearch"></b-button>
+        </div>
+      </div>
     </div>
     <div class="container">
       <section class="section">
@@ -107,13 +112,13 @@
         <label class="label">Search for items</label>
         <b-field>
           <b-input
+            id="search"
             icon="magnify"
             size="is-medium"
             placeholder="Item name"
             type="search"
             v-model="itemSearch"
             ref="search"
-            v-on:keyup.ctrl.66="FocusSearchBox"
             expanded>
           </b-input>
           <p class="control">
@@ -610,10 +615,13 @@ export default {
       this.loopCreated = new Date()
     },
     FocusName () {
-      this.$refs.name.$el.focus()
+      this.$refs.name.focus()
     },
     FocusNotes () {
-      this.$refs.notes.$el.focus()
+      this.$refs.notes.focus()
+    },
+    FocusSearch () {
+      this.$refs.search.focus()
     }
   },
   watch: {
