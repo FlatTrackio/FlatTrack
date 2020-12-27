@@ -52,6 +52,7 @@
           <div class="media-right">
             <b-tooltip label="Duplicate" class="is-paddingless" :delay="200">
               <b-button
+                size="is-small"
                 type="is-white"
                 icon-right="content-duplicate"
                 v-if="deviceIsMobile === false"
@@ -60,6 +61,7 @@
 
             <b-tooltip label="Delete" class="is-paddingless" :delay="200">
               <b-button
+                size="is-small"
                 type="is-danger"
                 icon-right="delete"
                 :loading="itemDeleting"
