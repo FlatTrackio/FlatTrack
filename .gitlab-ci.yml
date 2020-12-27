@@ -58,14 +58,12 @@ variables:
   export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
   mkdir -p $RELEASE_FOLDER_NAME
 
-build-container-amd64:
+.build-container: &build-container
   stage: build
   image:
     name: gcr.io/kaniko-project/executor:debug-v1.0.0
     entrypoint: [""]
   retry: 2
-  variables:
-    ARCH: "amd64"
   before_script:
     - *kaniko-build-pre-script
     - *kaniko-build-taggable-name
@@ -73,23 +71,18 @@ build-container-amd64:
   script:
     - *kaniko-build
 
+build-container-amd64:
+  <<: *build-container
+  variables:
+    ARCH: "amd64"
+
 build-container-arm64:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:debug-v1.0.0
-    entrypoint: [""]
-  retry: 2
+  <<: *build-container
   variables:
     ARCH: "arm64"
   only:
     - tags
     - master
-  before_script:
-    - *kaniko-build-pre-script
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
-  script:
-    - *kaniko-build
 
 build-zip-frontend:
   stage: build
@@ -257,7 +250,8 @@ lint_helm_chart:
 
 pages:
   image:
-    name: theiceshelf/firn:latest
+    # use temporary firn container image instead of theiceshelf/firn image, until tagging is in CI
+    name: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
     entrypoint: [""]
   stage: pages
   before_script:
