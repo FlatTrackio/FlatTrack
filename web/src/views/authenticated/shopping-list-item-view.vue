@@ -35,6 +35,9 @@
               maxlength="30"
               icon="text"
               placeholder="Enter a name for this item"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="name = ''"
               @keyup.enter.native="UpdateShoppingListItem"
               required>
             </b-input>
@@ -46,6 +49,9 @@
               size="is-medium"
               maxlength="40"
               placeholder="Enter extra information as notes to this item"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="notes = ''"
               @keyup.enter.native="UpdateShoppingListItem"
               icon="text">
             </b-input>
@@ -57,6 +63,9 @@
               placeholder="0.00"
               v-model="price"
               icon="currency-usd"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="price = ''"
               @keyup.enter.native="UpdateShoppingListItem"
               size="is-medium">
             </b-input>
@@ -105,6 +114,9 @@
                 icon="tag"
                 maxlength="30"
                 placeholder="Enter a tag to group the item"
+                icon-right="close-circle"
+                icon-right-clickable
+                @icon-right-click="tag = ''"
                 @keyup.enter.native="UpdateShoppingListItem"
                 size="is-medium">
               </b-input>

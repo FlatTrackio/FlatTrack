@@ -60,6 +60,9 @@
             placeholder="Enter your name(s)"
             icon="textbox"
             size="is-medium"
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="names = ''"
             @keyup.enter.native="PatchProfile"
             required>
           </b-input>
@@ -73,6 +76,9 @@
             icon="email"
             size="is-medium"
             placeholder="Enter your email address"
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="email = ''"
             @keyup.enter.native="PatchProfile"
             required>
           </b-input>
@@ -84,6 +90,9 @@
             placeholder="Enter your phone number"
             icon="phone"
             size="is-medium"
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="phoneNumber = ''"
             @keyup.enter.native="PatchProfile"
             maxlength="30">
           </b-input>

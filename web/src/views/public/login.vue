@@ -33,6 +33,9 @@
               @keyup.enter.native="postLogin"
               size="is-medium"
               icon="email"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="email = ''"
               required>
               </b-input>
           </b-field>
@@ -48,6 +51,9 @@
               size="is-medium"
               icon="textbox-password"
               pattern="^([a-z]*)([A-Z]*).{10,}$"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="password = ''"
               required>
             </b-input>
           </b-field>

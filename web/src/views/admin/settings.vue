@@ -36,6 +36,9 @@
               placeholder="Enter your flat's name"
               icon="textbox"
               size="is-medium"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="flatName = ''"
               @keyup.enter.native="PostFlatName"
               expanded
               required>
@@ -60,6 +63,9 @@
               maxlength="500"
               placeholder="Enter notes about your flat. e.g: living space, rules, obligations, etc..."
               size="is-medium"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="flatNotes = ''"
               expanded>
             </b-input>
             <p class="control">

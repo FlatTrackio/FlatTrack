@@ -35,6 +35,9 @@
               size="is-medium"
               placeholder="Enter a title for this list"
               autofocus
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="name = ''"
               @keyup.enter.native="PostNewShoppingList"
               required>
             </b-input>
@@ -47,6 +50,9 @@
               icon="text"
               placeholder="Enter extra information"
               @keyup.enter.native="PostNewShoppingList"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="notes = ''"
               maxlength="100">
             </b-input>
           </b-field>

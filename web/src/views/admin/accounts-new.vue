@@ -34,6 +34,9 @@
             placeholder="Enter your flatmate's name"
             icon="textbox"
             size="is-medium"
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="names = ''"
             @keyup.enter.native="PostUserAccount"
             autofocus
             required>
@@ -48,6 +51,9 @@
             placeholder="Enter your flatmate's email"
             icon="email"
             size="is-medium"
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="email = ''"
             @keyup.enter.native="PostUserAccount"
             required>
           </b-input>
@@ -76,13 +82,17 @@
         </div>
         <div v-if="!setOnlyRequiredFields">
           <b-field label="Phone number (optional)">
-            <b-input type="tel"
-                     v-model="phoneNumber"
-                     placeholder="Enter your flatmate's phone number"
-                     icon="phone"
-                     size="is-medium"
-                     @keyup.enter.native="PostUserAccount"
-                     maxlength="30">
+            <b-input
+              type="tel"
+              v-model="phoneNumber"
+              placeholder="Enter your flatmate's phone number"
+              icon="phone"
+              size="is-medium"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="phoneNumber = ''"
+              @keyup.enter.native="PostUserAccount"
+              maxlength="30">
             </b-input>
           </b-field>
 
@@ -117,6 +127,9 @@
               size="is-medium"
               pattern="^([a-z]*)([A-Z]*).{10,}$"
               validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="password = ''"
               @keyup.enter.native="PostUserAccount"
               required>
             </b-input>
@@ -133,6 +146,9 @@
               size="is-medium"
               pattern="^([a-z]*)([A-Z]*).{10,}$"
               validation-message="password is invalid. passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="passwordConfirm = ''"
               @keyup.enter.native="PostUserAccount"
               required>
             </b-input>

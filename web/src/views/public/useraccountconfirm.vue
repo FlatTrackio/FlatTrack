@@ -47,6 +47,9 @@
               placeholder="Enter your phone number"
               icon="phone"
               size="is-medium"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="phoneNumber = ''"
               @keyup.enter.native="PostUserConfirm"
               maxlength="30">
             </b-input>
@@ -84,6 +87,9 @@
               size="is-medium"
               pattern="^([a-z]*)([a-z]*).{10,}$"
               validation-message="password is invalid. passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="password = ''"
               @keyup.enter.native="PostUserConfirm"
               required>
             </b-input>
@@ -100,6 +106,9 @@
               size="is-medium"
               pattern="^([a-z]*)([A-Z]*).{10,}$"
               validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="passwordConfirm = ''"
               @keyup.enter.native="PostUserConfirm"
               required>
             </b-input>
