@@ -44,6 +44,9 @@
               placeholder="Enter a title for this list"
               @keyup.enter.native="UpdateShoppingList(name, notes, completed)"
               @keyup.esc.native="editing = false; editingMeta = false"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="name = ''"
               v-model="name"
               required>
             </b-input>
@@ -66,6 +69,9 @@
                 placeholder="Enter extra information"
                 @keyup.enter.native="notesFromEmpty = false; editing = false; editingMeta = false; UpdateShoppingList(name, notes)"
                 @keyup.esc.native="editing = false; editingMeta = false"
+                icon-right="close-circle"
+                icon-right-clickable
+                @icon-right-click="notes = ''"
                 v-model="notes">
               </b-input>
             </b-field>
@@ -176,6 +182,9 @@
                     expanded
                     @keyup.enter.native="editingTag = ''; UpdateShoppingListItemTag(itemTag.tag, TagTmp); itemTag.tag = TagTmp; TagTmp = ''; editing = false"
                     @keyup.esc.native="editingTag = ''; editing = false"
+                    icon-right="close-circle"
+                    icon-right-clickable
+                    @icon-right-click="TagTmp = ''"
                     v-model="TagTmp"
                     required>
                   </b-input>

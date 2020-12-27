@@ -72,6 +72,9 @@
             placeholder="Enter your flat's name"
             icon="textbox"
             size="is-medium"
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="flatName = ''"
             @keyup.enter.native="Register"
             required>
           </b-input>
@@ -91,6 +94,9 @@
             placeholder="Enter your name(s)"
             icon="textbox"
             size="is-medium"
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="names = ''"
             @keyup.enter.native="Register"
             required>
           </b-input>
@@ -103,6 +109,9 @@
             placeholder="Enter your email address"
             icon="email"
             size="is-medium"
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="email = ''"
             @keyup.enter.native="Register"
             required>
           </b-input>
@@ -114,6 +123,9 @@
             placeholder="Enter your phone number"
             icon="phone"
             size="is-medium"
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="phoneNumber = ''"
             @keyup.enter.native="Register"
             maxlength="30">
           </b-input>
@@ -151,6 +163,9 @@
             size="is-medium"
             pattern="^([a-z]*)([A-Z]*).{10,}$"
             validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="password = ''"
             @keyup.enter.native="Register"
             required>
           </b-input>
@@ -167,6 +182,9 @@
             maxlength="70"
             pattern="^([a-z]*)([A-Z]*).{10,}$"
             validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+            icon-right="close-circle"
+            icon-right-clickable
+            @icon-right-click="passwordConfirm = ''"
             required>
           </b-input>
         </b-field>

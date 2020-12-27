@@ -34,6 +34,9 @@
               maxlength="30"
               icon="text"
               placeholder="Enter a name for this item"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="name = ''"
               @keyup.enter.native="PostShoppingListItem"
               autofocus
               required>
@@ -47,6 +50,9 @@
               icon="text"
               placeholder="Enter information extra"
               @keyup.enter.native="PostShoppingListItem"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="notes = ''"
               maxlength="40">
             </b-input>
           </b-field>
@@ -57,6 +63,9 @@
               placeholder="0.00"
               v-model="price"
               icon="currency-usd"
+              icon-right="close-circle"
+              icon-right-clickable
+              @icon-right-click="price = ''"
               @keyup.enter.native="PostShoppingListItem"
               size="is-medium">
             </b-input>
@@ -106,6 +115,9 @@
                 maxlength="30"
                 placeholder="Enter a tag to group the item"
                 @keyup.enter.native="PostShoppingListItem"
+                icon-right="close-circle"
+                icon-right-clickable
+                @icon-right-click="tag = ''"
                 size="is-medium">
               </b-input>
             </b-field>

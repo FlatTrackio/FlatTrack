@@ -54,6 +54,9 @@
           placeholder="Enter your flatmate's name"
           icon="textbox"
           size="is-medium"
+          icon-right="close-circle"
+          icon-right-clickable
+          @icon-right-click="names = ''"
           @keyup.enter.native="PatchUserAccount"
           required>
         </b-input>
@@ -67,6 +70,9 @@
           placeholder="Enter your flatmate's email"
           icon="email"
           size="is-medium"
+          icon-right="close-circle"
+          icon-right-clickable
+          @icon-right-click="email = ''"
           @keyup.enter.native="PatchUserAccount"
           required>
         </b-input>
@@ -98,6 +104,9 @@
           placeholder="Enter your flatmate's phone number"
           icon="phone"
           size="is-medium"
+          icon-right="close-circle"
+          icon-right-clickable
+          @icon-right-click="phoneNumber = ''"
           @keyup.enter.native="PatchUserAccount"
           maxlength="30">
         </b-input>
@@ -133,6 +142,9 @@
           icon="textbox-password"
           pattern="^([a-z]*)([A-Z]*).{10,}$"
           validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+          icon-right="close-circle"
+          icon-right-clickable
+          @icon-right-click="password = ''"
           @keyup.enter.native="PatchUserAccount"
           size="is-medium">
         </b-input>
@@ -148,6 +160,9 @@
           icon="textbox-password"
           pattern="^([a-z]*)([A-Z]*).{10,}$"
           validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+          icon-right="close-circle"
+          icon-right-clickable
+          @icon-right-click="passwordConfirm = ''"
           @keyup.enter.native="PatchUserAccount"
           size="is-medium">
         </b-input>
