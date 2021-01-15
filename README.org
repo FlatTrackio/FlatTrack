@@ -8,6 +8,9 @@
 Collaborate with your flatmates
 #+end_quote
 
+#+html: <img style='margin-left: auto; margin-right: auto;' alt='flattrack shopping list preview' src='./screenshots/flatmates-mobile.png' width=350>
+#+html: <br/>
+
 ** Features
 - Shopping List
 - Tasks (WIP - no progress)
@@ -45,8 +48,8 @@ Looking for something to do? Check out the [[https://gitlab.com/flattrack/flattr
 ** Community
 Join FlatTrack's community to chip in and improve it!  
 Please read:
-- [[docs/contributing.org][contributing docs]].
-- [[docs/community.org][community docs]].
+- [[./docs/contributing.org][contributing docs]].
+- [[./docs/community.org][community docs]].
 
 ** License
 Copyright 2019-2020 Caleb Woodbine.  
