@@ -1,5 +1,6 @@
 siteURLOverride: ""
 realIPHeader: ""
+timezone: ""
 
 # how many flattrack pods there should be
 replicaCount: 1
@@ -54,15 +55,16 @@ networkPolicy:
   #         app: postgres
   egress: {}
 
-extraEnvVars:
-  - name: TZ
-    value: "Pacific/Auckland"
+extraEnvVars: []
 
 # connect to an existing postgres database
 postgres:
   enabled: true
   username: ""
   password: ""
+  passwordSecretRef:
+    name: ""
+    key: ""
   host: ""
   database: ""
   sslmode: disable
@@ -82,6 +84,9 @@ annotations: {}
 
 ingress:
   enabled: false
+  certmanager:
+    enabled: false
+    email: ""
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
