@@ -53,17 +53,32 @@ spec:
           securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 12 }}
           env:
+            {{- if .Values.timezone }}
+            - name: TZ
+              value: {{ .Values.timezone }}
+            {{- end }}
             {{- if .Values.postgres.enabled }}
             - name: APP_DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: {{ include "flattrack.fullname" . }}
                   key: app-db-username
+            {{- if .Values.postgres.password }}
             - name: APP_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "flattrack.fullname" . }}
                   key: app-db-password
+            {{- end }}
+            {{- if .Values.postgres.passwordSecretRef.name }}
+            {{- if .Values.postgres.passwordSecretRef.key }}
+            - name: APP_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.postgres.passwordSecretRef.name }}
+                  key: {{ .Values.postgres.passwordSecretRef.key }}
+            {{- end }}
+            {{- end }}
             - name: APP_DB_HOST
               valueFrom:
                 secretKeyRef:
