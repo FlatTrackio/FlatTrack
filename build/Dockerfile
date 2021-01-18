@@ -1,5 +1,4 @@
 FROM node:14.7.0-alpine3.11 AS ui
-LABEL maintainer="Caleb Woodbine <calebwoodbine.public@gmail.com>"
 ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
 ARG AppBuildDate="???"
@@ -41,6 +40,15 @@ RUN apk add --no-cache tzdata ca-certificates
 RUN adduser -D user
 
 FROM scratch
+LABEL maintainer="Caleb Woodbine <calebwoodbine.public@gmail.com>" \
+  org.opencontainers.image.title="flattrack" \
+  org.opencontainers.image.description="Collaborate with your flatmates" \
+  org.opencontainers.image.url="https://gitlab.com/flattrack/flattrack" \
+  org.opencontainers.image.source="git@gitlab.com/flattrack/flattrack" \
+  org.opencontainers.image.vendor="FlatTrack" \
+  org.opencontainers.image.licenses="AGPL-3.0" \
+  org.opencontainers.image.documentation="https://flattrack.gitlab.io/flattrack" \
+  org.opencontainers.image.authors="FlatTrack authors"
 WORKDIR /app
 ENV PATH=/app \
   APP_DIST_FOLDER=./dist
