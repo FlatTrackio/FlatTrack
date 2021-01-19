@@ -320,7 +320,7 @@
             Last updated
             <span v-if="hasInitialLoaded || typeof authorName !== 'undefined'">{{ TimestampToCalendar(modificationTimestamp) }}, by</span>
             <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
-            <router-link v-if="hasInitialLoaded || typeof authorName !== 'undefined'" tag="a" :to="{ name: 'My Flatmates', query: { 'id': author }}"> {{ authorLastNames }} </router-link>
+            <router-link v-if="hasInitialLoaded || typeof authorName !== 'undefined'" tag="a" :to="{ name: 'My Flatmates', query: { 'id': authorLast }}"> {{ authorLastNames }} </router-link>
             <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
           </span>
         </p>
