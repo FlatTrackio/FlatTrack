@@ -29,7 +29,7 @@ metadata:
 {{- end }}
 {{- end }}
 spec:
-  {{- if .Values.ingress.certmanager }}
+  {{- if .Values.ingress.certmanager.enabled }}
   tls:
     - hosts:
     {{- range .Values.ingress.hosts }}
