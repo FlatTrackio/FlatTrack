@@ -49,19 +49,15 @@ k8s_resource(workload='postgres', port_forwards=5432)
 
 # use misc development manifests (postgres, etc...)
 k8s_yaml(kustomize('deployments/k8s-manifests/development'))
-k8s_yaml(kustomize('deployments/k8s-manifests/docs'))
 # if using Kind with Podman
 if os.getenv('KIND_EXPERIMENTAL_PROVIDER') == 'podman' and k8s_context() == 'kind-kind':
     custom_build(containerRepo, 'podman build -f build/dev.Dockerfile -t $EXPECTED_REF . && podman save $EXPECTED_REF > /tmp/tilt-containerbuild.tar.gz && kind load image-archive /tmp/tilt-containerbuild.tar.gz', ['.'], disable_push=True, skips_local_docker=True)
-    custom_build(containerRepoDocs, 'podman build -f build/docs.Dockerfile -t $EXPECTED_REF . && podman save $EXPECTED_REF > /tmp/tilt-containerbuild.tar.gz && kind load image-archive /tmp/tilt-containerbuild.tar.gz', ['.'], disable_push=True, skips_local_docker=True)
 # if using a pair instance
 elif os.getenv('SHARINGIO_PAIR_NAME'):
     custom_build(containerRepo, 'docker build -f build/dev.Dockerfile -t $EXPECTED_REF .', ['.'], disable_push=True)
-    custom_build(containerRepoDocs, 'docker build -f build/docs.Dockerfile -t $EXPECTED_REF .', ['.'], disable_push=True)
 # standard
 else:
     docker_build(containerRepo, '.', dockerfile="build/dev.Dockerfile")
-    docker_build(containerRepoDocs, '.', dockerfile="build/docs.Dockerfile")
 
 # disallow production clusters
 allow_k8s_contexts('in-cluster')
