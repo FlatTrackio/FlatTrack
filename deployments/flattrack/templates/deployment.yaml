@@ -69,15 +69,12 @@ spec:
                 secretKeyRef:
                   name: {{ include "flattrack.fullname" . }}
                   key: app-db-password
-            {{- end }}
-            {{- if .Values.postgres.passwordSecretRef.name }}
-            {{- if .Values.postgres.passwordSecretRef.key }}
+            {{- else if and .Values.postgres.passwordSecretRef.name .Values.postgres.passwordSecretRef.key }}
             - name: APP_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.postgres.passwordSecretRef.name }}
                   key: {{ .Values.postgres.passwordSecretRef.key }}
-            {{- end }}
             {{- end }}
             - name: APP_DB_HOST
               valueFrom:

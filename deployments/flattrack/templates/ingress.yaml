@@ -1,6 +1,6 @@
-{{- if .Values.ingress.enabled -}}
+{{- if $.Values.ingress.enabled -}}
 {{- $fullName := include "flattrack.fullname" . -}}
-{{- $svcPort := .Values.service.port | default "8080" -}}
+{{- $svcPort := $.Values.service.port | default "8080" -}}
 {{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1beta1
 {{- else -}}
@@ -18,6 +18,9 @@ metadata:
 {{- end }}
   {{- with .Values.ingress.annotations }}
   annotations:
+    {{- if $.Values.ingress.certmanager.enabled }}
+    cert-manager.io/cluster-issuer: {{ $fullName }}-letsencrypt
+    {{- end }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- if .Values.annotations }}
@@ -26,7 +29,14 @@ metadata:
 {{- end }}
 {{- end }}
 spec:
-{{- if .Values.ingress.tls }}
+  {{- if .Values.ingress.certmanager }}
+  tls:
+    - hosts:
+    {{- range .Values.ingress.hosts }}
+        - {{ .host | quote }}
+    {{- end }}
+      secretName: {{ $fullName }}-letsencrypt
+  {{- else if .Values.ingress.tls }}
   tls:
   {{- range .Values.ingress.tls }}
     - hosts:
