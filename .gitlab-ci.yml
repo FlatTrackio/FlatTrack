@@ -5,6 +5,9 @@ stages:
   - build
   - zip
 
+include:
+  template: Dependency-Scanning.gitlab-ci.yml
+
 variables:
   ARCH_DEFAULT: "amd64"
   ARCHES: amd64 arm64
@@ -228,7 +231,10 @@ lint_backend:
     - apk add git gcc
     - go get -u golang.org/x/lint/golint
   script:
+    - echo -e "GOLINT\n"
     - golint -set_exit_status ./...
+    - echo -e "GOFMT\n"
+    - gofmt -d .
 
 lint_helm_chart:
   stage: lint
