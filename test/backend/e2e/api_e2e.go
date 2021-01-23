@@ -335,7 +335,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			ginkgo.By("creating a user account")
 			apiEndpoint := apiServerAPIprefix + "/admin/users"
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
-			gomega.Expect(err).To(gomega.BeNil(), apiServerAPIprefix + " should return error")
+			gomega.Expect(err).To(gomega.BeNil(), apiServerAPIprefix+" should return error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api have return code of http.StatusBadRequest")
 			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err := json.Marshal(userAccountResponse)
@@ -1145,10 +1145,10 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating the first user account")
 		account2 := types.UserSpec{
-			Names:       "Bloggs Joe",
-			Email:       "joeblogblog@example.com",
-			Password:    "Password123!",
-			Groups:      []string{"flatmember"},
+			Names:    "Bloggs Joe",
+			Email:    "joeblogblog@example.com",
+			Password: "Password123!",
+			Groups:   []string{"flatmember"},
 		}
 		accountBytes, err = json.Marshal(account2)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
@@ -1177,7 +1177,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("patching the profile")
 		apiEndpoint = apiServerAPIprefix + "/user/profile"
 		profilePatch := types.UserSpec{
-			Email:       "user123@example.com",
+			Email: "user123@example.com",
 		}
 		profilePatchData, err := json.Marshal(profilePatch)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
@@ -1692,11 +1692,11 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 				Name: "",
 			},
 			{
-				Name: "My list",
+				Name:  "My list",
 				Notes: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 			},
 			{
-				Name: "My list",
+				Name:       "My list",
 				TemplateID: "x",
 			},
 		}
@@ -1757,31 +1757,31 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("creating items on the list")
 		newShoppingListItems := []types.ShoppingItemSpec{
 			{
-				Name: "Eggs",
+				Name:     "Eggs",
 				Quantity: 1,
 			},
 			{
-				Name: "Onions",
-				Price: 2,
+				Name:     "Onions",
+				Price:    2,
 				Quantity: 1,
 			},
 			{
-				Name: "Pasta",
-				Price: 0.8,
+				Name:     "Pasta",
+				Price:    0.8,
 				Quantity: 3,
 			},
 			{
-				Name: "Bread",
-				Price: 3.5,
+				Name:     "Bread",
+				Price:    3.5,
 				Quantity: 4,
-				Notes: "Sourdough",
+				Notes:    "Sourdough",
 			},
 			{
-				Name: "Lettuce",
-				Price: 3,
+				Name:     "Lettuce",
+				Price:    3,
 				Quantity: 2,
-				Notes: "Not plastic bagged ones",
-				Tag: "Fruits and veges",
+				Notes:    "Not plastic bagged ones",
+				Tag:      "Fruits and veges",
 			},
 		}
 
@@ -1826,31 +1826,31 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("creating items on the list")
 		newShoppingListItems := []types.ShoppingItemSpec{
 			{
-				Name: "Eggs",
+				Name:     "Eggs",
 				Quantity: 1,
 			},
 			{
-				Name: "Onions",
-				Price: 2,
+				Name:     "Onions",
+				Price:    2,
 				Quantity: 1,
 			},
 			{
-				Name: "Pasta",
-				Price: 0.8,
+				Name:     "Pasta",
+				Price:    0.8,
 				Quantity: 3,
 			},
 			{
-				Name: "Bread",
-				Price: 3.5,
+				Name:     "Bread",
+				Price:    3.5,
 				Quantity: 4,
-				Notes: "Sourdough",
+				Notes:    "Sourdough",
 			},
 			{
-				Name: "Lettuce",
-				Price: 3,
+				Name:     "Lettuce",
+				Price:    3,
 				Quantity: 2,
-				Notes: "Not plastic bagged ones",
-				Tag: "Fruits and veges",
+				Notes:    "Not plastic bagged ones",
+				Tag:      "Fruits and veges",
 			},
 		}
 
@@ -1909,32 +1909,32 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("creating items on the list")
 		newShoppingListItems := []types.ShoppingItemSpec{
 			{
-				Name: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-				Price: 3,
+				Name:     "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+				Price:    3,
 				Quantity: 2,
-				Notes: "Not plastic bagged ones",
-				Tag: "Fruits and veges",
+				Notes:    "Not plastic bagged ones",
+				Tag:      "Fruits and veges",
 			},
 			{
-				Name: "Lettuce",
-				Price: 3,
+				Name:     "Lettuce",
+				Price:    3,
 				Quantity: 0,
-				Notes: "Not plastic bagged ones",
-				Tag: "Fruits and veges",
+				Notes:    "Not plastic bagged ones",
+				Tag:      "Fruits and veges",
 			},
 			{
-				Name: "Lettuce",
-				Price: 3,
+				Name:     "Lettuce",
+				Price:    3,
 				Quantity: 2,
-				Notes: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-				Tag: "Fruits and veges",
+				Notes:    "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+				Tag:      "Fruits and veges",
 			},
 			{
-				Name: "Lettuce",
-				Price: 3,
+				Name:     "Lettuce",
+				Price:    3,
 				Quantity: 2,
-				Notes: "Not plastic bagged ones",
-				Tag: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+				Notes:    "Not plastic bagged ones",
+				Tag:      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 			},
 		}
 
@@ -2005,11 +2005,11 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating item on the list")
 		newShoppingListItem := types.ShoppingItemSpec{
-			Name: "Lettuce",
-			Price: 3,
+			Name:     "Lettuce",
+			Price:    3,
 			Quantity: 2,
-			Notes: "Not plastic bagged ones",
-			Tag: "Fruits and veges",
+			Notes:    "Not plastic bagged ones",
+			Tag:      "Fruits and veges",
 		}
 
 		shoppingItemBytes, err := json.Marshal(newShoppingListItem)
@@ -2029,19 +2029,19 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("updating item on the list")
 		updatedShoppingListItems := []types.ShoppingItemSpec{
 			{
-				Name: "Iceberg lettuce",
-				Price: 4,
+				Name:     "Iceberg lettuce",
+				Price:    4,
 				Quantity: 1,
-				Notes: "",
-				Tag: "Salad",
+				Notes:    "",
+				Tag:      "Salad",
 				Obtained: true,
 			},
 			{
-				Name: "Iceberg lettuce",
-				Price: 4,
+				Name:     "Iceberg lettuce",
+				Price:    4,
 				Quantity: 1,
-				Notes: "",
-				Tag: "Salad",
+				Notes:    "",
+				Tag:      "Salad",
 				Obtained: false,
 			},
 		}
@@ -2118,11 +2118,11 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating item on the list")
 		newShoppingListItem := types.ShoppingItemSpec{
-			Name: "Lettuce",
-			Price: 3,
+			Name:     "Lettuce",
+			Price:    3,
 			Quantity: 2,
-			Notes: "Not plastic bagged ones",
-			Tag: "Fruits and veges",
+			Notes:    "Not plastic bagged ones",
+			Tag:      "Fruits and veges",
 		}
 
 		shoppingItemBytes, err := json.Marshal(newShoppingListItem)
@@ -2142,18 +2142,18 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("updating item on the list")
 		updatedShoppingListItems := []types.ShoppingItemSpec{
 			{
-				Name: "Iceberg lettuce",
-				Price: 4,
+				Name:     "Iceberg lettuce",
+				Price:    4,
 				Quantity: 1,
-				Notes: "Just a note",
-				Tag: "Salad",
+				Notes:    "Just a note",
+				Tag:      "Salad",
 			},
 			{
-				Name: "Iceberg lettuce",
-				Price: 4,
+				Name:     "Iceberg lettuce",
+				Price:    4,
 				Quantity: 1,
-				Notes: "This note should have some useful meaning",
-				Tag: "Salad",
+				Notes:    "This note should have some useful meaning",
+				Tag:      "Salad",
 			},
 		}
 
@@ -2222,35 +2222,35 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("creating items on the list")
 		newShoppingListItems := []types.ShoppingItemSpec{
 			{
-				Name: "Eggs",
+				Name:     "Eggs",
 				Quantity: 1,
-				Tag: "Dairy",
+				Tag:      "Dairy",
 			},
 			{
-				Name: "Onions",
-				Price: 2,
+				Name:     "Onions",
+				Price:    2,
 				Quantity: 1,
-				Tag: "Fruits and veges",
+				Tag:      "Fruits and veges",
 			},
 			{
-				Name: "Pasta",
-				Price: 0.8,
+				Name:     "Pasta",
+				Price:    0.8,
 				Quantity: 3,
-				Tag: "General",
+				Tag:      "General",
 			},
 			{
-				Name: "Bread",
-				Price: 3.5,
+				Name:     "Bread",
+				Price:    3.5,
 				Quantity: 4,
-				Notes: "Sourdough",
-				Tag: "General",
+				Notes:    "Sourdough",
+				Tag:      "General",
 			},
 			{
-				Name: "Lettuce",
-				Price: 3,
+				Name:     "Lettuce",
+				Price:    3,
 				Quantity: 2,
-				Notes: "Not plastic bagged ones",
-				Tag: "Fruits and veges",
+				Notes:    "Not plastic bagged ones",
+				Tag:      "Fruits and veges",
 			},
 		}
 
@@ -2328,35 +2328,35 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("creating items on the list")
 		newShoppingListItems := []types.ShoppingItemSpec{
 			{
-				Name: "Eggs",
+				Name:     "Eggs",
 				Quantity: 1,
-				Tag: "Dairy",
+				Tag:      "Dairy",
 			},
 			{
-				Name: "Onions",
-				Price: 2,
+				Name:     "Onions",
+				Price:    2,
 				Quantity: 1,
-				Tag: "Fruits and veges",
+				Tag:      "Fruits and veges",
 			},
 			{
-				Name: "Pasta",
-				Price: 0.8,
+				Name:     "Pasta",
+				Price:    0.8,
 				Quantity: 3,
-				Tag: "General",
+				Tag:      "General",
 			},
 			{
-				Name: "Bread",
-				Price: 3.5,
+				Name:     "Bread",
+				Price:    3.5,
 				Quantity: 4,
-				Notes: "Sourdough",
-				Tag: "General",
+				Notes:    "Sourdough",
+				Tag:      "General",
 			},
 			{
-				Name: "Lettuce",
-				Price: 3,
+				Name:     "Lettuce",
+				Price:    3,
 				Quantity: 2,
-				Notes: "Not plastic bagged ones",
-				Tag: "Fruits and veges",
+				Notes:    "Not plastic bagged ones",
+				Tag:      "Fruits and veges",
 			},
 		}
 
@@ -2414,35 +2414,35 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("creating items on the list")
 		newShoppingList2Items := []types.ShoppingItemSpec{
 			{
-				Name: "Eggs",
+				Name:     "Eggs",
 				Quantity: 1,
-				Tag: "Dairy1",
+				Tag:      "Dairy1",
 			},
 			{
-				Name: "Oions",
-				Price: 2,
+				Name:     "Oions",
+				Price:    2,
 				Quantity: 1,
-				Tag: "Fruits and veges1",
+				Tag:      "Fruits and veges1",
 			},
 			{
-				Name: "Pasta",
-				Price: 0.8,
+				Name:     "Pasta",
+				Price:    0.8,
 				Quantity: 3,
-				Tag: "General1",
+				Tag:      "General1",
 			},
 			{
-				Name: "Bread",
-				Price: 3.5,
+				Name:     "Bread",
+				Price:    3.5,
 				Quantity: 4,
-				Notes: "Sourdough",
-				Tag: "General1",
+				Notes:    "Sourdough",
+				Tag:      "General1",
 			},
 			{
-				Name: "Lettuce",
-				Price: 3,
+				Name:     "Lettuce",
+				Price:    3,
 				Quantity: 2,
-				Notes: "Not plastic bagged ones",
-				Tag: "Fruits and veges1",
+				Notes:    "Not plastic bagged ones",
+				Tag:      "Fruits and veges1",
 			},
 		}
 
@@ -2557,11 +2557,11 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating items on the list")
 		newShoppingListItem := types.ShoppingItemSpec{
-			Name: "Lettuce",
-			Price: 3,
+			Name:     "Lettuce",
+			Price:    3,
 			Quantity: 2,
-			Notes: "Not plastic bagged ones",
-			Tag: "Fruits and veges",
+			Notes:    "Not plastic bagged ones",
+			Tag:      "Fruits and veges",
 		}
 
 		ginkgo.By("creating shopping list items")
@@ -2738,35 +2738,35 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("creating items on the list")
 		newShoppingListItems := []types.ShoppingItemSpec{
 			{
-				Name: "Eggs",
+				Name:     "Eggs",
 				Quantity: 1,
-				Tag: "Dairy",
+				Tag:      "Dairy",
 			},
 			{
-				Name: "Onions",
-				Price: 2,
+				Name:     "Onions",
+				Price:    2,
 				Quantity: 1,
-				Tag: "Fruits and veges",
+				Tag:      "Fruits and veges",
 			},
 			{
-				Name: "Pasta",
-				Price: 0.8,
+				Name:     "Pasta",
+				Price:    0.8,
 				Quantity: 3,
-				Tag: "General",
+				Tag:      "General",
 			},
 			{
-				Name: "Bread",
-				Price: 3.5,
+				Name:     "Bread",
+				Price:    3.5,
 				Quantity: 4,
-				Notes: "Sourdough",
-				Tag: "General",
+				Notes:    "Sourdough",
+				Tag:      "General",
 			},
 			{
-				Name: "Lettuce",
-				Price: 3,
+				Name:     "Lettuce",
+				Price:    3,
 				Quantity: 2,
-				Notes: "Not plastic bagged ones",
-				Tag: "Fruits and veges",
+				Notes:    "Not plastic bagged ones",
+				Tag:      "Fruits and veges",
 			},
 		}
 
@@ -2788,8 +2788,8 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		}
 
 		shoppingListFromTemplate := types.ShoppingListSpec{
-			Name: "My list (from template)",
-			Notes: "This is a templated list",
+			Name:       "My list (from template)",
+			Notes:      "This is a templated list",
 			TemplateID: shoppingListCreated.ID,
 		}
 		shoppingListBytes, err = json.Marshal(shoppingListFromTemplate)
@@ -2866,11 +2866,11 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating an item on the origin list")
 		newShoppingListItem := types.ShoppingItemSpec{
-			Name: "Lettuce",
-			Price: 3,
+			Name:     "Lettuce",
+			Price:    3,
 			Quantity: 2,
-			Notes: "Not plastic bagged ones",
-			Tag: "Fruits and veges",
+			Notes:    "Not plastic bagged ones",
+			Tag:      "Fruits and veges",
 		}
 
 		shoppingListItemBytes, err := json.Marshal(newShoppingListItem)
@@ -2888,8 +2888,8 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		shoppingListFromTemplate := types.ShoppingListSpec{
-			Name: "My list (from template)",
-			Notes: "This is a templated list",
+			Name:       "My list (from template)",
+			Notes:      "This is a templated list",
 			TemplateID: shoppingListCreated.ID,
 		}
 		shoppingListBytes, err = json.Marshal(shoppingListFromTemplate)

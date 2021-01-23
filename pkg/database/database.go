@@ -33,7 +33,7 @@ var (
 	password = common.GetDBpassword()
 	hostname = common.GetDBhost()
 	database = common.GetDBdatabase()
-	sslmode = common.GetDBsslMode()
+	sslmode  = common.GetDBsslMode()
 )
 
 // DB ...
