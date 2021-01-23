@@ -5,6 +5,9 @@ stages:
   - build
   - zip
 
+include:
+  template: Dependency-Scanning.gitlab-ci.yml
+
 variables:
   ARCH_DEFAULT: "amd64"
   ARCHES: amd64 arm64
