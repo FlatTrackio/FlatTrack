@@ -85,7 +85,20 @@
                   <a class="subtitle is-6" v-if="member.birthday && member.birthday !== 0">
                     Birthday: {{ TimestampToCalendar(member.birthday) }}<br/>
                   </a>
-                  <b-tag type="is-danger" v-if="member.registered !== true">Has not registered</b-tag>
+                  <b-field grouped group-multiline>
+                    <div class="control">
+                      <b-taglist attached v-if="member.registered !== true">
+                        <b-tag type="is-dark">has</b-tag>
+                        <b-tag type="is-danger">not registered</b-tag>
+                      </b-taglist>
+                    </div>
+                    <div class="control">
+                      <b-taglist attached v-if="member.disabled === true">
+                        <b-tag type="is-dark">has</b-tag>
+                        <b-tag type="is-warning">account disabled</b-tag>
+                      </b-taglist>
+                    </div>
+                  </b-field>
                 </div>
               </div>
             </div>
