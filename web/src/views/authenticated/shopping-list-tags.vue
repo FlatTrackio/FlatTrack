@@ -19,8 +19,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/apps/shopping-list">Shopping list</router-link></li>
-              <li class="is-active"><router-link to="/apps/shopping-list/tags">Shopping tags</router-link></li>
+              <li><router-link :to="{ name: 'Shopping list' }">Shopping list</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'Manage shopping tags' }">Shopping tags</router-link></li>
             </ul>
         </nav>
         <h1 class="title is-1">Shopping tags</h1>
@@ -139,9 +139,6 @@ export default {
     }
   },
   methods: {
-    goToRef (ref) {
-      this.$router.push({ path: ref })
-    },
     GetShoppingTags () {
       shoppinglist.GetShoppingTags(this.sortBy).then(resp => {
         this.tags = resp.data.list || []

@@ -19,8 +19,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/apps">Apps</router-link></li>
-              <li class="is-active"><router-link to="/apps/shopping-list">Shopping list</router-link></li>
+              <li><router-link :to="{ name: 'Apps' }">Apps</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'Shopping list' }">Shopping list</router-link></li>
             </ul>
         </nav>
         <h1 class="title is-1">Shopping list</h1>
@@ -38,7 +38,7 @@
         </div>
         <b-button
           class="has-text-left"
-          @click="goToRef('/apps/shopping-list/tags')"
+          @click="$router.push({ name: 'Manage shopping tags' })"
           type="is-info"
           icon-left="tag-multiple"
           expanded>
@@ -80,7 +80,7 @@
           </b-field>
           <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
           <section>
-            <div class="card pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/new')">
+            <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'New shopping list' })">
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
@@ -100,7 +100,7 @@
             </div>
           </section>
         </div>
-        <floatingAddButton path="/apps/shopping-list/new" v-if="displayFloatingAddButton"/>
+        <floatingAddButton :routerLink="{ name: 'New shopping list' }" v-if="displayFloatingAddButton"/>
         <br/>
         <div v-if="listsFiltered.length > 0">
           <shoppingListCardView :list="list" :authors="authors" :lists="lists" :index="index" v-for="(list, index) in listsFiltered" v-bind:key="list" :deviceIsMobile="deviceIsMobile" />
@@ -165,9 +165,6 @@ export default {
     }
   },
   methods: {
-    goToRef (ref) {
-      this.$router.push({ path: ref })
-    },
     GetShoppingLists () {
       shoppinglist.GetShoppingLists(undefined, this.sortBy).then(resp => {
         this.pageLoading = false

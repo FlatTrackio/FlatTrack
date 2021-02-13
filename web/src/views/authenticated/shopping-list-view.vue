@@ -34,8 +34,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
-            <li><router-link to="/apps/shopping-list">Shopping list</router-link></li>
-            <li v-if="hasInitialLoaded || name !== '' || typeof name !== 'undefined'" class="is-active"><router-link :to="'/apps/shopping-list/list/' + id">{{ name || 'Unnamed list' }}</router-link></li>
+            <li><router-link :to="{ name: 'Shopping list' }">Shopping list</router-link></li>
+            <li v-if="hasInitialLoaded || name !== '' || typeof name !== 'undefined'" class="is-active"><router-link :to="{ name: 'View shopping list', params: { id: id } }">{{ name || 'Unnamed list' }}</router-link></li>
             <b-skeleton v-else size="is-small" width="35%" :animated="true"></b-skeleton>
           </ul>
         </nav>
@@ -442,9 +442,6 @@ export default {
     ItemByNameInList (item) {
       var vm = this
       return item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
-    },
-    goToRef (ref) {
-      this.$router.push({ path: ref })
     },
     FocusSearchBox () {
       this.$refs.search.$el.focus()

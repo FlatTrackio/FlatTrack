@@ -22,7 +22,7 @@
         <p></p>
         <br>
         <div v-for="app in apps" v-bind:key="app" >
-          <div class="card pointer-cursor-on-hover" @click="goToApp(app.ref)">
+          <div class="card pointer-cursor-on-hover" @click="$router.push({ name: app.routeName })">
             <div class="card-content">
               <div class="media">
                 <div class="media-left">
@@ -74,26 +74,21 @@ export default {
           name: 'Profile',
           description: 'Manage your general information',
           icon: 'account-circle',
-          ref: '/account/profile'
+          routeName: 'Account Profile'
         },
         {
           name: 'Security',
           description: 'Manage your account security',
           icon: 'lock-question',
-          ref: '/account/security'
+          routeName: 'Account Security'
         },
         {
           name: 'Settings',
           description: 'Manage settings for this device',
           icon: 'account-cog',
-          ref: '/account/settings'
+          routeName: 'Account Settings'
         }
       ]
-    }
-  },
-  methods: {
-    goToApp (ref) {
-      this.$router.push({ path: ref })
     }
   },
   computed: {
