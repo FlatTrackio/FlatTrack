@@ -19,8 +19,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link :to="'/apps/shopping-list/list/' + shoppingListId">{{ shoppingListName }}</router-link></li>
-              <li class="is-active"><router-link :to="'/apps/shopping-list/list/' + shoppingListId + '/item/' + id">{{ name || 'Unnamed item' }}</router-link></li>
+              <li><router-link :to="$router.push({ name: 'View shopping list', params: { id: shoppingListId } })">{{ shoppingListName }}</router-link></li>
+              <li class="is-active"><router-link :to="$router.push({ name: 'View shopping list item', params: { listId: shoppingListId, itemId: id } })">{{ name || 'Unnamed item' }}</router-link></li>
             </ul>
         </nav>
         <div>
@@ -154,13 +154,13 @@
             </p>
           </b-field>
           <p>
-            Added {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + author">{{ authorNames }}</router-link>
+            Added {{ TimestampToCalendar(creationTimestamp) }}, by <router-link tag="a" :to="{ name: 'My Flatmates', query: { id: author } }">{{ authorNames }}</router-link>
             <span v-if="templateId">
               (templated from <router-link tag="a" :to="{ name: 'View shopping list', params: { id: templateId } }">{{ templateListName }}</router-link>)
             </span>
           </p>
           <p v-if="creationTimestamp !== modificationTimestamp">
-            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="'/apps/flatmates?id=' + authorLast">{{ authorLastNames }}</router-link>
+            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by <router-link tag="a" :to="{ name: 'My Flatmates', query: { id: authorLast } }">{{ authorLastNames }}</router-link>
           </p>
         </div>
       </section>
@@ -243,7 +243,7 @@ export default {
           shoppinglist.DeleteShoppingListItem(listId, itemId).then(resp => {
             common.DisplaySuccessToast(resp.data.metadata.response)
             setTimeout(() => {
-              this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
+              this.$router.push({ name: 'View shopping list', params: { id: this.shoppingListId } })
             }, 1 * 1000)
           }).catch(err => {
             this.deleteLoading = false
@@ -299,7 +299,7 @@ export default {
     }).catch(err => {
       if (err.response.status === 404) {
         common.DisplayFailureToast('Error item not found' + '<br/>' + err.response.data.metadata.response)
-        this.$router.push({ path: '/apps/shopping-list/list/' + this.shoppingListId })
+        this.$router.push({ name: 'View shopping list', params: { id: this.shoppingListId } })
         return
       }
       common.DisplayFailureToast('Error loading the shopping list item' + '<br/>' + err.response.data.metadata.response)

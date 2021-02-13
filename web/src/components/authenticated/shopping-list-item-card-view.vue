@@ -21,7 +21,7 @@
           <div class="media-left" @click="PatchItemObtained(item.id, !item.obtained)">
             <b-checkbox size="is-medium" v-model="item.obtained"></b-checkbox>
           </div>
-          <div class="media-content pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + listId + '/item/' + item.id)">
+          <div class="media-content pointer-cursor-on-hover" @click="$router.push({ name: 'View shopping list item', params: { listId: listId, itemId: item.id } })">
             <div class="block">
               <p :class="item.obtained === true ? 'obtained' : ''" class="subtitle is-4 is-marginless">
                 {{ item.name }}
@@ -68,7 +68,7 @@
                 v-if="deviceIsMobile === false"
                 @click="DeleteShoppingListItem(item.id, index)" />
             </b-tooltip>
-            <span class="pointer-cursor-on-hover" @click="goToRef('/apps/shopping-list/list/' + listId + '/item/' + item.id)">
+            <span class="pointer-cursor-on-hover" @click="$router.push({ name: 'View shopping list item', params: { listId: listId, itemId: item.id } })">
                 <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
             </span>
           </div>
@@ -100,12 +100,6 @@ export default {
     itemDisplayState: Number
   },
   methods: {
-    goToRef (ref) {
-      if (this.itemDeleting === true) {
-        return
-      }
-      this.$router.push({ path: ref })
-    },
     PatchItemObtained (itemId, obtained) {
       shoppinglist.PatchShoppingListItemObtained(this.listId, itemId, obtained).then(() => {
         var displayAll = typeof this.itemDisplayState === 'number' && this.itemDisplayState === 0

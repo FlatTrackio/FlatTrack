@@ -22,7 +22,7 @@
         <p></p>
         <br>
         <div v-for="app in apps" v-bind:key="app" >
-          <div class="card pointer-cursor-on-hover" @click="goToApp(app.ref)">
+          <div class="card pointer-cursor-on-hover" @click="$router.push({ name: app.routeName })">
             <div class="card-content">
               <div class="media">
                 <div class="media-left">
@@ -57,20 +57,15 @@ export default {
           name: 'Accounts',
           description: 'Manage your flatmates accounts',
           icon: 'account-group',
-          ref: '/admin/accounts'
+          routeName: 'Admin accounts'
         },
         {
           name: 'Settings',
           description: 'General FlatTrack settings',
           icon: 'settings',
-          ref: '/admin/settings'
+          routeName: 'Admin settings'
         }
       ]
-    }
-  },
-  methods: {
-    goToApp (ref) {
-      this.$router.push({ path: ref })
     }
   }
 }

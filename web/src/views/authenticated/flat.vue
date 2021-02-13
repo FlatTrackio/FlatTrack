@@ -19,8 +19,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link to="/">Home</router-link></li>
-              <li class="is-active"><router-link to="/flat">My flat</router-link></li>
+              <li><router-link :to="{ name: 'Home' }">Home</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'My Flat' }">My flat</router-link></li>
             </ul>
         </nav>
         <h1 v-if="hasInitialLoaded || name !== ''" class="title is-1">{{ name }}</h1>

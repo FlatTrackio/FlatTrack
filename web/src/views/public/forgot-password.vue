@@ -20,8 +20,8 @@
         <section class="section form-width">
           <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
           <ul>
-              <li><router-link to="/login">Login</router-link></li>
-              <li class="is-active"><router-link to="/forgot-password">Forgot Password</router-link></li>
+              <li><router-link :to="{ name: 'Login' }">Login</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'Forgot password' }">Forgot Password</router-link></li>
           </ul>
           </nav>
           <h1 class="title is-1">Forgot Password</h1>
