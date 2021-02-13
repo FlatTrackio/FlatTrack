@@ -1204,6 +1204,25 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
 
+	ginkgo.It("should disallow own account from being deleted", func() {
+		ginkgo.By("fetching user profile")
+		apiEndpoint := apiServerAPIprefix + "/user/profile"
+		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
+		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountJSON, err := json.Marshal(userAccountResponse)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		userAccount := types.UserSpec{}
+		json.Unmarshal(userAccountJSON, &userAccount)
+
+		ginkgo.By("deleting the account")
+		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
+		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusForbidden), "api have return code of http.StatusOK")
+	})
+
 	ginkgo.It("should not allow non admins to patch their groups", func() {
 		ginkgo.By("creating the first user account")
 		account := types.UserSpec{
