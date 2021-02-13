@@ -371,7 +371,8 @@ export default {
       creationTimestamp: 0,
       modificationTimestamp: 0,
       templateId: undefined,
-      list: shoppinglistCommon.GetShoppingListFromCache(this.id) || []
+      list: shoppinglistCommon.GetShoppingListFromCache(this.id) || [],
+      listFull: []
     }
   },
   components: {
@@ -393,21 +394,21 @@ export default {
       })
     },
     obtainedCount () {
-      if (this.list.length === 0) {
+      if (this.listFull.length === 0) {
         return 0
       }
       var obtained = 0
-      this.list.forEach(item => {
+      this.listFull.forEach(item => {
         obtained += item.obtained === true ? 1 : 0
       })
       return obtained
     },
     currentPrice () {
-      if (this.list.length === 0) {
+      if (this.listFull.length === 0) {
         return 0
       }
       var currentPrice = 0
-      this.list.forEach(item => {
+      this.listFull.forEach(item => {
         if (item.obtained !== true) {
           return
         }
@@ -420,11 +421,11 @@ export default {
       return currentPrice
     },
     totalPrice () {
-      if (this.list.length === 0) {
+      if (this.listFull.length === 0) {
         return 0
       }
       var totalPrice = 0
-      this.list.forEach(item => {
+      this.listFull.forEach(item => {
         if (typeof item.price !== 'number') {
           item.price = 0
         }
@@ -538,7 +539,7 @@ export default {
           break
       }
 
-      shoppinglist.GetShoppingListItems(this.id, this.sortBy, obtained).then(resp => {
+      shoppinglist.GetShoppingListItems(this.id, this.sortBy, undefined).then(resp => {
         var responseList = resp.data.list
         this.totalItems = responseList === null ? 0 : responseList.length
         if (this.list === null) {
@@ -546,7 +547,8 @@ export default {
         }
 
         if (responseList !== this.list) {
-          this.list = responseList || []
+          this.listFull = responseList
+          this.list = responseList.filter(item => item.obtained === obtained || typeof obtained === 'undefined')
           shoppinglistCommon.WriteShoppingListToCache(this.id, this.list)
           this.listIsLoading = false
           this.hasInitialLoaded = true
