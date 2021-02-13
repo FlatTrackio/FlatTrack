@@ -177,7 +177,7 @@
           @click="PatchUserAccount">
           Update user account
         </b-button>
-        <p class="control">
+        <p class="control" v-if="myUserID !== id">
           <b-button
             type="is-danger"
             size="is-medium"
@@ -192,6 +192,7 @@
         class="card"
         animation="slide"
         aria-id="contentIdForA11y3"
+        v-if="myUserID !== id"
         :open="accountAdvancedOpen">
         <div
           slot="trigger"
@@ -258,6 +259,7 @@ export default {
       pageLoading: true,
       disabledLoading: false,
       accountAdvancedOpen: false,
+      myUserID: null,
       id: this.$route.params.id,
       names: null,
       email: null,
@@ -387,6 +389,7 @@ export default {
   async beforeMount () {
     this.GetAvailableGroups()
     this.GetUserAccount()
+    this.myUserID = common.GetUserIDFromJWT()
     if (this.registered !== true) {
       adminFlatmates.GetUserAccountConfirms(this.id).then(resp => {
         var confirmsList = resp.data.list
