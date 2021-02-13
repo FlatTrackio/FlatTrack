@@ -210,6 +210,13 @@ html {
     background-color: #c3c3c3;
     border-radius: 20px;
     border: 3px solid white;
+    transition: background-color 0.3s, border 0.3s;
+}
+*::-webkit-scrollbar-thumb:hover {
+    background-color: #b1b1b1;
+    border-radius: 20px;
+    border: 2px solid white;
+    transition: background-color 0.3s, border 0.3s;
 }
 
 @media (max-width : 870px) {
