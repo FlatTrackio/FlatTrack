@@ -132,6 +132,22 @@ function Hooray () {
   })
 }
 
+// GetUserIDFromJWT
+// retrieves the UserID from the JWT
+function GetUserIDFromJWT () {
+  var jwt = localStorage.getItem('authToken')
+  var jwtSplit = jwt.split('.')
+  if (jwtSplit.length !== 3) {
+    return null
+  }
+  var claimsPayloadBase64 = jwtSplit[1]
+  var buff = Buffer.from(claimsPayloadBase64, 'base64')
+  var claimsPayloadString = buff.toString('utf-8')
+  var claimsPayload = JSON.parse(claimsPayloadString)
+  var userID = claimsPayload['id']
+  return userID
+}
+
 export default {
   GetAuthToken,
   DeleteAuthToken,
@@ -144,5 +160,6 @@ export default {
   WriteFlatnameToCache,
   GetEnableAnimations,
   WriteEnableAnimations,
-  Hooray
+  Hooray,
+  GetUserIDFromJWT
 }

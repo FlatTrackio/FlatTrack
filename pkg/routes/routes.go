@@ -315,8 +315,32 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		// TODO make sure that if any errors occur the user account still won't be deleted
-		// TODO make sure that admins can't be deleted
+		myUserID, errID := users.GetIDFromJWT(db, r)
+		if errID != nil {
+			code = http.StatusBadRequest
+			response = "Failed to get user account ID from token"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: false,
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		if myUserID == userID {
+			code = http.StatusForbidden
+			response = "Deleting own user account is disallowed"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: nil,
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
 
 		err = users.DeleteUserByID(db, userInDB.ID)
 		if err == nil {
