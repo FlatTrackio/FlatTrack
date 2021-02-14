@@ -540,7 +540,7 @@ export default {
       }
 
       shoppinglist.GetShoppingListItems(this.id, this.sortBy, undefined).then(resp => {
-        var responseList = resp.data.list
+        var responseList = resp.data.list || []
         this.totalItems = responseList === null ? 0 : responseList.length
         if (this.list === null) {
           this.list = []

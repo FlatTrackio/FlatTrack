@@ -170,9 +170,9 @@ html {
 }
 
 .hero-body, .section {
-    padding-top: 3rem;
+    padding-top: 1.5rem;
     padding-right: 1rem;
-    padding-bottom: 3rem;
+    padding-bottom: 5rem;
     padding-left: 1rem;
 }
 
