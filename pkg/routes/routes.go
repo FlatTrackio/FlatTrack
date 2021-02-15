@@ -273,6 +273,47 @@ func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
+		jwtID, errID := users.GetIDFromJWT(db, r)
+		if errID != nil {
+			code = http.StatusBadRequest
+			response = "Failed get user ID from token"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.UserSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		isAdmin, errGroup := groups.CheckUserInGroup(db, jwtID, "admin")
+		if errGroup != nil {
+			code = http.StatusInternalServerError
+			response = "Failed to check for user in group"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.UserSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		if isAdmin == true && userID == jwtID {
+			code = http.StatusForbidden
+			response = "Unable to disabled own user account"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.UserSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
 		userAccountPatched, err := users.PatchUserDisabledAdmin(db, userID, userAccount.Disabled)
 		if err == nil {
 			code = http.StatusOK

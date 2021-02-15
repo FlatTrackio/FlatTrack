@@ -607,7 +607,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), confirmUserAccountJSON, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), fmt.Sprintf("api have return code of http.StatusOK; %v", routes.GetHTTPresponseBodyContents(resp).Metadata.Response))
 
 		ginkgo.By("fetching the user account confirm to check for it to be unavailable")
 		apiEndpoint = apiServerAPIprefix + "/admin/useraccountconfirms/" + confirmsList[0].ID
