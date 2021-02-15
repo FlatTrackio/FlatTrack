@@ -442,9 +442,9 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 		passwordHashed = userAccount.Password
 	}
 
-	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, disabled = $7, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
                          returning id, names, email, phoneNumber, birthday, contractAgreement, disabled, registered, lastLogin, creationTimestamp, modificationTimestamp, deletionTimestamp`
-	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.Disabled)
+	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday)
 	if err != nil {
 		// TODO add roll back, if there's failure
 		return userAccountPatched, err
@@ -488,9 +488,9 @@ func PatchProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userA
 		passwordHashed = userAccount.Password
 	}
 
-	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, disabled = $7, registered = $8, lastLogin = $9, authNonce = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $11
+	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, registered = $7, lastLogin = $8, authNonce = $9, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $10
                          returning *`
-	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce, id)
+	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce, id)
 	if err != nil {
 		// TODO add roll back, if there's failure
 		return userAccountPatched, err
@@ -568,9 +568,9 @@ func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (user
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
 
-	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, disabled = $8, registered = $9, lastLogin = $10, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, registered = $8, lastLogin = $9, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
                          returning *`
-	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Disabled, userAccount.Registered, userAccount.LastLogin)
+	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Registered, userAccount.LastLogin)
 	if err != nil {
 		// TODO add roll back, if there's failure
 		return userAccountUpdated, err
