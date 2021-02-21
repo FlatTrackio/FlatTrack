@@ -25,9 +25,9 @@ import (
 	"fmt"
 )
 
-// DB ...
+// Open ...
 // given database credentials, return a database connection
-func DB(username string, password string, hostname string, database string, sslMode string) (*sql.DB, error) {
+func Open(username string, password string, hostname string, database string, sslMode string) (*sql.DB, error) {
 	connStr := fmt.Sprintf("postgres://%v:%v@%v/%v?sslmode=%v", username, password, hostname, database, sslMode)
 	return sql.Open("postgres", connStr)
 }

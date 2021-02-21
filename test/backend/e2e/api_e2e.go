@@ -42,7 +42,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	}
 
 	// _ = godotenv.Load(".env")
-	db, err := database.DB(common.GetDBusername(), common.GetDBpassword(), common.GetDBhost(), common.GetDBdatabase(), common.GetDBsslMode())
+	db, err := database.Open(common.GetDBusername(), common.GetDBpassword(), common.GetDBhost(), common.GetDBdatabase(), common.GetDBsslMode())
 	if err != nil {
 		log.Fatalln(err)
 		return
