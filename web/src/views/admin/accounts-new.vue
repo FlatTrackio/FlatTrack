@@ -116,7 +116,7 @@
               <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
             </p>
           </div>
-          <b-field label="Password">
+          <b-field>
             <b-input
               type="password"
               v-model="password"
@@ -155,8 +155,9 @@
           </b-field>
         </div>
         <div v-else>
-          <p class="subtitle is-6"><b>Please note:</b> email account verification is not available yet, however QR code verification is. If this in an inconvenience, uncheck the checkbox above to fill all fields out for the new account.</p>
-          <br/>
+          <div class="notification is-warning mb-4">
+            <p class="subtitle is-6"><b>Please note:</b> email account verification is not available yet, however QR code verification is. If this in an inconvenience, uncheck the checkbox above to fill all fields out for the new account.</p>
+          </div>
         </div>
 
         <!-- TODO become invite via email button -->
