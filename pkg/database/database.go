@@ -21,9 +21,13 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
+	"path"
 
 	// include Pg
 	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
 	"gitlab.com/flattrack/flattrack/pkg/common"
 )
 
@@ -38,9 +42,18 @@ var (
 
 // DB ...
 // given database credentials, return a database connection
-func DB(username string, password string, hostname string, database string) (*sql.DB, error) {
-	connStr := fmt.Sprintf("postgres://%v:%v@%v/%v?sslmode=%v", username, password, hostname, database, sslmode)
-	return sql.Open("postgres", connStr)
+func DB(dbType string, username string, password string, hostname string, database string) (*sql.DB, error) {
+	var connectionString string
+	switch (dbType) {
+	case "postgres":
+		connectionString = fmt.Sprintf("postgres://%v:%v@%v/%v?sslmode=%v", username, password, hostname, database, sslmode)
+	case "sqlite3":
+		pwd, _ := os.Getwd()
+		connectionString = path.Join(pwd, "flattrack-dev.db")
+	default:
+		log.Panicf("Invalid database type '%v'", dbType)
+	}
+	return sql.Open(dbType, connectionString)
 }
 
 // Close ...

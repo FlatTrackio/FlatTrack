@@ -47,6 +47,12 @@ func GetEnvOrDefault(envName string, defaultValue string) (output string) {
 	return output
 }
 
+// GetDBtype ...
+// return the database connection type to use
+func GetDBtype() (output string) {
+	return GetEnvOrDefault("APP_DB_TYPE", "postgres")
+}
+
 // GetDBdatabase ...
 // return the database's database to use
 func GetDBdatabase() (output string) {

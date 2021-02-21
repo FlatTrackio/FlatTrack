@@ -52,11 +52,12 @@ func Start() {
 	envFile := common.GetAppEnvFile()
 	_ = godotenv.Load(envFile)
 
+	dbType := common.GetDBtype()
 	dbUsername := common.GetDBusername()
 	dbPassword := common.GetDBpassword()
 	dbHostname := common.GetDBhost()
 	dbDatabase := common.GetDBdatabase()
-	db, err := database.DB(dbUsername, dbPassword, dbHostname, dbDatabase)
+	db, err := database.DB(dbType, dbUsername, dbPassword, dbHostname, dbDatabase)
 	if err != nil {
 		log.Println(err)
 		return

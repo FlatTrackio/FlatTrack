@@ -25,8 +25,10 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	"github.com/golang-migrate/migrate/v4/database/sqlite3"
 	// allow file-based migrations
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/mattn/go-sqlite3"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
 )
@@ -35,11 +37,12 @@ import (
 // creates all the tables via the migration sql files
 func Migrate(db *sql.DB) (err error) {
 	migrationPath := common.GetMigrationsPath()
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	//driver, err := postgres.WithInstance(db, &postgres.Config{})
+	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
 	if err != nil {
 		return err
 	}
-	m, err := migrate.NewWithDatabaseInstance(fmt.Sprintf("file:///%v", migrationPath), "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance(fmt.Sprintf("file:///%v", migrationPath), common.GetDBtype(), driver)
 	if err != nil {
 		return err
 	}
@@ -64,7 +67,7 @@ func Reset(db *sql.DB) (err error) {
 	if err != nil {
 		return err
 	}
-	m, err := migrate.NewWithDatabaseInstance(fmt.Sprintf("file://%v", migrationPath), "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance(fmt.Sprintf("file://%v", migrationPath), common.GetDBtype(), driver)
 	if err != nil {
 		return err
 	}
