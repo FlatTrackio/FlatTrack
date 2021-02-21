@@ -222,7 +222,6 @@
           </div>
         </div>
       </b-collapse>
-      <br />
       <p class="subtitle is-6">
         Created {{ TimestampToCalendar(creationTimestamp) }} <br />
         <span v-if="creationTimestamp !== modificationTimestamp">
