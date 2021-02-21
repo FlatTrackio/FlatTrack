@@ -164,6 +164,7 @@ export default {
     shoppinglist.GetShoppingLists().then(resp => {
       this.lists = resp.data.list || []
     })
+    this.name = this.$route.query.name
   }
 }
 </script>

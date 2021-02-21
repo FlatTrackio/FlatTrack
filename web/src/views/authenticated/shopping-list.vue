@@ -80,7 +80,7 @@
           </b-field>
           <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
           <section>
-            <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'New shopping list' })">
+            <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'New shopping list', query: { name: listSearch || undefined } })">
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
@@ -100,7 +100,7 @@
             </div>
           </section>
         </div>
-        <floatingAddButton :routerLink="{ name: 'New shopping list' }" v-if="displayFloatingAddButton"/>
+        <floatingAddButton :routerLink="{ name: 'New shopping list', query: { name: listSearch || undefined } }" v-if="displayFloatingAddButton"/>
         <br/>
         <div v-if="listsFiltered.length > 0">
           <shoppingListCardView :list="list" :authors="authors" :lists="lists" :index="index" v-for="(list, index) in listsFiltered" v-bind:key="list" :deviceIsMobile="deviceIsMobile" />
