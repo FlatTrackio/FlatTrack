@@ -38,7 +38,9 @@ import (
 func Migrate(db *sql.DB) (err error) {
 	migrationPath := common.GetMigrationsPath()
 	//driver, err := postgres.WithInstance(db, &postgres.Config{})
-	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
+	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{
+		NoTxWrap: true,
+	})
 	if err != nil {
 		return err
 	}
