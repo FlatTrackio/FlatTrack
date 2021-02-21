@@ -1,4 +1,4 @@
-FROM node:14.7.0-alpine3.11 AS ui
+FROM node:15.9.0-alpine3.13 AS ui
 ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
 ARG AppBuildDate="???"
@@ -13,7 +13,7 @@ ENV VUE_APP_AppBuildVersion=$AppBuildVersion \
   VUE_APP_AppBuildMode=$AppBuildMode
 RUN npm run build
 
-FROM golang:1.14.6-alpine3.11 AS api
+FROM golang:1.15.8-alpine3.13 AS api
 WORKDIR /app
 COPY pkg /app/pkg
 COPY cmd /app/cmd
