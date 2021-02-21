@@ -70,7 +70,7 @@ The admin apps page is located in ~web/src/view/admin/apps.vue~
 
 ** Tests
 New features require tests to be written for them.
-Without tests, the features may not have the expection of consistent behaviour.
+Without tests, the features may not have the expectation of consistent behaviour.
 
 Tests are located in ~test/backend/e2e/api_e2e.go~
 
