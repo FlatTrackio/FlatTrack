@@ -56,7 +56,8 @@ func Start() {
 	dbPassword := common.GetDBpassword()
 	dbHostname := common.GetDBhost()
 	dbDatabase := common.GetDBdatabase()
-	db, err := database.DB(dbUsername, dbPassword, dbHostname, dbDatabase)
+	dbSSLmode  := common.GetDBsslMode()
+	db, err := database.Open(dbUsername, dbPassword, dbHostname, dbDatabase, dbSSLmode)
 	if err != nil {
 		log.Println(err)
 		return

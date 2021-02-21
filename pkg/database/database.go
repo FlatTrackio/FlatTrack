@@ -19,27 +19,16 @@
 package database
 
 import (
-	"database/sql"
-	"fmt"
-
 	// include Pg
 	_ "github.com/lib/pq"
-	"gitlab.com/flattrack/flattrack/pkg/common"
+	"database/sql"
+	"fmt"
 )
 
-// Database connection fields
-var (
-	username = common.GetDBusername()
-	password = common.GetDBpassword()
-	hostname = common.GetDBhost()
-	database = common.GetDBdatabase()
-	sslmode  = common.GetDBsslMode()
-)
-
-// DB ...
+// Open ...
 // given database credentials, return a database connection
-func DB(username string, password string, hostname string, database string) (*sql.DB, error) {
-	connStr := fmt.Sprintf("postgres://%v:%v@%v/%v?sslmode=%v", username, password, hostname, database, sslmode)
+func Open(username string, password string, hostname string, database string, sslMode string) (*sql.DB, error) {
+	connStr := fmt.Sprintf("postgres://%v:%v@%v/%v?sslmode=%v", username, password, hostname, database, sslMode)
 	return sql.Open("postgres", connStr)
 }
 
