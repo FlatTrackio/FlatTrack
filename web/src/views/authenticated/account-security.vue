@@ -108,6 +108,11 @@
         <br/>
         <br/>
         <h1 class="title is-3">Sign out of all devices</h1>
+        <div class="notification is-warning mb-4">
+          <p class="subtitle is-6">
+            <strong>Please note:</strong> revoking access is not unable and will require signing in again (including from this device).
+          </p>
+        </div>
         <b-button
           type="is-danger"
           size="is-medium"
