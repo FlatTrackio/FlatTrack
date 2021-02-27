@@ -28,8 +28,14 @@
       <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
       <div v-if="registered !== true">
         <div class="notification is-warning">
-          <p class="subtitle is-6">This account doesn't appear to be registered</p>
-          <b-button @click="showRegistrationCompletionDetails = !showRegistrationCompletionDetails">{{ showRegistrationCompletionDetails === false ? 'Show' : 'Hide' }} registration details</b-button>
+          <p class="subtitle is-6">
+            <strong>This account has been created but doesn't appear to be registered.</strong>
+          </p>
+          <b-button
+            @click="showRegistrationCompletionDetails = !showRegistrationCompletionDetails"
+            :icon-left="showRegistrationCompletionDetails === false ? 'eye' : 'eye-off'">
+            {{ showRegistrationCompletionDetails === false ? 'Show' : 'Hide' }} registration details
+          </b-button>
           <div v-if="showRegistrationCompletionDetails === true">
             <br/>
             <div class="notification">
