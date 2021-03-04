@@ -13,7 +13,7 @@ ENV VUE_APP_AppBuildVersion=$AppBuildVersion \
   VUE_APP_AppBuildMode=$AppBuildMode
 RUN npm run build
 
-FROM golang:1.15.8-alpine3.13 AS api
+FROM golang:1.16.0-alpine3.13 AS api
 WORKDIR /app
 COPY pkg /app/pkg
 COPY cmd /app/cmd
@@ -32,7 +32,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
     -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash=$AppBuildHash \
     -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$AppBuildDate \
     -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=$AppBuildMode" \
-  -o flattrack \
+  -o bin/flattrack \
   main.go
 
 FROM alpine:3.11 as extras
@@ -53,7 +53,7 @@ WORKDIR /app
 ENV PATH=/app \
   APP_DIST_FOLDER=./dist
 COPY --from=ui /app/web/dist /app/dist
-COPY --from=api /app/flattrack .
+COPY --from=api /app/bin/flattrack /app/bin/flattrack
 COPY --from=extras /etc/passwd /etc/passwd
 COPY --from=extras /etc/group /etc/group
 COPY --from=extras /usr/share/zoneinfo /usr/share/zoneinfo
@@ -62,4 +62,4 @@ COPY migrations /app/migrations
 COPY templates /app/templates
 EXPOSE 8080
 USER user
-ENTRYPOINT ["/app/flattrack"]
+ENTRYPOINT ["/app/bin/flattrack"]
