@@ -16,6 +16,7 @@ selenium-debug.log
 *.njsproj
 *.sln
 
+/bin
 dist
 .env
 /flattrack
