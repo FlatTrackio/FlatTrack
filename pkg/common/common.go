@@ -65,6 +65,12 @@ func GetDBhost() (output string) {
 	return GetEnvOrDefault("APP_DB_HOST", "localhost")
 }
 
+// GetDBport ...
+// return the database port to use
+func GetDBport() (output string) {
+	return GetEnvOrDefault("APP_DB_PORT", "5432")
+}
+
 // GetDBpassword ...
 // return the database password to use
 func GetDBpassword() (output string) {

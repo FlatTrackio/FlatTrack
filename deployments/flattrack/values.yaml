@@ -66,6 +66,7 @@ postgres:
     name: ""
     key: ""
   host: ""
+  port: "5432"
   database: ""
   sslmode: disable
 

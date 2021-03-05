@@ -81,6 +81,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "flattrack.fullname" . }}
                   key: app-db-host
+            - name: APP_DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "flattrack.fullname" . }}
+                  key: app-db-port
             - name: APP_DB_DATABASE
               valueFrom:
                 secretKeyRef:

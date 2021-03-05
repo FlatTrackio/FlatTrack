@@ -27,8 +27,8 @@ import (
 
 // Open ...
 // given database credentials, return a database connection
-func Open(username string, password string, hostname string, database string, sslMode string) (*sql.DB, error) {
-	connStr := fmt.Sprintf("postgres://%v:%v@%v/%v?sslmode=%v", username, password, hostname, database, sslMode)
+func Open(username string, password string, hostname string, port string, database string, sslMode string) (*sql.DB, error) {
+	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", username, password, hostname, port, database, sslMode)
 	return sql.Open("postgres", connStr)
 }
 
