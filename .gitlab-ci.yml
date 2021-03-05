@@ -69,8 +69,8 @@ variables:
     --snapshotMode=redo \
     --context $CI_PROJECT_DIR \
     --dockerfile $CI_PROJECT_DIR/build/Dockerfile \
-    --destination $CI_REGISTRY_IMAGE:latest$BRANCH_NAME$PRINT_ARCH \
-    $KANIKO_EXTRA_DESTINATION \
+    $KANIKO_DESTINATIONS \
+    $KANIKO_RELEASE_DESTINATIONS \
     --build-arg GOARCH="$ARCH" \
     --build-arg AppBuildVersion="$APP_BUILD_VERSION" \
     --build-arg AppBuildDate="$BUILD_DATE" \
