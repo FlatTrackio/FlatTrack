@@ -65,7 +65,7 @@ Navigate to the root of the repo.
 
 Build the backend
 #+begin_src shell
-  go build -o flattrack ./main.go
+  go build -o bin/flattrack ./main.go
 #+end_src
 
 *** Write an environment file
@@ -115,7 +115,7 @@ tilt up --host 0.0.0.0
 
 Build the backend:
 #+begin_src shell
-CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags "-extldflags '-static' -s -w" -o flattrack ./main.go
+CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags "-extldflags '-static' -s -w" -o bin/flattrack ./main.go
 #+end_src
 
 Build the frontend:
@@ -164,7 +164,7 @@ Note:
 
 *** Backend
     #+begin_src shell
-    go build -o flattrack ./main.go && ./flattrack
+    go build -o bin/flattrack ./main.go && ./flattrack
     #+end_src
 
 *** Frontend
