@@ -14,6 +14,7 @@ FlatTrack is solely configured to run with environment variables (or a ~.env~ fi
 | ~APP_DIST_FOLDER~         | The location of the frontend web assets                                   | ~./dist~       |
 | ~APP_URL~                 | The location of the site                                                  | ~""~           |
 | ~APP_DB_HOST~             | The Postgres host to connect to                                           | ~localhost~    |
+| ~APP_DB_PORT~             | The Postgres port use                                                     | ~5432~         |
 | ~APP_DB_USERNAME~         | The Postgres role to connect as                                           | ~flattrack~    |
 | ~APP_DB_PASSWORD~         | The Postgres role's password to authenticate with                         | ~flattrack~    |
 | ~APP_DB_DATABASE~         | The Postgres database to write data to                                    | ~flattrack~    |
