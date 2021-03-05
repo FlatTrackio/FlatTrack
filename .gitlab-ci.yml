@@ -16,11 +16,24 @@ variables:
   POSTGRES_DB: flattrack
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
+  REGISTRIES: "$CI_REGISTRY docker.io"
 
 .kaniko-build-pre-script: &kaniko-build-pre-script |
   set -x
   mkdir -p /kaniko/.docker
-  echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+  cat << EOF > /kaniko/.docker/config.json
+  {
+    "auths": {
+      "$CI_REGISTRY": {
+        "username": "$CI_REGISTRY_USER",
+        "password": "$CI_REGISTRY_PASSWORD"
+      },
+      "https://index.docker.io/v1/": {
+        "auth": "$DOCKERHUB_AUTH"
+      }
+    }
+  }
+  EOF
 
 .kaniko-build-taggable-name: &kaniko-build-taggable-name |
   set -x
