@@ -7,7 +7,7 @@ WORKDIR /app
 ENV PATH=/app/bin \
   APP_DIST_FOLDER=./dist
 COPY web/dist /app/dist
-COPY bin/flattrack /app/flattrack
+COPY bin/flattrack /app/bin/flattrack
 COPY --from=extras /etc/passwd /etc/passwd
 COPY --from=extras /etc/group /etc/group
 COPY --from=extras /usr/share/zoneinfo /usr/share/zoneinfo
