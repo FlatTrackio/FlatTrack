@@ -136,7 +136,7 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 
 		userAccount, err := users.CreateUser(db, user, user.Password == "")
 		if err == nil && userAccount.ID != "" {
-			code = http.StatusOK
+			code = http.StatusCreated
 			response = "Created user account"
 		} else {
 			response = err.Error()
@@ -732,7 +732,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 
 		registered, jwt, err := registration.Register(db, registrationForm)
 		if err == nil {
-			code = http.StatusOK
+			code = http.StatusCreated
 			response = "Successfully registered the FlatTrack instance"
 		} else {
 			code = http.StatusBadRequest
@@ -824,7 +824,7 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 		shoppingList.Author = id
 		shoppingListInserted, err := shoppinglist.CreateShoppingList(db, shoppingList, options)
 		if err == nil && errID == nil {
-			code = http.StatusOK
+			code = http.StatusCreated
 			response = "Successfully created the shopping list"
 		} else {
 			code = http.StatusBadRequest
@@ -1095,7 +1095,7 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 		shoppingItem.Author = id
 		shoppingItemInserted, err := shoppinglist.AddItemToList(db, listID, shoppingItem)
 		if err == nil && errID == nil {
-			code = http.StatusOK
+			code = http.StatusCreated
 			response = "Successfully created the shopping list item"
 		} else {
 			code = http.StatusBadRequest
@@ -1513,7 +1513,7 @@ func PostShoppingTag(db *sql.DB) http.HandlerFunc {
 		tag, err := shoppinglist.CreateShoppingTag(db, tag)
 		if err == nil && errID == nil {
 			response = "Updated a shopping tag"
-			code = http.StatusOK
+			code = http.StatusCreated
 		} else {
 			response = err.Error()
 		}
