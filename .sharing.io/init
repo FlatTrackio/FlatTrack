@@ -24,7 +24,7 @@ if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
 
     echo "Building Backend"
     tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n backend bash
-    tmate -S $TMATE_SOCKET send-keys -t backend "CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags \"-extldflags '-static' -s -w\" -o flattrack ./main.go" Enter
+    tmate -S $TMATE_SOCKET send-keys -t backend "CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags \"-extldflags '-static' -s -w\" -o bin/flattrack ./main.go" Enter
 
     echo "Building Frontend"
     tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD/web" -n frontend bash
