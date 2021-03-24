@@ -75,4 +75,4 @@ Install the release with Helm:
 
 * Extra notes
 
-To configure FlatTrack, please refer to the [[./CONFIGURATION.md][configuration guide]].
+To configure FlatTrack, please refer to the [[./configuration.org][configuration guide]].
