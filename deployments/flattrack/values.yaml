@@ -24,6 +24,10 @@ podSecurityContext:
 service:
   type: ClusterIP
   port: 8080
+  livenessProbe:
+    enabled: false
+  readinessProbe:
+    enabled: true
 
 horizonalPodAutoscaler:
   enabled: false
