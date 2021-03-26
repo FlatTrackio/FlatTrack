@@ -19,8 +19,8 @@
       <section class="section">
         <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
             <ul>
-              <li><router-link :to="$router.push({ name: 'View shopping list', params: { id: shoppingListId } })">{{ shoppingListName }}</router-link></li>
-              <li class="is-active"><router-link :to="$router.push({ name: 'New shopping list item', params: { id: shoppingListId } })">New shopping item</router-link></li>
+              <li><router-link :to="{ name: 'View shopping list', params: { id: shoppingListId } }">{{ shoppingListName }}</router-link></li>
+              <li class="is-active"><router-link :to="{ name: 'New shopping list item', params: { id: shoppingListId } }">New shopping item</router-link></li>
             </ul>
         </nav>
         <div>
