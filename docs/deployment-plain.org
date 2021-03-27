@@ -13,14 +13,7 @@ Commands are run as root.
 ** Install packages
   #+begin_src sh
     apt update && apt upgrade -y
-    apt install -y nginx postgresql software-properties-common build-essential
-
-    add-apt-repository universe
-    curl -L https://golang.org/dl/go1.14.6.linux-amd64.tar.gz | tar --directory /usr/local --extract --ungzip
-    echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc && export PATH=$PATH:/usr/local/go/bin
-    curl -sL https://deb.nodesource.com/setup_14.x | bash -
-    apt update
-    apt install -y certbot python3-certbot-nginx nodejs
+    apt install -y nginx postgresql certbot python3-certbot-nginx
   #+end_src
   
 ** DNS
@@ -183,40 +176,23 @@ Add a customized version of the following to ~/etc/nginx/sites-available/default
   #+end_src
   
 Reload nginx
-  #+begin_src sh
-  systemctl reload nginx
-  #+end_src
+#+begin_src sh
+systemctl reload nginx
+#+end_src
 
-** Build FlatTrack
-** Clone FlatTrack
-    Also, check a version (for stability):
-   #+begin_src sh
-     git clone -b 0.0.1-alpha12-1 https://gitlab.com/flattrack/flattrack /opt/flattrack
-     cd $_
-   #+end_src
+** Download FlatTrack
+
+Download the latest zip:
+#+begin_src sh
+curl -L -o /tmp/flattrack.zip https://gitlab.com/flattrack/flattrack/-/jobs/artifacts/0.0.1-alpha12/download?job=build-zip
+#+end_src
+
+Unpack the archives into /opt/flattrack
+#+begin_src sh
+unzip -d /tmp /tmp/flattrack.zip
+tar xvf /tmp/flattrack.tar.gz -C /opt
+#+end_src
    
-** Build the frontend
-    #+begin_src sh
-      npm i
-      npm run build
-    #+end_src
-
-** Build the backend
-    #+begin_src sh
-      export CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH"
-
-      go build \
-            -a \
-            -installsuffix cgo \
-            -ldflags "-extldflags '-static' -s -w \
-            -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildVersion=$(git symbolic-ref HEAD | sed 's!refs\/heads\/!!') \
-            -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash=$(git rev-parse --short HEAD) \
-            -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$(date -u +%Y-%m-%d_%I:%M:%S%p) \
-            -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=production" \
-            -o flattrack \
-            ./main.go
-    #+end_src
-
 ** Write the environment settings
 Install a custom environment file into ~/home/flattrack/.env~:
 #+begin_src sh
@@ -274,4 +250,4 @@ Woohoo! FlatTrack should now be running. Go to the hostname assigned in the DNS 
 
 * Extra notes
 
-To configure FlatTrack, please refer to the [[./CONFIGURATION.md][configuration guide]].
+To configure FlatTrack, please refer to the [[./configuration.org][configuration guide]].

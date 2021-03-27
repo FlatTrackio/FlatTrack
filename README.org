@@ -31,10 +31,10 @@ Collaborate with your flatmates
 
 ** Getting started
 Various options are available for running a FlatTrack instance:
-- [[https://flattrack.io][FlatTrack.io hosting]] (recommended; coming soon)
-- [[file:docs/deployment-kubernetes.org::*Deployment with Kubernetes][Self-hosted Kubernetes]] (recommended)
-- [[file:docs/deployment-docker-compose.org::*Deployment with Docker Compose][Self-hosted Docker-Compose]]
-- [[file:docs/deployment-plain.org::*Deployment on a plain Ubuntu server][Self-hosted plain Ubuntu server]]
+- [[https://flattrack.io][FlatTrack.io hosting]] (coming soon)
+- [[./docs/deployment-kubernetes.org][Self-hosted Kubernetes]] (recommended)
+- [[./docs/deployment-docker-compose.org][Self-hosted Docker-Compose]]
+- [[./docs/deployment-plain.org][Self-hosted plain Ubuntu server]]
 
 ** Documentation
 To view the documentation, please check out the GitLab-hosted [[https://flattrack.gitlab.io/flattrack][FlatTrack docs]]
@@ -52,6 +52,6 @@ Please read:
 - [[./docs/community.org][community docs]].
 
 ** License
-Copyright 2019-2020 Caleb Woodbine.  
+Copyright 2019-2021 Caleb Woodbine.
 This project is licensed under the [[http://www.gnu.org/licenses/agpl-3.0.html][AGPL-3.0]] and is [[https://www.gnu.org/philosophy/free-sw.en.html][Free Software]].
 This program comes with absolutely no warranty.
