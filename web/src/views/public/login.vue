@@ -79,6 +79,9 @@
                 Forgot Password
               </b-button>
             </p>
+            <div class="notification is-warning mb-4 mt-2" v-if="typeof message !== 'undefined' && message !== ''">
+              <p class="subtitle is-6">{{  message }}</p>
+            </div>
           </div>
         </section>
       </div>
@@ -95,6 +98,7 @@ export default {
   data () {
     return {
       redirect: this.$route.query.redirect || null,
+      message: common.GetLoginMessage(),
       email: '',
       password: ''
     }

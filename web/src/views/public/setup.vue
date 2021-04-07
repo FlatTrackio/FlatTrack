@@ -198,6 +198,9 @@
           @click="Register">
           Setup
         </b-button>
+        <div class="notification is-warning mb-4 mt-2" v-if="typeof message !== 'undefined' && message !== ''">
+          <p class="subtitle is-6">{{  message }}</p>
+        </div>
       </div>
     </section>
   </div>
@@ -227,6 +230,7 @@ export default {
       jsBirthday: null,
       passwordConfirm: '',
       flatName: null,
+      message: common.GetSetupMessage(),
       names: null,
       email: null,
       phoneNumber: null,

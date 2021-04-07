@@ -28,6 +28,8 @@ FlatTrack is solely configured to run with environment variables (or a ~.env~ fi
 | ~APP_SMTP_HOST~           | Host for SMTP emails                                                      | ~""~           |
 | ~APP_SMTP_PORT~           | Port for SMTP emails                                                      | ~""~           |
 | ~APP_HTTP_REAL_IP_HEADER~ | The header to use for forwarding IP address real value                    | ~""~           |
+| ~APP_SETUP_MESSAGE~       | Display a message on the setup page                                       | ~""~           |
+| ~APP_LOGIN_MESSAGE~       | Display a message on the login page                                       | ~""~           |
 
 *this port runs on all available interfaces - this may be better configured on a single host as ~127.0.0.1:...~ for security
 
