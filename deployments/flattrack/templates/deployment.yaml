@@ -138,7 +138,7 @@ spec:
               containerPort: {{ .Values.service.port | default 8080 }}
               protocol: TCP
             - name: health
-              containerPort: 2112
+              containerPort: 8081
               protocol: TCP
             {{- if "flattrack.prometheus.enabled" }}
             - name: prometheus
