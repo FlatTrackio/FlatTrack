@@ -50,13 +50,13 @@ EOF
 
     echo "Postgres"
     tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n postgres bash
-    tmate -S $TMATE_SOCKET send-keys -t postgres "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=Ready pod -l app=postgres --timeout=200s" Enter
+    tmate -S $TMATE_SOCKET send-keys -t postgres "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=ready pod -l app=postgres --timeout=200s && sleep 2s" Enter
     tmate -S $TMATE_SOCKET send-keys -t postgres "psql \"postgres://flattrack:flattrack@postgres.flattrack-dev/flattrack\"" Enter
 
     if [ ! "$FLATTRACK_INIT_COLLABORATORS_DISABLE" ]; then
         echo "Init Collaborators"
         tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n init-collaborators bash
-        tmate -S $TMATE_SOCKET send-keys -t init-collaborators "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"\$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\"" Enter
+        tmate -S $TMATE_SOCKET send-keys -t init-collaborators "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"\$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\" && export $(cat .env | xargs)" Enter
         tmate -S $TMATE_SOCKET send-keys -t init-collaborators "$SCRIPT_PATH/insert-collaborators.sh" Enter
     fi
 fi
