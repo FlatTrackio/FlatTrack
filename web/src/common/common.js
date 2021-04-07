@@ -148,6 +148,18 @@ function GetUserIDFromJWT () {
   return userID
 }
 
+// GetSetupMessage
+// returns a message to display on setup
+function GetSetupMessage () {
+  return document.head.querySelector('[name~=setupmessage][content]').content || ''
+}
+
+// GetLoginMessage
+// returns a message to display on login
+function GetLoginMessage () {
+  return document.head.querySelector('[name~=loginmessage][content]').content || ''
+}
+
 export default {
   GetAuthToken,
   DeleteAuthToken,
@@ -161,5 +173,7 @@ export default {
   GetEnableAnimations,
   WriteEnableAnimations,
   Hooray,
-  GetUserIDFromJWT
+  GetUserIDFromJWT,
+  GetSetupMessage,
+  GetLoginMessage
 }

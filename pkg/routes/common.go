@@ -26,9 +26,10 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"path"
+	"html/template"
 
 	"database/sql"
-	"github.com/ddo/go-vue-handler"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"gitlab.com/flattrack/flattrack/pkg/common"
@@ -125,12 +126,55 @@ func RequireContentType(expectedContentType string) func(http.Handler) http.Hand
 	}
 }
 
+// FrontendOptions ...
+// options to send to the frontend index.html for templating
+type FrontendOptions struct {
+	SetupMessage string
+	LoginMessage string
+}
+
+// FrontendHandler ...
+// handles rewriting and API root setting
+func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler {
+	handler := http.FileServer(http.Dir(publicDir))
+
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+		req.URL.Path = strings.Replace(req.URL.Path, "/", "", 1)
+		if len(req.URL.Path) > 0 && req.URL.Path[len(req.URL.Path)-1:] != "/" {
+			req.URL.Path = path.Join("/", req.URL.Path)
+		}
+
+		// TODO redirect to subPath + /unknown-page if _path does not include subPath at the front
+
+		// static files
+		if strings.Contains(req.URL.Path, ".") {
+			handler.ServeHTTP(w, req)
+			return
+		}
+
+		// frontend views
+		indexPath := path.Join(publicDir, "/index.html")
+		tmpl, err := template.ParseFiles(indexPath)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if err := tmpl.Execute(w, passthrough); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	})
+}
+
 // Handle ...
 // manage the launching of the API's webserver
 func Handle(db *sql.DB) {
 	port := common.GetAppPort()
 	router := mux.NewRouter().StrictSlash(true)
 	apiEndpointPrefix := "/api"
+	passthrough := FrontendOptions{
+		SetupMessage: common.GetAppSetupMessage(),
+		LoginMessage: common.GetAppLoginMessage(),
+	}
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
 	apiRouters.Use(RequireContentType("application/json"))
@@ -140,15 +184,12 @@ func Handle(db *sql.DB) {
 	}
 
 	apiRouters.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)
-	router.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)
-	// TODO implement /healthz for healthiness checks
-	// TODO implement /readyz for readiness checks
 	router.HandleFunc("/robots.txt", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./dist/robots.txt")
 	})
 
 	router.HandleFunc("/_healthz", Healthz(db)).Methods("GET")
-	router.PathPrefix("/").Handler(vue.Handler(common.GetAppDistFolder())).Methods("GET")
+	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder(), passthrough)).Methods("GET")
 
 	router.Use(Logging)
 

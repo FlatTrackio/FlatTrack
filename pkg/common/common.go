@@ -175,6 +175,18 @@ func GetAppRealIPHeader() (output string) {
 	return GetEnvOrDefault("APP_HTTP_REAL_IP_HEADER", "")
 }
 
+// GetAppSetupMessage ...
+// return a message to display on setup
+func GetAppSetupMessage() (output string) {
+	return GetEnvOrDefault("APP_SETUP_MESSAGE", "")
+}
+
+// GetAppLoginMessage ...
+// return a message to display on login
+func GetAppLoginMessage() (output string) {
+	return GetEnvOrDefault("APP_LOGIN_MESSAGE", "")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {
