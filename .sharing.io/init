@@ -8,6 +8,8 @@ export TMATE_SOCKET="${TMATE_SOCKET:-/tmp/ii.default.target.iisocket}"
 export SCRIPT_PATH="$(dirname $(realpath $0))"
 export FLATTRACK_DEV_HOSTNAME="$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME"
 
+GUEST_GREETER_MESSAGE="Welcome to Pairing on FlatTrack with Pair. Guests will be able to login with emails like 'USERNAME@$FLATTRACK_DEV_HOSTNAME' and a default password of 'P@ssw0rd123!'"
+
 if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
     export SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE="${SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE:-flattrack-dev}"
 
@@ -16,15 +18,35 @@ if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
 
     /usr/local/bin/tmate-wait-for-socket.sh
 
-    echo "Building and installing FlatTrack"
-    echo "Starting Tilt"
-    tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n tilt bash
-    tmate -S $TMATE_SOCKET send-keys -t tilt "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"\$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\"" Enter
-    tmate -S $TMATE_SOCKET send-keys -t tilt "tilt up --host 0.0.0.0 --hud" Enter
+    cat <<EOF > "$PWD/.env"
+APP_DB_USERNAME=flattrack
+APP_DB_PASSWORD=flattrack
+APP_DB_DATABASE=flattrack
+APP_DB_HOST=postgres.flattrack-dev
+
+APP_DIST_FOLDER=./web/dist
+
+APP_METRICS_ENABLED=false
+APP_HEALTH_ENABLED=false
+
+POSTGRES_DB=flattrack
+POSTGRES_USER=flattrack
+POSTGRES_PASSWORD=flattrack
+PGDATABASE=flattrack
+PGUSER=flattrack
+
+APP_SETUP_MESSAGE="$GUEST_GREETER_MESSAGE"
+APP_LOGIN_MESSAGE="$GUEST_GREETER_MESSAGE"
+EOF
+
+    kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE apply -k deployments/k8s-manifests/development/postgres/
+
+    until kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE get pod postgres-0; do echo "waiting for postgres"; sleep 1s; done
 
     echo "Building Backend"
     tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n backend bash
-    tmate -S $TMATE_SOCKET send-keys -t backend "CGO_ENABLED=0 go build -a -installsuffix cgo -ldflags \"-extldflags '-static' -s -w\" -o bin/flattrack ./main.go" Enter
+    tmate -S $TMATE_SOCKET send-keys -t backend "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=ready pod -l app=postgres --timeout=200s && sleep 2s" Enter
+    tmate -S $TMATE_SOCKET send-keys -t backend "go run ." Enter
 
     echo "Building Frontend"
     tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD/web" -n frontend bash
@@ -33,13 +55,13 @@ if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
 
     echo "Postgres"
     tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n postgres bash
-    tmate -S $TMATE_SOCKET send-keys -t postgres "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=Ready pod -l app=postgres --timeout=200s" Enter
+    tmate -S $TMATE_SOCKET send-keys -t postgres "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=ready pod -l app=postgres --timeout=200s && sleep 2s" Enter
     tmate -S $TMATE_SOCKET send-keys -t postgres "psql \"postgres://flattrack:flattrack@postgres.flattrack-dev/flattrack\"" Enter
 
     if [ ! "$FLATTRACK_INIT_COLLABORATORS_DISABLE" ]; then
         echo "Init Collaborators"
         tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n init-collaborators bash
-        tmate -S $TMATE_SOCKET send-keys -t init-collaborators "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"\$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\"" Enter
+        tmate -S $TMATE_SOCKET send-keys -t init-collaborators "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"\$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\" && export $(cat .env | xargs)" Enter
         tmate -S $TMATE_SOCKET send-keys -t init-collaborators "$SCRIPT_PATH/insert-collaborators.sh" Enter
     fi
 fi

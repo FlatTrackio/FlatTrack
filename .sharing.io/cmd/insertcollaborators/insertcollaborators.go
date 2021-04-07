@@ -46,8 +46,10 @@ func main() {
 	dbUsername := common.GetDBusername()
 	dbPassword := common.GetDBpassword()
 	dbHostname := common.GetDBhost()
+	dbPort     := common.GetDBport()
 	dbDatabase := common.GetDBdatabase()
-	db, err := database.DB(dbUsername, dbPassword, dbHostname, dbDatabase)
+	dbSSLmode  := common.GetDBsslMode()
+	db, err := database.Open(dbUsername, dbPassword, dbHostname, dbPort, dbDatabase, dbSSLmode)
 	if err != nil {
 		log.Fatalln(err)
 		return
@@ -76,5 +78,6 @@ func main() {
 		log.Println("Completed processing account")
 	}
 
+	log.Printf("The default password for each guest is %v\n", defaultUserPassword)
 	log.Println("It's collaboration time!")
 }
