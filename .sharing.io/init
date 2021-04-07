@@ -8,6 +8,8 @@ export TMATE_SOCKET="${TMATE_SOCKET:-/tmp/ii.default.target.iisocket}"
 export SCRIPT_PATH="$(dirname $(realpath $0))"
 export FLATTRACK_DEV_HOSTNAME="$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME"
 
+GUEST_GREETER_MESSAGE="Welcome to Pairing on FlatTrack with Pair. Guests will be able to login with emails like 'USERNAME@$FLATTRACK_DEV_HOSTNAME' and a default password of 'P@ssw0rd123!'"
+
 if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
     export SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE="${SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE:-flattrack-dev}"
 
@@ -32,6 +34,9 @@ POSTGRES_USER=flattrack
 POSTGRES_PASSWORD=flattrack
 PGDATABASE=flattrack
 PGUSER=flattrack
+
+APP_SETUP_MESSAGE="$GUEST_GREETER_MESSAGE"
+APP_LOGIN_MESSAGE="$GUEST_GREETER_MESSAGE"
 EOF
 
     kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE apply -k deployments/k8s-manifests/development/postgres/
