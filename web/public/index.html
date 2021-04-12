@@ -9,6 +9,9 @@
     {{ if .LoginMessage }}
     <meta name="loginmessage" content="{{ .LoginMessage }}">
     {{ end }}
+    {{ if .BasePath }}
+    <meta name="basepath" content="{{ .BasePath }}">
+    {{ end }}
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <title>FlatTrack</title>

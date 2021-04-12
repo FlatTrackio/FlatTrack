@@ -187,6 +187,12 @@ func GetAppLoginMessage() (output string) {
 	return GetEnvOrDefault("APP_LOGIN_MESSAGE", "")
 }
 
+// GetAppBasePath ...
+// return the base path to serve the frontend on
+func GetAppBasePath() (output string) {
+	return GetEnvOrDefault("APP_BASE_PATH", "/")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {

@@ -160,6 +160,12 @@ function GetLoginMessage () {
   return document.head.querySelector('[name~=loginmessage][content]').content || ''
 }
 
+// GetBasePath
+// returns the basepath
+function GetBasePath () {
+  return document.head.querySelector('[name~=basepath][content]').content || ''
+}
+
 export default {
   GetAuthToken,
   DeleteAuthToken,
@@ -175,5 +181,6 @@ export default {
   Hooray,
   GetUserIDFromJWT,
   GetSetupMessage,
-  GetLoginMessage
+  GetLoginMessage,
+  GetBasePath
 }

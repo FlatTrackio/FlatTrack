@@ -2,12 +2,13 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import routes from './routes'
 import routerCommon from './common'
+import common from '@/common/common'
 
 Vue.use(VueRouter)
 
 const router = new VueRouter({
   mode: 'history',
-  base: process.env.BASE_URL,
+  base: common.GetBasePath(),
   routes,
   scrollBehavior (to, from, savedPosition) {
     if (savedPosition) {

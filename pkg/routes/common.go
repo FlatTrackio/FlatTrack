@@ -21,13 +21,13 @@ package routes
 
 import (
 	"encoding/json"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path"
 	"strings"
 	"time"
-	"path"
-	"html/template"
 
 	"database/sql"
 	"github.com/gorilla/mux"
@@ -131,6 +131,7 @@ func RequireContentType(expectedContentType string) func(http.Handler) http.Hand
 type FrontendOptions struct {
 	SetupMessage string
 	LoginMessage string
+	BasePath     string
 }
 
 // FrontendHandler ...
@@ -139,7 +140,8 @@ func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler
 	handler := http.FileServer(http.Dir(publicDir))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		req.URL.Path = strings.Replace(req.URL.Path, "/", "", 1)
+		req.URL.Path = strings.Replace(req.URL.Path, passthrough.BasePath, "", 1)
+		log.Printf("%#v\n", req.URL.Path)
 		if len(req.URL.Path) > 0 && req.URL.Path[len(req.URL.Path)-1:] != "/" {
 			req.URL.Path = path.Join("/", req.URL.Path)
 		}
@@ -174,6 +176,7 @@ func Handle(db *sql.DB) {
 	passthrough := FrontendOptions{
 		SetupMessage: common.GetAppSetupMessage(),
 		LoginMessage: common.GetAppLoginMessage(),
+		BasePath:     common.GetAppBasePath(),
 	}
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
@@ -189,7 +192,7 @@ func Handle(db *sql.DB) {
 	})
 
 	router.HandleFunc("/_healthz", Healthz(db)).Methods("GET")
-	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder(), passthrough)).Methods("GET")
+	router.PathPrefix(common.GetAppBasePath()).Handler(FrontendHandler(common.GetAppDistFolder(), passthrough)).Methods("GET")
 
 	router.Use(Logging)
 
