@@ -20,6 +20,7 @@
 package routes
 
 import (
+	"fmt"
 	"database/sql"
 	"encoding/json"
 	"io/ioutil"
@@ -33,6 +34,7 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/registration"
 	"gitlab.com/flattrack/flattrack/pkg/settings"
 	"gitlab.com/flattrack/flattrack/pkg/shoppinglist"
+	"gitlab.com/flattrack/flattrack/pkg/tasks"
 	"gitlab.com/flattrack/flattrack/pkg/system"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 	"gitlab.com/flattrack/flattrack/pkg/users"
@@ -1633,6 +1635,93 @@ func DeleteShoppingTag(db *sql.DB) http.HandlerFunc {
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
 			},
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetTasks ...
+// responds with tasks
+func GetTasks(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch tasks"
+		code := http.StatusInternalServerError
+
+		options := tasks.TaskListOptions{
+			SortBy: r.FormValue("sortBy"),
+			Selector: tasks.TaskListSelector{
+				Completed: r.FormValue("completed"),
+			},
+		}
+
+		tasks, err := tasks.GetTasks(db, options)
+		if err == nil {
+			response = "Fetched tasks"
+			code = http.StatusOK
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			List: tasks,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// GetTask ...
+// responds a given task
+func GetTask(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		response := "Failed to fetch the given task: %v"
+		code := http.StatusNotFound
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		task, err := tasks.GetTask(db, id)
+		if err == nil && task.ID != "" {
+			response = "Fetched the task"
+			code = http.StatusOK
+		} else {
+			response = fmt.Sprintf(response, err)
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: task,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PostTask ...
+// creates a new shopping list to add items to
+func PostTask(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := http.StatusInternalServerError
+		response := "Failed to create the task"
+
+		var task tasks.TaskSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &task)
+
+		id, errID := users.GetIDFromJWT(db, r)
+		task.Author = id
+		taskInserted, err := tasks.CreateTask(db, task)
+		if err == nil && errID == nil {
+			code = http.StatusCreated
+			response = "Successfully created the task"
+		} else {
+			code = http.StatusBadRequest
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: taskInserted,
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}

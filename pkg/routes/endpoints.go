@@ -291,6 +291,21 @@ func GetEndpoints(db *sql.DB) types.Endpoints {
 			HTTPMethod:   http.MethodDelete,
 		},
 		{
+			EndpointPath: "/apps/tasks",
+			HandlerFunc:  HTTPuseMiddleware(GetTasks(db), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: "/apps/tasks/{id}",
+			HandlerFunc:  HTTPuseMiddleware(GetTask(db), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: "/apps/tasks",
+			HandlerFunc:  HTTPuseMiddleware(PostTask(db), HTTPvalidateJWT(db)),
+			HTTPMethod:   http.MethodPost,
+		},
+		{
 			EndpointPath: "/flat/info",
 			HandlerFunc:  HTTPuseMiddleware(GetSettingsFlatNotes(db), HTTPvalidateJWT(db)),
 			HTTPMethod:   http.MethodGet,
