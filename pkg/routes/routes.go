@@ -1703,8 +1703,8 @@ func PostTask(db *sql.DB) http.HandlerFunc {
 		code := http.StatusInternalServerError
 		response := "Failed to create the task"
 
-		var task tasks.TaskSpec
 		body, _ := ioutil.ReadAll(r.Body)
+		var task tasks.TaskSpec
 		json.Unmarshal(body, &task)
 
 		id, errID := users.GetIDFromJWT(db, r)
@@ -1722,6 +1722,47 @@ func PostTask(db *sql.DB) http.HandlerFunc {
 				Response: response,
 			},
 			Spec: taskInserted,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// DeleteTask ...
+// delete a task by it's id
+func DeleteTask(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := http.StatusInternalServerError
+		response := "Failed to delete the task"
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		task, err := tasks.GetTask(db, id)
+		if err != nil || task.ID == "" {
+			code = http.StatusNotFound
+			response = "Failed to find task"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: tasks.TaskSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		err = tasks.DeleteTask(db, id)
+		if err == nil {
+			code = http.StatusOK
+			response = "Successfully deleted the task"
+		} else {
+			code = http.StatusBadRequest
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
 		}
 		JSONResponse(r, w, code, JSONresp)
 	}

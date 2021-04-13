@@ -22,6 +22,8 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+
+	"gitlab.com/flattrack/flattrack/pkg/users"
 )
 
 // TaskSpec ...
@@ -74,7 +76,7 @@ const (
 	TaskFrequencyMonthly  TaskFrequency = "monthly"
 )
 
-// TaskRotation
+// TaskRotation ...
 // how the task is rotated
 type TaskRotation string
 
@@ -113,6 +115,14 @@ func ValidateTask(db *sql.DB, task TaskSpec) error {
 		task, err := GetTask(db, task.TemplateID)
 		if err != nil || task.ID == "" {
 			return fmt.Errorf("Unable to find list to use as template from provided id")
+		}
+	}
+	if user, err := users.GetUserByID(db, task.Assignee, false); err != nil || user.ID == "" {
+		return fmt.Errorf("Unable to use user id with field assigned, as it is not found or invalid")
+	}
+	for _, includedUser := range task.RotatesBetween {
+		if user, err := users.GetUserByID(db, includedUser, false); err != nil || user.ID == "" {
+			return fmt.Errorf("Unable to use user id with field assigned, as it is not found or invalid")
 		}
 	}
 	switch taskFrequency := task.Frequency; taskFrequency {
@@ -242,7 +252,7 @@ func UpdateTask(db *sql.DB, task TaskSpec) (taskUpdated TaskSpec, err error) {
 // DeleteTask ...
 // deletes a task
 func DeleteTask(db *sql.DB, taskID string) (err error) {
-	sqlStatement := `delete from tasks id = $1`
+	sqlStatement := `delete from tasks where id = $1`
 	rows, err := db.Query(sqlStatement, taskID)
 	defer rows.Close()
 	return err
