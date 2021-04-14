@@ -23,6 +23,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/imdario/mergo"
+
 	"gitlab.com/flattrack/flattrack/pkg/users"
 )
 
@@ -239,13 +241,50 @@ func CreateTask(db *sql.DB, task TaskSpec) (taskInserted TaskSpec, err error) {
 
 // PatchTask ...
 // patches a task
-func PatchTask(db *sql.DB, task TaskSpec) (taskUpdated TaskSpec, err error) {
+func PatchTask(db *sql.DB, id string, task TaskSpec) (taskUpdated TaskSpec, err error) {
+	existingTask, err := GetTask(db, id)
+	if err != nil || existingTask.ID == "" {
+		return taskUpdated, fmt.Errorf("Failed to fetch existing task")
+	}
+	err = mergo.Merge(&task, existingTask)
+	if err != nil {
+		return taskUpdated, fmt.Errorf("Failed to update fields in the task")
+	}
+
+	err = ValidateTask(db, task)
+	if err != nil {
+		return taskUpdated, err
+	}
+
+	rotatesBetween := strings.Join(task.RotatesBetween, " ")
+	sqlStatement := `update tasks set name = $3, notes = $4, frequency = $5, completed = $6, assignee = $7, rotation = $8, rotatesBetween = $9, startDate = $10, authorLast = $11, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1 returning *`
+	rows, err := db.Query(sqlStatement, id, task.Name, task.Notes, task.Frequency, task.Completed, task.Assignee, task.Rotation, rotatesBetween, task.StartDate, task.AuthorLast)
+	if err != nil {
+		return taskUpdated, err
+	}
+	defer rows.Close()
+	rows.Next()
+	taskUpdated, err = GetTaskObjectFromRows(rows)
 	return taskUpdated, err
 }
 
 // UpdateTask ...
 // updates a task
-func UpdateTask(db *sql.DB, task TaskSpec) (taskUpdated TaskSpec, err error) {
+func UpdateTask(db *sql.DB, id string, task TaskSpec) (taskUpdated TaskSpec, err error) {
+	err = ValidateTask(db, task)
+	if err != nil {
+		return taskUpdated, err
+	}
+
+	rotatesBetween := strings.Join(task.RotatesBetween, " ")
+	sqlStatement := `update tasks set name = $3, notes = $4, frequency = $5, completed = $6, assignee = $7, rotation = $8, rotatesBetween = $9, startDate = $10, authorLast = $11, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1 returning *`
+	rows, err := db.Query(sqlStatement, id, task.Name, task.Notes, task.Frequency, task.Completed, task.Assignee, task.Rotation, rotatesBetween, task.StartDate, task.AuthorLast)
+	if err != nil {
+		return taskUpdated, err
+	}
+	defer rows.Close()
+	rows.Next()
+	taskUpdated, err = GetTaskObjectFromRows(rows)
 	return taskUpdated, err
 }
 

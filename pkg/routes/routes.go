@@ -1727,6 +1727,100 @@ func PostTask(db *sql.DB) http.HandlerFunc {
 	}
 }
 
+// PatchTask ...
+// patches an existing task
+func PatchTask(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := http.StatusBadRequest
+		response := "Failed to patch the task"
+
+		var taskPatch tasks.TaskSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &taskPatch)
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		task, err := tasks.GetTask(db, id)
+		if err != nil || task.ID == "" {
+			code = http.StatusNotFound
+			response = "Failed to find task"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: tasks.TaskSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		userID, errID := users.GetIDFromJWT(db, r)
+		task.AuthorLast = userID
+		taskPatched, err := tasks.PatchTask(db, id, taskPatch)
+		if err == nil && errID == nil && task.ID != "" {
+			code = http.StatusOK
+			response = "Successfully patched the task"
+		} else {
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: taskPatched,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
+// PutTask ...
+// updates an existing task
+func PutTask(db *sql.DB) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		code := http.StatusInternalServerError
+		response := "Failed to update the task"
+
+		var task tasks.TaskSpec
+		body, _ := ioutil.ReadAll(r.Body)
+		json.Unmarshal(body, &task)
+
+		vars := mux.Vars(r)
+		id := vars["id"]
+
+		if task, err := shoppinglist.GetShoppingList(db, id); err != nil || task.ID == "" {
+			code = http.StatusNotFound
+			response = "Failed to find the task"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: tasks.TaskSpec{},
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+
+		userID, errID := users.GetIDFromJWT(db, r)
+		task.AuthorLast = userID
+		taskUpdated, err := tasks.UpdateTask(db, id, task)
+		if err == nil && errID == nil && taskUpdated.ID != "" {
+			code = http.StatusOK
+			response = "Successfully updated the task"
+		} else {
+			code = http.StatusBadRequest
+			response = err.Error()
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: response,
+			},
+			Spec: taskUpdated,
+		}
+		JSONResponse(r, w, code, JSONresp)
+	}
+}
+
 // DeleteTask ...
 // delete a task by it's id
 func DeleteTask(db *sql.DB) http.HandlerFunc {
