@@ -1,4 +1,4 @@
-package api_e2e_test
+package e2e_test
 
 import (
 	"testing"
