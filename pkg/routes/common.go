@@ -21,13 +21,13 @@ package routes
 
 import (
 	"encoding/json"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"path"
 	"strings"
 	"time"
-	"path"
-	"html/template"
 
 	"database/sql"
 	"github.com/gorilla/mux"

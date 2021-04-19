@@ -1,4 +1,3 @@
-
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the Affero GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
@@ -54,9 +53,9 @@ func Start() {
 	dbUsername := common.GetDBusername()
 	dbPassword := common.GetDBpassword()
 	dbHostname := common.GetDBhost()
-	dbPort     := common.GetDBport()
+	dbPort := common.GetDBport()
 	dbDatabase := common.GetDBdatabase()
-	dbSSLmode  := common.GetDBsslMode()
+	dbSSLmode := common.GetDBsslMode()
 	db, err := database.Open(dbUsername, dbPassword, dbHostname, dbPort, dbDatabase, dbSSLmode)
 	if err != nil {
 		log.Println(err)

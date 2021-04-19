@@ -15,7 +15,7 @@ require (
 	github.com/joho/godotenv v1.3.0
 	github.com/lib/pq v1.8.0
 	github.com/neo4j-drivers/gobolt v1.7.4 // indirect
-	github.com/onsi/ginkgo v1.15.2
+	github.com/onsi/ginkgo v1.16.1
 	github.com/onsi/gomega v1.11.0
 	github.com/openzipkin/zipkin-go v0.1.6 // indirect
 	github.com/prometheus/client_golang v0.9.4
