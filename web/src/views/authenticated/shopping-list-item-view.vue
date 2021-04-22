@@ -221,7 +221,7 @@ export default {
         var item = resp.data.spec
         if (item.id !== '' && typeof item.id !== 'undefined') {
           common.DisplaySuccessToast('Updated item successfully')
-          this.$router.push({ name: 'View shopping list', params: { id: this.shoppingListId }, query: { itemId: this.id } })
+          this.$router.go(-1)
         } else {
           this.submitLoading = false
           common.DisplayFailureToast('Unable to find created shopping item')
