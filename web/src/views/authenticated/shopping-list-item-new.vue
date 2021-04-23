@@ -186,7 +186,7 @@ export default {
       shoppinglist.PostShoppingListItem(this.shoppingListId, this.name, this.notes, this.price, this.quantity, this.tag, this.obtained).then(resp => {
         var item = resp.data.spec
         if (item.id !== '' || typeof item.id === 'undefined') {
-          this.$router.push({ name: 'View shopping list', params: { id: this.shoppingListId } })
+          this.$router.go(-1)
         } else {
           this.submitLoading = false
           common.DisplayFailureToast('Unable to find created shopping item')
