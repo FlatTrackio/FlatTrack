@@ -6,7 +6,6 @@
 
 export TMATE_SOCKET="${TMATE_SOCKET:-/tmp/ii.default.target.iisocket}"
 export SCRIPT_PATH="$(dirname $(realpath $0))"
-export FLATTRACK_DEV_HOSTNAME="$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME"
 
 GUEST_GREETER_MESSAGE="Welcome to Pairing on FlatTrack with Pair. Guests will be able to login with emails like 'USERNAME@$FLATTRACK_DEV_HOSTNAME' and a default password of 'P@ssw0rd123!'"
 
@@ -25,6 +24,7 @@ APP_DB_DATABASE=flattrack
 APP_DB_HOST=postgres.flattrack-dev
 
 APP_DIST_FOLDER=./web/dist
+APP_URL=http://flattrack.${SHARINGIO_PAIR_BASE_DNS_NAME}:8080
 
 APP_METRICS_ENABLED=false
 APP_HEALTH_ENABLED=false
@@ -58,10 +58,10 @@ EOF
     tmate -S $TMATE_SOCKET send-keys -t postgres "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=ready pod -l app=postgres --timeout=200s && sleep 2s" Enter
     tmate -S $TMATE_SOCKET send-keys -t postgres "psql \"postgres://flattrack:flattrack@postgres.flattrack-dev/flattrack\"" Enter
 
-    if [ ! "$FLATTRACK_INIT_COLLABORATORS_DISABLE" ]; then
+    if [ ! "$FLATTRACK_INIT_COLLABORATORS_DISABLE" ] && [ ! -z "$SHARINGIO_PAIR_GUEST_NAMES" ]; then
         echo "Init Collaborators"
         tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n init-collaborators bash
-        tmate -S $TMATE_SOCKET send-keys -t init-collaborators "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"\$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\" && export $(cat .env | xargs)" Enter
+        tmate -S $TMATE_SOCKET send-keys -t init-collaborators "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"\$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\" $(cat .env | xargs)" Enter
         tmate -S $TMATE_SOCKET send-keys -t init-collaborators "$SCRIPT_PATH/insert-collaborators.sh" Enter
     fi
 fi
