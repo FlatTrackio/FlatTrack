@@ -98,6 +98,7 @@ export default {
   data () {
     return {
       redirect: this.$route.query.redirect || null,
+      authToken: this.$route.query.authToken || null,
       message: common.GetLoginMessage(),
       email: '',
       password: ''
@@ -114,7 +115,7 @@ export default {
       setTimeout(() => loadingComponent.close(), 20 * 1000)
       login.PostUserAuth(this.email, this.password)
         .then(resp => {
-          localStorage.setItem('authToken', resp.data.data)
+          common.SetAuthToken(resp.data.data)
           setTimeout(() => {
             loadingComponent.close()
             if (this.redirect !== null) {
@@ -151,6 +152,9 @@ export default {
     }
   },
   mounted () {
+    if (typeof this.authToken !== 'undefined') {
+      common.SetAuthToken(this.authToken)
+    }
     this.checkForLoginToken()
   }
 }

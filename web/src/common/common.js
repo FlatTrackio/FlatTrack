@@ -29,6 +29,12 @@ function GetAuthToken () {
   return localStorage.getItem('authToken')
 }
 
+// SetAuthToken
+// returns the JWT from localStorage
+function SetAuthToken (token) {
+  return localStorage.setItem('authToken', token)
+}
+
 // DeleteAuthToken
 // removes the JWT from localStorage
 function DeleteAuthToken () {
@@ -162,6 +168,7 @@ function GetLoginMessage () {
 
 export default {
   GetAuthToken,
+  SetAuthToken,
   DeleteAuthToken,
   DisplaySuccessToast,
   DisplayFailureToast,
