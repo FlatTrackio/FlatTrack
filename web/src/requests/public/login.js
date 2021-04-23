@@ -24,7 +24,7 @@ function GetUserAuth (redirect) {
   return Request({
     url: '/api/user/auth',
     method: 'GET'
-  }, redirect, true)
+  }, redirect, false)
 }
 
 // PostUserAuth
