@@ -32,9 +32,6 @@ variables:
   if [[ ! "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]] && [[ -z "$CI_COMMIT_TAG" ]]; then
     BRANCH_NAME="-$CI_COMMIT_BRANCH"
   fi
-  ARCH_TAGGABLE_NAME="$(echo $ARCH | tr -d '/')"
-  if [[ ! "$ARCH" = "$ARCH_DEFAULT" ]]; then
-  fi
   PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
 
 .container-pre-build-release-version: &container-pre-build-release-version |
