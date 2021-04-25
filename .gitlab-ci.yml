@@ -9,7 +9,6 @@ include:
   template: Dependency-Scanning.gitlab-ci.yml
 
 variables:
-  ARCH_DEFAULT: "amd64"
   ARCHES: amd64 arm64
   APP_BUILD_VERSION: 0.0.0
   APP_BUILD_MODE: development
@@ -18,7 +17,7 @@ variables:
   POSTGRES_PASSWORD: flattrack
   REGISTRIES: "$CI_REGISTRY docker.io"
 
-.kaniko-build-pre-script: &kaniko-build-pre-script |
+.container-build-pre-script: &kaniko-build-pre-script |
   set -x
   mkdir -p /kaniko/.docker
   cat << EOF > /kaniko/.docker/config.json
@@ -35,7 +34,7 @@ variables:
   }
   EOF
 
-.kaniko-build-taggable-name: &kaniko-build-taggable-name |
+.container-build-taggable-name: &kaniko-build-taggable-name |
   set -x
   COMMIT_HASH="$CI_COMMIT_SHORT_SHA"
   BUILD_DATE="$(date -u +%Y-%m-%d_%I:%M:%S%p)"
@@ -47,34 +46,36 @@ variables:
   fi
   ARCH_TAGGABLE_NAME="$(echo $ARCH | tr -d '/')"
   if [[ ! "$ARCH" = "$ARCH_DEFAULT" ]]; then
-    PRINT_ARCH="-$ARCH_TAGGABLE_NAME"
   fi
   PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
 
-.kaniko-pre-build-release-version: &kaniko-pre-build-release-version |
+.container-pre-build-release-version: &kaniko-pre-build-release-version |
   if [[ ! -z "$CI_COMMIT_TAG" ]]; then
     export APP_BUILD_VERSION="$CI_COMMIT_TAG"
     export APP_BUILD_MODE=production
     for reg in $REGISTRIES; do
-      export KANIKO_RELEASE_DESTINATIONS="$KANIKO_RELEASE_DESTINATIONS --destination $reg/$PROJECT_PATH:$APP_BUILD_VERSION$PRINT_ARCH"
+      export CONTAINER_RELEASE_DESTINATIONS="$KANIKO_RELEASE_DESTINATIONS -t $reg/$PROJECT_PATH:$APP_BUILD_VERSION"
     done
   fi
   for reg in $REGISTRIES; do
-    export KANIKO_DESTINATIONS="$KANIKO_DESTINATIONS --destination $reg/$PROJECT_PATH:latest$BRANCH_NAME$PRINT_ARCH"
+    export CONTAINER_DESTINATIONS="$KANIKO_DESTINATIONS -t $reg/$PROJECT_PATH:latest$BRANCH_NAME"
+  done
+  for ARCH in $ARCHES; do
+    export BUILD_ARCHES="$BUILD_ARCHES --platform linux/$ARCH"
   done
 
-.kaniko-build: &kaniko-build |
-  /kaniko/executor \
-    --snapshotMode=redo \
-    --context $CI_PROJECT_DIR \
-    --dockerfile $CI_PROJECT_DIR/build/Dockerfile \
-    $KANIKO_DESTINATIONS \
-    $KANIKO_RELEASE_DESTINATIONS \
-    --build-arg GOARCH="$ARCH" \
+.container-build: &kaniko-build |
+  docker buildx build \
+    --push \
+    -f $CI_PROJECT_DIR/build/Dockerfile \
+    $BUILD_ARCHES \
+    $CONTAINER_DESTINATIONS \
+    $CONTAINER_RELEASE_DESTINATIONS \
     --build-arg AppBuildVersion="$APP_BUILD_VERSION" \
     --build-arg AppBuildDate="$BUILD_DATE" \
     --build-arg AppBuildHash="$COMMIT_HASH" \
-    --build-arg AppBuildMode="$APP_BUILD_MODE"
+    --build-arg AppBuildMode="$APP_BUILD_MODE" \
+    $CI_PROJECT_DIR
 
 .zip-prepare: &zip-prepare |
   export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
@@ -82,37 +83,29 @@ variables:
 
 .build-container: &build-container
   stage: build
+  services:
+    - docker:20.10.6-dind
   image:
-    name: gcr.io/kaniko-project/executor:debug-v1.3.0
+    name: docker:20.10.6
     entrypoint: [""]
   retry: 2
   before_script:
-    - *kaniko-build-pre-script
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - *container-build-pre-script
+    - *container-build-taggable-name
+    - *container-pre-build-release-version
   script:
-    - *kaniko-build
+    - *container-build
 
-build-container-amd64:
+build-container:
   <<: *build-container
-  variables:
-    ARCH: "amd64"
-
-build-container-arm64:
-  <<: *build-container
-  variables:
-    ARCH: "arm64"
-  only:
-    - tags
-    - master
 
 build-zip-frontend:
   stage: build
   retry: 2
   image: node:14.7.0-alpine3.11
   before_script:
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - *container-build-taggable-name
+    - *container-pre-build-release-version
     - *zip-prepare
     - cd web
     - npm i
@@ -131,8 +124,8 @@ build-zip-backend:
   retry: 2
   image: golang:1.14.6-alpine3.11
   before_script:
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - *container-build-taggable-name
+    - *container-pre-build-release-version
     - *zip-prepare
   script:
     - |
@@ -170,8 +163,8 @@ build-zip-copy-extras:
   retry: 2
   image: alpine:3.11
   before_script:
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - *container-build-taggable-name
+    - *container-pre-build-release-version
     - *zip-prepare
   script:
     - cp -r migrations $RELEASE_FOLDER_NAME/migrations
@@ -194,8 +187,8 @@ build-zip:
     - build-zip-backend
     - build-zip-copy-extras
   before_script:
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - *container-build-taggable-name
+    - *container-pre-build-release-version
     - *zip-prepare
   script:
     - tar cvf $RELEASE_FOLDER_NAME.tar.gz $RELEASE_FOLDER_NAME
