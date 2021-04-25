@@ -16,6 +16,9 @@ variables:
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
   REGISTRIES: "$CI_REGISTRY docker.io"
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
 
 .container-build-pre-script: &container-build-pre-script |
   set -x
