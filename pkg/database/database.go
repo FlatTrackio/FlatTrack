@@ -19,9 +19,10 @@
 package database
 
 import (
-	// include Pg
 	"database/sql"
 	"fmt"
+
+	// include Pg
 	_ "github.com/lib/pq"
 )
 
