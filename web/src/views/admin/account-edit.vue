@@ -347,7 +347,7 @@ export default {
         }
         groups.push(group.name)
       })
-      adminFlatmates.PatchFlatmate(this.id, this.names, this.email, this.phoneNumber, this.birthday, this.groups, this.password).then(resp => {
+      adminFlatmates.PatchFlatmate(this.id, this.names, this.email, this.phoneNumber, this.birthday, groups, this.password).then(resp => {
         common.DisplaySuccessToast('Updated user account')
         setTimeout(() => {
           this.$router.push({ name: 'Admin accounts' })
