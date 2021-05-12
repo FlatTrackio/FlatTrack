@@ -112,6 +112,9 @@ tag-container-image:
     - |
         set -x
         cp -rf /kaniko/.docker $HOME/.docker
+        if [[ -z "$CI_COMMIT_TAG" ]]; then
+          APP_BUILD_VERSION=
+        fi
         for tag in $APP_BUILD_VERSION latest$BRANCH_NAME; do
           for reg in $REGISTRIES; do
             export IMAGE_TAG_WITH_ARCH=""
