@@ -3,6 +3,7 @@ stages:
   - test
   - pages
   - build
+  - tag-container-image
   - zip
 
 include:
@@ -45,10 +46,7 @@ variables:
   if [[ ! "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]] && [[ -z "$CI_COMMIT_TAG" ]]; then
     BRANCH_NAME="-$CI_COMMIT_BRANCH"
   fi
-  ARCH_TAGGABLE_NAME="$(echo $ARCH | tr -d '/')"
-  if [[ ! "$ARCH" = "$ARCH_DEFAULT" ]]; then
-    PRINT_ARCH="-$ARCH_TAGGABLE_NAME"
-  fi
+  PRINT_ARCH="$(echo $ARCH | tr -d '/')"
   PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
 
 .kaniko-pre-build-release-version: &kaniko-pre-build-release-version |
@@ -56,11 +54,11 @@ variables:
     export APP_BUILD_VERSION="$CI_COMMIT_TAG"
     export APP_BUILD_MODE=production
     for reg in $REGISTRIES; do
-      export KANIKO_RELEASE_DESTINATIONS="$KANIKO_RELEASE_DESTINATIONS --destination $reg/$PROJECT_PATH:$APP_BUILD_VERSION$PRINT_ARCH"
+      export KANIKO_RELEASE_DESTINATIONS="$KANIKO_RELEASE_DESTINATIONS --destination $reg/$PROJECT_PATH:$APP_BUILD_VERSION-$PRINT_ARCH"
     done
   fi
   for reg in $REGISTRIES; do
-    export KANIKO_DESTINATIONS="$KANIKO_DESTINATIONS --destination $reg/$PROJECT_PATH:latest$BRANCH_NAME$PRINT_ARCH"
+    export KANIKO_DESTINATIONS="$KANIKO_DESTINATIONS --destination $reg/$PROJECT_PATH:latest$BRANCH_NAME-$PRINT_ARCH"
   done
 
 .kaniko-build: &kaniko-build |
@@ -102,9 +100,37 @@ build-container-arm64:
   <<: *build-container
   variables:
     ARCH: "arm64"
-  only:
-    - tags
-    - master
+
+tag-container-image:
+  stage: tag-container-image
+  image: docker:20.10.6
+  before_script:
+    - *kaniko-build-pre-script
+    - *kaniko-build-taggable-name
+    - *kaniko-pre-build-release-version
+  script:
+    - |
+        set -x
+        cp -rf /kaniko/.docker $HOME/.docker
+        for tag in $APP_BUILD_VERSION latest$BRANCH_NAME; do
+          for reg in $REGISTRIES; do
+            export IMAGE_TAG_WITH_ARCH=""
+            for arch in $ARCHES; do
+              IMAGE="$reg/$CI_PROJECT_PATH:$tag-$arch"
+              export IMAGE_TAG_WITH_ARCH="$IMAGE_TAG_WITH_ARCH $IMAGE"
+            done
+            docker manifest create $reg/$CI_PROJECT_PATH:$tag $IMAGE_TAG_WITH_ARCH
+            for arch in $ARCHES; do
+              # TODO tidy up
+              EXTRA_ARGS=""
+              if [ "$arch" = "arm64" ]; then
+                EXTRA_ARGS="--variant v8"
+              fi
+              docker manifest annotate $reg/$CI_PROJECT_PATH:$tag $reg/$CI_PROJECT_PATH:$tag-$arch --os linux --arch $arch $EXTRA_ARGS
+            done
+            docker manifest push $reg/$CI_PROJECT_PATH:$tag
+          done
+        done
 
 build-zip-frontend:
   stage: build
