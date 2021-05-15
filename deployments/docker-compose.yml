@@ -24,7 +24,7 @@ services:
       - PGUSER=postgres
 
   flattrack:
-    image: registry.gitlab.com/flattrack/flattrack:0.0.1-alpha12-1
+    image: registry.gitlab.com/flattrack/flattrack:0.0.1-alpha14
     # uncomment to build from local instead of using a pre-built image 
     # build: ./
     restart: unless-stopped
