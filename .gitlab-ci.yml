@@ -3,8 +3,7 @@ stages:
   - test
   - pages
   - build
-  - tag-container-image
-  - zip
+  - post-build
 
 include:
   template: Dependency-Scanning.gitlab-ci.yml
@@ -102,7 +101,7 @@ build-container-arm64:
     ARCH: "arm64"
 
 tag-container-image:
-  stage: tag-container-image
+  stage: post-build
   image: docker:20.10.6
   before_script:
     - *kaniko-build-pre-script
@@ -215,7 +214,7 @@ build-zip-copy-extras:
       - flattrack*
 
 build-zip:
-  stage: zip
+  stage: post-build
   retry: 2
   image: alpine:3.11
   dependencies:

@@ -34,41 +34,13 @@ wget https://gitlab.com/flattrack/flattrack/-/jobs/723836116/artifacts/raw/flatt
   git clone https://gitlab.com/flattrack/flattrack
 #+end_src
 
-*** Remove testing dependencies from the frontend
-#+begin_src patch :tangle flattrack-remove-deps.patch
-diff --git a/package.json b/package.json
-index 442781e..0dfecc7 100644
---- a/package.json
-+++ b/package.json
-@@ -35,20 +35,15 @@
-     "vue-router": "^3.3.4"
-   },
-   "devDependencies": {
--    "@types/chai": "^4.2.12",
-     "@types/lodash": "^4.14.158",
--    "@types/mocha": "^5.2.4",
-     "@vue/cli-plugin-babel": "^4.4.6",
--    "@vue/cli-plugin-e2e-cypress": "^4.4.6",
-     "@vue/cli-plugin-eslint": "^4.4.6",
-     "@vue/cli-plugin-router": "^4.4.6",
-     "@vue/cli-plugin-typescript": "^4.4.6",
--    "@vue/cli-plugin-unit-mocha": "^4.4.6",
-     "@vue/cli-service": "^4.4.6",
-     "@vue/eslint-config-standard": "^4.0.0",
-     "@vue/eslint-config-typescript": "^4.0.0",
-     "@vue/test-utils": "1.0.0-beta.29",
--    "chai": "^4.1.2",
-     "eslint": "^5.16.0",
-     "eslint-plugin-vue": "^5.0.0",
-     "node-sass": "^4.14.1",
-#+end_src
+*** Build the frontend
 
-#+begin_src shell
-  git patch < flattrack-remove-deps.patch
-#+end_src
+Go to the web folder
+#+BEGIN_SRC
+cd web
+#+END_SRC
 
-*** Build components
-*** Frontend
 Fetch dependencies:
 #+begin_src shell
   npm i
@@ -79,49 +51,19 @@ Build:
   npm run build
 #+end_src
 
-*** Backend
+*** Build the backend
 #+begin_src shell
   go build -o flattrack ./src/backend/main.go
 #+end_src
 
 * Initialize and start Postgres
 
-Create the skeleton for Postgres:
-#+begin_src shell
-  mkdir -p $PREFIX/var/lib/postgresql
-  initdb $PREFIX/var/lib/postgresql
-#+end_src
+To bring up FlatTrack on Termux, simply run the following command:
+#+BEGIN_SRC shell
+./hack/start-on-termux.sh
+#+END_SRC
 
-Start Postgres:
-#+begin_src shell
-  pg_ctl -D $PREFIX/var/lib/postgresql start
-#+end_src
-
-Create a user:
-#+begin_src shell
-  createuser --superuser --pwprompt postgres
-#+end_src
-
-Create a database:
-#+begin_src shell
-  createdb flattrack
-#+end_src
-
-Test the connection to the database:
-#+begin_src shell
-  psql postgres -c 'select 0;'
-#+end_src
-
-* Add .env file
-#+begin_src shell
-APP_DB_USERNAME=postgres
-APP_DB_PASSWORD=postgres
-APP_DB_DATABASE=flattrack
-APP_DB_HOST=localhost
-#+end_src
-
-* Start FlatTrack
-
-#+begin_src shell
-./flattrack
-#+end_src
+This will:
+- prepare, init, and launch Postgres
+- set default for and write a .env file
+- bring up FlatTrack

@@ -52,6 +52,23 @@ function PatchFlatmate (id, names, email, phoneNumber, birthday, groups, passwor
   })
 }
 
+// PutFlatmate
+// updates a user account
+function PutFlatmate (id, names, email, phoneNumber, birthday, groups, password) {
+  return Request({
+    url: `/api/admin/users/${id}`,
+    method: 'PUT',
+    data: {
+      names,
+      email,
+      phoneNumber,
+      birthday,
+      groups,
+      password
+    }
+  })
+}
+
 // PatchFlatmateDisabled
 // patches a user account disabled field
 function PatchFlatmateDisabled (id, disabled) {
@@ -104,6 +121,7 @@ function GetUserAccountConfirms (userId) {
 
 export default {
   PostFlatmate,
+  PutFlatmate,
   PatchFlatmate,
   PatchFlatmateDisabled,
   DeleteFlatmate,
