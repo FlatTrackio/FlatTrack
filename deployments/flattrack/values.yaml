@@ -1,6 +1,7 @@
 siteURLOverride: ""
 realIPHeader: ""
 timezone: ""
+embeddedHTML: ""
 
 # how many flattrack pods there should be
 replicaCount: 1

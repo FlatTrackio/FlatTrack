@@ -131,6 +131,7 @@ func RequireContentType(expectedContentType string) func(http.Handler) http.Hand
 type FrontendOptions struct {
 	SetupMessage string
 	LoginMessage string
+	EmbeddedHTML template.HTML
 }
 
 // FrontendHandler ...
@@ -174,6 +175,7 @@ func Handle(db *sql.DB) {
 	passthrough := FrontendOptions{
 		SetupMessage: common.GetAppSetupMessage(),
 		LoginMessage: common.GetAppLoginMessage(),
+		EmbeddedHTML: template.HTML(common.GetAppEmbeddedHTML()),
 	}
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()

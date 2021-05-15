@@ -48,6 +48,7 @@ Chart values are located in [[https://gitlab.com/flattrack/flattrack/-/blob/mast
 | smtp.port                                             | SMTP port                                                    | ~""~                                    |
 | siteURL                                               | the URL of the site                                          | ~""~                                    |
 | realIPHeader                                          | a HTTP header to use for forwarding the real IP address      | ~""~                                    |
+| embeddedHTML                                          | inject custom HTML into index.html                           | ~""~                                    |
 | labels                                                | declare labels for all resources                             | ~{}~                                    |
 | annotations                                           | declare annotations for all resources                        | ~{}~                                    |
 | ingress.enabled                                       | create an ingress manifests                                  | false                                   |

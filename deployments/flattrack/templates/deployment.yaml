@@ -130,6 +130,10 @@ spec:
             - name: APP_HTTP_REAL_IP_HEADER
               value: {{ .Values.realIPHeader }}
             {{- end }}
+            {{- if .Values.embeddedHTML }}
+            - name: APP_EMBEDDED_HTML
+              values: {{ .Values.embeddedHTML }}
+            {{- end }}
         {{- with .Values.extraEnvVars }}
             {{- toYaml . | nindent 12 }}
         {{- end }}
