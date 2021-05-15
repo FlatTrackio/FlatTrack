@@ -3,14 +3,17 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    {{ if .SetupMessage }}
+    {{- if .SetupMessage }}
     <meta name="setupmessage" content="{{ .SetupMessage }}">
-    {{ end }}
-    {{ if .LoginMessage }}
+    {{- end }}
+    {{- if .LoginMessage }}
     <meta name="loginmessage" content="{{ .LoginMessage }}">
-    {{ end }}
+    {{- end }}
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
+    {{- if .EmbeddedHTML }}
+    {{ .EmbeddedHTML }}
+    {{- end }}
     <title>FlatTrack</title>
   </head>
   <body>

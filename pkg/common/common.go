@@ -187,6 +187,12 @@ func GetAppLoginMessage() (output string) {
 	return GetEnvOrDefault("APP_LOGIN_MESSAGE", "")
 }
 
+// GetAppEmbeddedHTML ...
+// return HTML to inject into index.html
+func GetAppEmbeddedHTML() (output string) {
+	return GetEnvOrDefault("APP_EMBEDDED_HTML", "")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {
