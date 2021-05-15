@@ -1,7 +1,8 @@
-#!/bin/bash -x
+#!/bin/bash
 
 if [ -z "$FT_TOKEN" ]; then
     echo "error: \$FT_TOKEN must be set to authenticate" > /dev/stderr
+    exit 1
 fi
 
 VERB="$1"
