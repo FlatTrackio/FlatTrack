@@ -1,0 +1,7 @@
+language: ${LANGUAGE}
+timezone: ${TIMEZONE}
+flatName: ${FLATNAME}
+user:
+  names: "${USER_NAMES}"
+  email: "${USER_EMAIL}"
+  password: "${USER_PASSWORD}"
