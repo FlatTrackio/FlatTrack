@@ -24,7 +24,8 @@ ARG AppBuildHash="???"
 ARG AppBuildDate="???"
 ARG AppBuildMode="development"
 ARG GOARCH=""
-RUN CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
+ARG GOPROXY=""
+RUN GOPROXY="$GOPROXY" CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
   -a \
   -installsuffix cgo \
   -ldflags "-extldflags '-static' -s -w \
