@@ -97,9 +97,9 @@ export default {
   name: 'login',
   data () {
     return {
-      redirect: this.$route.query.redirect || null,
-      authToken: this.$route.query.authToken || null,
-      message: common.GetLoginMessage(),
+      redirect: this.$route.query.redirect || undefined,
+      authToken: this.$route.query.authToken || undefined,
+      message: common.GetLoginMessage() || undefined,
       email: '',
       password: ''
     }
@@ -113,21 +113,20 @@ export default {
         container: null
       })
       setTimeout(() => loadingComponent.close(), 20 * 1000)
-      login.PostUserAuth(this.email, this.password)
-        .then(resp => {
-          common.SetAuthToken(resp.data.data)
-          setTimeout(() => {
-            loadingComponent.close()
-            if (this.redirect !== null) {
-              this.$router.push({ path: this.redirect })
-              return
-            }
-            window.location.href = '/'
-          }, 2 * 1000)
-        }).catch(err => {
+      login.PostUserAuth(this.email, this.password).then(resp => {
+        common.SetAuthToken(resp.data.data)
+        setTimeout(() => {
           loadingComponent.close()
-          common.DisplayFailureToast(err.response.data.metadata.response || err)
-        })
+          if (typeof this.redirect !== 'undefined' && this.redirect) {
+            this.$router.push({ path: this.redirect })
+            return
+          }
+          window.location.href = '/'
+        }, 2 * 1000)
+      }).catch(err => {
+        loadingComponent.close()
+        common.DisplayFailureToast(err.response.data.metadata.response || err)
+      })
     },
     checkForLoginToken () {
       var authToken = common.GetAuthToken()
