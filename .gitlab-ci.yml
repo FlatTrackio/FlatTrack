@@ -338,7 +338,7 @@ pages:
   script:
   - firn build
   - mv _firn/_site ../public
-  - mv .helm-root ../public/helm
+  - mv ../.helm-root ../public/helm
   artifacts:
     paths:
     - public
