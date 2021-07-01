@@ -117,7 +117,7 @@ build-helm-chart:
         fi
     - cat helm.tar.gz | tar --directory /usr/local/bin --extract -xz --strip-components 1 linux-amd64/helm
   script:
-    - helm package deployments/flattrack --destination .helm-root
+    - helm package deployments/flattrack --destination .helm-root/helm/
     - helm repo index --url "https://${CI_PROJECT_NAMESPACE}.gitlab.io/${CI_PROJECT_NAME}" .helm-root/
   artifacts:
     paths:
@@ -338,7 +338,7 @@ pages:
   script:
   - firn build
   - mv _firn/_site ../public
-  - cp -r ../.helm-root ../public/helm
+  - cp -r ../.helm-root/* ../public
   artifacts:
     paths:
     - public
