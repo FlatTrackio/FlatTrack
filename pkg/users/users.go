@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"log"
 
 	"github.com/imdario/mergo"
 
@@ -32,6 +33,7 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/groups"
 	"gitlab.com/flattrack/flattrack/pkg/system"
 	"gitlab.com/flattrack/flattrack/pkg/types"
+	"gitlab.com/flattrack/flattrack/pkg/emails"
 )
 
 // ValidateUser ...
@@ -126,6 +128,14 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
 		if userCreationSecretInserted.ID == "" {
 			return userInserted, fmt.Errorf("Failed to created a user creation secret")
 		}
+	}
+	if common.GetSMTPEnabled() == "true" {
+		go func() {
+			err := emails.SendAccountSignup(db, user, userCreationSecretInserted)
+			if err != nil {
+				log.Println(err)
+			}
+		}()
 	}
 
 	return userInserted, err

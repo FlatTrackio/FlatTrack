@@ -44,11 +44,14 @@ func SendEmail(content string, subject string, recipient string) error {
 		Port:     common.GetSMTPPort(),
 	}
 
-	auth := smtp.PlainAuth("",
-		smtpConfiguration.Username,
-		smtpConfiguration.Password,
-		smtpConfiguration.Host,
-	)
+	var auth smtp.Auth = nil
+	if smtpConfiguration.Username != "" && smtpConfiguration.Password != "" {
+		auth = smtp.PlainAuth("",
+			smtpConfiguration.Username,
+			smtpConfiguration.Password,
+			smtpConfiguration.Host,
+		)
+	}
 
 	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 	subjectFmt := fmt.Sprintf("Subject: %v\n", subject)
