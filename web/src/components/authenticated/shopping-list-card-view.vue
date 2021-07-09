@@ -51,10 +51,12 @@
               <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
             </div>
           </div>
-          <div class="content" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
+          <div v-if="!mini" class="content" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
             <div>
-              <b-tag type="is-info" v-if="list.completed">Completed</b-tag>
-              <b-tag type="is-warning" v-if="!list.completed">Uncompleted</b-tag>
+              <b-tag
+                :type="list.Completed ? 'is-info' : 'is-warning'">
+                {{ list.Completed ? 'Completed' : 'Uncompleted' }}
+              </b-tag>
             </div>
             <br/>
             <span v-if="list.notes !== '' && typeof list.notes !== 'undefined'">
@@ -87,6 +89,7 @@ import shoppinglistCommon from '@/common/shoppinglist'
 export default {
   name: 'shopping-list-card-view',
   props: {
+    mini: Boolean,
     deviceIsMobile: Boolean,
     index: Number,
     lists: Object,

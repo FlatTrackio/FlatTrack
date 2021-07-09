@@ -128,13 +128,16 @@ const (
 // options for lists
 type ShoppingListOptions struct {
 	SortBy   string               `json:"sortBy"`
+	Limit    int                  `json:"limit"`
 	Selector ShoppingListSelector `json:"selector"`
 }
 
 // ShoppingListSelector ...
 // options for creating and selecting lists
 type ShoppingListSelector struct {
-	Completed string `json:"completed"`
+	Completed                  string `json:"completed"`
+	ModificationTimestampAfter int    `json:"modificationTimestampAfter"`
+	CreationTimestampAfter     int    `json:"creationTimestampAfter"`
 }
 
 // ShoppingItemSpec ...

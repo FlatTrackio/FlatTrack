@@ -20,13 +20,15 @@ import Request from '@/requests/requests'
 
 // GetShoppingLists
 // returns a list of all shopping lists
-function GetShoppingLists (completed, sortBy) {
+function GetShoppingLists (completed, sortBy, creationTimestampAfter, modificationTimestampAfter) {
   return Request({
     url: '/api/apps/shoppinglist/lists',
     method: 'GET',
     params: {
       completed,
-      sortBy
+      sortBy,
+      creationTimestampAfter,
+      modificationTimestampAfter
     }
   })
 }

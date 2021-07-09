@@ -17,27 +17,58 @@
   <div>
     <div class="container">
       <section class="section">
+        <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <h1 class="title is-1">Home</h1>
-        <b-message type="is-warning">
-          This page will be a dashboard of recently added or updated things.
-          <br/>
-          As it's not available yet, please navigate to other pages which do things other than a message like this.
-        </b-message>
+        <p class="subtitle is-3">Recent activity of your flat</p>
+
+        <h1 class="subtitle is-4">Shopping lists</h1>
+        <div v-if="lists.length > 0">
+          <shoppingListCardView :list="list" :authors="authors" :lists="lists" :index="index" v-for="(list, index) in lists" v-bind:key="list" :deviceIsMobile="true" :mini="true" />
+          <p class="is-size-5 ml-3">
+            <b-icon icon="party-popper" type="is-success" size="is-medium"></b-icon>
+            You're all caught up! That's all for now
+          </p>
+          <!-- TODO add clear button -->
+        </div>
+        <div v-else>
+          <p class="is-size-5">Nothing recent yet. Check back in later!</p>
+        </div>
       </section>
     </div>
   </div>
 </template>
 
 <script>
+import common from '@/common/common'
+import shoppinglist from '@/requests/authenticated/shoppinglist'
 export default {
   name: 'home',
   data () {
     return {
+      authors: {},
+      lists: [],
+      pageLoading: true,
+      deviceIsMobile: false,
+      sortBy: 'recentlyUpdated'
     }
   },
   methods: {
+    // TODO add modificationTimestampAfter value
+    GetShoppingLists () {
+      shoppinglist.GetShoppingLists(undefined, this.sortBy, undefined, undefined).then(resp => {
+        this.pageLoading = false
+        this.lists = resp.data.list || []
+        console.log(this.lists)
+      }).catch(() => {
+        common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping lists')
+      })
+    }
+  },
+  components: {
+    shoppingListCardView: () => import('@/components/authenticated/shopping-list-card-view.vue')
   },
   async beforeMount () {
+    this.GetShoppingLists()
   }
 }
 </script>
