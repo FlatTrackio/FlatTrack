@@ -62,11 +62,11 @@ func GetShoppingLists(db *sql.DB, options types.ShoppingListOptions) (shoppingLi
 	fields := []interface{}{}
 
 	if options.Selector.ModificationTimestampAfter != 0 {
-		sqlStatement += `and modificationTimestamp > ? `
+		sqlStatement += fmt.Sprintf(`and modificationTimestamp > $%v `, len(fields)+1)
 		fields = append(fields, options.Selector.ModificationTimestampAfter)
 	}
 	if options.Selector.CreationTimestampAfter != 0 {
-		sqlStatement += `and creationTimestamp > ? `
+		sqlStatement += fmt.Sprintf(`and creationTimestamp > $%v `, len(fields)+1)
 		fields = append(fields, options.Selector.CreationTimestampAfter)
 	}
 
@@ -87,7 +87,7 @@ func GetShoppingLists(db *sql.DB, options types.ShoppingListOptions) (shoppingLi
 	}
 
 	if options.Limit > 0 {
-		sqlStatement += `limit ? `
+		sqlStatement += fmt.Sprintf(`limit $%v `, len(fields)+1)
 		fields = append(fields, options.Limit)
 	}
 
