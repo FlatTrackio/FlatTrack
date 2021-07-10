@@ -19,19 +19,27 @@
       <section class="section">
         <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <h1 class="title is-1">Home</h1>
-        <p class="subtitle is-3">Recent activity of your flat</p>
-
+        <p class="subtitle is-3">Recent activity</p>
         <h1 class="subtitle is-4">Shopping lists</h1>
         <div v-if="lists.length > 0">
           <shoppingListCardView :list="list" :authors="authors" :lists="lists" :index="index" v-for="(list, index) in lists" v-bind:key="list" :deviceIsMobile="true" :mini="true" />
-          <p class="is-size-5 ml-3">
+          <p class="is-size-5 ml-3 mb-2">
             <b-icon icon="party-popper" type="is-success" size="is-medium"></b-icon>
             You're all caught up! That's all for now
           </p>
-          <!-- TODO add clear button -->
+          <b-button
+            class="has-text-left"
+            @click="ClearItems"
+            type="is-info"
+            icon-left="close-box-outline"
+            expanded>
+            Clear
+          </b-button>
         </div>
         <div v-else>
-          <p class="is-size-5">Nothing recent yet. Check back in later!</p>
+          <b-message type="is-warning">
+            You're all caught up. Check back later!
+          </b-message>
         </div>
       </section>
     </div>
@@ -41,27 +49,32 @@
 <script>
 import common from '@/common/common'
 import shoppinglist from '@/requests/authenticated/shoppinglist'
+import dayjs from 'dayjs'
+
 export default {
   name: 'home',
   data () {
     return {
       authors: {},
-      lists: [],
       pageLoading: true,
+      lists: [],
       deviceIsMobile: false,
+      modificationTimestampAfter: common.GetHomeLastViewedTimestamp(),
       sortBy: 'recentlyUpdated'
     }
   },
   methods: {
-    // TODO add modificationTimestampAfter value
     GetShoppingLists () {
-      shoppinglist.GetShoppingLists(undefined, this.sortBy, undefined, undefined).then(resp => {
+      shoppinglist.GetShoppingLists(undefined, this.sortBy, undefined, this.modificationTimestampAfter, 5).then(resp => {
         this.pageLoading = false
         this.lists = resp.data.list || []
-        console.log(this.lists)
       }).catch(() => {
         common.DisplayFailureToast('Hmmm seems somethings gone wrong loading the shopping lists')
       })
+    },
+    ClearItems () {
+      common.WriteHomeLastViewedTimestamp(Number(dayjs().unix()))
+      this.lists = []
     }
   },
   components: {
