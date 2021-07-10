@@ -25,6 +25,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"runtime"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/pkg/common"
@@ -781,10 +782,17 @@ func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 		response := "Failed to fetch shopping lists"
 		code := http.StatusInternalServerError
 
+		modificationTimestampAfter, _ := strconv.Atoi(r.FormValue("modificationTimestampAfter"))
+		creationTimestampAfter, _ := strconv.Atoi(r.FormValue("creationTimestampAfter"))
+		limit, _ := strconv.Atoi(r.FormValue("limit"))
+
 		options := types.ShoppingListOptions{
 			SortBy: r.FormValue("sortBy"),
+			Limit:  limit,
 			Selector: types.ShoppingListSelector{
-				Completed: r.FormValue("completed"),
+				Completed:                  r.FormValue("completed"),
+				ModificationTimestampAfter: modificationTimestampAfter,
+				CreationTimestampAfter:     creationTimestampAfter,
 			},
 		}
 

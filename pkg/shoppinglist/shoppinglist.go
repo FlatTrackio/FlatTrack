@@ -58,33 +58,40 @@ func ValidateShoppingTag(db *sql.DB, tag types.ShoppingTag) (valid bool, err err
 // GetShoppingLists ...
 // returns a list of all shopping lists (name, notes, author, etc...)
 func GetShoppingLists(db *sql.DB, options types.ShoppingListOptions) (shoppingLists []types.ShoppingListSpec, err error) {
-	// recentlyAdded
-	sqlStatement := `select * from shopping_list
-                         where deletionTimestamp = 0
-	                 order by creationTimestamp desc`
-	if options.SortBy == types.ShoppingListSortByRecentlyUpdated {
-		sqlStatement = `select * from shopping_list
-                         where deletionTimestamp = 0
-	                 order by modificationTimestamp desc`
-	} else if options.SortBy == types.ShoppingListSortByLastAdded {
-		sqlStatement = `select * from shopping_list
-                         where deletionTimestamp = 0
-	                 order by creationTimestamp asc`
-	} else if options.SortBy == types.ShoppingListSortByLastUpdated {
-		sqlStatement = `select * from shopping_list
-                         where deletionTimestamp = 0
-	                 order by modificationTimestamp asc`
-	} else if options.SortBy == types.ShoppingListSortByAlphabeticalDescending {
-		sqlStatement = `select * from shopping_list
-                         where deletionTimestamp = 0
-	                 order by name asc`
-	} else if options.SortBy == types.ShoppingListSortByAlphabeticalAscending {
-		sqlStatement = `select * from shopping_list
-                         where deletionTimestamp = 0
-	                 order by name desc`
+	sqlStatement := `select * from shopping_list where deletionTimestamp = 0 `
+	fields := []interface{}{}
+
+	if options.Selector.ModificationTimestampAfter != 0 {
+		sqlStatement += fmt.Sprintf(`and modificationTimestamp > $%v `, len(fields)+1)
+		fields = append(fields, options.Selector.ModificationTimestampAfter)
+	}
+	if options.Selector.CreationTimestampAfter != 0 {
+		sqlStatement += fmt.Sprintf(`and creationTimestamp > $%v `, len(fields)+1)
+		fields = append(fields, options.Selector.CreationTimestampAfter)
 	}
 
-	rows, err := db.Query(sqlStatement)
+	if options.SortBy == types.ShoppingListSortByRecentlyUpdated {
+		sqlStatement += `order by modificationTimestamp desc `
+	} else if options.SortBy == types.ShoppingListSortByLastUpdated {
+		sqlStatement += `order by modificationTimestamp asc `
+	} else if options.SortBy == types.ShoppingListSortByRecentlyAdded {
+		sqlStatement += `order by creationTimestamp asc `
+	} else if options.SortBy == types.ShoppingListSortByLastAdded {
+		sqlStatement += `order by creationTimestamp asc `
+	} else if options.SortBy == types.ShoppingListSortByAlphabeticalDescending {
+		sqlStatement += `order by name asc `
+	} else if options.SortBy == types.ShoppingListSortByAlphabeticalAscending {
+		sqlStatement += `order by name desc `
+	} else {
+		sqlStatement += `order by creationTimestamp desc `
+	}
+
+	if options.Limit > 0 {
+		sqlStatement += fmt.Sprintf(`limit $%v `, len(fields)+1)
+		fields = append(fields, options.Limit)
+	}
+
+	rows, err := db.Query(sqlStatement, fields...)
 	if err != nil {
 		return shoppingLists, err
 	}

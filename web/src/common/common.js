@@ -110,6 +110,18 @@ function WriteFlatnameToCache (name) {
   localStorage.setItem('flatname', name)
 }
 
+// GetHomeLastViewedTimestamp
+// returns the timestamp of when the home page was last loaded or cleared
+function GetHomeLastViewedTimestamp () {
+  return Number(localStorage.getItem('homeLastViewedTimestamp'))
+}
+
+// WriteHomeLastViewedTimestamp
+// sets the timestamp of when the home page was last loaded or cleared
+function WriteHomeLastViewedTimestamp (timestamp) {
+  localStorage.setItem('homeLastViewedTimestamp', String(timestamp))
+}
+
 // GetEnableAnimations
 // returns if animations is enabled
 function GetEnableAnimations () {
@@ -177,6 +189,8 @@ export default {
   DeviceIsMobile,
   GetFlatnameFromCache,
   WriteFlatnameToCache,
+  GetHomeLastViewedTimestamp,
+  WriteHomeLastViewedTimestamp,
   GetEnableAnimations,
   WriteEnableAnimations,
   Hooray,
