@@ -149,7 +149,7 @@ function PostShoppingListItem (id, name, notes, price, quantity, tag, obtained) 
 
 // PatchShoppingListItem
 // patches the shopping list item
-function PatchShoppingListItem(listId, itemId, name, notes, price, quantity, tag) {
+function PatchShoppingListItem (listId, itemId, name, notes, price, quantity, tag) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
     method: 'PATCH',
