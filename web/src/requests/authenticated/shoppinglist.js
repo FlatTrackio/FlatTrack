@@ -20,7 +20,7 @@ import Request from '@/requests/requests'
 
 // GetShoppingLists
 // returns a list of all shopping lists
-function GetShoppingLists (completed, sortBy, creationTimestampAfter, modificationTimestampAfter) {
+function GetShoppingLists (completed, sortBy, creationTimestampAfter, modificationTimestampAfter, limit) {
   return Request({
     url: '/api/apps/shoppinglist/lists',
     method: 'GET',
@@ -28,7 +28,8 @@ function GetShoppingLists (completed, sortBy, creationTimestampAfter, modificati
       completed,
       sortBy,
       creationTimestampAfter,
-      modificationTimestampAfter
+      modificationTimestampAfter,
+      limit
     }
   })
 }
@@ -148,7 +149,7 @@ function PostShoppingListItem (id, name, notes, price, quantity, tag, obtained) 
 
 // PatchShoppingListItem
 // patches the shopping list item
-function PatchShoppingListItem (listId, itemId, name, notes, price, quantity, tag) {
+function PatchShoppingListItem(listId, itemId, name, notes, price, quantity, tag) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
     method: 'PATCH',
