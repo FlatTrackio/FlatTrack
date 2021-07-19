@@ -54,8 +54,8 @@
           <div v-if="!mini" class="content" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
             <div>
               <b-tag
-                :type="list.Completed ? 'is-info' : 'is-warning'">
-                {{ list.Completed ? 'Completed' : 'Uncompleted' }}
+                :type="list.completed ? 'is-info' : 'is-warning'">
+                {{ list.completed ? 'Completed' : 'Uncompleted' }}
               </b-tag>
             </div>
             <br/>
