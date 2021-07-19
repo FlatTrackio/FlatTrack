@@ -37,8 +37,9 @@ variables:
 
 .kaniko-build-taggable-name: &kaniko-build-taggable-name |
   set -x
+  echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
   COMMIT_HASH="$CI_COMMIT_SHORT_SHA"
-  BUILD_DATE="$(date --date=${CI_COMMIT_TIMESTAMP%T*} +%Y-%m-%d_%I:%M:%S%p)"
+  BUILD_DATE=$(date --date="${CI_COMMIT_TIMESTAMP//[T+]/ }" '+%Y.%m.%d.%H%M')
   if [[ -z "$CI_COMMIT_TAG" ]]; then
     PRINTABLE_COMMIT_HASH="-$COMMIT_HASH"
   fi
