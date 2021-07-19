@@ -21,6 +21,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	// include Pg
 	_ "github.com/lib/pq"
@@ -42,5 +43,15 @@ func Close(db *sql.DB) (err error) {
 // Ping ...
 // ping the database
 func Ping(db *sql.DB) (err error) {
-	return db.Ping()
+	var zero int
+	rows, err := db.Query(`SELECT 0`)
+	if err != nil {
+		log.Println("Error querying database", err.Error())
+		return err
+	}
+	rows.Scan(&zero)
+	if zero != 0 {
+		return fmt.Errorf("Wild, this error should never occur.")
+	}
+	return rows.Err()
 }
