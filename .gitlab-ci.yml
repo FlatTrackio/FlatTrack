@@ -10,7 +10,7 @@ include:
 
 variables:
   ARCH_DEFAULT: "amd64"
-  ARCHES: amd64 arm64
+  ARCHES: amd64 arm64 arm
   APP_BUILD_VERSION: 0.0.0
   APP_BUILD_MODE: development
   POSTGRES_DB: flattrack
@@ -101,6 +101,11 @@ build-container-arm64:
   variables:
     ARCH: "arm64"
 
+build-container-arm:
+  <<: *build-container
+  variables:
+    ARCH: "arm"
+
 build-helm-chart:
   stage: build
   image: alpine:3.12
@@ -153,6 +158,9 @@ tag-container-image:
               EXTRA_ARGS=""
               if [ "$arch" = "arm64" ]; then
                 EXTRA_ARGS="--variant v8"
+              fi
+              if [ "$arch" = "arm" ]; then
+                EXTRA_ARGS="--variant v7"
               fi
               docker manifest annotate $reg/$CI_PROJECT_PATH:$tag $reg/$CI_PROJECT_PATH:$tag-$arch --os linux --arch $arch $EXTRA_ARGS
             done
