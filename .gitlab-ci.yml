@@ -17,6 +17,12 @@ variables:
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
   REGISTRIES: "$CI_REGISTRY docker.io"
+  IMAGE_KANIKO: gcr.io/kaniko-project/executor:debug-v1.3.0
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.17.0-alpine3.14
+  IMAGE_NODE_ALPINE: docker.io/node:15.14.0-alpine3.13
+  IMAGE_ALPINE: docker.io/alpine:3.14
+  IMAGE_DOCKER: docker.io/docker:20.10.6
+  IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
 
 .kaniko-build-pre-script: &kaniko-build-pre-script |
   set -x
@@ -81,7 +87,7 @@ variables:
 .build-container: &build-container
   stage: build
   image:
-    name: gcr.io/kaniko-project/executor:debug-v1.3.0
+    name: $IMAGE_KANIKO
     entrypoint: [""]
   retry: 2
   before_script:
@@ -108,7 +114,7 @@ build-container-arm:
 
 build-helm-chart:
   stage: build
-  image: alpine:3.12
+  image: $IMAGE_ALPINE
   variables:
     HELM_LINK: https://get.helm.sh/helm-v3.4.0-linux-amd64.tar.gz
     HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
@@ -133,7 +139,7 @@ build-helm-chart:
     
 tag-container-image:
   stage: post-build
-  image: docker:20.10.6
+  image: $IMAGE_DOCKER
   before_script:
     - *kaniko-build-pre-script
     - *kaniko-build-taggable-name
@@ -171,7 +177,7 @@ tag-container-image:
 build-zip-frontend:
   stage: build
   retry: 2
-  image: node:14.7.0-alpine3.11
+  image: $IMAGE_NODE
   before_script:
     - *kaniko-build-taggable-name
     - *kaniko-pre-build-release-version
@@ -191,7 +197,7 @@ build-zip-frontend:
 build-zip-backend:
   stage: build
   retry: 2
-  image: golang:1.14.6-alpine3.11
+  image: $IMAGE_GOLANG_ALPINE
   before_script:
     - *kaniko-build-taggable-name
     - *kaniko-pre-build-release-version
@@ -230,7 +236,7 @@ build-zip-backend:
 build-zip-copy-extras:
   stage: build
   retry: 2
-  image: alpine:3.11
+  image: $IMAGE_ALPINE
   before_script:
     - *kaniko-build-taggable-name
     - *kaniko-pre-build-release-version
@@ -250,7 +256,7 @@ build-zip-copy-extras:
 build-zip:
   stage: post-build
   retry: 2
-  image: alpine:3.11
+  image: $IMAGE_ALPINE
   dependencies:
     - build-zip-frontend
     - build-zip-backend
@@ -270,7 +276,7 @@ build-zip:
 
 test_backend_e2e:
   stage: test
-  image: golang:1.13.10-alpine3.11
+  image: $IMAGE_GOLANG_ALPINE
   variables:
     APP_DB_HOST: postgres
     CGO_ENABLED: "0"
@@ -288,30 +294,31 @@ test_backend_e2e:
 
 spell_check:
   stage: lint
-  image: golang:1.13.10-alpine3.11
+  image: $IMAGE_GOLANG_ALPINE
   allow_failure: true
   before_script:
-    - go get -u github.com/client9/misspell/cmd/misspell
+    - go get github.com/client9/misspell/cmd/misspell
   script:
     - misspell -error src docs migrations pubic template k8s-manifests README*
     
 lint_frontend:
   stage: lint
-  image: node:12.10.0-alpine
+  image: $IMAGE_NODE_ALPINE
   allow_failure: true
   before_script:
     - cd web
+    - apk add --no-cache python2
     - npm i
   script:
     - npm run lint
 
 lint_backend:
   stage: lint
-  image: golang:1.13.10-alpine3.11
+  image: $IMAGE_GOLANG_ALPINE
   allow_failure: true
   before_script:
     - apk add git gcc
-    - go get -u golang.org/x/lint/golint
+    - apk add --no-cache python2 make g++
   script:
     - echo -e "GOLINT\n"
     - golint -set_exit_status ./...
@@ -320,7 +327,7 @@ lint_backend:
 
 lint_helm_chart:
   stage: lint
-  image: alpine:3.11
+  image: $IMAGE_ALPINE
   variables:
     HELM_LINK: https://get.helm.sh/helm-v3.4.0-linux-amd64.tar.gz
     HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
@@ -339,7 +346,7 @@ lint_helm_chart:
 pages:
   image:
     # use temporary firn container image instead of theiceshelf/firn image, until tagging is in CI
-    name: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
+    name: $IMAGE_FIRN
     entrypoint: [""]
   stage: pages
   before_script:

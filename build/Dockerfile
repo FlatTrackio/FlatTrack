@@ -1,4 +1,4 @@
-FROM node:15.9.0-alpine3.13 AS ui
+FROM node:15.14.0-alpine3.13 AS ui
 ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
 ARG AppBuildDate="???"
@@ -13,7 +13,7 @@ ENV VUE_APP_AppBuildVersion=$AppBuildVersion \
   VUE_APP_AppBuildMode=$AppBuildMode
 RUN npm run build
 
-FROM golang:1.16.0-alpine3.13 AS api
+FROM golang:1.17.0-alpine3.14 AS api
 WORKDIR /app
 COPY pkg /app/pkg
 COPY cmd /app/cmd
@@ -36,7 +36,7 @@ RUN GOPROXY="$GOPROXY" CGO_ENABLED=0 GOOS=linux GOARCH="$GOARCH" go build \
   -o bin/flattrack \
   main.go
 
-FROM alpine:3.13 as extras
+FROM alpine:3.14 as extras
 RUN apk add --no-cache tzdata ca-certificates
 RUN adduser -D user
 
