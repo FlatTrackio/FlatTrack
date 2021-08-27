@@ -183,6 +183,7 @@ build-zip-frontend:
     - *kaniko-pre-build-release-version
     - *zip-prepare
     - cd web
+    - apk add --no-cache python2 make g++
     - npm i
   script:
     - ./node_modules/.bin/vue-cli-service build --dest $CI_PROJECT_DIR/$RELEASE_FOLDER_NAME/dist ./src/main.js
