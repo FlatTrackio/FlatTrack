@@ -256,7 +256,7 @@ build-zip-copy-extras:
 build-zip:
   stage: post-build
   retry: 2
-  image: $IMAGE_ALPINE
+  image: alpine:3.14
   dependencies:
     - build-zip-frontend
     - build-zip-backend
