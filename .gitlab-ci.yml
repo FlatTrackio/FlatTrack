@@ -177,7 +177,7 @@ tag-container-image:
 build-zip-frontend:
   stage: build
   retry: 2
-  image: $IMAGE_NODE
+  image: $IMAGE_NODE_ALPINE
   before_script:
     - *kaniko-build-taggable-name
     - *kaniko-pre-build-release-version
@@ -256,7 +256,7 @@ build-zip-copy-extras:
 build-zip:
   stage: post-build
   retry: 2
-  image: alpine:3.14
+  image: $IMAGE_ALPINE
   dependencies:
     - build-zip-frontend
     - build-zip-backend
@@ -297,7 +297,7 @@ spell_check:
   image: $IMAGE_GOLANG_ALPINE
   allow_failure: true
   before_script:
-    - go get github.com/client9/misspell/cmd/misspell
+    - go get -u github.com/client9/misspell/cmd/misspell
   script:
     - misspell -error src docs migrations pubic template k8s-manifests README*
     
@@ -318,7 +318,7 @@ lint_backend:
   allow_failure: true
   before_script:
     - apk add git gcc
-    - apk add --no-cache python2 make g++
+    - go get -u golang.org/x/lint/golint
   script:
     - echo -e "GOLINT\n"
     - golint -set_exit_status ./...
