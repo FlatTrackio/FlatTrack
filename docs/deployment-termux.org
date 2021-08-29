@@ -20,18 +20,18 @@ The pipeline will contain a ~build-zip~ job which has artifacts to download.
 
 e.g:
 #+begin_src shell
-wget https://gitlab.com/flattrack/flattrack/-/jobs/723836116/artifacts/raw/flattrack.tar.gz
+wget https://gitlab.com/flattrack/flattrack/-/jobs/artifacts/0.1.15/download?job=build-zip
 #+end_src
 
 ** Manual installation
 *** Install Dependencies
 #+begin_src shell
-  pkg add postgresql nodejs golang git python2
+pkg add postgresql nodejs golang git python2
 #+end_src
 
 *** Clone the repo
 #+begin_src shell
-  git clone https://gitlab.com/flattrack/flattrack
+git clone https://gitlab.com/flattrack/flattrack
 #+end_src
 
 *** Build the frontend
@@ -43,17 +43,17 @@ cd web
 
 Fetch dependencies:
 #+begin_src shell
-  npm i
+npm i
 #+end_src
 
 Build:
 #+begin_src shell
-  npm run build
+npm run build
 #+end_src
 
 *** Build the backend
 #+begin_src shell
-  go build -o flattrack ./src/backend/main.go
+go build -o flattrack ./src/backend/main.go
 #+end_src
 
 * Initialize and start Postgres
