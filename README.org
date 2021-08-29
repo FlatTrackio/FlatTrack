@@ -6,8 +6,6 @@
 #+html: <a target=_blank href="https://artifacthub.io/packages/search?repo=flattrack"><img alt="ArtifactHub" src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/flattrack"></a>
 #+html: <br/>
 
-[![Artifact Hub]()]()
-
 * FlatTrack
 #+begin_quote
 Collaborate with your flatmates
