@@ -4,6 +4,6 @@
 * Deployment
 
 FlatTrack can be deployed in a variety of ways, such as to:
-- [[./deployment-kubernetes.org][Kubernetes]]
-- [[./deployment-docker-compose.org][Docker-Compose]]
-- [[./deployment-plain.org][a plain Ubuntu server]]
+- [[./deployment-kubernetes][Kubernetes]]
+- [[./deployment-docker-compose][Docker-Compose]]
+- [[./deployment-plain][a plain Ubuntu server]]
