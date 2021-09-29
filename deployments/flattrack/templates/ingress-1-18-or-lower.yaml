@@ -1,8 +1,12 @@
 {{- if $.Values.ingress.enabled -}}
 {{- $fullName := include "flattrack.fullname" . -}}
 {{- $svcPort := $.Values.service.port | default "8080" -}}
-{{- if semverCompare "<=1.19-0" .Capabilities.KubeVersion.GitVersion -}}
-apiVersion: networking.k8s.io/v1
+{{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.GitVersion -}}
+{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
 kind: Ingress
 metadata:
   name: {{ $fullName }}
@@ -50,12 +54,9 @@ spec:
         paths:
         {{- range .paths }}
           - path: {{ . | quote }}
-            pathType: ImplementationSpecific
             backend:
-              service:
-                name: {{ $fullName }}
-                port:
-                  number: {{ $svcPort }}
+              serviceName: {{ $fullName }}
+              servicePort: {{ $svcPort }}
         {{- end }}
   {{- end }}
 {{- end }}
