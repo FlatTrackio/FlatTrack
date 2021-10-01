@@ -17,12 +17,14 @@ import router from './router'
 import Buefy from 'buefy'
 import VueMaterial from 'vue-material'
 import 'vue-material/dist/vue-material.min.css'
+import { MotionPlugin } from '@vueuse/motion'
 import './registerServiceWorker'
 
 Vue.use(VueMaterial)
 Vue.use(Buefy, {
   defaultIconPack: 'mdi'
 })
+Vue.use(MotionPlugin)
 Vue.config.productionTip = false
 
 new Vue({

@@ -103,7 +103,7 @@
         <floatingAddButton :routerLink="{ name: 'New shopping list', query: { name: listSearch || undefined } }" v-if="displayFloatingAddButton"/>
         <br/>
         <div v-if="listsFiltered.length > 0">
-          <shoppingListCardView :list="list" :authors="authors" :lists="lists" :index="index" v-for="(list, index) in listsFiltered" v-bind:key="list" :deviceIsMobile="deviceIsMobile" />
+          <shoppingListCardView :v-motion-slide-bottom="enableAnimations" :list="list" :authors="authors" :lists="lists" :index="index" v-for="(list, index) in listsFiltered" v-bind:key="list" :deviceIsMobile="deviceIsMobile" />
           <br/>
           <p>{{ listsFiltered.length }} shopping list(s)</p>
         </div>
@@ -141,6 +141,7 @@ export default {
   name: 'Shopping List',
   data () {
     return {
+      enableAnimations: common.GetEnableAnimations() === 'true' ? '' : 'false',
       displayFloatingAddButton: true,
       canUserAccountAdmin: false,
       notes: '',

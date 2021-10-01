@@ -168,7 +168,7 @@
         <div v-if="listItemsFromTags.length > 0">
           <b-loading :is-full-page="false" :active.sync="listIsLoading" :can-cancel="false"></b-loading>
           <div v-if="sortBy === 'tags'">
-            <section v-for="itemTag in listItemsFromTags" v-bind:key="itemTag">
+            <section :v-motion-slide-bottom="enableAnimations" v-for="itemTag in listItemsFromTags" v-bind:key="itemTag">
               <div v-if="editingTag === itemTag.tag">
                 <label class="label">Tag name</label>
                 <b-field>
@@ -230,7 +230,7 @@
                 v-bind:css="false"
                 v-on:enter="ItemAppear"
                 v-on:leave="ItemDisappear">
-                <div v-for="(item, index) in itemTag.items" v-bind:key="item">
+                <div :v-motion-slide-bottom="enableAnimations" v-for="(item, index) in itemTag.items" v-bind:key="item">
                   <a :id="item.id"></a>
                   <itemCard :list="list" :item="item" :index="index" :listId="id" :deviceIsMobile="deviceIsMobile" :id="item.id" :itemDisplayState="itemDisplayState" />
                 </div>
@@ -249,7 +249,7 @@
             </section>
           </div>
           <div v-else-if="sortBy !== 'tag'">
-            <div v-for="(item, index) in listItemsFromPlainList" v-bind:key="item">
+            <div :v-motion-slide-bottom="enableAnimations" v-for="(item, index) in listItemsFromPlainList" v-bind:key="item">
               <a :id="item.id"></a>
               <itemCard :list="list" :item="item" :index="index" :listId="id" :displayTag="true" :deviceIsMobile="deviceIsMobile" :id="item.id" :itemDisplayState="itemDisplayState" />
             </div>
@@ -341,6 +341,7 @@ export default {
   name: 'Shopping List',
   data () {
     return {
+      enableAnimations: common.GetEnableAnimations() === 'true' ? undefined : 'false',
       intervalLoop: null,
       editing: false,
       editingMeta: false,

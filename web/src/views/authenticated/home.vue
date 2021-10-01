@@ -22,7 +22,7 @@
         <p class="subtitle is-3">Recent activity</p>
         <h1 class="subtitle is-4">Shopping lists</h1>
         <div v-if="lists.length > 0">
-          <shoppingListCardView :list="list" :authors="authors" :lists="lists" :index="index" v-for="(list, index) in lists" v-bind:key="list" :deviceIsMobile="true" :mini="true" />
+          <shoppingListCardView :v-motion-slide-bottom="enableAnimations" :list="list" :authors="authors" :lists="lists" :index="index" v-for="(list, index) in lists" v-bind:key="list" :deviceIsMobile="true" :mini="true" />
           <p class="is-size-5 ml-3 mb-2">
             <b-icon icon="party-popper" type="is-success" size="is-medium"></b-icon>
             You're all caught up! That's all for now
@@ -55,6 +55,7 @@ export default {
   name: 'home',
   data () {
     return {
+      enableAnimations: common.GetEnableAnimations() === 'true',
       authors: {},
       pageLoading: true,
       lists: [],

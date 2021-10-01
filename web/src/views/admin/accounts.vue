@@ -50,7 +50,7 @@
         </div>
         <br/>
         <div v-if="members && members.length">
-          <div class="card-margin pointer-cursor-on-hover" v-for="member of members" v-bind:key="member" @click="$router.push({ name: 'View user account', params: { id: member.id } })">
+          <div class="card-margin pointer-cursor-on-hover" :v-motion-slide-bottom="enableAnimations" v-for="member of members" v-bind:key="member" @click="$router.push({ name: 'View user account', params: { id: member.id } })">
             <div class="card">
               <div class="card-content">
                 <div class="media">
@@ -146,6 +146,7 @@ export default {
       members: [],
       groupQuery: undefined,
       emojiSmile: emoji.get('smile'),
+      enableAnimations: common.GetEnableAnimations() === 'true',
       pageLoading: true
     }
   },

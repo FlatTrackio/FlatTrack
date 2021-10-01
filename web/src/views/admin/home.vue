@@ -21,7 +21,7 @@
         <p class="subtitle is-4">Manage FlatTrack</p>
         <p></p>
         <br>
-        <div v-for="app in apps" v-bind:key="app" >
+        <div :v-motion-slide-bottom="enableAnimations" v-for="app in apps" v-bind:key="app" >
           <div class="card pointer-cursor-on-hover" @click="$router.push({ name: app.routeName })">
             <div class="card-content">
               <div class="media">
@@ -48,10 +48,12 @@
 </template>
 
 <script>
+import common from '@/common/common'
 export default {
   name: 'Admin home',
   data () {
     return {
+      enableAnimations: common.GetEnableAnimations() === 'true' ? '' : 'false',
       apps: [
         {
           name: 'Accounts',

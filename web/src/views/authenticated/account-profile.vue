@@ -26,7 +26,7 @@
         <h1 class="title is-1">Profile</h1>
         <p class="subtitle is-3">Manage your account</p>
         <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
-        <div class="card">
+        <div :v-motion-slide-bottom="enableAnimations" class="card">
           <div class="card-content">
             <div class="media">
               <div class="media-content">
@@ -144,6 +144,7 @@ export default {
       passwordConfirm: '',
       jsBirthday: null,
       pageLoading: true,
+      enableAnimations: common.GetEnableAnimations() === 'true',
       names: '',
       email: '',
       phoneNumber: '',
