@@ -3,6 +3,7 @@ module gitlab.com/flattrack/flattrack
 go 1.14
 
 require (
+	contrib.go.opencensus.io/exporter/ocagent v0.7.0 // indirect
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/golang-migrate/migrate/v4 v4.14.2-0.20210728160618-5bf05dc3236e
 	github.com/gorilla/mux v1.8.0
@@ -17,6 +18,7 @@ require (
 	github.com/prometheus/common v0.30.0 // indirect
 	github.com/prometheus/procfs v0.7.1 // indirect
 	github.com/rs/cors v1.8.0
+	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985 // indirect
 	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect

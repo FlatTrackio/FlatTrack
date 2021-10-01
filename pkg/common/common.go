@@ -193,6 +193,10 @@ func GetAppEmbeddedHTML() (output string) {
 	return GetEnvOrDefault("APP_EMBEDDED_HTML", "")
 }
 
+func GetAppOCAgentHost() (output string) {
+	return GetEnvOrDefault("APP_OC_AGENT_HOST", "")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {

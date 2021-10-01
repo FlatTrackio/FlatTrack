@@ -30,8 +30,10 @@ import (
 	"time"
 
 	"database/sql"
-	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"go.opencensus.io/plugin/ochttp"
+	"github.com/gorilla/mux"
+
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
@@ -180,9 +182,9 @@ func Handle(db *sql.DB) {
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
 	apiRouters.Use(RequireContentType("application/json"))
-	apiRouters.HandleFunc("", Root)
+	apiRouters.HandleFunc("", ochttp.WithRouteTag(Root, apiEndpointPrefix))
 	for _, endpoint := range GetEndpoints(db) {
-		apiRouters.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HTTPMethod, http.MethodOptions)
+		apiRouters.HandleFunc(endpoint.EndpointPath, ochttp.WithRouteTag(endpoint.HandlerFunc, endpoint.EndpointPath)).Methods(endpoint.HTTPMethod, http.MethodOptions)
 	}
 
 	apiRouters.HandleFunc(apiEndpointPrefix+"/{.*}", UnknownEndpoint)

@@ -33,13 +33,18 @@
 package flattrack
 
 import (
+	"log"
+	"time"
+
+	"contrib.go.opencensus.io/exporter/ocagent"
+	"go.opencensus.io/trace"
 	"github.com/joho/godotenv"
+
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/database"
 	"gitlab.com/flattrack/flattrack/pkg/metrics"
 	"gitlab.com/flattrack/flattrack/pkg/migrations"
 	"gitlab.com/flattrack/flattrack/pkg/routes"
-	"log"
 )
 
 // Start ...
@@ -66,6 +71,17 @@ func Start() {
 		log.Println("migrations:", err)
 		return
 	}
+
+	ocagentHost := common.GetAppOCAgentHost()
+	oce, err := ocagent.NewExporter(
+		ocagent.WithInsecure(),
+		ocagent.WithReconnectionPeriod(5*time.Second),
+		ocagent.WithAddress(ocagentHost),
+		ocagent.WithServiceName("web"))
+	if err != nil {
+		log.Fatalf("Failed to create ocagent-exporter: %v", err)
+	}
+	trace.RegisterExporter(oce)
 
 	go metrics.Handle()
 	go routes.HealthHandler(db)
