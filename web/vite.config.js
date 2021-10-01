@@ -11,7 +11,24 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-module.exports = {
+import { defineConfig } from 'vite'
+import { createVuePlugin } from 'vite-plugin-vue2'
+const path = require('path')
+export default defineConfig({
+  plugins: [
+    createVuePlugin(),
+  ],
+  server: {
+    port: 8081
+  },
+  resolve: {
+    alias: [
+      {
+        find: '@',
+        replacement: path.resolve(__dirname, 'src')
+      }
+    ]
+  },
   productionSourceMap: false,
   pwa: {
     name: "FlatTrack",
@@ -27,4 +44,4 @@ module.exports = {
     },
     workboxPluginMode: "GenerateSW"
   }
-}
+})

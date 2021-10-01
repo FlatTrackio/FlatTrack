@@ -105,7 +105,7 @@ export default {
     }
   },
   components: {
-    headerDisplay: () => import('@/components/common/header-display')
+    headerDisplay: () => import('@/components/common/header-display.vue')
   },
   methods: {
     postLogin () {

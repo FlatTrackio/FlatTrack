@@ -50,7 +50,7 @@ import common from '@/common/common'
 export default {
   name: 'login',
   components: {
-    headerDisplay: () => import('@/components/common/header-display')
+    headerDisplay: () => import('@/components/common/header-display.vue')
   },
   methods: {
     Reload () {

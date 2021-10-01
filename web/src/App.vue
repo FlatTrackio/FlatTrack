@@ -75,13 +75,13 @@ export default {
 </script>
 
 <style lang="scss">
-@import "~bulma/sass/utilities/_all";
+@import "../node_modules/bulma/sass/utilities/_all";
 
-$material-icons-font-path: '~material-icons/iconfont/';
+$material-icons-font-path: '../node_modules/material-icons/iconfont/';
 
-@import '~material-icons/iconfont/material-icons.scss';
+@import '../node_modules/material-icons/iconfont/material-icons.scss';
 
-@import '~@mdi/font/css/materialdesignicons.min.css';
+@import '../node_modules/@mdi/font/css/materialdesignicons.min.css';
 
 $midgray: #c9c9c9;
 $lightred: #b55c5c;
@@ -108,12 +108,16 @@ $link-invert: $black;
 $link-focus-border: $primary;
 $breadcrumb-item-color: $link;
 
-@import "~bulma";
-@import "~buefy/src/scss/buefy";
+@import '../node_modules/bulma/bulma.sass';
+@import '../node_modules/buefy/src/scss/buefy.scss';
 
 </style>
 
 <style>
+body {
+  font-family: BlinkMacSystemFont,-apple-system,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,Helvetica,Arial,sans-serif !important;
+}
+
 .darken a.is-disabled {
     color: black;
 }

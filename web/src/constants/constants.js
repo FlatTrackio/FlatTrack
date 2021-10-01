@@ -16,9 +16,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 export default {
-  appBuildVersion: process.env.VUE_APP_AppBuildVersion || '0.0.0',
-  appBuildHash: process.env.VUE_APP_AppBuildHash || '???',
-  appBuildDate: process.env.VUE_APP_AppBuildDate || '???',
-  appBuildMode: process.env.VUE_APP_AppBuildMode || 'development',
-  appWebpackHotUpdate: typeof webpackHotUpdate === 'function' && process.env.NODE_ENV === 'development'
+  appBuildVersion: import.meta.env.VUE_APP_AppBuildVersion || '0.0.0',
+  appBuildHash: import.meta.env.VUE_APP_AppBuildHash || '???',
+  appBuildDate: import.meta.env.VUE_APP_AppBuildDate || '???',
+  appBuildMode: import.meta.env.VUE_APP_AppBuildMode || 'development',
+  appWebpackHotUpdate: typeof webpackHotUpdate === 'function' && import.meta.env.NODE_ENV === 'development'
 }
