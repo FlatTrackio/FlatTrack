@@ -308,7 +308,7 @@ lint_frontend:
   allow_failure: true
   before_script:
     - cd web
-    - apk add --no-cache python2
+    - apk add --no-cache python2 make
     - npm i
   script:
     - npm run lint
