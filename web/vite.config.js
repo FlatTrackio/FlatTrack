@@ -13,10 +13,39 @@
 
 import { defineConfig } from 'vite'
 import { createVuePlugin } from 'vite-plugin-vue2'
+import { VitePWA } from 'vite-plugin-pwa'
 const path = require('path')
+
 export default defineConfig({
   plugins: [
     createVuePlugin(),
+    VitePWA({
+      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'FlatTrack',
+        short_name: 'Collaborate with your flatmates',
+        description: 'Collaborate with your flatmates',
+        theme_color: '#209cee',
+        icons: [
+          {
+            src: 'pwa-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: 'pwa-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
+          }
+        ]
+      }
+    })
   ],
   server: {
     port: 8081
@@ -28,20 +57,5 @@ export default defineConfig({
         replacement: path.resolve(__dirname, 'src')
       }
     ]
-  },
-  productionSourceMap: false,
-  pwa: {
-    name: "FlatTrack",
-    themeColor: "#209cee",
-    msTileColor: "#209cee",
-    appleMobileWebAppCache: "yes",
-    manifestOptions: {
-      background_color: "#000000"
-    },
-    workboxOptions: {
-      swSrc: 'service-worker.js',
-      skipWaiting: true
-    },
-    workboxPluginMode: "GenerateSW"
   }
 })
