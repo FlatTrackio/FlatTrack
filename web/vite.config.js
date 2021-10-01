@@ -20,6 +20,7 @@ export default defineConfig({
   plugins: [
     createVuePlugin(),
     VitePWA({
+      registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'FlatTrack',
@@ -47,6 +48,9 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    assetsDir: 'assets/'
+  },
   server: {
     port: 8081
   },
