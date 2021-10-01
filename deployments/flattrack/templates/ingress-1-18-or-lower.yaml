@@ -1,7 +1,7 @@
 {{- if $.Values.ingress.enabled -}}
 {{- $fullName := include "flattrack.fullname" . -}}
 {{- $svcPort := $.Values.service.port | default "8080" -}}
-{{- if semverCompare "<1.19-0" .Capabilities.KubeVersion.GitVersion -}}
+{{- if semverCompare ">1.19-0" .Capabilities.KubeVersion.GitVersion -}}
 {{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1beta1
 {{- else -}}
