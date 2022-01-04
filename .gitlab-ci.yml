@@ -186,7 +186,7 @@ build-zip-frontend:
     - apk add --no-cache python2 make g++
     - npm i
   script:
-    - npm run build --dest $CI_PROJECT_DIR/$RELEASE_FOLDER_NAME/dist ./src/main.js
+    - ./node_modules/.bin/vite build --outDir $CI_PROJECT_DIR/$RELEASE_FOLDER_NAME/dist
   only:
     - tags
     - master
