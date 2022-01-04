@@ -275,6 +275,8 @@ type SystemVersion struct {
 	Mode          string `json:"mode"`
 	Date          string `json:"date"`
 	GolangVersion string `json:"golangVersion"`
+	OSType        string `json:"osType"`
+	OSArch        string `json:"osArch"`
 }
 
 // JSONResponseMetadata ...

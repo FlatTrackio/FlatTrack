@@ -1924,6 +1924,8 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 	mode := common.GetAppBuildMode()
 	date := common.GetAppBuildDate()
 	golangVersion := runtime.Version()
+	osType := runtime.GOOS
+	osArch := runtime.GOARCH
 
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
@@ -1935,6 +1937,8 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 			Mode:          mode,
 			Date:          date,
 			GolangVersion: golangVersion,
+			OSType:        osType,
+			OSArch:        osArch,
 		},
 	}
 	JSONResponse(r, w, http.StatusOK, JSONresp)

@@ -63,6 +63,10 @@
             <b>Golang version</b>: {{ golangVersion || 'Unknown' }}
             <br/>
             <b>Vue.js Version</b>: {{ vuejsVersion || 'Unknown' }}
+            <br/>
+            <b>Operating System</b>: {{ osType || 'Unknown' }}
+            <br/>
+            <b>Architecture</b>: {{ osArch || 'Unknown' }}
           </p>
         </b-message>
       </section>
@@ -86,6 +90,8 @@ export default {
       mode: '',
       date: '',
       golangVersion: '',
+      osType: '',
+      osArch: '',
       vuejsVersion: vue.version,
       versionFrontend: constants.appBuildVersion,
       commitHashFrontend: constants.appBuildHash,
@@ -102,6 +108,8 @@ export default {
         this.mode = resp.data.data.mode
         this.date = resp.data.data.date
         this.golangVersion = resp.data.data.golangVersion
+        this.osType = resp.data.data.osType
+        this.osArch = resp.data.data.osArch
       })
     }
   },
