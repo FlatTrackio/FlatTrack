@@ -516,7 +516,7 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 // authenticate a user
 func UserAuth(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		response := "Failed to authenticate user, incorrect email or password"
+		response := "Failed to authenticate user, incorrect or not found email or password"
 		code := http.StatusUnauthorized
 		jwtToken := ""
 
@@ -525,15 +525,10 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &user)
 
 		userInDB, err := users.GetUserByEmail(db, user.Email, false)
-		if err != nil || userInDB.ID == "" {
-			response = "Unable to find the account"
-			code = http.StatusNotFound
-		}
 		if userInDB.ID != "" && userInDB.Registered == false {
 			response = "Account not yet registered"
 			code = http.StatusForbidden
-		}
-		if userInDB.Disabled == true {
+		} else if userInDB.Disabled == true {
 			response = "User account has been disabled"
 			code = http.StatusForbidden
 		}
