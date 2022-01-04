@@ -20,6 +20,7 @@ import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog, LoadingProgra
 import dayjs from 'dayjs'
 import dayjsCalendar from 'dayjs/plugin/calendar'
 import confetti from 'canvas-confetti'
+import { Buffer } from 'buffer'
 
 dayjs.extend(dayjsCalendar)
 

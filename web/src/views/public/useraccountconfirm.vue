@@ -157,7 +157,7 @@ export default {
     }
   },
   components: {
-    headerDisplay: () => import('@/components/common/header-display'),
+    headerDisplay: () => import('@/components/common/header-display.vue'),
     infotooltip: () => import('@/components/common/info-tooltip.vue')
   },
   methods: {

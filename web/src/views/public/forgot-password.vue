@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import headerDisplay from '@/components/common/header-display'
+import headerDisplay from '@/components/common/header-display.vue'
 import { ToastProgrammatic as Toast } from 'buefy'
 
 export default {

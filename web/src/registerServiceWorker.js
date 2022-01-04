@@ -14,8 +14,8 @@
 import { register } from 'register-service-worker'
 import { SnackbarProgrammatic as Snackbar, ToastProgrammatic as Toast } from 'buefy'
 
-if (process.env.NODE_ENV === 'production') {
-  register(`${process.env.BASE_URL}service-worker.js`, {
+if (import.meta.env.NODE_ENV === 'production') {
+  register(`${import.meta.env.BASE_URL}service-worker.js`, {
     ready () {
     },
     registered () {
