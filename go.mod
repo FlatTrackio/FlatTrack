@@ -3,6 +3,7 @@ module gitlab.com/flattrack/flattrack
 go 1.14
 
 require (
+	github.com/NYTimes/gziphandler v1.1.1
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/golang-migrate/migrate/v4 v4.14.2-0.20210728160618-5bf05dc3236e
 	github.com/gorilla/mux v1.8.0
