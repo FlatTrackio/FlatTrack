@@ -32,6 +32,8 @@ import (
 	"database/sql"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"github.com/NYTimes/gziphandler"
+
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
@@ -202,8 +204,10 @@ func Handle(db *sql.DB) {
 		AllowCredentials: true,
 	})
 
+	handler := gziphandler.GzipHandler(c.Handler(router))
+
 	srv := &http.Server{
-		Handler:      c.Handler(router),
+		Handler:      handler,
 		Addr:         port,
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
