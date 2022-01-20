@@ -1,5 +1,5 @@
 [build]
-  image = "flattrack/flattrack:0.1.15"
+  image = "flattrack/flattrack:0.16.0"
 
 [[services]]
   internal_port = 8080
