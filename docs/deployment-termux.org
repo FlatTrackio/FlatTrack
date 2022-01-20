@@ -20,7 +20,7 @@ The pipeline will contain a ~build-zip~ job which has artifacts to download.
 
 e.g:
 #+begin_src shell
-wget https://gitlab.com/flattrack/flattrack/-/jobs/artifacts/0.1.15/download?job=build-zip
+wget https://gitlab.com/flattrack/flattrack/-/jobs/artifacts/0.16.0/download?job=build-zip
 #+end_src
 
 ** Manual installation
