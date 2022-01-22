@@ -34,6 +34,10 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
+var (
+	jwtAlg *jwt.SigningMethodHMAC = jwt.SigningMethodHS256
+)
+
 // ValidateUser ...
 // given a UserSpec, return if it's valid
 func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (valid bool, err error) {
@@ -306,7 +310,7 @@ func GenerateJWTauthToken(db *sql.DB, id string, authNonce string, expiresIn tim
 		return "", err
 	}
 	expirationTime := time.Now().Add(time.Hour * expiresIn)
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, types.JWTclaim{
+	token := jwt.NewWithClaims(jwtAlg, types.JWTclaim{
 		ID:        id,
 		AuthNonce: authNonce,
 		StandardClaims: jwt.StandardClaims{
@@ -340,6 +344,16 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
 	})
 	if err != nil {
 		return false, err
+	}
+
+	if token.Valid == false {
+		return false, fmt.Errorf("Unable to use existing login token as it is invalid")
+	}
+	if err := token.Claims.Valid(); err != nil {
+		return false, fmt.Errorf("Unable to use existing login token as it is invalid")
+	}
+	if token.Method.Alg() != jwtAlg.Alg() {
+		return false, fmt.Errorf("Unable to use login token provided, please log in again")
 	}
 
 	reqClaims, ok := token.Claims.(*types.JWTclaim)
