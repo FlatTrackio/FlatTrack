@@ -30,9 +30,9 @@ import (
 	"time"
 
 	"database/sql"
+	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	"github.com/NYTimes/gziphandler"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/types"

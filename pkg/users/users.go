@@ -144,16 +144,16 @@ func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector)
 		found := true
 		user, err := UserObjectFromRows(rows)
 		if err != nil {
-			return users, err
+			return []types.UserSpec{}, err
 		}
 		groupsOfUser, err := groups.GetGroupNamesOfUserByID(db, user.ID)
 		if err != nil {
-			return users, err
+			return []types.UserSpec{}, err
 		}
 		if selectors.Group != "" {
 			found, err = groups.CheckUserInGroup(db, user.ID, selectors.Group)
 			if err != nil {
-				return users, err
+				return []types.UserSpec{}, err
 			}
 		} else if selectors.ID != "" {
 			found = selectors.ID == user.ID
@@ -169,7 +169,7 @@ func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector)
 		}
 		users = append(users, user)
 	}
-	return users, err
+	return users, nil
 }
 
 // GetUser ...
@@ -318,48 +318,57 @@ func GenerateJWTauthToken(db *sql.DB, id string, authNonce string, expiresIn tim
 	return tokenString, err
 }
 
-// ValidateJWTauthToken ...
-// given an HTTP request and Authorization header, return if auth is valid
-func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, err error) {
-	secret, err := system.GetJWTsecret(db)
-	if err != nil {
-		return false, fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
-	}
+// GetAuthTokenFromHeader ...
+// given a request, retreive the authoriation value
+func GetAuthTokenFromHeader(r *http.Request) (string, error) {
 	tokenHeader := r.Header.Get("Authorization")
 	if tokenHeader == "" {
-		return false, fmt.Errorf("Unable to find authorization token (header doesn't exist)")
+		return "", fmt.Errorf("Unable to find authorization token (header doesn't exist)")
 	}
 	authorizationHeader := strings.Split(tokenHeader, " ")
 	if authorizationHeader[0] != "bearer" || len(authorizationHeader) <= 1 {
-		return false, fmt.Errorf("Unable to find authorization token (must be as bearer)")
+		return "", fmt.Errorf("Unable to find authorization token (must be as bearer)")
 	}
-	tokenHeaderJWT := authorizationHeader[1]
+	return authorizationHeader[1], nil
+}
+
+// ValidateJWTauthToken ...
+// given an HTTP request and Authorization header, return if auth is valid
+func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, tokenClaims *types.JWTclaim, err error) {
+	secret, err := system.GetJWTsecret(db)
+	if err != nil {
+		return false, &types.JWTclaim{}, fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
+	}
+	tokenHeaderJWT, err := GetAuthTokenFromHeader(r)
+	if err != nil {
+		return false, &types.JWTclaim{}, err
+	}
 	claims := &types.JWTclaim{}
 	token, err := jwt.ParseWithClaims(tokenHeaderJWT, claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 	if err != nil {
-		return false, err
+		return false, &types.JWTclaim{}, err
 	}
 
 	reqClaims, ok := token.Claims.(*types.JWTclaim)
 	if ok == false {
-		return false, fmt.Errorf("Unable to read JWT claims")
+		return false, &types.JWTclaim{}, fmt.Errorf("Unable to read JWT claims")
 	}
 	user, err := GetUserByID(db, reqClaims.ID, true)
 	if err != nil || user.ID == "" || user.DeletionTimestamp != 0 {
-		return false, fmt.Errorf("Unable to find the user account which the authentication token belongs to")
+		return false, &types.JWTclaim{}, fmt.Errorf("Unable to find the user account which the authentication token belongs to")
 	}
 
 	if reqClaims.AuthNonce != user.AuthNonce {
-		return false, fmt.Errorf("Authentication has been invalidated, please log in again")
+		return false, &types.JWTclaim{}, fmt.Errorf("Authentication has been invalidated, please log in again")
 	}
 
 	if user.Disabled == true {
-		return false, fmt.Errorf("Your user account is disabled")
+		return false, &types.JWTclaim{}, fmt.Errorf("Your user account is disabled")
 	}
 
-	return token.Valid, nil
+	return token.Valid, reqClaims, nil
 }
 
 // InvalidateAllAuthTokens ...
