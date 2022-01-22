@@ -16,7 +16,7 @@
 //     Schemes: http
 //     Host: localhost
 //     BasePath: /api
-//     Version: 0.16.0
+//     Version: 0.16.1
 //     License: AGPL-3.0 http://www.gnu.org/licenses/agpl-3.0.html
 //     Contact: Caleb Woodbine <calebwoodbine.public@gmail.com>
 //

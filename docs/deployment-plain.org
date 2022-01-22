@@ -184,7 +184,7 @@ systemctl reload nginx
 
 Download the latest zip:
 #+begin_src sh
-curl -L -o /tmp/flattrack.zip https://gitlab.com/flattrack/flattrack/-/jobs/artifacts/0.16.0/download?job=build-zip
+curl -L -o /tmp/flattrack.zip https://gitlab.com/flattrack/flattrack/-/jobs/artifacts/0.16.1/download?job=build-zip
 #+end_src
 
 Unpack the archives into /opt/flattrack
