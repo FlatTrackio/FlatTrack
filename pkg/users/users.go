@@ -356,13 +356,13 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, tokenClaims 
 	}
 
 	if token.Valid == false {
-		return false, fmt.Errorf("Unable to use existing login token as it is invalid")
+		return false, &types.JWTclaim{}, fmt.Errorf("Unable to use existing login token as it is invalid")
 	}
 	if err := token.Claims.Valid(); err != nil {
-		return false, fmt.Errorf("Unable to use existing login token as it is invalid")
+		return false, &types.JWTclaim{}, fmt.Errorf("Unable to use existing login token as it is invalid")
 	}
 	if token.Method.Alg() != jwtAlg.Alg() {
-		return false, fmt.Errorf("Unable to use login token provided, please log in again")
+		return false, &types.JWTclaim{}, fmt.Errorf("Unable to use login token provided, please log in again")
 	}
 
 	reqClaims, ok := token.Claims.(*types.JWTclaim)
