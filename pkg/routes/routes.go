@@ -22,12 +22,15 @@ package routes
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"runtime"
 	"strconv"
 
 	"github.com/gorilla/mux"
+
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/groups"
 	"gitlab.com/flattrack/flattrack/pkg/health"
@@ -46,6 +49,7 @@ import (
 // get a list of all users
 func GetAllUsers(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to fetch user accounts"
 
@@ -71,6 +75,7 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -85,6 +90,7 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 // get a user by id or email (whatever is provided in the given respective order)
 func GetUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to fetch user account"
 		vars := mux.Vars(r)
@@ -95,7 +101,8 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 		}
 
 		user, err := users.GetUserByID(db, id, false)
-		if err != nil || user.ID == "" {
+		if err != nil {
+			context = err.Error()
 			code = http.StatusNotFound
 			response = "Failed to find user"
 			JSONresp := types.JSONMessageResponse{
@@ -104,6 +111,20 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.UserSpec{},
 			}
+			log.Println(response, context)
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
+		if user.ID == "" {
+			code = http.StatusNotFound
+			response = "Failed to find user"
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Spec: types.UserSpec{},
+			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -114,6 +135,7 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -128,6 +150,7 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 // create a user
 func PostUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusBadRequest
 		response := "Failed to create user account"
 
@@ -139,9 +162,11 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 		if err == nil && userAccount.ID != "" {
 			code = http.StatusCreated
 			response = "Created user account"
+			context = fmt.Sprintf("'%v'", userAccount.ID)
 		} else {
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -156,6 +181,7 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 // updates a user account by their id
 func PutUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to updat the user account"
 
@@ -176,6 +202,7 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.UserSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -189,6 +216,7 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -203,6 +231,7 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 // patches a user account by their id
 func PatchUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to patch the user account"
 
@@ -223,6 +252,7 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.UserSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -236,6 +266,7 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -250,6 +281,7 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 // patches a user account's disabled field by their id
 func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to patch the user account as disabled"
 
@@ -270,6 +302,7 @@ func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.UserSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -284,6 +317,7 @@ func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.UserSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -298,6 +332,7 @@ func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.UserSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -311,6 +346,7 @@ func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.UserSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -323,6 +359,7 @@ func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -337,6 +374,7 @@ func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 // delete a user
 func DeleteUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to delete user account"
 
@@ -353,6 +391,7 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: false,
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -367,6 +406,7 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: false,
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -380,6 +420,7 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: nil,
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -392,6 +433,7 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -406,6 +448,7 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 // returns the authenticated user's profile
 func GetProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to fetch user account"
 
@@ -417,6 +460,7 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 			code = http.StatusNotFound
 			response = "Failed to find your profile"
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -431,6 +475,7 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 // Update a user account their id from their JWT
 func PutProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to patch the user account"
 
@@ -447,6 +492,7 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -461,6 +507,7 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 // patches a user account their id from their JWT
 func PatchProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to patch the user account"
 
@@ -477,6 +524,7 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -491,6 +539,7 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 // check if the server has been initialized
 func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to fetch if this FlatTrack instance has initialized"
 		initialized, err := system.GetHasInitialized(db)
@@ -502,6 +551,7 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 		} else if err == nil && initialized == "false" {
 			response = "This FlatTrack instance has not initialized"
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -516,6 +566,7 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 // authenticate a user
 func UserAuth(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to authenticate user, incorrect or not found email or password"
 		code := http.StatusUnauthorized
 		jwtToken := ""
@@ -525,6 +576,17 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 		json.Unmarshal(body, &user)
 
 		userInDB, err := users.GetUserByEmail(db, user.Email, false)
+		if err != nil {
+			log.Println(response, context)
+			JSONresp := types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: response,
+				},
+				Data: jwtToken,
+			}
+			JSONResponse(r, w, code, JSONresp)
+			return
+		}
 		if userInDB.ID != "" && userInDB.Registered == false {
 			response = "Account not yet registered"
 			code = http.StatusForbidden
@@ -539,6 +601,7 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 			response = "Successfully authenticated user"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -553,16 +616,19 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 // validate an auth token
 func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to validate authentication token"
 		code := http.StatusUnauthorized
 
-		valid, err := users.ValidateJWTauthToken(db, r)
+		valid, claims, err := users.ValidateJWTauthToken(db, r)
 		if valid == true && err == nil {
 			response = "Authentication token is valid"
 			code = http.StatusOK
 		} else {
 			response = err.Error()
+			context = fmt.Sprintf("for user with ID '%v'", claims.ID)
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -577,6 +643,7 @@ func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 // invalidates all JWTs
 func UserAuthReset(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to sign out all devices logged in"
 		code := http.StatusInternalServerError
 
@@ -588,6 +655,7 @@ func UserAuthReset(db *sql.DB) http.HandlerFunc {
 					Response: response,
 				},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -596,6 +664,7 @@ func UserAuthReset(db *sql.DB) http.HandlerFunc {
 			response = "Successfully signed out all devices logged in"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -609,6 +678,7 @@ func UserAuthReset(db *sql.DB) http.HandlerFunc {
 // respond whether the current user account is in a group
 func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to determine group privileges"
 		code := http.StatusInternalServerError
 
@@ -625,6 +695,7 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.GroupSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -636,6 +707,7 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 			code = http.StatusOK
 		}
 
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -650,6 +722,7 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 // responds with the name of the flat
 func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch the flat name"
 		code := http.StatusInternalServerError
 
@@ -661,6 +734,7 @@ func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the flat name"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -675,6 +749,7 @@ func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 // update the flat's name
 func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to update the flat name"
 
@@ -690,6 +765,7 @@ func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -704,6 +780,7 @@ func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 // register the instance of FlatTrack
 func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to register the FlatTrack instance"
 
@@ -718,6 +795,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 				Spec: true,
 				Data: "",
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -734,6 +812,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -749,6 +828,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 // responds with list of shopping lists
 func GetShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch shopping lists"
 		code := http.StatusNotFound
 
@@ -760,6 +840,7 @@ func GetShoppingList(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the shopping lists"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -774,6 +855,7 @@ func GetShoppingList(db *sql.DB) http.HandlerFunc {
 // responds with shopping list by id
 func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch shopping lists"
 		code := http.StatusInternalServerError
 
@@ -796,6 +878,7 @@ func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the shopping lists"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -810,6 +893,7 @@ func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 // creates a new shopping list to add items to
 func PostShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to create the shopping list"
 
@@ -833,6 +917,7 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -847,6 +932,7 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 // patches an existing shopping list
 func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusBadRequest
 		response := "Failed to patch the shopping list"
 
@@ -867,6 +953,7 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -880,6 +967,7 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 		} else {
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -894,6 +982,7 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 // updates an existing shopping list
 func PutShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to update the shopping list"
 
@@ -914,6 +1003,7 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -928,6 +1018,7 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -942,6 +1033,7 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 // delete a new shopping list by it's id
 func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to delete the shopping list"
 
@@ -958,6 +1050,7 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -970,6 +1063,7 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -983,6 +1077,7 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 // responds with shopping items by list id
 func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch shopping list items"
 		code := http.StatusInternalServerError
 
@@ -1006,6 +1101,7 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1016,6 +1112,7 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the shopping list items"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1030,6 +1127,7 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 // responds with list of shopping lists
 func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch shopping list item"
 		code := http.StatusNotFound
 
@@ -1047,6 +1145,7 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1056,6 +1155,7 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the shopping list item"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1070,6 +1170,7 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 // adds an item to a shopping list
 func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to create the shopping list item"
 
@@ -1090,6 +1191,7 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1104,6 +1206,7 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1118,6 +1221,7 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 // adds an item to a shopping list
 func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to patch the shopping list completed field"
 
@@ -1138,6 +1242,7 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1151,6 +1256,7 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1165,6 +1271,7 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 // patches an item in a shopping list
 func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to patch the shopping list item"
 
@@ -1186,6 +1293,7 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1200,6 +1308,7 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingItemSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1214,6 +1323,7 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1228,6 +1338,7 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 // updates an item in a shopping list
 func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to update the shopping list item"
 
@@ -1249,6 +1360,7 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1263,6 +1375,7 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingItemSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1277,6 +1390,7 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1291,6 +1405,7 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 // patches an item in a shopping list
 func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to patch the shopping list item obtained field"
 
@@ -1312,6 +1427,7 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1326,6 +1442,7 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingItemSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1339,6 +1456,7 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1353,6 +1471,7 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 // delete a shopping list item by it's id
 func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to delete the shopping list item"
 
@@ -1370,6 +1489,7 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingListSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1384,6 +1504,7 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingItemSpec{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1396,6 +1517,7 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1409,6 +1531,7 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 // responds with tags used in shopping list items from a list
 func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch shopping list item tags"
 		code := http.StatusInternalServerError
 
@@ -1420,6 +1543,7 @@ func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the shopping list item tags"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1434,6 +1558,7 @@ func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 // updates then tag name used in shopping list items from a list
 func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to update shopping list item tag name"
 		code := http.StatusInternalServerError
 
@@ -1452,6 +1577,7 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 				Spec: types.ShoppingListSpec{},
 			}
 			JSONResponse(r, w, code, JSONresp)
+			log.Println(response, context)
 			return
 		}
 
@@ -1464,6 +1590,7 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 			response = "Updated the shopping list item tag name"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1478,6 +1605,7 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 // responds with all tags used in shopping list items
 func GetAllShoppingTags(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch shopping list item tags"
 		code := http.StatusInternalServerError
 
@@ -1490,6 +1618,7 @@ func GetAllShoppingTags(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the shopping list item tags"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1504,6 +1633,7 @@ func GetAllShoppingTags(db *sql.DB) http.HandlerFunc {
 // creates a tag name
 func PostShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to create a shopping tag"
 		code := http.StatusInternalServerError
 
@@ -1520,6 +1650,7 @@ func PostShoppingTag(db *sql.DB) http.HandlerFunc {
 		} else {
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1534,6 +1665,7 @@ func PostShoppingTag(db *sql.DB) http.HandlerFunc {
 // gets a shopping tag by id
 func GetShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch a shopping tag"
 		code := http.StatusInternalServerError
 
@@ -1545,6 +1677,7 @@ func GetShoppingTag(db *sql.DB) http.HandlerFunc {
 			response = "Fetched a shopping tag"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1559,6 +1692,7 @@ func GetShoppingTag(db *sql.DB) http.HandlerFunc {
 // updates a tag name
 func UpdateShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to update a shopping tag"
 		code := http.StatusInternalServerError
 
@@ -1575,6 +1709,7 @@ func UpdateShoppingTag(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingTag{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1590,6 +1725,7 @@ func UpdateShoppingTag(db *sql.DB) http.HandlerFunc {
 			response = "Updated a shopping tag"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1604,6 +1740,7 @@ func UpdateShoppingTag(db *sql.DB) http.HandlerFunc {
 // deletes a shopping tag by id
 func DeleteShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to delete the shopping tag"
 
@@ -1620,6 +1757,7 @@ func DeleteShoppingTag(db *sql.DB) http.HandlerFunc {
 				},
 				Spec: types.ShoppingTag{},
 			}
+			log.Println(response, context)
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
@@ -1632,6 +1770,7 @@ func DeleteShoppingTag(db *sql.DB) http.HandlerFunc {
 			code = http.StatusBadRequest
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1645,6 +1784,7 @@ func DeleteShoppingTag(db *sql.DB) http.HandlerFunc {
 // responds with the notes for shopping lists
 func GetSettingsShoppingListNotes(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch the shopping list notes"
 		code := http.StatusInternalServerError
 
@@ -1656,6 +1796,7 @@ func GetSettingsShoppingListNotes(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the shopping list notes"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1670,6 +1811,7 @@ func GetSettingsShoppingListNotes(db *sql.DB) http.HandlerFunc {
 // update the notes for shopping lists
 func PutSettingsShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to update the notes for shopping lists"
 
@@ -1686,6 +1828,7 @@ func PutSettingsShoppingList(db *sql.DB) http.HandlerFunc {
 			response = err.Error()
 			notes.Notes = ""
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1700,6 +1843,7 @@ func PutSettingsShoppingList(db *sql.DB) http.HandlerFunc {
 // responds with the notes for flat
 func GetSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch the flat notes"
 		code := http.StatusInternalServerError
 
@@ -1711,6 +1855,7 @@ func GetSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the flat notes"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1727,6 +1872,7 @@ func GetSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 // update the notes for flat
 func PutSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to update the notes the flat"
 
@@ -1743,6 +1889,7 @@ func PutSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 			response = err.Error()
 			notes.Notes = ""
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1757,6 +1904,7 @@ func PutSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 // returns a list of all groups
 func GetAllGroups(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch groups"
 		code := http.StatusInternalServerError
 
@@ -1765,6 +1913,7 @@ func GetAllGroups(db *sql.DB) http.HandlerFunc {
 			response = "Fetched all groups"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1779,6 +1928,7 @@ func GetAllGroups(db *sql.DB) http.HandlerFunc {
 // returns a group by id
 func GetGroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch groups"
 		code := http.StatusNotFound
 
@@ -1790,6 +1940,7 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the groups"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1804,6 +1955,7 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 // returns a list of account confirms
 func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch user account creation secrets"
 		code := http.StatusInternalServerError
 
@@ -1817,6 +1969,7 @@ func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the user account creation secrets"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1831,6 +1984,7 @@ func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 // returns an account confirm by id
 func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch user account creation secret"
 		code := http.StatusNotFound
 
@@ -1842,6 +1996,7 @@ func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the user account creation secret"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1856,6 +2011,7 @@ func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 // returns if an account confirm is valid by id
 func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to fetch user account creation secret"
 		code := http.StatusNotFound
 
@@ -1867,6 +2023,7 @@ func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 			response = "Fetched the user account creation secret"
 			code = http.StatusOK
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1881,6 +2038,7 @@ func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 // confirm a user account
 func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
 		response := "Failed to confirm your user account"
 		code := http.StatusInternalServerError
 
@@ -1900,6 +2058,7 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 		} else {
 			response = err.Error()
 		}
+		log.Println(response, context)
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: response,
@@ -1914,6 +2073,7 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 // GetVersion ...
 // returns version information about the instance
 func GetVersion(w http.ResponseWriter, r *http.Request) {
+	response := "Fetched version information"
 	version := common.GetAppBuildVersion()
 	commitHash := common.GetAppBuildHash()
 	mode := common.GetAppBuildMode()
@@ -1922,9 +2082,10 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 	osType := runtime.GOOS
 	osArch := runtime.GOARCH
 
+	log.Println(response)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: "Fetched version information",
+			Response: response,
 		},
 		Data: types.SystemVersion{
 			Version:       version,
@@ -1987,10 +2148,16 @@ func Healthz(db *sql.DB) http.HandlerFunc {
 func HTTPvalidateJWT(db *sql.DB) func(http.HandlerFunc) http.HandlerFunc {
 	return func(h http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			if completed, err := users.ValidateJWTauthToken(db, r); completed == true && err == nil {
+			var context string
+			completed, claims, err := users.ValidateJWTauthToken(db, r)
+			if completed == true && err == nil {
 				h.ServeHTTP(w, r)
 				return
 			}
+			if claims.ID != "" {
+				context = fmt.Sprintf("with user id '%v'", claims.ID)
+			}
+			log.Printf("Unauthorized request with token %v\n", context)
 			JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
 					Response: "Unauthorized",
@@ -2012,6 +2179,7 @@ func HTTPcheckGroupsFromID(db *sql.DB, groupsAllowed ...string) func(http.Handle
 					return
 				}
 			}
+			log.Printf("User '%v' tried to access route that is protected by '%v' group access", id, groupsAllowed)
 			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
 					Response: "Forbidden",
