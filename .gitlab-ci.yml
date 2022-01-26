@@ -283,12 +283,14 @@ test_backend_e2e:
     CGO_ENABLED: "0"
   services:
     - postgres:12.2-alpine
+    - minio/minio:RELEASE.2022-01-07T01-53-23Z
   before_script:
-    - apk add git gcc
+    - apk add --no-cache git gcc curl
     - go get github.com/onsi/ginkgo/ginkgo
     - go get github.com/onsi/gomega/...
     - go build -o flattrack main.go
     - ./flattrack &
+    - until curl -s http://localhost:8080; do echo "Waiting for API"; sleep 1s; done
   script:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
     - pkill flattrack || true
