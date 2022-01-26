@@ -129,7 +129,6 @@ func RequireContentType(all bool, expectedContentTypes ...string) func(http.Hand
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			foundRequiredTypes := 0
-			v := []string{}
 			for _, c := range expectedContentTypes {
 				for _, t := range []HTTPHeaderBackendAllowTypes{HTTPHeaderBackendAllowTypesContentType, HTTPHeaderBackendAllowTypesAccept} {
 					if len(r.Header[string(t)]) > 0 &&
@@ -137,12 +136,9 @@ func RequireContentType(all bool, expectedContentTypes ...string) func(http.Hand
 							len(r.Header[strings.ToLower(string(t))]) > 0 &&
 								r.Header[strings.ToLower(string(t))][0] == c) {
 						foundRequiredTypes += 1
-						v = append(v)
 					}
 				}
 			}
-			log.Println(v, expectedContentTypes)
-			log.Println(all == true && foundRequiredTypes == len(expectedContentTypes), (all == false && foundRequiredTypes > 0))
 			if (all == true && foundRequiredTypes == len(expectedContentTypes)) || (all == false && foundRequiredTypes > 0) {
 				next.ServeHTTP(w, r)
 				return
