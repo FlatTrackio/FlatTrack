@@ -196,8 +196,8 @@ func Handle(db *sql.DB, mc *minio.Client) {
 	})
 
 	router.HandleFunc("/_healthz", Healthz(db)).Methods(http.MethodGet)
-	// TODO add required content types
-	router.HandleFunc("/files/{.*}", GetServeFilestoreObjects(mc, "/files")).Methods(http.MethodGet)
+	fileRouter := router.PathPrefix("/files").Subrouter()
+	fileRouter.HandleFunc("/{.*}", GetServeFilestoreObjects(mc, "/files")).Methods(http.MethodGet)
 	// TODO add files post
 
 	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder(), passthrough)).Methods(http.MethodGet)
