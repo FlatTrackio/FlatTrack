@@ -21,7 +21,6 @@ package routes
 
 import (
 	"database/sql"
-	"strings"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -29,10 +28,12 @@ import (
 	"net/http"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
+	"gitlab.com/flattrack/flattrack/pkg/files"
 	"gitlab.com/flattrack/flattrack/pkg/groups"
 	"gitlab.com/flattrack/flattrack/pkg/health"
 	"gitlab.com/flattrack/flattrack/pkg/registration"
@@ -41,11 +42,10 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/system"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 	"gitlab.com/flattrack/flattrack/pkg/users"
-	"gitlab.com/flattrack/flattrack/pkg/files"
 )
 
 type RouteHandler struct {
-	db *sql.DB
+	db         *sql.DB
 	fileAccess files.FileAccess
 }
 

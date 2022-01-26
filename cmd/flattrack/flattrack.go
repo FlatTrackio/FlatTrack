@@ -36,10 +36,10 @@ import (
 	"github.com/joho/godotenv"
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/database"
+	"gitlab.com/flattrack/flattrack/pkg/files"
 	"gitlab.com/flattrack/flattrack/pkg/metrics"
 	"gitlab.com/flattrack/flattrack/pkg/migrations"
 	"gitlab.com/flattrack/flattrack/pkg/routes"
-	"gitlab.com/flattrack/flattrack/pkg/files"
 	"log"
 )
 
@@ -80,11 +80,11 @@ func Start() {
 	}
 
 	router := routes.Router{
-		DB: db,
+		DB:         db,
 		FileAccess: fileAccess,
 	}
 
-	go func(){
+	go func() {
 		err = router.FileAccess.Init()
 		if err != nil {
 			log.Println("Minio error initialising bucket:", err)

@@ -2,9 +2,9 @@ package files
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
-	"fmt"
 
 	minio "github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -13,7 +13,7 @@ import (
 )
 
 type FileAccess struct {
-	Client *minio.Client
+	Client     *minio.Client
 	BucketName string
 }
 

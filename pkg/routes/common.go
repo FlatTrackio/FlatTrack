@@ -35,8 +35,8 @@ import (
 	"github.com/rs/cors"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
-	"gitlab.com/flattrack/flattrack/pkg/types"
 	"gitlab.com/flattrack/flattrack/pkg/files"
+	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
 // JSONResponse ...
@@ -117,9 +117,10 @@ func Logging(next http.Handler) http.Handler {
 }
 
 type HTTPHeaderBackendAllowTypes string
+
 const (
 	HTTPHeaderBackendAllowTypesContentType HTTPHeaderBackendAllowTypes = "Content-Type"
-	HTTPHeaderBackendAllowTypesAccept HTTPHeaderBackendAllowTypes = "Accept"
+	HTTPHeaderBackendAllowTypesAccept      HTTPHeaderBackendAllowTypes = "Accept"
 )
 
 // RequireContentType ...
@@ -130,13 +131,13 @@ func RequireContentType(all bool, expectedContentTypes ...string) func(http.Hand
 			foundRequiredTypes := 0
 			v := []string{}
 			for _, c := range expectedContentTypes {
-				for _, t := range []HTTPHeaderBackendAllowTypes{HTTPHeaderBackendAllowTypesContentType, HTTPHeaderBackendAllowTypesAccept}{
+				for _, t := range []HTTPHeaderBackendAllowTypes{HTTPHeaderBackendAllowTypesContentType, HTTPHeaderBackendAllowTypesAccept} {
 					if len(r.Header[string(t)]) > 0 &&
 						(r.Header[string(t)][0] == c ||
 							len(r.Header[strings.ToLower(string(t))]) > 0 &&
 								r.Header[strings.ToLower(string(t))][0] == c) {
 						foundRequiredTypes += 1
-						v = append(v, )
+						v = append(v)
 					}
 				}
 			}
@@ -192,7 +193,7 @@ func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler
 }
 
 type Router struct {
-	DB *sql.DB
+	DB         *sql.DB
 	FileAccess files.FileAccess
 }
 
