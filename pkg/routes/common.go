@@ -116,13 +116,33 @@ func Logging(next http.Handler) http.Handler {
 	})
 }
 
+type HTTPHeaderBackendAllowTypes string
+const (
+	HTTPHeaderBackendAllowTypesContentType HTTPHeaderBackendAllowTypes = "Content-Type"
+	HTTPHeaderBackendAllowTypesAccept HTTPHeaderBackendAllowTypes = "Accept"
+)
+
 // RequireContentType ...
 // 404s requests if content-type isn't what is expected
-func RequireContentType(expectedContentType string) func(http.Handler) http.Handler {
+func RequireContentType(all bool, expectedContentTypes ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if (len(r.Header["Content-Type"]) > 0 && r.Header["Content-Type"][0] == expectedContentType) ||
-				(len(r.Header["Accept"]) > 0 && r.Header["Accept"][0] == expectedContentType) {
+			foundRequiredTypes := 0
+			v := []string{}
+			for _, c := range expectedContentTypes {
+				for _, t := range []HTTPHeaderBackendAllowTypes{HTTPHeaderBackendAllowTypesContentType, HTTPHeaderBackendAllowTypesAccept}{
+					if len(r.Header[string(t)]) > 0 &&
+						(r.Header[string(t)][0] == c ||
+							len(r.Header[strings.ToLower(string(t))]) > 0 &&
+								r.Header[strings.ToLower(string(t))][0] == c) {
+						foundRequiredTypes += 1
+						v = append(v, )
+					}
+				}
+			}
+			log.Println(v, expectedContentTypes)
+			log.Println(all == true && foundRequiredTypes == len(expectedContentTypes), (all == false && foundRequiredTypes > 0))
+			if (all == true && foundRequiredTypes == len(expectedContentTypes)) || (all == false && foundRequiredTypes > 0) {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -184,7 +204,7 @@ func Handle(db *sql.DB, mc *minio.Client) {
 	}
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
-	apiRouters.Use(RequireContentType("application/json"))
+	apiRouters.Use(RequireContentType(true, "application/json"))
 	apiRouters.HandleFunc("", Root)
 	for _, endpoint := range GetEndpoints(db) {
 		apiRouters.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HTTPMethod, http.MethodOptions)
