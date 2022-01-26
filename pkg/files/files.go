@@ -1,11 +1,11 @@
 package files
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
-	"bytes"
 
 	minio "github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
