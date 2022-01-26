@@ -33,6 +33,7 @@ import (
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
+	"github.com/minio/minio-go/v7"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/types"
@@ -106,6 +107,8 @@ func Logging(next http.Handler) http.Handler {
 			pathSection = "backend "
 		} else if len(requestPath) >= 1 && requestPath[1] == "metrics" {
 			pathSection = "metrics "
+		} else if len(requestPath) >= 1 && requestPath[1] == "files" {
+			pathSection = "files   "
 		}
 		requestIP := GetRequestIP(r)
 		log.Printf("[%v] %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, requestIP)
@@ -170,7 +173,7 @@ func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler
 
 // Handle ...
 // manage the launching of the API's webserver
-func Handle(db *sql.DB) {
+func Handle(db *sql.DB, mc *minio.Client) {
 	port := common.GetAppPort()
 	router := mux.NewRouter().StrictSlash(true)
 	apiEndpointPrefix := "/api"
@@ -192,8 +195,12 @@ func Handle(db *sql.DB) {
 		http.ServeFile(w, r, "./dist/robots.txt")
 	})
 
-	router.HandleFunc("/_healthz", Healthz(db)).Methods("GET")
-	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder(), passthrough)).Methods("GET")
+	router.HandleFunc("/_healthz", Healthz(db)).Methods(http.MethodGet)
+	// TODO add required content types
+	router.HandleFunc("/files/{.*}", GetServeFilestoreObjects(mc, "/files")).Methods(http.MethodGet)
+	// TODO add files post
+
+	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder(), passthrough)).Methods(http.MethodGet)
 
 	router.Use(Logging)
 

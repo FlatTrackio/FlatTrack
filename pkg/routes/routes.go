@@ -21,6 +21,7 @@ package routes
 
 import (
 	"database/sql"
+	"strings"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -30,6 +31,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/minio/minio-go/v7"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/groups"
@@ -40,6 +42,7 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/system"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 	"gitlab.com/flattrack/flattrack/pkg/users"
+	"gitlab.com/flattrack/flattrack/pkg/files"
 )
 
 // GetAllUsers ...
@@ -2100,6 +2103,38 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
+// GetServeFileStoreObjects ...
+// serves files or 404
+func GetServeFilestoreObjects(mc *minio.Client, prefix string) http.HandlerFunc {
+	if mc == nil {
+		return HTTP404()
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		doneCh := make(chan struct{})
+		defer close(doneCh)
+
+		path := strings.TrimPrefix(r.URL.Path, prefix)
+		object, objectInfo, err := files.Get(mc, path)
+		if objectInfo.Size == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("File not found"))
+			return
+		}
+		if err != nil {
+			log.Printf("%#v\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("An error occurred with retrieving the requested object"))
+			return
+		}
+		log.Println(objectInfo.Key, objectInfo.Size, objectInfo.ContentType)
+		w.Header().Set("content-length", fmt.Sprintf("%d", objectInfo.Size))
+		w.Header().Set("content-type", objectInfo.ContentType)
+		w.Header().Set("accept-ranges", "bytes")
+		w.WriteHeader(http.StatusOK)
+		w.Write(object)
+	}
+}
+
 // Root ...
 // /api endpoint
 func Root(w http.ResponseWriter, r *http.Request) {
@@ -2186,5 +2221,14 @@ func HTTPcheckGroupsFromID(db *sql.DB, groupsAllowed ...string) func(http.Handle
 				},
 			})
 		}
+	}
+}
+
+// 404
+// responds with 404
+func HTTP404() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`404 not found`))
 	}
 }

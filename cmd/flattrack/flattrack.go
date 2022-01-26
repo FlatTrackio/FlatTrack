@@ -39,6 +39,7 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/metrics"
 	"gitlab.com/flattrack/flattrack/pkg/migrations"
 	"gitlab.com/flattrack/flattrack/pkg/routes"
+	"gitlab.com/flattrack/flattrack/pkg/files"
 	"log"
 )
 
@@ -67,7 +68,24 @@ func Start() {
 		return
 	}
 
+	minioHost := common.GetAppMinioHost()
+	minioAccessKey := common.GetAppMinioAccessKey()
+	minioSecretKey := common.GetAppMinioSecretKey()
+	minioUseSSL := common.GetAppMinioUseSSL()
+	minioBucket := common.GetAppMinioBucket()
+	mc, err := files.Open(minioHost, minioAccessKey, minioSecretKey, minioUseSSL == "true")
+	if err != nil {
+		log.Println("Minio error:", err)
+		return
+	}
+
+	go func(){
+		err = files.Init(mc, minioBucket)
+		if err != nil {
+			log.Println("Minio error initialising bucket:", err)
+		}
+	}()
 	go metrics.Handle()
 	go routes.HealthHandler(db)
-	routes.Handle(db)
+	routes.Handle(db, mc)
 }
