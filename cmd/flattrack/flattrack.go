@@ -33,14 +33,17 @@
 package flattrack
 
 import (
+	"log"
+
 	"github.com/joho/godotenv"
+
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/database"
 	"gitlab.com/flattrack/flattrack/pkg/files"
 	"gitlab.com/flattrack/flattrack/pkg/metrics"
 	"gitlab.com/flattrack/flattrack/pkg/migrations"
 	"gitlab.com/flattrack/flattrack/pkg/routes"
-	"log"
+	"gitlab.com/flattrack/flattrack/pkg/system"
 )
 
 // Start ...
@@ -78,6 +81,13 @@ func Start() {
 		log.Println("Minio error:", err)
 		return
 	}
+
+	systemManager := system.SystemManager{DB: db}
+	systemUUID, err := systemManager.GetInstanceUUID()
+	if err != nil {
+		log.Println("Error getting system UUID:", err)
+	}
+	fileAccess.Prefix = systemUUID
 
 	router := routes.Router{
 		DB:         db,

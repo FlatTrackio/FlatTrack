@@ -38,6 +38,10 @@ var (
 	jwtAlg *jwt.SigningMethodHMAC = jwt.SigningMethodHS256
 )
 
+type UserManager struct {
+	DB *sql.DB
+}
+
 // ValidateUser ...
 // given a UserSpec, return if it's valid
 func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (valid bool, err error) {
@@ -301,11 +305,12 @@ func CheckUserPassword(db *sql.DB, email string, password string) (matches bool,
 
 // GenerateJWTauthToken ...
 // given an email, return a usable JWT token
-func GenerateJWTauthToken(db *sql.DB, id string, authNonce string, expiresIn time.Duration) (tokenString string, err error) {
+func (u UserManager) GenerateJWTauthToken(id string, authNonce string, expiresIn time.Duration) (tokenString string, err error) {
+	systemManager := system.SystemManager{DB: u.DB}
 	if expiresIn == 0 {
 		expiresIn = 24 * 5
 	}
-	secret, err := system.GetJWTsecret(db)
+	secret, err := systemManager.GetJWTsecret()
 	if err != nil {
 		return "", err
 	}
@@ -339,7 +344,8 @@ func GetAuthTokenFromHeader(r *http.Request) (string, error) {
 // ValidateJWTauthToken ...
 // given an HTTP request and Authorization header, return if auth is valid
 func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, tokenClaims *types.JWTclaim, err error) {
-	secret, err := system.GetJWTsecret(db)
+	systemManager := system.SystemManager{DB: db}
+	secret, err := systemManager.GetJWTsecret()
 	if err != nil {
 		return false, &types.JWTclaim{}, fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
 	}
@@ -397,7 +403,8 @@ func InvalidateAllAuthTokens(db *sql.DB, id string) (err error) {
 // GetIDFromJWT ...
 // return the userID in a JWT from a header in a HTTP request
 func GetIDFromJWT(db *sql.DB, r *http.Request) (id string, err error) {
-	secret, err := system.GetJWTsecret(db)
+	systemManager := system.SystemManager{DB: db}
+	secret, err := systemManager.GetJWTsecret()
 	if err != nil {
 		return "", fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
 	}
@@ -704,11 +711,11 @@ func DeleteUserCreationSecretByUserID(db *sql.DB, userID string) (err error) {
 
 // ConfirmUserAccount ...
 // confirms the user account
-func ConfirmUserAccount(db *sql.DB, id string, secret string, user types.UserSpec) (tokenString string, err error) {
+func (u UserManager) ConfirmUserAccount(id string, secret string, user types.UserSpec) (tokenString string, err error) {
 	if user.Password == "" {
 		return tokenString, fmt.Errorf("Unable to confirm account, a password must be provided to complete registration")
 	}
-	userCreationSecret, err := GetUserCreationSecret(db, id)
+	userCreationSecret, err := GetUserCreationSecret(u.DB, id)
 	if err != nil {
 		return tokenString, err
 	}
@@ -718,7 +725,7 @@ func ConfirmUserAccount(db *sql.DB, id string, secret string, user types.UserSpe
 	if secret != userCreationSecret.Secret {
 		return tokenString, fmt.Errorf("Unable to confirm account, as the secret doesn't match")
 	}
-	userInDB, err := GetUserByID(db, userCreationSecret.UserID, false)
+	userInDB, err := GetUserByID(u.DB, userCreationSecret.UserID, false)
 	if err != nil {
 		return tokenString, err
 	}
@@ -731,16 +738,16 @@ func ConfirmUserAccount(db *sql.DB, id string, secret string, user types.UserSpe
 		PhoneNumber: user.PhoneNumber,
 		Registered:  true,
 	}
-	userConfirmed, err := PatchProfileAdmin(db, userCreationSecret.UserID, userAccountPatch)
+	userConfirmed, err := PatchProfileAdmin(u.DB, userCreationSecret.UserID, userAccountPatch)
 	if err != nil {
 		return tokenString, err
 	}
 	if userConfirmed.ID == "" || userConfirmed.Registered == false {
 		return tokenString, fmt.Errorf("Failed to patch profile")
 	}
-	err = DeleteUserCreationSecret(db, id)
+	err = DeleteUserCreationSecret(u.DB, id)
 
-	return GenerateJWTauthToken(db, userInDB.ID, userInDB.AuthNonce, 0)
+	return u.GenerateJWTauthToken(userInDB.ID, userInDB.AuthNonce, 0)
 }
 
 // UserAccountExists ...

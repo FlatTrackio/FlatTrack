@@ -545,11 +545,12 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 // GetSystemInitialized ...
 // check if the server has been initialized
 func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
+	systemManager := system.SystemManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to fetch if this FlatTrack instance has initialized"
-		initialized, err := system.GetHasInitialized(db)
+		initialized, err := systemManager.GetHasInitialized()
 		if err == nil {
 			code = http.StatusOK
 		}
@@ -572,6 +573,7 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 // UserAuth ...
 // authenticate a user
 func UserAuth(db *sql.DB) http.HandlerFunc {
+	userManager := users.UserManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		response := "Failed to authenticate user, incorrect or not found email or password"
@@ -604,7 +606,7 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 		// Check password locally, fall back to remote if incorrect
 		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
 		if err == nil && matches == true && code == http.StatusUnauthorized {
-			jwtToken, _ = users.GenerateJWTauthToken(db, userInDB.ID, userInDB.AuthNonce, 0)
+			jwtToken, _ = userManager.GenerateJWTauthToken(userInDB.ID, userInDB.AuthNonce, 0)
 			response = "Successfully authenticated user"
 			code = http.StatusOK
 		}
@@ -786,12 +788,13 @@ func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 // PostAdminRegister ...
 // register the instance of FlatTrack
 func PostAdminRegister(db *sql.DB) http.HandlerFunc {
+	systemManager := system.SystemManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to register the FlatTrack instance"
 
-		initialized, err := system.GetHasInitialized(db)
+		initialized, err := systemManager.GetHasInitialized()
 		if err == nil && initialized == "true" {
 			response = "This instance is already registered"
 			code = http.StatusOK
@@ -2044,6 +2047,7 @@ func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 // PostUserConfirm ...
 // confirm a user account
 func PostUserConfirm(db *sql.DB) http.HandlerFunc {
+	userManager := users.UserManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		response := "Failed to confirm your user account"
@@ -2058,7 +2062,7 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 		body, errUnmarshal := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &user)
 
-		tokenString, err := users.ConfirmUserAccount(db, id, secret, user)
+		tokenString, err := userManager.ConfirmUserAccount(id, secret, user)
 		if err == nil && errUnmarshal == nil {
 			response = "Your user account has been confirmed"
 			code = http.StatusOK

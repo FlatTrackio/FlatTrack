@@ -22,41 +22,50 @@ import (
 	"database/sql"
 )
 
-// GetHasInitialized ...
-// return if the FlatTrack instance has initialized
-func GetHasInitialized(db *sql.DB) (initialized string, err error) {
-	sqlStatement := `select value from system where name = 'initialized'`
-	rows, err := db.Query(sqlStatement)
+type SystemManager struct {
+	DB *sql.DB
+}
+
+func (s SystemManager) getValue(name string) (output string, err error) {
+	sqlStatement := `select value from system where name = $1`
+	rows, err := s.DB.Query(sqlStatement, name)
 	if err != nil {
-		return initialized, err
+		return output, err
 	}
 	defer rows.Close()
 	for rows.Next() {
-		rows.Scan(&initialized)
+		rows.Scan(&output)
 	}
-	return initialized, err
+	return output, err
 }
 
-// SetHasInitialized ...
-// set if the FlatTrack instance has been initialized
-func SetHasInitialized(db *sql.DB) (err error) {
-	sqlStatement := `update system set value = 'true' where name = 'initialized'`
-	rows, err := db.Query(sqlStatement)
+func (s SystemManager) setValue(name, value string) (err error) {
+	sqlStatement := `update system set value = $2 where name = $1`
+	rows, err := s.DB.Query(sqlStatement, name, value)
 	defer rows.Close()
 	return err
 }
 
+// GetHasInitialized ...
+// return if the FlatTrack instance has initialized
+func (s SystemManager) GetHasInitialized() (string, error) {
+	return s.getValue("initialized")
+}
+
+// SetHasInitialized ...
+// set if the FlatTrack instance has been initialized
+func (s SystemManager) SetHasInitialized() (err error) {
+	return s.setValue("initialized", "true")
+}
+
 // GetJWTsecret ...
 // return the JWT secret, used in authentication
-func GetJWTsecret(db *sql.DB) (jwtSecret string, err error) {
-	sqlStatement := `select value from system where name = 'jwtSecret'`
-	rows, err := db.Query(sqlStatement)
-	if err != nil {
-		return jwtSecret, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		rows.Scan(&jwtSecret)
-	}
-	return jwtSecret, err
+func (s SystemManager) GetJWTsecret() (string, error) {
+	return s.getValue("jwtSecret")
+}
+
+// GeInstanceUUID ...
+// returns the instance UUID
+func (s SystemManager) GetInstanceUUID() (string, error) {
+	return s.getValue("instanceUUID")
 }
