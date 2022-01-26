@@ -214,7 +214,7 @@ func GetAppMinioBucket() (output string) {
 // GetAppMinioHost ...
 // return the host for file storage
 func GetAppMinioHost() (output string) {
-	return GetEnvOrDefault("APP_MINIO_HOST", "")
+	return GetEnvOrDefault("APP_MINIO_HOST", "0.0.0.0:9000")
 }
 
 // GetAppMinioUseSSL ...
