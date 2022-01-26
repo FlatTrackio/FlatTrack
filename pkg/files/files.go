@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"bytes"
 
 	minio "github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -15,6 +16,7 @@ import (
 type FileAccess struct {
 	Client     *minio.Client
 	BucketName string
+	Prefix     string
 }
 
 // Open ...
@@ -27,7 +29,7 @@ func Open(endpoint string, accessKey string, secretKey string, bucketName string
 	if err != nil {
 		return FileAccess{}, err
 	}
-	return FileAccess{mc, bucketName}, err
+	return FileAccess{Client: mc, BucketName: bucketName}, err
 }
 
 func (f FileAccess) Init() error {
@@ -56,8 +58,9 @@ func (f FileAccess) Init() error {
 
 // Get ...
 // retrieves a given object
-func (f FileAccess) Get(filePath string) (objectBytes []byte, objectInfo minio.ObjectInfo, err error) {
-	object, err := f.Client.GetObject(context.TODO(), common.GetAppMinioBucket(), filePath, minio.GetObjectOptions{})
+func (f FileAccess) Get(name string) (objectBytes []byte, objectInfo minio.ObjectInfo, err error) {
+	fileName := fmt.Sprintf("%v-%v", f.Prefix, name)
+	object, err := f.Client.GetObject(context.TODO(), common.GetAppMinioBucket(), fileName, minio.GetObjectOptions{})
 	if err != nil {
 		log.Printf("%#v\n", err)
 		return []byte{}, minio.ObjectInfo{}, err
@@ -78,4 +81,25 @@ func (f FileAccess) Get(filePath string) (objectBytes []byte, objectInfo minio.O
 
 // Put ...
 // uploads a file
-func (f FileAccess) Put() {}
+func (f FileAccess) Put(name string, data []byte) error {
+	fileName := fmt.Sprintf("%v-%v", f.Prefix, name)
+	reader := bytes.NewReader(data)
+	info, err := f.Client.PutObject(context.TODO(), f.BucketName, fileName, reader, int64(reader.Len()), minio.PutObjectOptions{})
+	if err != nil {
+		return err
+	}
+	log.Printf("Sucessful uploaded '%v' into bucket\n", info.Key)
+	return nil
+}
+
+// Delete ...
+// deletes a file
+func (f FileAccess) Delete(name string) error {
+	fileName := fmt.Sprintf("%v-%v", f.Prefix, name)
+	err := f.Client.RemoveObject(context.TODO(), f.BucketName, fileName, minio.RemoveObjectOptions{})
+	if err != nil {
+		return err
+	}
+	log.Printf("Sucessful deleted '%v' from bucket\n", fileName)
+	return nil
+}
