@@ -290,7 +290,9 @@ test_backend_e2e:
     CGO_ENABLED: "0"
   services:
     - name: postgres:12.2-alpine
+      alias: postgres
     - name: minio/minio:RELEASE.2022-01-07T01-53-23Z
+      alias: minio
       command:
         - server
         - /data
