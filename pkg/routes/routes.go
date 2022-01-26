@@ -31,7 +31,6 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
-	"github.com/minio/minio-go/v7"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/groups"
@@ -44,6 +43,11 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/users"
 	"gitlab.com/flattrack/flattrack/pkg/files"
 )
+
+type RouteHandler struct {
+	db *sql.DB
+	fileAccess files.FileAccess
+}
 
 // GetAllUsers ...
 // swagger:route GET /users users getAllUsers
@@ -2105,8 +2109,8 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 
 // GetServeFileStoreObjects ...
 // serves files or 404
-func GetServeFilestoreObjects(mc *minio.Client, prefix string) http.HandlerFunc {
-	if mc == nil {
+func (router Router) GetServeFilestoreObjects(prefix string) http.HandlerFunc {
+	if router.FileAccess.Client == nil {
 		return HTTP404()
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -2114,7 +2118,7 @@ func GetServeFilestoreObjects(mc *minio.Client, prefix string) http.HandlerFunc 
 		defer close(doneCh)
 
 		path := strings.TrimPrefix(r.URL.Path, prefix)
-		object, objectInfo, err := files.Get(mc, path)
+		object, objectInfo, err := router.FileAccess.Get(path)
 		if objectInfo.Size == 0 {
 			w.WriteHeader(http.StatusNotFound)
 			w.Write([]byte("File not found"))

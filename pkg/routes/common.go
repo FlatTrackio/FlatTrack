@@ -33,10 +33,10 @@ import (
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	"github.com/minio/minio-go/v7"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/types"
+	"gitlab.com/flattrack/flattrack/pkg/files"
 )
 
 // JSONResponse ...
@@ -191,9 +191,14 @@ func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler
 	})
 }
 
+type Router struct {
+	DB *sql.DB
+	FileAccess files.FileAccess
+}
+
 // Handle ...
 // manage the launching of the API's webserver
-func Handle(db *sql.DB, mc *minio.Client) {
+func (r Router) Handle() {
 	port := common.GetAppPort()
 	router := mux.NewRouter().StrictSlash(true)
 	apiEndpointPrefix := "/api"
@@ -206,7 +211,7 @@ func Handle(db *sql.DB, mc *minio.Client) {
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
 	apiRouters.Use(RequireContentType(true, "application/json"))
 	apiRouters.HandleFunc("", Root)
-	for _, endpoint := range GetEndpoints(db) {
+	for _, endpoint := range GetEndpoints(r.DB) {
 		apiRouters.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HTTPMethod, http.MethodOptions)
 	}
 
@@ -215,9 +220,9 @@ func Handle(db *sql.DB, mc *minio.Client) {
 		http.ServeFile(w, r, "./dist/robots.txt")
 	})
 
-	router.HandleFunc("/_healthz", Healthz(db)).Methods(http.MethodGet)
+	router.HandleFunc("/_healthz", Healthz(r.DB)).Methods(http.MethodGet)
 	fileRouter := router.PathPrefix("/files").Subrouter()
-	fileRouter.HandleFunc("/{.*}", GetServeFilestoreObjects(mc, "/files")).Methods(http.MethodGet)
+	fileRouter.HandleFunc("/{.*}", r.GetServeFilestoreObjects("/files")).Methods(http.MethodGet)
 	// TODO add files post
 
 	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder(), passthrough)).Methods(http.MethodGet)

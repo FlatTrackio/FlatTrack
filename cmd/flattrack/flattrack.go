@@ -73,19 +73,24 @@ func Start() {
 	minioSecretKey := common.GetAppMinioSecretKey()
 	minioUseSSL := common.GetAppMinioUseSSL()
 	minioBucket := common.GetAppMinioBucket()
-	mc, err := files.Open(minioHost, minioAccessKey, minioSecretKey, minioUseSSL == "true")
+	fileAccess, err := files.Open(minioHost, minioAccessKey, minioSecretKey, minioBucket, minioUseSSL == "true")
 	if err != nil {
 		log.Println("Minio error:", err)
 		return
 	}
 
+	router := routes.Router{
+		DB: db,
+		FileAccess: fileAccess,
+	}
+
 	go func(){
-		err = files.Init(mc, minioBucket)
+		err = router.FileAccess.Init()
 		if err != nil {
 			log.Println("Minio error initialising bucket:", err)
 		}
 	}()
 	go metrics.Handle()
 	go routes.HealthHandler(db)
-	routes.Handle(db, mc)
+	router.Handle()
 }

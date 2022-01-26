@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"log"
+	"fmt"
 
 	minio "github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -11,34 +12,42 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/common"
 )
 
-type Client struct {
-	minio.Client
+type FileAccess struct {
+	Client *minio.Client
+	BucketName string
 }
 
 // Open ...
 // open a Minio client
-func Open(endpoint string, accessKey string, secretKey string, useSSL bool) (*minio.Client, error) {
-	return minio.New(endpoint, &minio.Options{
+func Open(endpoint string, accessKey string, secretKey string, bucketName string, useSSL bool) (FileAccess, error) {
+	mc, err := minio.New(endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: useSSL,
 	})
+	if err != nil {
+		return FileAccess{}, err
+	}
+	return FileAccess{mc, bucketName}, err
 }
 
-func Init(mc *minio.Client, bucketName string) error {
-	buckets, err := mc.ListBuckets(context.TODO())
+func (f FileAccess) Init() error {
+	if f.BucketName == "" {
+		return fmt.Errorf("Error: cannot initialise a bucket, because no bucket name was provided")
+	}
+	buckets, err := f.Client.ListBuckets(context.TODO())
 	if err != nil {
 		return err
 	}
 	foundBucket := false
 	for _, b := range buckets {
-		if b.Name == bucketName {
+		if b.Name == f.BucketName {
 			foundBucket = true
 		}
 	}
 	if foundBucket == true {
 		return nil
 	}
-	err = mc.MakeBucket(context.TODO(), bucketName, minio.MakeBucketOptions{})
+	err = f.Client.MakeBucket(context.TODO(), f.BucketName, minio.MakeBucketOptions{})
 	if err != nil {
 		return err
 	}
@@ -47,8 +56,8 @@ func Init(mc *minio.Client, bucketName string) error {
 
 // Get ...
 // retrieves a given object
-func Get(minioClient *minio.Client, filePath string) (objectBytes []byte, objectInfo minio.ObjectInfo, err error) {
-	object, err := minioClient.GetObject(context.TODO(), common.GetAppMinioBucket(), filePath, minio.GetObjectOptions{})
+func (f FileAccess) Get(filePath string) (objectBytes []byte, objectInfo minio.ObjectInfo, err error) {
+	object, err := f.Client.GetObject(context.TODO(), common.GetAppMinioBucket(), filePath, minio.GetObjectOptions{})
 	if err != nil {
 		log.Printf("%#v\n", err)
 		return []byte{}, minio.ObjectInfo{}, err
@@ -66,3 +75,7 @@ func Get(minioClient *minio.Client, filePath string) (objectBytes []byte, object
 	}
 	return objectBytes, objectInfo, err
 }
+
+// Put ...
+// uploads a file
+func (f FileAccess) Put() {}
