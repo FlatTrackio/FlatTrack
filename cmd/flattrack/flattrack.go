@@ -95,9 +95,17 @@ func Start() {
 	}
 
 	go func() {
+		if router.FileAccess.Client == nil {
+			log.Println("Error: no Minio client available, will not serve files")
+			return
+		}
+		if router.FileAccess.BucketName == "" {
+			log.Println("Error: no Minio bucket name was provided")
+			return
+		}
 		err = router.FileAccess.Init()
 		if err != nil {
-			log.Println("Minio error initialising bucket:", err)
+			log.Println("Error initialising Minio bucket:", err)
 		}
 	}()
 	go metrics.Handle()
