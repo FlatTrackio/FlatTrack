@@ -16,6 +16,8 @@ variables:
   POSTGRES_DB: flattrack
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
+  MINIO_ROOT_USER: minioadmin
+  MINIO_ROOT_PASSWORD: minioadmin
   REGISTRIES: "$CI_REGISTRY docker.io"
   IMAGE_KANIKO: gcr.io/kaniko-project/executor:debug-v1.3.0
   IMAGE_GOLANG_ALPINE: docker.io/golang:1.17.0-alpine3.14
@@ -280,10 +282,18 @@ test_backend_e2e:
   image: $IMAGE_GOLANG_ALPINE
   variables:
     APP_DB_HOST: postgres
+    APP_MINIO_HOST: minio:9000
+    APP_MINIO_ACCESS_KEY: minioadmin
+    APP_MINIO_SECRET_KEY: minioadmin
+    APP_MINIO_BUCKET: flattrack
+    APP_MINIO_USE_SSL: "false"
     CGO_ENABLED: "0"
   services:
-    - postgres:12.2-alpine
-    - minio/minio:RELEASE.2022-01-07T01-53-23Z
+    - name: postgres:12.2-alpine
+    - name: minio/minio:RELEASE.2022-01-07T01-53-23Z
+      command:
+        - server
+        - /data
   before_script:
     - apk add --no-cache git gcc curl
     - go get github.com/onsi/ginkgo/ginkgo
