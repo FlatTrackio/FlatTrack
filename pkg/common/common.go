@@ -193,6 +193,36 @@ func GetAppEmbeddedHTML() (output string) {
 	return GetEnvOrDefault("APP_EMBEDDED_HTML", "")
 }
 
+// GetAppMinioAccessKey ...
+// return the accessKey for file storage
+func GetAppMinioAccessKey() (output string) {
+	return GetEnvOrDefault("APP_MINIO_ACCESS_KEY", "")
+}
+
+// GetAppMinioSecretKey ...
+// return the secretKey for file storage
+func GetAppMinioSecretKey() (output string) {
+	return GetEnvOrDefault("APP_MINIO_SECRET_KEY", "")
+}
+
+// GetAppMinioBucket ...
+// return the bucket for file storage
+func GetAppMinioBucket() (output string) {
+	return GetEnvOrDefault("APP_MINIO_BUCKET", "")
+}
+
+// GetAppMinioHost ...
+// return the host for file storage
+func GetAppMinioHost() (output string) {
+	return GetEnvOrDefault("APP_MINIO_HOST", "0.0.0.0:9000")
+}
+
+// GetAppMinioUseSSL ...
+// return if the file storage should use SSL
+func GetAppMinioUseSSL() (output string) {
+	return GetEnvOrDefault("APP_MINIO_USE_SSL", "")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {

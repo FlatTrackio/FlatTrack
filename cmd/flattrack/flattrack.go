@@ -33,13 +33,17 @@
 package flattrack
 
 import (
+	"log"
+
 	"github.com/joho/godotenv"
+
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/database"
+	"gitlab.com/flattrack/flattrack/pkg/files"
 	"gitlab.com/flattrack/flattrack/pkg/metrics"
 	"gitlab.com/flattrack/flattrack/pkg/migrations"
 	"gitlab.com/flattrack/flattrack/pkg/routes"
-	"log"
+	"gitlab.com/flattrack/flattrack/pkg/system"
 )
 
 // Start ...
@@ -67,7 +71,44 @@ func Start() {
 		return
 	}
 
+	minioHost := common.GetAppMinioHost()
+	minioAccessKey := common.GetAppMinioAccessKey()
+	minioSecretKey := common.GetAppMinioSecretKey()
+	minioUseSSL := common.GetAppMinioUseSSL()
+	minioBucket := common.GetAppMinioBucket()
+	fileAccess, err := files.Open(minioHost, minioAccessKey, minioSecretKey, minioBucket, minioUseSSL == "true")
+	if err != nil {
+		log.Println("Minio error:", err)
+		return
+	}
+
+	systemManager := system.SystemManager{DB: db}
+	systemUUID, err := systemManager.GetInstanceUUID()
+	if err != nil {
+		log.Println("Error getting system UUID:", err)
+	}
+	fileAccess.Prefix = systemUUID
+
+	router := routes.Router{
+		DB:         db,
+		FileAccess: fileAccess,
+	}
+
+	go func() {
+		if router.FileAccess.Client == nil {
+			log.Println("Error: no Minio client available, will not serve files")
+			return
+		}
+		if router.FileAccess.BucketName == "" {
+			log.Println("Error: no Minio bucket name was provided")
+			return
+		}
+		err = router.FileAccess.Init()
+		if err != nil {
+			log.Println("Error initialising Minio bucket:", err)
+		}
+	}()
 	go metrics.Handle()
 	go routes.HealthHandler(db)
-	routes.Handle(db)
+	router.Handle()
 }

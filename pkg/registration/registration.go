@@ -34,6 +34,8 @@ var (
 // Register ...
 // perform initial FlatTrack instance setup
 func Register(db *sql.DB, registration types.Registration) (successful bool, jwt string, err error) {
+	userManager := users.UserManager{DB: db}
+	systemManager := system.SystemManager{DB: db}
 	// TODO add timezone validation
 	err = settings.SetTimezone(db, registration.Timezone)
 	if err != nil {
@@ -54,11 +56,11 @@ func Register(db *sql.DB, registration types.Registration) (successful bool, jwt
 	if err != nil || user.ID == "" {
 		return successful, jwt, err
 	}
-	jwt, err = users.GenerateJWTauthToken(db, user.ID, user.AuthNonce, 0)
+	jwt, err = userManager.GenerateJWTauthToken(user.ID, user.AuthNonce, 0)
 	if err != nil {
 		return successful, "", err
 	}
-	err = system.SetHasInitialized(db)
+	err = systemManager.SetHasInitialized()
 	if err != nil {
 		return successful, "", err
 	}

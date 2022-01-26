@@ -28,10 +28,12 @@ import (
 	"net/http"
 	"runtime"
 	"strconv"
+	"strings"
 
 	"github.com/gorilla/mux"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
+	"gitlab.com/flattrack/flattrack/pkg/files"
 	"gitlab.com/flattrack/flattrack/pkg/groups"
 	"gitlab.com/flattrack/flattrack/pkg/health"
 	"gitlab.com/flattrack/flattrack/pkg/registration"
@@ -41,6 +43,11 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/types"
 	"gitlab.com/flattrack/flattrack/pkg/users"
 )
+
+type RouteHandler struct {
+	db         *sql.DB
+	fileAccess files.FileAccess
+}
 
 // GetAllUsers ...
 // swagger:route GET /users users getAllUsers
@@ -538,11 +545,12 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 // GetSystemInitialized ...
 // check if the server has been initialized
 func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
+	systemManager := system.SystemManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to fetch if this FlatTrack instance has initialized"
-		initialized, err := system.GetHasInitialized(db)
+		initialized, err := systemManager.GetHasInitialized()
 		if err == nil {
 			code = http.StatusOK
 		}
@@ -565,6 +573,7 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 // UserAuth ...
 // authenticate a user
 func UserAuth(db *sql.DB) http.HandlerFunc {
+	userManager := users.UserManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		response := "Failed to authenticate user, incorrect or not found email or password"
@@ -597,7 +606,7 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 		// Check password locally, fall back to remote if incorrect
 		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
 		if err == nil && matches == true && code == http.StatusUnauthorized {
-			jwtToken, _ = users.GenerateJWTauthToken(db, userInDB.ID, userInDB.AuthNonce, 0)
+			jwtToken, _ = userManager.GenerateJWTauthToken(userInDB.ID, userInDB.AuthNonce, 0)
 			response = "Successfully authenticated user"
 			code = http.StatusOK
 		}
@@ -779,12 +788,13 @@ func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 // PostAdminRegister ...
 // register the instance of FlatTrack
 func PostAdminRegister(db *sql.DB) http.HandlerFunc {
+	systemManager := system.SystemManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		code := http.StatusInternalServerError
 		response := "Failed to register the FlatTrack instance"
 
-		initialized, err := system.GetHasInitialized(db)
+		initialized, err := systemManager.GetHasInitialized()
 		if err == nil && initialized == "true" {
 			response = "This instance is already registered"
 			code = http.StatusOK
@@ -2037,6 +2047,7 @@ func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 // PostUserConfirm ...
 // confirm a user account
 func PostUserConfirm(db *sql.DB) http.HandlerFunc {
+	userManager := users.UserManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		response := "Failed to confirm your user account"
@@ -2051,7 +2062,7 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 		body, errUnmarshal := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &user)
 
-		tokenString, err := users.ConfirmUserAccount(db, id, secret, user)
+		tokenString, err := userManager.ConfirmUserAccount(id, secret, user)
 		if err == nil && errUnmarshal == nil {
 			response = "Your user account has been confirmed"
 			code = http.StatusOK
@@ -2098,6 +2109,38 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// GetServeFileStoreObjects ...
+// serves files or 404
+func (router Router) GetServeFilestoreObjects(prefix string) http.HandlerFunc {
+	if router.FileAccess.Client == nil {
+		return HTTP404()
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		doneCh := make(chan struct{})
+		defer close(doneCh)
+
+		path := strings.TrimPrefix(r.URL.Path, prefix)
+		object, objectInfo, err := router.FileAccess.Get(path)
+		if objectInfo.Size == 0 {
+			w.WriteHeader(http.StatusNotFound)
+			w.Write([]byte("File not found"))
+			return
+		}
+		if err != nil {
+			log.Printf("%#v\n", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte("An error occurred with retrieving the requested object"))
+			return
+		}
+		log.Println(objectInfo.Key, objectInfo.Size, objectInfo.ContentType)
+		w.Header().Set("content-length", fmt.Sprintf("%d", objectInfo.Size))
+		w.Header().Set("content-type", objectInfo.ContentType)
+		w.Header().Set("accept-ranges", "bytes")
+		w.WriteHeader(http.StatusOK)
+		w.Write(object)
+	}
 }
 
 // Root ...
@@ -2186,5 +2229,14 @@ func HTTPcheckGroupsFromID(db *sql.DB, groupsAllowed ...string) func(http.Handle
 				},
 			})
 		}
+	}
+}
+
+// 404
+// responds with 404
+func HTTP404() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte(`404 not found`))
 	}
 }

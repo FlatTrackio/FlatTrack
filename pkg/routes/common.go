@@ -35,6 +35,7 @@ import (
 	"github.com/rs/cors"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
+	"gitlab.com/flattrack/flattrack/pkg/files"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
@@ -106,6 +107,8 @@ func Logging(next http.Handler) http.Handler {
 			pathSection = "backend "
 		} else if len(requestPath) >= 1 && requestPath[1] == "metrics" {
 			pathSection = "metrics "
+		} else if len(requestPath) >= 1 && requestPath[1] == "files" {
+			pathSection = "files   "
 		}
 		requestIP := GetRequestIP(r)
 		log.Printf("[%v] %v %v %v %v %v", pathSection, r.Method, r.URL, r.Proto, r.Response, requestIP)
@@ -113,13 +116,30 @@ func Logging(next http.Handler) http.Handler {
 	})
 }
 
+type HTTPHeaderBackendAllowTypes string
+
+const (
+	HTTPHeaderBackendAllowTypesContentType HTTPHeaderBackendAllowTypes = "Content-Type"
+	HTTPHeaderBackendAllowTypesAccept      HTTPHeaderBackendAllowTypes = "Accept"
+)
+
 // RequireContentType ...
 // 404s requests if content-type isn't what is expected
-func RequireContentType(expectedContentType string) func(http.Handler) http.Handler {
+func RequireContentType(all bool, expectedContentTypes ...string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if (len(r.Header["Content-Type"]) > 0 && r.Header["Content-Type"][0] == expectedContentType) ||
-				(len(r.Header["Accept"]) > 0 && r.Header["Accept"][0] == expectedContentType) {
+			foundRequiredTypes := 0
+			for _, c := range expectedContentTypes {
+				for _, t := range []HTTPHeaderBackendAllowTypes{HTTPHeaderBackendAllowTypesContentType, HTTPHeaderBackendAllowTypesAccept} {
+					if len(r.Header[string(t)]) > 0 &&
+						(r.Header[string(t)][0] == c ||
+							len(r.Header[strings.ToLower(string(t))]) > 0 &&
+								r.Header[strings.ToLower(string(t))][0] == c) {
+						foundRequiredTypes += 1
+					}
+				}
+			}
+			if (all == true && foundRequiredTypes == len(expectedContentTypes)) || (all == false && foundRequiredTypes > 0) {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -168,9 +188,14 @@ func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler
 	})
 }
 
+type Router struct {
+	DB         *sql.DB
+	FileAccess files.FileAccess
+}
+
 // Handle ...
 // manage the launching of the API's webserver
-func Handle(db *sql.DB) {
+func (r Router) Handle() {
 	port := common.GetAppPort()
 	router := mux.NewRouter().StrictSlash(true)
 	apiEndpointPrefix := "/api"
@@ -181,9 +206,9 @@ func Handle(db *sql.DB) {
 	}
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
-	apiRouters.Use(RequireContentType("application/json"))
+	apiRouters.Use(RequireContentType(true, "application/json"))
 	apiRouters.HandleFunc("", Root)
-	for _, endpoint := range GetEndpoints(db) {
+	for _, endpoint := range GetEndpoints(r.DB) {
 		apiRouters.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HTTPMethod, http.MethodOptions)
 	}
 
@@ -192,8 +217,12 @@ func Handle(db *sql.DB) {
 		http.ServeFile(w, r, "./dist/robots.txt")
 	})
 
-	router.HandleFunc("/_healthz", Healthz(db)).Methods("GET")
-	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder(), passthrough)).Methods("GET")
+	router.HandleFunc("/_healthz", Healthz(r.DB)).Methods(http.MethodGet)
+	fileRouter := router.PathPrefix("/files").Subrouter()
+	fileRouter.HandleFunc("/{.*}", r.GetServeFilestoreObjects("/files")).Methods(http.MethodGet)
+	// TODO add files post
+
+	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder(), passthrough)).Methods(http.MethodGet)
 
 	router.Use(Logging)
 

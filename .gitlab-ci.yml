@@ -16,6 +16,8 @@ variables:
   POSTGRES_DB: flattrack
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
+  MINIO_ROOT_USER: minioadmin
+  MINIO_ROOT_PASSWORD: minioadmin
   REGISTRIES: "$CI_REGISTRY docker.io"
   IMAGE_KANIKO: gcr.io/kaniko-project/executor:debug-v1.3.0
   IMAGE_GOLANG_ALPINE: docker.io/golang:1.17.0-alpine3.14
@@ -280,15 +282,27 @@ test_backend_e2e:
   image: $IMAGE_GOLANG_ALPINE
   variables:
     APP_DB_HOST: postgres
+    APP_MINIO_HOST: minio:9000
+    APP_MINIO_ACCESS_KEY: minioadmin
+    APP_MINIO_SECRET_KEY: minioadmin
+    APP_MINIO_BUCKET: flattrack
+    APP_MINIO_USE_SSL: "false"
     CGO_ENABLED: "0"
   services:
-    - postgres:12.2-alpine
+    - name: postgres:12.2-alpine
+      alias: postgres
+    - name: minio/minio:RELEASE.2022-01-07T01-53-23Z
+      alias: minio
+      command:
+        - server
+        - /data
   before_script:
-    - apk add git gcc
+    - apk add --no-cache git gcc curl
     - go get github.com/onsi/ginkgo/ginkgo
     - go get github.com/onsi/gomega/...
     - go build -o flattrack main.go
     - ./flattrack &
+    - until curl -s http://localhost:8080; do echo "Waiting for API"; sleep 1s; done
   script:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
     - pkill flattrack || true
