@@ -37,7 +37,7 @@ variables:
   set -x
   echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
   export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
-  APP_BUILD_DATE=$(date --date="${CI_COMMIT_TIMESTAMP//[T+]/ }" '+%Y.%m.%d.%H%M')
+  export APP_BUILD_DATE=$(date --date="${CI_COMMIT_TIMESTAMP//[T+]/ }" '+%Y.%m.%d.%H%M')
   if [[ -z "$CI_COMMIT_TAG" ]]; then
     PRINTABLE_COMMIT_HASH="-$APP_BUILD_HASH"
   fi
@@ -47,6 +47,8 @@ variables:
   PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
 
 .image-pre-build-release-version: &image-pre-build-release-version |
+  export APP_BUILD_VERSION=0.0.0
+  export APP_BUILD_MODE=development
   if [[ ! -z "$CI_COMMIT_TAG" ]]; then
     export APP_BUILD_VERSION="$CI_COMMIT_TAG"
     export APP_BUILD_MODE=production
