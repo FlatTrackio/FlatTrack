@@ -52,9 +52,9 @@ variables:
   if [[ ! -z "$CI_COMMIT_TAG" ]]; then
     export APP_BUILD_VERSION="$CI_COMMIT_TAG"
     export APP_BUILD_MODE=production
-    export IMAGE_RELEASE_DESTINATIONS="${CI_REGISTRY}/$PROJECT_PATH:$APP_BUILD_VERSION"
+    export IMAGE_RELEASE_DESTINATIONS="$APP_BUILD_VERSION"
   fi
-  export IMAGE_DESTINATIONS="${CI_REGISTRY}/$PROJECT_PATH:latest$BRANCH_NAME"
+  export IMAGE_DESTINATIONS="latest$BRANCH_NAME"
 
 .image-build: &image-build |
   ko publish \
