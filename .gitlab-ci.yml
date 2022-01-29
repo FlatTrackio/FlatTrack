@@ -136,9 +136,6 @@ build-frontend:
     - npm i
   script:
     - ./node_modules/.bin/vite build --outDir $CI_PROJECT_DIR/$RELEASE_FOLDER_NAME/dist
-  only:
-    - tags
-    - master
   artifacts:
     expire_in: 1 day
     paths:
