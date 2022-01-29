@@ -1,7 +1,6 @@
 stages:
   - lint
   - test
-  - build-frontend
   - build
   - post-build
   - pages
