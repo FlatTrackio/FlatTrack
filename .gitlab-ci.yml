@@ -59,7 +59,7 @@ variables:
     --push \
     --jobs 100 \
     --platform all \
-    --tags "${IMAGE_DESTINATIONS},${IMAGE_RELEASE_DESTINATIONS:-latest}"
+    --tags "${IMAGE_DESTINATIONS},${IMAGE_RELEASE_DESTINATIONS:-latest}" \
     "${CI_PROJECT_DIR}"
 
 .zip-prepare: &zip-prepare |
@@ -135,7 +135,14 @@ build-frontend:
     - apk add --no-cache python2 make g++
     - npm i
   script:
-    - ./node_modules/.bin/vite build --outDir $CI_PROJECT_DIR/$RELEASE_FOLDER_NAME/dist
+    - npm run build
+  post_script:
+    - |
+      if [[ ! -z "$CI_COMMIT_TAG" ]]; then
+        mkdir -p "${RELEASE_FOLDER_NAME}/dist"
+        cd web/dist
+        cp -R . "${RELEASE_FOLDER_NAME}/dist"
+      fi
   artifacts:
     expire_in: 1 day
     paths:
