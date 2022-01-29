@@ -72,6 +72,8 @@ build-container:
     name: $IMAGE_GOLANG_ALPINE
     entrypoint: [""]
   retry: 2
+  variables:
+    KO_DOCKER_REPO: "$CI_REGISTRY_IMAGE"
   before_script:
     - go install github.com/google/ko@latest
     - *container-registry-login-ko
@@ -79,7 +81,7 @@ build-container:
     - *image-pre-build-release-version
   script:
     - *image-build
-  dependencies:
+  needs:
     - build-frontend
 
 build-helm-chart:
@@ -211,8 +213,7 @@ build-zip:
   stage: post-build
   retry: 2
   image: $IMAGE_ALPINE
-  dependencies:
-    - build-zip
+  needs:
     - build-zip-backend
     - build-zip-copy-extras
   before_script:
