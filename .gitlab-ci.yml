@@ -60,7 +60,7 @@ variables:
     --jobs 100 \
     --platform all \
     --tags "${IMAGE_DESTINATIONS},${IMAGE_RELEASE_DESTINATIONS:-latest}" \
-    "${CI_PROJECT_DIR}"
+    .
 
 .zip-prepare: &zip-prepare |
   export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
