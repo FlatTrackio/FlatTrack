@@ -37,7 +37,7 @@ variables:
   set -x
   echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
   APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
-  BUILD_DATE=$(date --date="${CI_COMMIT_TIMESTAMP//[T+]/ }" '+%Y.%m.%d.%H%M')
+  APP_BUILD_DATE=$(date --date="${CI_COMMIT_TIMESTAMP//[T+]/ }" '+%Y.%m.%d.%H%M')
   if [[ -z "$CI_COMMIT_TAG" ]]; then
     PRINTABLE_COMMIT_HASH="-$APP_BUILD_HASH"
   fi
@@ -161,10 +161,6 @@ build-zip-backend:
     - *zip-prepare
   script:
     - |
-      AppBuildVersion="$APP_BUILD_VERSION"
-      AppBuildHash="$COMMIT_HASH"
-      AppBuildDate="$BUILD_DATE"
-      AppBuildMode="$APP_BUILD_MODE"
       for ARCH in $ARCHES; do
         echo "Building backend for $ARCH";
         PRINTABLE_ARCH="-$ARCH"
@@ -175,10 +171,10 @@ build-zip-backend:
           -a \
           -installsuffix cgo \
           -ldflags "-extldflags '-static' -s -w \
-          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildVersion=$AppBuildVersion \
-          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash=$AppBuildHash \
-          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$AppBuildDate \
-          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=$AppBuildMode" \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildVersion=$APP_BUILD_VERSION \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash=$APP_BUILD_HASH \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$APP_BUILD_DATE \
+          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=$APP_BUILD_MODE" \
           -o $RELEASE_FOLDER_NAME/flattrack$PRINTABLE_ARCH \
           main.go
       done
