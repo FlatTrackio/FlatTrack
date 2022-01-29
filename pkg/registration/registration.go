@@ -20,6 +20,7 @@ package registration
 
 import (
 	"database/sql"
+
 	"gitlab.com/flattrack/flattrack/pkg/settings"
 	"gitlab.com/flattrack/flattrack/pkg/system"
 	"gitlab.com/flattrack/flattrack/pkg/types"

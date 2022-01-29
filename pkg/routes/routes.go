@@ -814,6 +814,7 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 		body, _ := ioutil.ReadAll(r.Body)
 		json.Unmarshal(body, &registrationForm)
 
+		log.Printf("%v\n", registrationForm)
 		registered, jwt, err := registration.Register(db, registrationForm)
 		if err == nil {
 			code = http.StatusCreated

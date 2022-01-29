@@ -256,12 +256,6 @@ func SetFirstOrSecond(first string, second string) string {
 	return second
 }
 
-// GetAppDistFolder ...
-// return the path to the folder containing the frontend assets
-func GetAppDistFolder() string {
-	return GetEnvOrDefault("APP_DIST_FOLDER", "./web/dist")
-}
-
 // RegexMatchName ...
 // regex check for valid name string
 func RegexMatchName(name string) bool {

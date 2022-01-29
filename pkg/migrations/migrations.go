@@ -22,24 +22,40 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"embed"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	// allow file-based migrations
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/golang-migrate/migrate/v4/source/iofs"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
 )
 
+type Migrations struct {
+	DB *sql.DB
+	Folder embed.FS
+}
+
 // Migrate ...
 // creates all the tables via the migration sql files
-func Migrate(db *sql.DB) (err error) {
-	migrationPath := common.GetMigrationsPath()
-	driver, err := postgres.WithInstance(db, &postgres.Config{})
+func (mi Migrations) Migrate() (err error) {
+	var m *migrate.Migrate
+	driver, err := postgres.WithInstance(mi.DB, &postgres.Config{})
 	if err != nil {
 		return err
 	}
-	m, err := migrate.NewWithDatabaseInstance(fmt.Sprintf("file:///%v", migrationPath), "postgres", driver)
+
+	_, err = mi.Folder.ReadDir("migrations")
+	if err != nil {
+		return err
+	}
+	d, err := iofs.New(mi.Folder, "migrations")
+	if err != nil {
+		return err
+	}
+	m, err = migrate.NewWithInstance("file:///migrations", d, "postgres", driver)
 	if err != nil {
 		return err
 	}

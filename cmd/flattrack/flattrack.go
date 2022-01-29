@@ -33,6 +33,7 @@
 package flattrack
 
 import (
+	"embed"
 	"log"
 
 	"github.com/joho/godotenv"
@@ -48,7 +49,7 @@ import (
 
 // Start ...
 // initialise the app
-func Start() {
+func Start(frontendFolder embed.FS, migrationsFolder embed.FS) {
 	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
 
 	envFile := common.GetAppEnvFile()
@@ -65,7 +66,11 @@ func Start() {
 		log.Println(err)
 		return
 	}
-	err = migrations.Migrate(db)
+	migrator := migrations.Migrations{
+		DB: db,
+		Folder: migrationsFolder,
+	}
+	err = migrator.Migrate()
 	if err != nil {
 		log.Println("migrations:", err)
 		return
@@ -92,6 +97,7 @@ func Start() {
 	router := routes.Router{
 		DB:         db,
 		FileAccess: fileAccess,
+		Frontend:   frontendFolder,
 	}
 
 	go func() {

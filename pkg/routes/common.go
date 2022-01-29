@@ -20,8 +20,10 @@
 package routes
 
 import (
+	"embed"
 	"encoding/json"
 	"html/template"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -158,8 +160,17 @@ type FrontendOptions struct {
 
 // FrontendHandler ...
 // handles rewriting and API root setting
-func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler {
-	handler := http.FileServer(http.Dir(publicDir))
+func FrontendHandler(frontendEmbed embed.FS, passthrough FrontendOptions) http.Handler {
+	publicDir := "web/dist"
+	_, err := frontendEmbed.ReadDir(publicDir)
+	if err != nil {
+		log.Println("Error: unable to read frontend assets", err)
+	}
+	sub, err := fs.Sub(frontendEmbed, publicDir)
+	if err != nil {
+		log.Println(err)
+	}
+	handler := http.FileServer(http.FS(sub))
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		req.URL.Path = strings.Replace(req.URL.Path, "/", "", 1)
@@ -177,7 +188,7 @@ func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler
 
 		// frontend views
 		indexPath := path.Join(publicDir, "/index.html")
-		tmpl, err := template.ParseFiles(indexPath)
+		tmpl, err := template.ParseFS(frontendEmbed, indexPath)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -191,6 +202,7 @@ func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler
 type Router struct {
 	DB         *sql.DB
 	FileAccess files.FileAccess
+	Frontend   embed.FS
 }
 
 // Handle ...
@@ -222,7 +234,7 @@ func (r Router) Handle() {
 	fileRouter.HandleFunc("/{.*}", r.GetServeFilestoreObjects("/files")).Methods(http.MethodGet)
 	// TODO add files post
 
-	router.PathPrefix("/").Handler(FrontendHandler(common.GetAppDistFolder(), passthrough)).Methods(http.MethodGet)
+	router.PathPrefix("/").Handler(FrontendHandler(r.Frontend, passthrough)).Methods(http.MethodGet)
 
 	router.Use(Logging)
 

@@ -49,7 +49,7 @@ export default defineConfig({
     })
   ],
   build: {
-    assetsDir: 'assets/'
+    assetsDir: ''
   },
   server: {
     port: 8081

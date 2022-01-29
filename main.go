@@ -14,9 +14,16 @@
 package main
 
 import (
+	"embed"
+
 	"gitlab.com/flattrack/flattrack/cmd/flattrack"
 )
 
+//go:embed web/dist/*
+var frontend embed.FS
+//go:embed migrations/*.sql
+var migrations embed.FS
+
 func main() {
-	flattrack.Start()
+	flattrack.Start(frontend, migrations)
 }
