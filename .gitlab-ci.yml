@@ -136,7 +136,7 @@ build-frontend:
     - npm i
   script:
     - npm run build
-  post_script:
+  after_script:
     - |
       if [[ ! -z "$CI_COMMIT_TAG" ]]; then
         mkdir -p "${RELEASE_FOLDER_NAME}/dist"
