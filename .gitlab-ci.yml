@@ -1,6 +1,7 @@
 stages:
   - lint
   - test
+  - build-frontend
   - build
   - post-build
   - pages
@@ -18,32 +19,22 @@ variables:
   POSTGRES_PASSWORD: flattrack
   MINIO_ROOT_USER: minioadmin
   MINIO_ROOT_PASSWORD: minioadmin
-  REGISTRIES: "$CI_REGISTRY docker.io"
-  IMAGE_KANIKO: gcr.io/kaniko-project/executor:debug-v1.3.0
   IMAGE_GOLANG_ALPINE: docker.io/golang:1.19.3-alpine3.15
+  EXTRA_REGISTRIES: docker.io
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.17.0-alpine3.14
   IMAGE_NODE_ALPINE: docker.io/node:15.14.0-alpine3.13
   IMAGE_ALPINE: docker.io/alpine:3.14
-  IMAGE_DOCKER: docker.io/docker:20.10.6
   IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
 
-.kaniko-build-pre-script: &kaniko-build-pre-script |
-  set -x
-  mkdir -p /kaniko/.docker
-  cat << EOF > /kaniko/.docker/config.json
-  {
-    "auths": {
-      "$CI_REGISTRY": {
-        "username": "$CI_REGISTRY_USER",
-        "password": "$CI_REGISTRY_PASSWORD"
-      },
-      "https://index.docker.io/v1/": {
-        "auth": "$DOCKERHUB_AUTH"
-      }
-    }
-  }
-  EOF
+.container-registry-login-ko: &container-registry-login-ko |
+  ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
+  ko login "docker.io" -u "${DOCKERHUB_USERNAME}" -p "${DOCKERHUB_PASSWORD}"
 
-.kaniko-build-taggable-name: &kaniko-build-taggable-name |
+.container-registry-login-crane: &container-registry-login-crane |
+  crane auth login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
+  crane auth login "docker.io" -u "${DOCKERHUB_USERNAME}" -p "${DOCKERHUB_PASSWORD}"
+
+.image-build-taggable-name: &image-build-taggable-name |
   set -x
   echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
   COMMIT_HASH="$CI_COMMIT_SHORT_SHA"
@@ -54,65 +45,42 @@ variables:
   if [[ ! "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]] && [[ -z "$CI_COMMIT_TAG" ]]; then
     BRANCH_NAME="-$CI_COMMIT_BRANCH"
   fi
-  PRINT_ARCH="$(echo $ARCH | tr -d '/')"
   PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
 
-.kaniko-pre-build-release-version: &kaniko-pre-build-release-version |
+.image-pre-build-release-version: &image-pre-build-release-version |
   if [[ ! -z "$CI_COMMIT_TAG" ]]; then
     export APP_BUILD_VERSION="$CI_COMMIT_TAG"
     export APP_BUILD_MODE=production
-    for reg in $REGISTRIES; do
-      export KANIKO_RELEASE_DESTINATIONS="$KANIKO_RELEASE_DESTINATIONS --destination $reg/$PROJECT_PATH:$APP_BUILD_VERSION-$PRINT_ARCH"
-    done
+    export IMAGE_RELEASE_DESTINATIONS="${CI_REGISTRY}/$PROJECT_PATH:$APP_BUILD_VERSION"
   fi
-  for reg in $REGISTRIES; do
-    export KANIKO_DESTINATIONS="$KANIKO_DESTINATIONS --destination $reg/$PROJECT_PATH:latest$BRANCH_NAME-$PRINT_ARCH"
-  done
+  export IMAGE_DESTINATIONS="${CI_REGISTRY}/$PROJECT_PATH:latest$BRANCH_NAME"
 
-.kaniko-build: &kaniko-build |
-  /kaniko/executor \
-    --snapshotMode=redo \
-    --context $CI_PROJECT_DIR \
-    --dockerfile $CI_PROJECT_DIR/build/Dockerfile \
-    $KANIKO_DESTINATIONS \
-    $KANIKO_RELEASE_DESTINATIONS \
-    --build-arg GOARCH="$ARCH" \
-    --build-arg AppBuildVersion="$APP_BUILD_VERSION" \
-    --build-arg AppBuildDate="$BUILD_DATE" \
-    --build-arg AppBuildHash="$COMMIT_HASH" \
-    --build-arg AppBuildMode="$APP_BUILD_MODE"
+.image-build: &image-build |
+  ko publish \
+    --push \
+    --jobs 100 \
+    --platform all \
+    --tags "${IMAGE_DESTINATIONS},${IMAGE_RELEASE_DESTINATIONS:-latest}"
+    "${CI_PROJECT_DIR}"
 
 .zip-prepare: &zip-prepare |
   export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
   mkdir -p $RELEASE_FOLDER_NAME
 
-.build-container: &build-container
+build-container:
   stage: build
   image:
-    name: $IMAGE_KANIKO
+    name: $IMAGE_GOLANG_ALPINE
     entrypoint: [""]
   retry: 2
   before_script:
-    - *kaniko-build-pre-script
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - go install github.com/google/ko@latest
+    - *container-registry-login-ko
+    - *image-build-taggable-name
+    - *image-pre-build-release-version
   script:
-    - *kaniko-build
+    - *image-build
 
-build-container-amd64:
-  <<: *build-container
-  variables:
-    ARCH: "amd64"
-
-build-container-arm64:
-  <<: *build-container
-  variables:
-    ARCH: "arm64"
-
-build-container-arm:
-  <<: *build-container
-  variables:
-    ARCH: "arm"
 
 build-helm-chart:
   stage: build
@@ -122,7 +90,7 @@ build-helm-chart:
     HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
   allow_failure: true
   before_script:
-    - *kaniko-build-taggable-name
+    - *image-build-taggable-name
     - apk add curl
     - curl -L -o helm.tar.gz $HELM_LINK
     - |
@@ -139,50 +107,30 @@ build-helm-chart:
   only:
     - master
     
-tag-container-image:
+copy-container-image-to-dockerhub:
   stage: post-build
   image: $IMAGE_DOCKER
   before_script:
-    - *kaniko-build-pre-script
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - *container-registry-login-crane
+    - *image-build-pre-script
+    - *image-build-taggable-name
+    - *image-pre-build-release-version
   script:
     - |
-        set -x
-        cp -rf /kaniko/.docker $HOME/.docker
-        if [[ -z "$CI_COMMIT_TAG" ]]; then
-          APP_BUILD_VERSION=
-        fi
-        for tag in $APP_BUILD_VERSION latest$BRANCH_NAME; do
-          for reg in $REGISTRIES; do
-            export IMAGE_TAG_WITH_ARCH=""
-            for arch in $ARCHES; do
-              IMAGE="$reg/$CI_PROJECT_PATH:$tag-$arch"
-              export IMAGE_TAG_WITH_ARCH="$IMAGE_TAG_WITH_ARCH $IMAGE"
-            done
-            docker manifest create $reg/$CI_PROJECT_PATH:$tag $IMAGE_TAG_WITH_ARCH
-            for arch in $ARCHES; do
-              # TODO tidy up
-              EXTRA_ARGS=""
-              if [ "$arch" = "arm64" ]; then
-                EXTRA_ARGS="--variant v8"
-              fi
-              if [ "$arch" = "arm" ]; then
-                EXTRA_ARGS="--variant v7"
-              fi
-              docker manifest annotate $reg/$CI_PROJECT_PATH:$tag $reg/$CI_PROJECT_PATH:$tag-$arch --os linux --arch $arch $EXTRA_ARGS
-            done
-            docker manifest push $reg/$CI_PROJECT_PATH:$tag
-          done
+      [ -z "${EXTRA_REGISTRIES}" ] && exit 0
+      for TAG in $(echo ${IMAGE_DESTINATIONS} ${IMAGE_RELEASE_DESTINATIONS:-latest} | tr ',' ' '); do
+        for REG in ${EXTRA_REGISTRIES}; do
+          crane copy "${CI_REGISTRY}/${PROJECT_PATH}:${TAG}" "${REG}/${PROJECT_PATH}:${TAG}"
         done
+      done
 
-build-zip-frontend:
-  stage: build
+build-frontend:
+  stage: build-frontend
   retry: 2
   image: $IMAGE_NODE_ALPINE
   before_script:
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - *image-build-taggable-name
+    - *image-pre-build-release-version
     - *zip-prepare
     - cd web
     - apk add --no-cache python2 make g++
@@ -202,8 +150,8 @@ build-zip-backend:
   retry: 2
   image: $IMAGE_GOLANG_ALPINE
   before_script:
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - *image-build-taggable-name
+    - *image-pre-build-release-version
     - *zip-prepare
   script:
     - |
@@ -241,8 +189,8 @@ build-zip-copy-extras:
   retry: 2
   image: $IMAGE_ALPINE
   before_script:
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - *image-build-taggable-name
+    - *image-pre-build-release-version
     - *zip-prepare
   script:
     - cp -r migrations $RELEASE_FOLDER_NAME/migrations
@@ -265,8 +213,8 @@ build-zip:
     - build-zip-backend
     - build-zip-copy-extras
   before_script:
-    - *kaniko-build-taggable-name
-    - *kaniko-pre-build-release-version
+    - *image-build-taggable-name
+    - *image-pre-build-release-version
     - *zip-prepare
   script:
     - tar cvf $RELEASE_FOLDER_NAME.tar.gz $RELEASE_FOLDER_NAME
