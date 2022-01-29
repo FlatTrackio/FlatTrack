@@ -80,7 +80,8 @@ build-container:
     - *image-pre-build-release-version
   script:
     - *image-build
-
+  dependencies:
+    - build-frontend
 
 build-helm-chart:
   stage: build
@@ -112,7 +113,6 @@ copy-container-image-to-dockerhub:
   image: $IMAGE_DOCKER
   before_script:
     - *container-registry-login-crane
-    - *image-build-pre-script
     - *image-build-taggable-name
     - *image-pre-build-release-version
   script:
@@ -125,7 +125,7 @@ copy-container-image-to-dockerhub:
       done
 
 build-frontend:
-  stage: build-frontend
+  stage: build
   retry: 2
   image: $IMAGE_NODE_ALPINE
   before_script:
@@ -209,7 +209,7 @@ build-zip:
   retry: 2
   image: $IMAGE_ALPINE
   dependencies:
-    - build-zip-frontend
+    - build-zip
     - build-zip-backend
     - build-zip-copy-extras
   before_script:
