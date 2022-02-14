@@ -286,7 +286,7 @@ func DeleteUserByID(db *sql.DB, id string) (err error) {
 		return err
 	}
 
-	sqlStatement := `update users set names = '(Deleted User)', email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
+	sqlStatement := `update users set email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	defer rows.Close()
 	return err
