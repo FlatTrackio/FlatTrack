@@ -66,7 +66,7 @@
                   <a class="subtitle is-6" v-if="member.birthday && member.birthday !== 0">
                     Birthday: {{ TimestampToCalendar(member.birthday) }}<br/>
                   </a>
-                  <b-field grouped group-multiline v-if="member.registered !== true || member.disabled === true">
+                  <b-field grouped group-multiline v-if="member.registered !== true || member.disabled === true || member.deletionTimestamp !== 0">
                     <div class="control">
                       <b-taglist attached v-if="member.registered !== true">
                         <b-tag type="is-dark">has</b-tag>
@@ -77,6 +77,12 @@
                       <b-taglist attached v-if="member.disabled === true">
                         <b-tag type="is-dark">has</b-tag>
                         <b-tag type="is-warning">account disabled</b-tag>
+                      </b-taglist>
+                    </div>
+                    <div class="control">
+                      <b-taglist attached v-if="member.deletionTimestamp !== 0">
+                        <b-tag type="is-dark">has</b-tag>
+                        <b-tag type="is-danger">account deactivatived</b-tag>
                       </b-taglist>
                     </div>
                   </b-field>
@@ -136,7 +142,17 @@ export default {
     }
   },
   async beforeMount () {
-    this.FetchAllFlatmates()
+    if (typeof this.IdQuery !== 'undefined') {
+      var id = this.IdQuery
+      flatmates.GetFlatmate(id).then(resp => {
+        this.members = [resp.data.spec]
+        this.pageLoading = false
+      }).catch(err => {
+        common.DisplayFailureToast('Failed fetch flatmate info' + `<br/>${err}`)
+      })
+    } else {
+      this.FetchAllFlatmates()
+    }
   },
   computed: {
     GroupQuery () {
@@ -163,6 +179,7 @@ export default {
     },
     ClearFilter () {
       this.$router.replace({ name: 'My Flatmates' })
+      this.FetchAllFlatmates()
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)

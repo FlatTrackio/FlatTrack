@@ -189,7 +189,7 @@
             size="is-medium"
             icon-left="delete"
             native-type="submit"
-            @click="DeleteUserAccount(id)">
+            @click="DeactivateUserAccount(id)">
           </b-button>
         </p>
       </b-field>
@@ -367,21 +367,21 @@ export default {
         common.DisplayFailureToast('Failed to patch user account disabled field' + '<br/>' + (err.response.data.metadata.response || err))
       })
     },
-    DeleteUserAccount (id) {
+    DeactivateUserAccount (id) {
       Dialog.confirm({
-        title: 'Delete user account',
-        message: 'Are you sure that you wish to remove this account?' + '<br/>' + 'This action cannot be undone.',
-        confirmText: 'Delete account',
+        title: 'Deactivate user account',
+        message: 'Are you sure that you wish to permanently deactivate this account?' + '<br/>' + 'This action cannot be undone.',
+        confirmText: 'Deactivate account',
         type: 'is-danger',
         hasIcon: true,
         onConfirm: () => {
           adminFlatmates.DeleteFlatmate(id).then(resp => {
-            common.DisplaySuccessToast('Deleted user account')
+            common.DisplaySuccessToast('Permanently deactivated user account')
             setTimeout(() => {
               this.$router.push({ name: 'Admin accounts' })
             }, 1 * 1000)
           }).catch(err => {
-            common.DisplayFailureToast('Failed to delete user account' + '<br/>' + (err.response.data.metadata.response || err))
+            common.DisplayFailureToast('Failed to permanently deactive user account' + '<br/>' + (err.response.data.metadata.response || err))
           })
         }
       })
