@@ -44,7 +44,7 @@
         <p class="subtitle is-3">This FlatTrack instance</p>
         <b-message type="is-warning" has-icon icon="information-outline">
           <p class="is-size-5">
-            <b>Version</b>: {{ version || 'Unknown' }}
+            <b>Version</b>: <a :href="'https://gitlab.com/flattrack/flattrack/-/tags/' + version">{{ version || 'Unknown' }}
             <span v-if="version !== versionFrontend">(frontend {{ versionFrontend }})</span>
             <br/>
             <b>Commit hash</b>:
