@@ -83,6 +83,10 @@ build-container:
     - *image-build-taggable-name
     - *image-pre-build-release-version
   script:
+    - |
+      mkdir -p ./kodata/{web,}
+      cp -r ./migrations ./kodata
+      cp -r ./web/dist ./kodata/web
     - *image-build
   needs:
     - build-frontend
