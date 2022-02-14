@@ -4,7 +4,7 @@ cd $(dirname $0)
 cd $(git rev-parse --show-toplevel)
 
 rm -r ./kodata
-mkdir -p ./kodata/{web,}
+mkdir -p ./kodata/{web/dist,}
 cp -r ./migrations ./kodata
 cp -r ./web/dist ./kodata/web
 
