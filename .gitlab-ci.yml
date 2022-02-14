@@ -114,8 +114,9 @@ build-helm-chart:
     
 copy-container-image-to-dockerhub:
   stage: post-build
-  image: $IMAGE_DOCKER
+  image: $IMAGE_GOLANG_ALPINE
   before_script:
+    - go install github.com/google/go-containerregistry/cmd/crane@latest
     - *container-registry-login-crane
     - *image-build-taggable-name
     - *image-pre-build-release-version
