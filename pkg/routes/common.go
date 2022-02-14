@@ -130,11 +130,12 @@ func RequireContentType(all bool, expectedContentTypes ...string) func(http.Hand
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			foundRequiredTypes := 0
 			for _, c := range expectedContentTypes {
-				for _, t := range []HTTPHeaderBackendAllowTypes{HTTPHeaderBackendAllowTypesContentType, HTTPHeaderBackendAllowTypesAccept} {
-					if len(r.Header[string(t)]) > 0 &&
-						(r.Header[string(t)][0] == c ||
-							len(r.Header[strings.ToLower(string(t))]) > 0 &&
-								r.Header[strings.ToLower(string(t))][0] == c) {
+				for _, h := range []HTTPHeaderBackendAllowTypes{HTTPHeaderBackendAllowTypesContentType, HTTPHeaderBackendAllowTypesAccept} {
+					// TODO refactor
+					if (r.Header.Get(string(h)) != "" &&
+						r.Header.Get(string(h)) == c) ||
+						(r.Header.Get(strings.ToLower(string(h))) != "" &&
+						r.Header.Get(strings.ToLower(string(h))) == c) {
 						foundRequiredTypes += 1
 					}
 				}
@@ -206,7 +207,7 @@ func (r Router) Handle() {
 	}
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
-	apiRouters.Use(RequireContentType(true, "application/json"))
+	apiRouters.Use(RequireContentType(false, "application/json"))
 	apiRouters.HandleFunc("", Root)
 	for _, endpoint := range GetEndpoints(r.DB) {
 		apiRouters.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HTTPMethod, http.MethodOptions)
@@ -228,8 +229,20 @@ func (r Router) Handle() {
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
-		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization", "User-Agent", "Accept-Encoding"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedHeaders:   []string{
+			"Accept",
+			"Content-Type",
+			"Authorization",
+			"User-Agent",
+			"Accept-Encoding",
+		},
+		AllowedMethods:   []string{
+			http.MethodGet,
+			http.MethodPost,
+			http.MethodPut,
+			http.MethodPatch,
+			http.MethodDelete,
+		},
 		AllowCredentials: true,
 	})
 
