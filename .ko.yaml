@@ -1,4 +1,3 @@
-defaultBaseImage: registry.gitlab.com/flattrack/flattrack
 platform: linux/amd64,linux/arm/v7,linux/arm64/v8
 builds:
 - id: flattrack
@@ -16,3 +15,5 @@ builds:
   - -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash={{ .Env.APP_BUILD_HASH }}
   - -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate={{ .Env.APP_BUILD_DATE }}
   - -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode={{ .Env.APP_BUILD_MODE }}
+  - -X gitlab.com/flattrack/flattrack/pkg/common.AppAssetsFolder=/var/run/ko/web/dist
+  - -X gitlab.com/flattrack/flattrack/pkg/common.AppDbMigrationsPath=/var/run/ko/migrations
