@@ -86,7 +86,7 @@ build-container:
     - *image-build-taggable-name
     - *image-pre-build-release-version
   script:
-    - ./hack/build-container.sh production
+    - "${CI_PROJECT_DIR}"/hack/build-container.sh production
   needs:
     - build-frontend
 
