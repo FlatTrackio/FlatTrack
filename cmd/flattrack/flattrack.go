@@ -54,6 +54,8 @@ func Start() {
 	envFile := common.GetAppEnvFile()
 	_ = godotenv.Load(envFile)
 
+	log.Println(common.GetMigrationsPath(), common.GetAppDistFolder())
+
 	dbUsername := common.GetDBusername()
 	dbPassword := common.GetDBpassword()
 	dbHostname := common.GetDBhost()

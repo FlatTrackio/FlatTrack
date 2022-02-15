@@ -68,15 +68,6 @@ variables:
     export IMAGE_DESTINATIONS="$APP_BUILD_VERSION"
   fi
 
-.image-build: &image-build |
-  ko publish \
-    --push \
-    --jobs 100 \
-    --bare \
-    --platform all \
-    --tags "${IMAGE_DESTINATIONS}" \
-    .
-
 .zip-prepare: &zip-prepare |
   export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
   mkdir -p $RELEASE_FOLDER_NAME
@@ -95,13 +86,26 @@ build-container:
     - *image-build-taggable-name
     - *image-pre-build-release-version
   script:
-    - |
-      mkdir -p ./kodata/{web/dist,}
-      cp -r ./migrations ./kodata
-      cp -r ./web/dist ./kodata/web
-    - *image-build
+    - ./hack/build-container.sh production
   needs:
     - build-frontend
+
+copy-container-image-to-dockerhub:
+  stage: post-build
+  image: $IMAGE_GOLANG_ALPINE
+  before_script:
+    - go install github.com/google/go-containerregistry/cmd/crane@latest
+    - *container-registry-login-crane
+    - *image-build-taggable-name
+    - *image-pre-build-release-version
+  script:
+    - |
+      [ -z "${EXTRA_REGISTRIES}" ] && exit 0
+      for TAG in $(echo ${IMAGE_DESTINATIONS:-} | tr ',' ' '); do
+        for REG in ${EXTRA_REGISTRIES}; do
+          crane copy "${CI_REGISTRY}/${PROJECT_PATH}:${TAG}" "${REG}/${PROJECT_PATH}:${TAG}"
+        done
+      done
 
 build-helm-chart:
   stage: build
@@ -127,23 +131,6 @@ build-helm-chart:
       - .helm-root
   only:
     - master
-    
-copy-container-image-to-dockerhub:
-  stage: post-build
-  image: $IMAGE_GOLANG_ALPINE
-  before_script:
-    - go install github.com/google/go-containerregistry/cmd/crane@latest
-    - *container-registry-login-crane
-    - *image-build-taggable-name
-    - *image-pre-build-release-version
-  script:
-    - |
-      [ -z "${EXTRA_REGISTRIES}" ] && exit 0
-      for TAG in $(echo ${IMAGE_DESTINATIONS:-} | tr ',' ' '); do
-        for REG in ${EXTRA_REGISTRIES}; do
-          crane copy "${CI_REGISTRY}/${PROJECT_PATH}:${TAG}" "${REG}/${PROJECT_PATH}:${TAG}"
-        done
-      done
 
 build-frontend:
   stage: build
