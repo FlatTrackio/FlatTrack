@@ -86,7 +86,15 @@ build-container:
     - *image-build-taggable-name
     - *image-pre-build-release-version
   script:
-    - ${CI_PROJECT_DIR}/hack/build-container.sh production
+    - |
+      ko publish \
+      --push \
+      --jobs 100 \
+      --bare \
+      --platform all \
+      --tags "${IMAGE_DESTINATIONS}" \
+      .
+    # TODO use common script - ${CI_PROJECT_DIR}/hack/build-container.sh production
   needs:
     - build-frontend
 
