@@ -86,7 +86,6 @@ build-container:
     - *image-pre-build-release-version
   script:
     - |
-      rm -r ./kodata
       mkdir -p ./kodata/{web/dist,}
       cp -r ./migrations ./kodata
       cp -r ./web/dist ./kodata/web
