@@ -24,6 +24,7 @@ variables:
   IMAGE_NODE_ALPINE: docker.io/node:15.14.0-alpine3.13
   IMAGE_ALPINE: docker.io/alpine:3.14
   IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
+  IMAGE_KO: ghcr.io/google/ko:eb2597f9751c5483baf7ec7f038be9582e5b3a35
 
 .container-registry-login-ko: &container-registry-login-ko |
   ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
@@ -75,13 +76,12 @@ variables:
 build-container:
   stage: build
   image:
-    name: $IMAGE_GOLANG_ALPINE
+    name: $IMAGE_KO
     entrypoint: [""]
   retry: 2
   variables:
     KO_DOCKER_REPO: "$CI_REGISTRY_IMAGE"
   before_script:
-    - go install github.com/google/ko@latest
     - *container-registry-login-ko
     - *image-build-taggable-name
     - *image-pre-build-release-version
