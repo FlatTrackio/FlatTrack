@@ -3,7 +3,7 @@
 begin;
 
 create table if not exists users (
-  id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
+  id text default (md5(random()::text || clock_timestamp()::text)::uuid)::text not null,
   names text not null,
   email text not null,
   password text,
@@ -13,9 +13,9 @@ create table if not exists users (
   disabled bool default false not null,
   registered bool default false not null,
   lastLogin int not null default 0,
-  authNonce text default md5(random()::text || clock_timestamp()::text)::uuid not null,
-  creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
-  modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  authNonce text default (md5(random()::text || clock_timestamp()::text)::uuid)::text not null,
+  creationTimestamp int not null default extract('epoch' from now())::int,
+  modificationTimestamp int not null default extract('epoch' from now())::int,
   deletionTimestamp int not null default 0,
 
   primary key (id)

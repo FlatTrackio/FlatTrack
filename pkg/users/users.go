@@ -286,7 +286,7 @@ func DeleteUserByID(db *sql.DB, id string) (err error) {
 		return err
 	}
 
-	sqlStatement := `update users set names = '(Deleted User)', email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
+	sqlStatement := `update users set names = '(Deleted User)', email = '', password = '', deletionTimestamp = extract('epoch' from now())::int where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	defer rows.Close()
 	return err
@@ -394,7 +394,7 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, tokenClaims 
 // InvalidateAllAuthTokens ...
 // updates the authNonce to invalidate auth tokens
 func InvalidateAllAuthTokens(db *sql.DB, id string) (err error) {
-	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid where id = $1`
+	sqlStatement := `update users set authNonce = (md5(random()::text || clock_timestamp()::text)::uuid)::text where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	defer rows.Close()
 	return err
@@ -472,7 +472,7 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 		passwordHashed = userAccount.Password
 	}
 
-	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, modificationTimestamp = extract('epoch' from now())::int where id = $1
                          returning id, names, email, phoneNumber, birthday, contractAgreement, disabled, registered, lastLogin, creationTimestamp, modificationTimestamp, deletionTimestamp`
 	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday)
 	if err != nil {
@@ -518,7 +518,7 @@ func PatchProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userA
 		passwordHashed = userAccount.Password
 	}
 
-	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, registered = $7, lastLogin = $8, authNonce = $9, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $10
+	sqlStatement := `update users set names = $1, email = $2, password = $3, phoneNumber = $4, birthday = $5, contractAgreement = $6, registered = $7, lastLogin = $8, authNonce = $9, modificationTimestamp = extract('epoch' from now())::int where id = $10
                          returning *`
 	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce, id)
 	if err != nil {
@@ -561,7 +561,7 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
 
-	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, modificationTimestamp = extract('epoch' from now())::int where id = $1
                          returning id, names, email, phoneNumber, birthday, contractAgreement, disabled, registered, lastLogin, creationTimestamp, modificationTimestamp, deletionTimestamp`
 	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement)
 	if err != nil {
@@ -598,7 +598,7 @@ func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (user
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
 
-	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, registered = $8, lastLogin = $9, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1
+	sqlStatement := `update users set names = $2, email = $3, password = $4, phoneNumber = $5, birthday = $6, contractAgreement = $7, registered = $8, lastLogin = $9, modificationTimestamp = extract('epoch' from now())::int where id = $1
                          returning *`
 	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Registered, userAccount.LastLogin)
 	if err != nil {
@@ -769,7 +769,7 @@ func UserAccountExists(db *sql.DB, id string) (exists bool, err error) {
 // GenerateNewAuthNonce ...
 // given a user account id, generates a new auth nonce to reset all logins and invalidate all issued JWTs
 func GenerateNewAuthNonce(db *sql.DB, id string) (err error) {
-	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid where id = $1
+	sqlStatement := `update users set authNonce = (md5(random()::text || clock_timestamp()::text)::uuid)::text where id = $1
                          returning *`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {

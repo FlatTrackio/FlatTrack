@@ -33,6 +33,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
+	"gitlab.com/flattrack/flattrack/pkg/database"
 	"gitlab.com/flattrack/flattrack/pkg/files"
 	"gitlab.com/flattrack/flattrack/pkg/groups"
 	"gitlab.com/flattrack/flattrack/pkg/health"
@@ -795,6 +796,9 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 		response := "Failed to register the FlatTrack instance"
 
 		initialized, err := systemManager.GetHasInitialized()
+		if err != nil {
+			log.Println(err)
+		}
 		if err == nil && initialized == "true" {
 			response = "This instance is already registered"
 			code = http.StatusOK
@@ -2166,7 +2170,7 @@ func UnknownEndpoint(w http.ResponseWriter, r *http.Request) {
 
 // Healthz ...
 // HTTP handler for health checks
-func Healthz(db *sql.DB) http.HandlerFunc {
+func Healthz(db *database.Database) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		response := "App unhealthy"
 		code := http.StatusInternalServerError

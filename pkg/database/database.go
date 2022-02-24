@@ -25,32 +25,70 @@ import (
 
 	// include Pg
 	_ "github.com/lib/pq"
+
+	"gitlab.com/flattrack/flattrack/pkg/common"
 )
+
+type Database struct {
+	Protocol     string
+	DatabaseType string
+	Username     string
+	Password     string
+	Hostname     string
+	Port         string
+	Database     string
+	SSLMode      string
+
+	ConnectionString string
+	DB               *sql.DB
+}
+
+func NewDatabase() *Database {
+	return &Database{
+		Protocol:     common.GetDBprotocol(),
+		DatabaseType: common.GetDBdatabaseType(),
+		Username:     common.GetDBusername(),
+		Password:     common.GetDBpassword(),
+		Hostname:     common.GetDBhost(),
+		Port:         common.GetDBport(),
+		Database:     common.GetDBdatabase(),
+		SSLMode:      common.GetDBsslMode(),
+	}
+}
+
+func (d *Database) GetConnectionString() string {
+	return fmt.Sprintf("%v://%v:%v@%v:%v/%v?sslmode=%v", d.Protocol, d.Username, d.Password, d.Hostname, d.Port, d.Database, d.SSLMode)
+}
 
 // Open ...
 // given database credentials, return a database connection
-func Open(username string, password string, hostname string, port string, database string, sslMode string) (*sql.DB, error) {
-	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", username, password, hostname, port, database, sslMode)
-	return sql.Open("postgres", connStr)
+func (d *Database) Open() (*sql.DB, error) {
+	connStr := d.GetConnectionString()
+	db, err := sql.Open(d.Protocol, connStr)
+	if err != nil {
+		return &sql.DB{}, err
+	}
+	d.ConnectionString = connStr
+	return db, nil
 }
 
 // Close ...
 // close the connection to the database
-func Close(db *sql.DB) (err error) {
-	return db.Close()
+func (d *Database) Close() (err error) {
+	return d.DB.Close()
 }
 
 // Ping ...
 // ping the database
-func Ping(db *sql.DB) (err error) {
-	var zero int
-	rows, err := db.Query(`SELECT 0`)
+func (d *Database) Ping() (err error) {
+	var one int
+	rows, err := d.DB.Query(`SELECT 1`)
 	if err != nil {
 		log.Println("Error querying database", err.Error())
 		return err
 	}
-	rows.Scan(&zero)
-	if zero != 0 {
+	rows.Scan(&one)
+	if one != 0 {
 		return fmt.Errorf("Wild, this error should never occur.")
 	}
 	return rows.Err()

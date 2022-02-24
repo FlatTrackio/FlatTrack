@@ -3,12 +3,12 @@
 begin;
 
 create table if not exists user_creation_secret (
-  id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
+  id text default (md5(random()::text || clock_timestamp()::text)::uuid)::text not null,
   userId text not null,
-  secret text default md5(random()::text || clock_timestamp()::text)::uuid not null,
+  secret text default (md5(random()::text || clock_timestamp()::text)::uuid)::text not null,
   valid bool not null default true,
-  creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
-  modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  creationTimestamp int not null default extract('epoch' from now())::int,
+  modificationTimestamp int not null default extract('epoch' from now())::int,
   deletionTimestamp int not null default 0,
 
   primary key (id),

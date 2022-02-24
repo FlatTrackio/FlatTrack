@@ -54,18 +54,17 @@ func Start() {
 	envFile := common.GetAppEnvFile()
 	_ = godotenv.Load(envFile)
 
-	dbUsername := common.GetDBusername()
-	dbPassword := common.GetDBpassword()
-	dbHostname := common.GetDBhost()
-	dbPort := common.GetDBport()
-	dbDatabase := common.GetDBdatabase()
-	dbSSLmode := common.GetDBsslMode()
-	db, err := database.Open(dbUsername, dbPassword, dbHostname, dbPort, dbDatabase, dbSSLmode)
+	log.Println(common.GetMigrationsPath(), common.GetAppDistFolder())
+
+	dbConfig := database.NewDatabase()
+	db, err := dbConfig.Open()
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	err = migrations.Migrate(db)
+	dbConfig.DB = db
+	migrater := migrations.NewMigration(dbConfig)
+	err = migrater.Migrate()
 	if err != nil {
 		log.Println("migrations:", err)
 		return
@@ -90,7 +89,7 @@ func Start() {
 	fileAccess.Prefix = systemUUID
 
 	router := routes.Router{
-		DB:         db,
+		DB:         dbConfig,
 		FileAccess: fileAccess,
 	}
 
@@ -109,6 +108,6 @@ func Start() {
 		}
 	}()
 	go metrics.Handle()
-	go routes.HealthHandler(db)
+	go routes.HealthHandler(dbConfig)
 	router.Handle()
 }

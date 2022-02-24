@@ -173,7 +173,7 @@ func UpdateShoppingTag(db *sql.DB, id string, tag types.ShoppingTag) (tagUpdated
 	if tag.Name != "" && len(tag.Name) == 0 || len(tag.Name) > 30 {
 		return tagUpdated, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
 	}
-	sqlStatement := `update shopping_list_tag set name = $2, authorLast = $3, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1 returning *`
+	sqlStatement := `update shopping_list_tag set name = $2, authorLast = $3, modificationTimestamp = extract('epoch' from now())::int where id = $1 returning *`
 	rows, err := db.Query(sqlStatement, id, tag.Name, tag.AuthorLast)
 	if err != nil {
 		return tagUpdated, err

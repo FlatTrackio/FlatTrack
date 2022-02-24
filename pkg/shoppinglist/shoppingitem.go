@@ -164,7 +164,7 @@ func PatchItem(db *sql.DB, listid string, itemID string, item types.ShoppingItem
 		return itemPatched, err
 	}
 
-	sqlStatement := `update shopping_item set name = $2, price = $3, quantity = $4, notes = $5, authorLast = $6, tag = $7, obtained = $8, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1 returning *`
+	sqlStatement := `update shopping_item set name = $2, price = $3, quantity = $4, notes = $5, authorLast = $6, tag = $7, obtained = $8, modificationTimestamp = extract('epoch' from now())::int where id = $1 returning *`
 	rows, err := db.Query(sqlStatement, itemID, item.Name, item.Price, item.Quantity, item.Notes, item.AuthorLast, item.Tag, item.Obtained)
 	if err != nil {
 		return itemPatched, err
@@ -192,7 +192,7 @@ func UpdateItem(db *sql.DB, listID string, itemID string, item types.ShoppingIte
 		return itemUpdated, err
 	}
 
-	sqlStatement := `update shopping_item set name = $3, price = $4, quantity = $5, notes = $6, authorLast = $7, tag = $8, obtained = $9, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where listId = $1 and id = $2 returning *`
+	sqlStatement := `update shopping_item set name = $3, price = $4, quantity = $5, notes = $6, authorLast = $7, tag = $8, obtained = $9, modificationTimestamp = extract('epoch' from now())::int where listId = $1 and id = $2 returning *`
 	rows, err := db.Query(sqlStatement, listID, itemID, item.Name, item.Price, item.Quantity, item.Notes, item.AuthorLast, item.Tag, item.Obtained)
 	if err != nil {
 		return itemUpdated, err

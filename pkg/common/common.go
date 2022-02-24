@@ -35,6 +35,7 @@ var (
 	AppBuildDate        = "???"
 	AppBuildMode        = "development"
 	AppDbMigrationsPath = "/app/migrations"
+	AppAssetsFolder     = "/app/web/dist"
 )
 
 // GetEnvOrDefault ...
@@ -83,6 +84,18 @@ func GetDBsslMode() (output string) {
 	return GetEnvOrDefault("APP_DB_SSLMODE", "disable")
 }
 
+// GetDBprotocol ...
+// return the database sslmode to use
+func GetDBprotocol() (output string) {
+	return GetEnvOrDefault("APP_DB_PROTOCOL", "postgres")
+}
+
+// GetDBdatabaseType ...
+// return the database sslmode to use
+func GetDBdatabaseType() (output string) {
+	return GetEnvOrDefault("APP_DB_DATABASE_TYPE", "postgres")
+}
+
 // GetInstanceURL ...
 // return URL of the instance
 func GetInstanceURL() (output string) {
@@ -127,7 +140,7 @@ func GetMigrationsPath() (output string) {
 		return envSet
 	}
 	if AppBuildMode == "production" {
-		return "/app/migrations"
+		return AppDbMigrationsPath
 	}
 	pwd, _ := os.Getwd()
 	return fmt.Sprintf("%v/migrations", pwd)
@@ -259,7 +272,15 @@ func SetFirstOrSecond(first string, second string) string {
 // GetAppDistFolder ...
 // return the path to the folder containing the frontend assets
 func GetAppDistFolder() string {
-	return GetEnvOrDefault("APP_DIST_FOLDER", "./web/dist")
+	envSet := GetEnvOrDefault("APP_DIST_FOLDER", "")
+	if envSet != "" {
+		return envSet
+	}
+	if AppBuildMode == "production" {
+		return AppAssetsFolder
+	}
+	pwd, _ := os.Getwd()
+	return fmt.Sprintf("%v/web/dist", pwd)
 }
 
 // RegexMatchName ...

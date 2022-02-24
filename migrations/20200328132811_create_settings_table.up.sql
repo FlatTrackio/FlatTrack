@@ -3,11 +3,11 @@
 begin;
 
 create table if not exists settings (
-  id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
+  id text default (md5(random()::text || clock_timestamp()::text)::uuid)::text not null,
   name text not null,
   value text not null,
-  creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
-  modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  creationTimestamp int not null default extract('epoch' from now())::int,
+  modificationTimestamp int not null default extract('epoch' from now())::int,
   deletionTimestamp int not null default 0,
 
   primary key (id)

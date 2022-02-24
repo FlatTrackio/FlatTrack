@@ -29,12 +29,12 @@ import (
 	"strings"
 	"time"
 
-	"database/sql"
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
+	"gitlab.com/flattrack/flattrack/pkg/database"
 	"gitlab.com/flattrack/flattrack/pkg/files"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
@@ -74,7 +74,7 @@ func HTTPuseMiddleware(handler http.HandlerFunc, middlewares ...func(http.Handle
 }
 
 // HealthHandler ...
-func HealthHandler(db *sql.DB) {
+func HealthHandler(db *database.Database) {
 	if common.GetAppHealthEnabled() != "true" {
 		return
 	}
@@ -189,7 +189,7 @@ func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler
 }
 
 type Router struct {
-	DB         *sql.DB
+	DB         *database.Database
 	FileAccess files.FileAccess
 }
 
@@ -208,7 +208,7 @@ func (r Router) Handle() {
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
 	apiRouters.Use(RequireContentType(true, "application/json"))
 	apiRouters.HandleFunc("", Root)
-	for _, endpoint := range GetEndpoints(r.DB) {
+	for _, endpoint := range GetEndpoints(r.DB.DB) {
 		apiRouters.HandleFunc(endpoint.EndpointPath, endpoint.HandlerFunc).Methods(endpoint.HTTPMethod, http.MethodOptions)
 	}
 

@@ -204,7 +204,7 @@ func PatchShoppingList(db *sql.DB, listID string, shoppingList types.ShoppingLis
 		return shoppingListPatched, err
 	}
 
-	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $5
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = extract('epoch' from now())::int where id = $5
                          returning *`
 	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listID)
 	if err != nil {
@@ -227,7 +227,7 @@ func UpdateShoppingList(db *sql.DB, listID string, shoppingList types.ShoppingLi
 		return shoppingListUpdated, err
 	}
 
-	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $5
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = extract('epoch' from now())::int where id = $5
                          returning *`
 	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listID)
 	if err != nil {
