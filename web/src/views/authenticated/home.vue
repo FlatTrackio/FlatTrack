@@ -19,6 +19,32 @@
       <section class="section">
         <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
         <h1 class="title is-1">Home</h1>
+        <div v-if="notes !== '' || canUserAccountAdmin === true" class="my-4">
+          <p class="subtitle is-3">About {{ name }}</p>
+          <b-message type="is-primary" v-if="notes !== ''">
+            <span v-for="line in notesSplit" v-bind:key="line">
+              {{ line }}
+              <br/>
+            </span>
+          </b-message>
+          <b-message type="is-warning" v-else>
+            This section for describing such things as, but not limited to:
+            <br/>
+            <ul style="list-style-type: disc;">
+              <li>how the flat life is</li>
+              <li>rules</li>
+              <li>regulations</li>
+              <li>culture</li>
+            </ul>
+          </b-message>
+          <b-button
+            v-if="canUserAccountAdmin === true"
+            icon-left="pencil"
+            type="is-warning"
+            @click="$router.push({ name: 'Admin settings' })" rounded>
+            Edit message
+          </b-button>
+        </div>
         <p class="subtitle is-3">Recent activity</p>
         <h1 class="subtitle is-4">Shopping lists</h1>
         <div v-if="lists.length > 0">
@@ -73,6 +99,7 @@
 <script>
 import common from '@/common/common'
 import shoppinglist from '@/requests/authenticated/shoppinglist'
+import flatInfo from '@/requests/authenticated/flatInfo'
 import cani from '@/requests/authenticated/can-i'
 import dayjs from 'dayjs'
 
@@ -80,13 +107,16 @@ export default {
   name: 'home',
   data () {
     return {
+      name: '',
       authors: {},
       pageLoading: true,
       lists: [],
       deviceIsMobile: false,
       modificationTimestampAfter: common.GetHomeLastViewedTimestamp(),
+      notes: '',
+      notesSplit: '',
       sortBy: 'recentlyUpdated',
-      canUserAccountAdmin: false,
+      canUserAccountAdmin: false
     }
   },
   methods: {
@@ -107,6 +137,17 @@ export default {
     shoppingListCardView: () => import('@/components/authenticated/shopping-list-card-view.vue')
   },
   async beforeMount () {
+    this.name = common.GetFlatnameFromCache() || this.name
+    flatInfo.GetFlatName().then(resp => {
+      if (this.name !== resp.data.spec) {
+        this.name = resp.data.spec
+        common.WriteFlatnameToCache(resp.data.spec)
+      }
+      return flatInfo.GetFlatNotes()
+    }).then(resp => {
+      this.notes = resp.data.spec.notes
+      this.notesSplit = this.notes.split('\n')
+    })
     cani.GetCanIgroup('admin').then(resp => {
       this.canUserAccountAdmin = resp.data.data
     })

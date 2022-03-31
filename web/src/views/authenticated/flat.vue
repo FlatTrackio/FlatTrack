@@ -42,6 +42,7 @@
             <li>culture</li>
           </ul>
         </b-message>
+        <b-button icon-left="pencil" v-if="canUserAccountAdmin === true" type="is-warning" @click="$router.push({ name: 'Admin settings' })" rounded>Edit message</b-button>
       </section>
     </div>
   </div>
@@ -49,6 +50,7 @@
 
 <script>
 import flatInfo from '@/requests/authenticated/flatInfo'
+import cani from '@/requests/authenticated/can-i'
 import common from '@/common/common'
 
 export default {
@@ -58,7 +60,8 @@ export default {
       name: '',
       notes: '',
       notesSplit: '',
-      hasInitialLoaded: false
+      hasInitialLoaded: false,
+      canUserAccountAdmin: false
     }
   },
   async beforeMount () {
@@ -73,6 +76,9 @@ export default {
       this.notes = resp.data.spec.notes
       this.notesSplit = this.notes.split('\n')
       this.hasInitialLoaded = true
+    })
+    cani.GetCanIgroup('admin').then(resp => {
+      this.canUserAccountAdmin = resp.data.data
     })
   }
 }
