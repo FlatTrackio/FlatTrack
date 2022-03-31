@@ -2121,7 +2121,7 @@ func (router Router) GetServeFilestoreObjects(prefix string) http.HandlerFunc {
 		doneCh := make(chan struct{})
 		defer close(doneCh)
 
-		path := strings.TrimPrefix(r.URL.Path, prefix + "/")
+		path := strings.TrimPrefix(r.URL.Path, prefix+"/")
 		object, objectInfo, err := router.FileAccess.Get(path)
 		if objectInfo.Size == 0 {
 			w.WriteHeader(http.StatusNotFound)
