@@ -41,6 +41,30 @@
             You're all caught up. Check back later!
           </b-message>
         </div>
+        <div v-if="canUserAccountAdmin === true">
+          <br/>
+          <h1 class="subtitle is-4">Admin</h1>
+          <div class="card pointer-cursor-on-hover" @click="$router.push({ name: 'Admin accounts' })">
+            <div class="card-content card-content-list">
+              <div class="media">
+                <div class="media-left">
+                  <b-icon icon="account-group" size="is-medium"></b-icon>
+                </div>
+                <div class="media-content">
+                  <div class="block">
+                    <p class="subtitle is-4">Review flatmember accounts</p>
+                    <p class="subtitle is-6">Add new and remove previous flatmate accounts</p>
+                  </div>
+                </div>
+                <div class="media-right">
+                  <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                </div>
+              </div>
+            </div>
+            <div class="content">
+            </div>
+          </div>
+        </div>
       </section>
     </div>
   </div>
@@ -49,6 +73,7 @@
 <script>
 import common from '@/common/common'
 import shoppinglist from '@/requests/authenticated/shoppinglist'
+import cani from '@/requests/authenticated/can-i'
 import dayjs from 'dayjs'
 
 export default {
@@ -60,7 +85,8 @@ export default {
       lists: [],
       deviceIsMobile: false,
       modificationTimestampAfter: common.GetHomeLastViewedTimestamp(),
-      sortBy: 'recentlyUpdated'
+      sortBy: 'recentlyUpdated',
+      canUserAccountAdmin: false,
     }
   },
   methods: {
@@ -81,6 +107,9 @@ export default {
     shoppingListCardView: () => import('@/components/authenticated/shopping-list-card-view.vue')
   },
   async beforeMount () {
+    cani.GetCanIgroup('admin').then(resp => {
+      this.canUserAccountAdmin = resp.data.data
+    })
     this.GetShoppingLists()
   }
 }
