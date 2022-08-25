@@ -7,6 +7,14 @@
 export TMATE_SOCKET="${TMATE_SOCKET:-/tmp/ii.default.target.iisocket}"
 export SCRIPT_PATH="$(dirname $(realpath $0))"
 
+function wait-for-window {
+    WINDOW="${1:-}"
+    until tmate -S "${TMATE_SOCKET}" list-windows | grep "${WINDOW:-}"; do
+        sleep 1s
+    done
+    sleep 1s
+}
+
 GUEST_GREETER_MESSAGE="Welcome to Pairing on FlatTrack with Pair. Guests will be able to login with emails like 'USERNAME@pair.${SHARINGIO_PAIR_BASE_DNS_NAME}' and a default password of 'P@ssw0rd123!'"
 
 if [ -f /var/run/secrets/kubernetes.io/serviceaccount/namespace ]; then
@@ -45,23 +53,35 @@ EOF
 
     echo "Building Backend"
     tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n backend bash
-    tmate -S $TMATE_SOCKET send-keys -t backend "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=ready pod -l app=postgres --timeout=200s && sleep 2s" Enter
-    tmate -S $TMATE_SOCKET send-keys -t backend "go run ." Enter
+    (
+        wait-for-window backend
+        tmate -S $TMATE_SOCKET send-keys -t backend "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=ready pod -l app=postgres --timeout=200s && sleep 2s" Enter
+        tmate -S $TMATE_SOCKET send-keys -t backend "go run ." Enter
+    ) &
 
     echo "Building Frontend"
     tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD/web" -n frontend bash
-    tmate -S $TMATE_SOCKET send-keys -t frontend "npm i" Enter
-    tmate -S $TMATE_SOCKET send-keys -t frontend "npm run build" Enter
+    (
+        wait-for-window frontend
+        tmate -S $TMATE_SOCKET send-keys -t frontend "npm i" Enter
+        tmate -S $TMATE_SOCKET send-keys -t frontend "npm run build" Enter
+    ) &
 
     echo "Postgres"
     tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n postgres bash
-    tmate -S $TMATE_SOCKET send-keys -t postgres "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=ready pod -l app=postgres --timeout=200s && sleep 2s" Enter
-    tmate -S $TMATE_SOCKET send-keys -t postgres "psql \"postgres://flattrack:flattrack@postgres.flattrack-dev/flattrack\"" Enter
+    (
+        wait-for-window postgres
+        tmate -S $TMATE_SOCKET send-keys -t postgres "kubectl -n $SHARINGIO_PAIR_PROJECT_DEPLOY_NAMESPACE wait --for=condition=ready pod -l app=postgres --timeout=200s && sleep 2s" Enter
+        tmate -S $TMATE_SOCKET send-keys -t postgres "psql \"postgres://flattrack:flattrack@postgres.flattrack-dev/flattrack\"" Enter
+    ) &
 
     if [ ! "$FLATTRACK_INIT_COLLABORATORS_DISABLE" ] && [ ! -z "$SHARINGIO_PAIR_GUEST_NAMES" ]; then
         echo "Init Collaborators"
         tmate -F -v -S $TMATE_SOCKET new-window -d -c "$PWD" -n init-collaborators bash
-        tmate -S $TMATE_SOCKET send-keys -t init-collaborators "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"\$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\" $(cat .env | xargs)" Enter
-        tmate -S $TMATE_SOCKET send-keys -t init-collaborators "$SCRIPT_PATH/insert-collaborators.sh" Enter
+        (
+            wait-for-window init-collaborators
+            tmate -S $TMATE_SOCKET send-keys -t init-collaborators "export DEFAULT_SUBDOMAIN_NAME=flattrack-dev && export FLATTRACK_DEV_HOSTNAME=\"\$DEFAULT_SUBDOMAIN_NAME.$SHARINGIO_PAIR_BASE_DNS_NAME\" $(cat .env | xargs)" Enter
+            tmate -S $TMATE_SOCKET send-keys -t init-collaborators "$SCRIPT_PATH/insert-collaborators.sh" Enter
+        ) &
     fi
 fi
