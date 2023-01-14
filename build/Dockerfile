@@ -15,7 +15,6 @@ ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
 ARG AppBuildDate="???"
 ARG AppBuildMode="development"
-RUN apk add --no-cache python2 make g++
 COPY web /app/web
 WORKDIR /app/web
 RUN npm i
