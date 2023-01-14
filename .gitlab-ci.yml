@@ -20,7 +20,7 @@ variables:
   MINIO_ROOT_PASSWORD: minioadmin
   REGISTRIES: "$CI_REGISTRY docker.io"
   IMAGE_KANIKO: gcr.io/kaniko-project/executor:debug-v1.3.0
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.17.0-alpine3.14
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.19.3-alpine3.15
   IMAGE_NODE_ALPINE: docker.io/node:15.14.0-alpine3.13
   IMAGE_ALPINE: docker.io/alpine:3.14
   IMAGE_DOCKER: docker.io/docker:20.10.6
@@ -298,8 +298,7 @@ test_backend_e2e:
         - /data
   before_script:
     - apk add --no-cache git gcc curl
-    - go get github.com/onsi/ginkgo/ginkgo
-    - go get github.com/onsi/gomega/...
+    - go install github.com/onsi/ginkgo/ginkgo@v1.16.4
     - go build -o flattrack main.go
     - ./flattrack &
     - until curl -s http://localhost:8080; do echo "Waiting for API"; sleep 1s; done

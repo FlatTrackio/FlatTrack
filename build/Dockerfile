@@ -25,7 +25,7 @@ ENV VITE_APP_AppBuildVersion=$AppBuildVersion \
   VITE_APP_AppBuildMode=$AppBuildMode
 RUN npm run build
 
-FROM golang:1.17.0-alpine3.14 AS api
+FROM golang:1.19.3-alpine3.15 AS api
 WORKDIR /app
 COPY pkg /app/pkg
 COPY cmd /app/cmd
