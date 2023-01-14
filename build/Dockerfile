@@ -10,7 +10,7 @@ COPY --from=extras /usr/share/zoneinfo /usr/share/zoneinfo
 COPY --from=extras /etc/ssl /etc/ssl
 USER user
 
-FROM node:15.14.0-alpine3.13 AS ui
+FROM node:19.4-alpine3.17 AS ui
 ARG AppBuildVersion="0.0.0"
 ARG AppBuildHash="???"
 ARG AppBuildDate="???"

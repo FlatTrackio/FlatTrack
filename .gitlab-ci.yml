@@ -21,7 +21,7 @@ variables:
   REGISTRIES: "$CI_REGISTRY docker.io"
   IMAGE_KANIKO: gcr.io/kaniko-project/executor:debug-v1.3.0
   IMAGE_GOLANG_ALPINE: docker.io/golang:1.19.3-alpine3.15
-  IMAGE_NODE_ALPINE: docker.io/node:15.14.0-alpine3.13
+  IMAGE_NODE_ALPINE: docker.io/node:19.4-alpine3.17
   IMAGE_ALPINE: docker.io/alpine:3.14
   IMAGE_DOCKER: docker.io/docker:20.10.6
   IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
