@@ -1,4 +1,3 @@
-platform: linux/amd64,linux/arm/v7,linux/arm64/v8
 builds:
 - id: flattrack
   dir: .
@@ -17,3 +16,10 @@ builds:
   - -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode={{ .Env.APP_BUILD_MODE }}
   - -X gitlab.com/flattrack/flattrack/pkg/common.AppAssetsFolder=/var/run/ko/web/dist
   - -X gitlab.com/flattrack/flattrack/pkg/common.AppDbMigrationsPath=/var/run/ko/migrations
+
+defaultPlatforms:
+- linux/arm64
+- linux/arm/v6
+- linux/riscv64
+- linux/amd64
+- linux/386
