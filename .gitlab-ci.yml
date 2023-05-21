@@ -24,7 +24,7 @@ variables:
   IMAGE_NODE_ALPINE: docker.io/node:15.14.0-alpine3.13
   IMAGE_ALPINE: docker.io/alpine:3.14
   IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
-  IMAGE_KO: ghcr.io/google/ko:eb2597f9751c5483baf7ec7f038be9582e5b3a35
+  IMAGE_KO: ghcr.io/ko-build/ko:v0.13.0
 
 .container-registry-login-ko: &container-registry-login-ko |
   ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
