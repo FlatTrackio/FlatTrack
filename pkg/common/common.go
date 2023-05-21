@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path"
 	"regexp"
 	"time"
 )
@@ -34,8 +35,8 @@ var (
 	AppBuildHash        = "???"
 	AppBuildDate        = "???"
 	AppBuildMode        = "development"
-	AppDbMigrationsPath = "/app/migrations"
-	AppAssetsFolder     = "/app/web/dist"
+	AppDbMigrationsPath = "/var/run/ko/migrations"
+	AppAssetsFolder     = "/var/run/ko/web/dist"
 )
 
 // GetEnvOrDefault ...
@@ -268,7 +269,7 @@ func GetAppDistFolder() string {
 		return AppAssetsFolder
 	}
 	pwd, _ := os.Getwd()
-	return fmt.Sprintf("%v/web/dist", pwd)
+	return path.Join(pwd, "web", "dist")
 }
 
 // RegexMatchName ...
