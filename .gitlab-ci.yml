@@ -24,6 +24,8 @@ variables:
   IMAGE_ALPINE: docker.io/alpine:3.14
   IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
   IMAGE_KO: ghcr.io/ko-build/ko:v0.13.0
+  VERSION_COSIGN: v2.0.2
+  COSIGN_YES: "true"
 
 .container-registry-login-ko: &container-registry-login-ko |
   ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
@@ -71,16 +73,24 @@ variables:
   export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
   mkdir -p $RELEASE_FOLDER_NAME
 
+.setup-cosign: &setup-cosign |
+  curl -L https://github.com/sigstore/cosign/releases/download/$VERSION_COSIGN/cosign-linux-amd64  -o /usr/local/bin/cosign
+  chmod +x /usr/local/bin/cosign
+
 build-container:
   stage: build
   image:
     name: $IMAGE_KO
     entrypoint: [""]
   retry: 2
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: "sigstore"
   variables:
     KO_DOCKER_REPO: "$CI_REGISTRY_IMAGE"
   before_script:
     - *container-registry-login-ko
+    - *setup-cosign
     - *image-build-taggable-name
     - *image-pre-build-release-version
   script:
@@ -88,11 +98,14 @@ build-container:
       mkdir -p ./kodata/{web/dist,}
       cp -r ./web/dist ./kodata/web
     - |
-      ko publish \
+      IMAGE="$(ko publish \
       --jobs 100 \
       --bare \
       --tags "${IMAGE_DESTINATIONS}" \
-      .
+      .)"
+    - cosign sign --recursive -y "$IMAGE"
+    - cosign download sbom $IMAGE > /tmp/sbom-spdx.json
+    - cosign attest -y --recursive --predicate /tmp/sbom-spdx.json $IMAGE
     # TODO use common script - ${CI_PROJECT_DIR}/hack/build-container.sh production
   needs:
     - build-frontend
