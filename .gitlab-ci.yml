@@ -20,7 +20,6 @@ variables:
   MINIO_ROOT_PASSWORD: minioadmin
   IMAGE_GOLANG_ALPINE: docker.io/golang:1.19.3-alpine3.15
   EXTRA_REGISTRIES: docker.io
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.17.0-alpine3.14
   IMAGE_NODE_ALPINE: docker.io/node:15.14.0-alpine3.13
   IMAGE_ALPINE: docker.io/alpine:3.14
   IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
@@ -91,10 +90,8 @@ build-container:
       cp -r ./web/dist ./kodata/web
     - |
       ko publish \
-      --push \
       --jobs 100 \
       --bare \
-      --platform all \
       --tags "${IMAGE_DESTINATIONS}" \
       .
     # TODO use common script - ${CI_PROJECT_DIR}/hack/build-container.sh production
