@@ -28,7 +28,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	jwtToken = os.Getenv("APP_TEST_JWT")
 
 	cwd, _ := os.Getwd()
-	os.Setenv("APP_DB_MIGRATIONS_PATH", fmt.Sprintf("%v/../../../migrations", cwd))
+	os.Setenv("APP_DB_MIGRATIONS_PATH", fmt.Sprintf("%v/../../../kodata/migrations", cwd))
 
 	regstrationForm := types.Registration{
 		Timezone: "Pacific/Auckland",
