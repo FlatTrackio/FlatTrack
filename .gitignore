@@ -23,4 +23,4 @@ dist
 .log
 site
 /docs/_firn/_site
-/kodata
+/kodata/web

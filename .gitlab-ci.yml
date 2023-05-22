@@ -86,7 +86,6 @@ build-container:
   script:
     - |
       mkdir -p ./kodata/{web/dist,}
-      cp -r ./migrations ./kodata
       cp -r ./web/dist ./kodata/web
     - |
       ko publish \
@@ -210,7 +209,7 @@ build-zip-copy-extras:
     - *image-pre-build-release-version
     - *zip-prepare
   script:
-    - cp -r migrations $RELEASE_FOLDER_NAME/migrations
+    - cp -r kodata/migrations $RELEASE_FOLDER_NAME/migrations
     - cp -r templates $RELEASE_FOLDER_NAME/templates
     - cp example.env $RELEASE_FOLDER_NAME
   only:
@@ -277,7 +276,7 @@ spell_check:
   before_script:
     - go get -u github.com/client9/misspell/cmd/misspell
   script:
-    - misspell -error src docs migrations pubic template k8s-manifests README*
+    - misspell -error src docs kodata/migrations pubic template k8s-manifests README*
     
 lint_frontend:
   stage: lint
