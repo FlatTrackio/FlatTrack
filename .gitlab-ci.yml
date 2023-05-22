@@ -18,14 +18,16 @@ variables:
   POSTGRES_PASSWORD: flattrack
   MINIO_ROOT_USER: minioadmin
   MINIO_ROOT_PASSWORD: minioadmin
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.19.3-alpine3.15
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.20.4-alpine3.18
   EXTRA_REGISTRIES: docker.io
-  IMAGE_NODE_ALPINE: docker.io/node:15.14.0-alpine3.13
-  IMAGE_ALPINE: docker.io/alpine:3.14
+  IMAGE_NODE_ALPINE: docker.io/node:20.2.0-alpine3.17
+  IMAGE_ALPINE: docker.io/alpine:3.18
   IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
   IMAGE_KO: ghcr.io/ko-build/ko:v0.13.0
   VERSION_COSIGN: v2.0.2
   COSIGN_YES: "true"
+  HELM_LINK: https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz
+  HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
 
 .container-registry-login-ko: &container-registry-login-ko |
   ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
@@ -131,8 +133,6 @@ build-helm-chart:
   stage: build
   image: $IMAGE_ALPINE
   variables:
-    HELM_LINK: https://get.helm.sh/helm-v3.4.0-linux-amd64.tar.gz
-    HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
   allow_failure: true
   before_script:
     - *image-build-taggable-name
@@ -318,9 +318,6 @@ lint_backend:
 lint_helm_chart:
   stage: lint
   image: $IMAGE_ALPINE
-  variables:
-    HELM_LINK: https://get.helm.sh/helm-v3.4.0-linux-amd64.tar.gz
-    HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
   allow_failure: true
   before_script:
     - apk add curl
