@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"time"
 
 	"github.com/onsi/ginkgo"
@@ -28,7 +29,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	jwtToken = os.Getenv("APP_TEST_JWT")
 
 	cwd, _ := os.Getwd()
-	os.Setenv("APP_DB_MIGRATIONS_PATH", fmt.Sprintf("%v/../../../kodata/migrations", cwd))
+	common.AppDbMigrationsPath = path.Join(cwd, "..", "..", "..", "kodata", "migrations")
 
 	regstrationForm := types.Registration{
 		Timezone: "Pacific/Auckland",
