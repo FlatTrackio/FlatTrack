@@ -1,0 +1,23 @@
+builds:
+- id: flattrack
+  dir: .
+  main: .
+  env:
+    - CGO_ENABLED=0
+  flags:
+  - -tags
+  - netgo
+  ldflags:
+  - -s -w
+  - -extldflags "-static"
+  - -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildVersion={{ .Env.APP_BUILD_VERSION }}
+  - -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash={{ .Env.APP_BUILD_HASH }}
+  - -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate={{ .Env.APP_BUILD_DATE }}
+  - -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode={{ .Env.APP_BUILD_MODE }}
+
+defaultPlatforms:
+- linux/arm64
+- linux/arm/v6
+- linux/riscv64
+- linux/amd64
+- linux/386

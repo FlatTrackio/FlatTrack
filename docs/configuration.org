@@ -19,7 +19,7 @@ FlatTrack is solely configured to run with environment variables (or a ~.env~ fi
 | ~APP_DB_PASSWORD~         | The Postgres role's password to authenticate with                         | ~flattrack~    |
 | ~APP_DB_DATABASE~         | The Postgres database to write data to                                    | ~flattrack~    |
 | ~APP_DB_SSLMODE~          | The Postgres SSL mode to use                                              | ~disable~      |
-| ~APP_DB_MIGRATIONS_PATH~  | The path to the database migrations to migrate the Postgres database with | ~./migrations~ |
+| ~APP_DB_MIGRATIONS_PATH~  | The path to the database migrations to migrate the Postgres database with | ~./kodata/migrations~ |
 | ~APP_METRICS_ENABLED~     | Serve Prometheus metrics endpoint                                         | ~"true"~       |
 | ~APP_HEALTH_ENABLED~      | Serve healthz endpoint                                                    | ~"true"~       |
 | ~APP_SMTP_ENABLED~        | Send SMTP email notifcations                                              | ~"false"~      |

@@ -23,6 +23,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path"
 	"regexp"
 	"time"
 )
@@ -34,7 +35,8 @@ var (
 	AppBuildHash        = "???"
 	AppBuildDate        = "???"
 	AppBuildMode        = "development"
-	AppDbMigrationsPath = "/app/migrations"
+	AppDbMigrationsPath = "/var/run/ko/migrations"
+	AppAssetsFolder     = "/var/run/ko/web/dist"
 )
 
 // GetEnvOrDefault ...
@@ -127,10 +129,10 @@ func GetMigrationsPath() (output string) {
 		return envSet
 	}
 	if AppBuildMode == "production" {
-		return "/app/migrations"
+		return AppDbMigrationsPath
 	}
 	pwd, _ := os.Getwd()
-	return fmt.Sprintf("%v/migrations", pwd)
+	return fmt.Sprintf("%v/kodata/migrations", pwd)
 }
 
 // GetAppPort ...
@@ -259,7 +261,15 @@ func SetFirstOrSecond(first string, second string) string {
 // GetAppDistFolder ...
 // return the path to the folder containing the frontend assets
 func GetAppDistFolder() string {
-	return GetEnvOrDefault("APP_DIST_FOLDER", "./web/dist")
+	envSet := GetEnvOrDefault("APP_DIST_FOLDER", "")
+	if envSet != "" {
+		return envSet
+	}
+	if AppBuildMode == "production" {
+		return AppAssetsFolder
+	}
+	pwd, _ := os.Getwd()
+	return path.Join(pwd, "web", "dist")
 }
 
 // RegexMatchName ...
