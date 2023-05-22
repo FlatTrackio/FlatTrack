@@ -132,7 +132,7 @@ func GetMigrationsPath() (output string) {
 		return AppDbMigrationsPath
 	}
 	pwd, _ := os.Getwd()
-	return fmt.Sprintf("%v/migrations", pwd)
+	return fmt.Sprintf("%v/kodata/migrations", pwd)
 }
 
 // GetAppPort ...
