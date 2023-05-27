@@ -1,22 +1,38 @@
+# fly.toml app configuration file generated for derby-flattrack-islive-xyz on 2023-05-22T08:00:36+12:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "derby-flattrack-islive-xyz"
+primary_region = "syd"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
 [build]
-  image = "flattrack/flattrack:0.16.0"
+  image = "flattrack/flattrack:0.16.1"
+
+[env]
+  APP_DB_DATABASE = "postgres"
+  APP_DB_HOST = "derby-flattrack-islive-xyz-postgres.internal"
+  APP_DB_PASSWORD = "postgres"
+  APP_DB_USERNAME = "postgres"
+  APP_HTTP_REAL_IP_HEADER = "Fly-Client-Ip"
+  TZ = "Pacific/Auckland"
 
 [[services]]
-  internal_port = 8080
   protocol = "tcp"
+  internal_port = 8080
 
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
   [services.concurrency]
+    type = "connections"
     hard_limit = 25
     soft_limit = 20
 
-  [[services.ports]]
-    handlers = ["http"]
-    port = "80"
-
-  [[services.ports]]
-    handlers = ["tls", "http"]
-    port = "443"
-
   [[services.tcp_checks]]
-    interval = 10000
-    timeout = 2000
+    interval = "10s"
+    timeout = "2s"
+    grace_period = "1s"
+    restart_limit = 0
