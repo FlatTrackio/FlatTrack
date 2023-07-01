@@ -24,6 +24,7 @@ variables:
   IMAGE_ALPINE: docker.io/alpine:3.14
   IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
   IMAGE_KO: ghcr.io/ko-build/ko:v0.13.0
+  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.53.3
   VERSION_COSIGN: v2.0.2
   COSIGN_YES: "true"
 
@@ -76,6 +77,12 @@ variables:
 .setup-cosign: &setup-cosign |
   curl -L https://github.com/sigstore/cosign/releases/download/$VERSION_COSIGN/cosign-linux-amd64  -o /usr/local/bin/cosign
   chmod +x /usr/local/bin/cosign
+
+build-backend-smoketest:
+  stage: build
+  image: $IMAGE_GOLANG_ALPINE
+  script:
+    - grep -r 'package main' | sort | cut -d ':' -f1 | grep '.go$' | xargs -n 1 dirname | sort | uniq | grep -v vendor | xargs -I{} go build -o /dev/null './{}'
 
 build-container:
   stage: build
@@ -290,7 +297,49 @@ spell_check:
     - go get -u github.com/client9/misspell/cmd/misspell
   script:
     - misspell -error src docs kodata/migrations pubic template k8s-manifests README*
-    
+
+govet:
+  stage: lint
+  image: $IMAGE_GOLANG_ALPINE
+  script:
+    - go vet -v ./...
+
+gofmt:
+  stage: lint
+  image: $IMAGE_GOLANG_ALPINE
+  script:
+    - find . -name "*.go" | grep -E -v vendor | xargs gofmt -s -l -d -w -s
+
+goimports:
+  stage: lint
+  image: $IMAGE_GOLANG_ALPINE
+  before_script:
+    - apk add --no-cache git
+    - go install golang.org/x/tools/cmd/goimports@latest
+  script:
+    - find . -type f -name '*.go' -not -path './vendor/*' | xargs -I{} goimports -w {}
+    - |
+      if git diff --name-only --diff-filter=ACMRT | grep -E '(.*).go$'; then
+        echo "error: changes detected, run 'find . -type f -name '*.go' -not -path './vendor/*' | xargs -I{} goimports -w {}'"
+        exit 1
+      fi
+
+golangci-lint:
+  stage: lint
+  image:
+    name: $IMAGE_GOLANGCI_LINT
+    entrypoint: [""]
+  script:
+    - golangci-lint run
+
+govulncheck:
+  stage: lint
+  image: $IMAGE_GOLANG_ALPINE
+  before_script:
+    - go install golang.org/x/vuln/cmd/govulncheck@latest
+  script:
+    - govulncheck ./...
+
 lint_frontend:
   stage: lint
   image: $IMAGE_NODE_ALPINE
