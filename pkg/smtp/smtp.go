@@ -20,9 +20,10 @@ package smtp
 
 import (
 	"fmt"
-	"gitlab.com/flattrack/flattrack/pkg/common"
 	"log"
 	"net/smtp"
+
+	"gitlab.com/flattrack/flattrack/pkg/common"
 )
 
 // EmailUser ...

@@ -52,7 +52,9 @@ type RouteHandler struct {
 // GetAllUsers ...
 // swagger:route GET /users users getAllUsers
 // responses:
-//  200: []userSpec
+//
+//	200: []userSpec
+//
 // get a list of all users
 func GetAllUsers(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

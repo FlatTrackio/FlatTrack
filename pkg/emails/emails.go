@@ -20,9 +20,10 @@ package emails
 
 import (
 	"bytes"
-	"gitlab.com/flattrack/flattrack/pkg/smtp"
 	"html/template"
 	"log"
+
+	"gitlab.com/flattrack/flattrack/pkg/smtp"
 )
 
 // SMTPTemplateData ...

@@ -19,8 +19,9 @@
 package types
 
 import (
-	"github.com/golang-jwt/jwt"
 	"net/http"
+
+	"github.com/golang-jwt/jwt"
 )
 
 // Group ...
