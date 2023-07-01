@@ -18,7 +18,7 @@ variables:
   POSTGRES_PASSWORD: flattrack
   MINIO_ROOT_USER: minioadmin
   MINIO_ROOT_PASSWORD: minioadmin
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.19.3-alpine3.15
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.20.5-alpine3.18
   EXTRA_REGISTRIES: docker.io
   IMAGE_NODE_ALPINE: docker.io/node:15.14.0-alpine3.13
   IMAGE_ALPINE: docker.io/alpine:3.14
