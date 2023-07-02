@@ -264,7 +264,14 @@ test_backend_e2e:
   stage: test
   image: $IMAGE_GOLANG_ALPINE
   variables:
+    POSTGRES_DB: flattrack
+    POSTGRES_USER: flattrack
+    POSTGRES_PASSWORD: flattrack
+    POSTGRES_HOST_AUTH_METHOD: trust
     APP_DB_HOST: postgres
+    APP_DB_USERNAME: flattrack
+    APP_DB_PASSWORD: flattrack
+    APP_DB_DATABASE: flattrack
     APP_MINIO_HOST: minio:9000
     APP_MINIO_ACCESS_KEY: minioadmin
     APP_MINIO_SECRET_KEY: minioadmin
