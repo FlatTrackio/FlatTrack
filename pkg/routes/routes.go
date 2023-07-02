@@ -192,6 +192,7 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 			response = "Created user account"
 			context = fmt.Sprintf("'%v'", userAccount.ID)
 		} else {
+			code = http.StatusInternalServerError
 			response = err.Error()
 		}
 		log.Println(response, context)
@@ -636,13 +637,17 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 func UserAuth(db *sql.DB) http.HandlerFunc {
 	userManager := users.UserManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
-		var context string
-		var response string
-		var code int
-		jwtToken := ""
-
 		var user types.UserSpec
-		body, _ := io.ReadAll(r.Body)
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("error: faled to read request body; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 		if err := json.Unmarshal(body, &user); err != nil {
 			log.Printf("error: failed to unmarshal; %v\n", err)
 			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -655,38 +660,65 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 
 		userInDB, err := users.GetUserByEmail(db, user.Email, false)
 		if err != nil {
-			log.Println(response, context)
-			JSONresp := types.JSONMessageResponse{
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
-					Response: response,
+					Response: "Failed to get user account",
 				},
-				Data: jwtToken,
-			}
-			JSONResponse(r, w, code, JSONresp)
+			})
 			return
 		}
 		if userInDB.ID != "" && !userInDB.Registered {
-			response = "Account not yet registered"
-			code = http.StatusForbidden
-		} else if userInDB.Disabled {
-			response = "User account has been disabled"
-			code = http.StatusForbidden
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "User account is not yet registered",
+				},
+			})
+			return
+		}
+		if userInDB.Disabled {
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "User account has been disabled",
+				},
+			})
+			return
 		}
 		// Check password locally, fall back to remote if incorrect
 		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
-		if err == nil && matches && code == http.StatusUnauthorized {
-			jwtToken, _ = userManager.GenerateJWTauthToken(userInDB.ID, userInDB.AuthNonce, 0)
-			response = "Successfully authenticated user"
-			code = http.StatusOK
+		if err != nil {
+			log.Printf("error checking password: %v\n", err)
+			JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Failed to check user account password",
+				},
+			})
+			return
 		}
-		log.Println(response, context)
-		JSONresp := types.JSONMessageResponse{
+		if !matches {
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Unable to authenticate",
+				},
+			})
+			return
+		}
+		jwtToken, err := userManager.GenerateJWTauthToken(userInDB.ID, userInDB.AuthNonce, 0)
+		if err != nil {
+			log.Printf("error checking password: %v\n", err)
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Successfully authenticated user",
+				},
+				Data: jwtToken,
+			})
+			return
+		}
+		JSONResponse(r, w, http.StatusOK, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "Successfully authenticated user",
 			},
 			Data: jwtToken,
-		}
-		JSONResponse(r, w, code, JSONresp)
+		})
 	}
 }
 
