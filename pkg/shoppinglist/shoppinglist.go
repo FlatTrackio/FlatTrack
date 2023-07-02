@@ -172,10 +172,12 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, options
 	rows.Next()
 	shoppingListInserted, err = GetListObjectFromRows(rows)
 	if err != nil || shoppingListInserted.ID == "" {
+		log.Printf("error getting list object from rows: %v\n", err)
 		return types.ShoppingListSpec{}, fmt.Errorf("Failed to create shopping list")
 	}
+	log.Printf("%+v\n", shoppingListInserted)
 	if shoppingList.TemplateID == "" {
-		return types.ShoppingListSpec{}, err
+		return shoppingListInserted, nil
 	}
 
 	// if using other list as a template

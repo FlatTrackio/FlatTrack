@@ -1010,10 +1010,19 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 			},
 		}
 
-		id, errID := users.GetIDFromJWT(db, r)
+		id, err := users.GetIDFromJWT(db, r)
+		if err != nil {
+			log.Printf("error: %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to get userid from token",
+				},
+			})
+			return
+		}
 		shoppingList.Author = id
 		shoppingListInserted, err := shoppinglist.CreateShoppingList(db, shoppingList, options)
-		if err == nil && errID == nil {
+		if err == nil {
 			code = http.StatusCreated
 			response = "Successfully created the shopping list"
 		} else {

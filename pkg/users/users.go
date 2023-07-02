@@ -686,7 +686,7 @@ func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (user
 // UserCreationSecretsFromRows ...
 // constructs a UserCreationSecretSpec from rows
 func UserCreationSecretsFromRows(rows *sql.Rows) (creationSecret types.UserCreationSecretSpec, err error) {
-	if err := rows.Scan(&creationSecret.ID, &creationSecret.UserID, &creationSecret.Secret, &creationSecret.Valid, creationSecret.CreationTimestamp, &creationSecret.ModificationTimestamp, &creationSecret.DeletionTimestamp); err != nil {
+	if err := rows.Scan(&creationSecret.ID, &creationSecret.UserID, &creationSecret.Secret, &creationSecret.Valid, &creationSecret.CreationTimestamp, &creationSecret.ModificationTimestamp, &creationSecret.DeletionTimestamp); err != nil {
 		return types.UserCreationSecretSpec{}, err
 	}
 	if err := rows.Err(); err != nil {

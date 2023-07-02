@@ -57,8 +57,9 @@ func ValidateShoppingListItem(db *sql.DB, item types.ShoppingItemSpec) (valid bo
 // returns a list of items on a shopping list
 func GetShoppingListItems(db *sql.DB, listID string, options types.ShoppingItemOptions) (items []types.ShoppingItemSpec, err error) {
 	// sort by tags
-	var obtained sql.NullBool
+	var obtained sql.NullString
 	if err := obtained.Scan(options.Selector.Obtained); err != nil {
+		log.Printf("error: scanning obtained; %v\n", err)
 		return []types.ShoppingItemSpec{}, err
 	}
 
