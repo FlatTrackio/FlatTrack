@@ -31,13 +31,21 @@ import (
 // given database credentials, return a database connection
 func Open(username string, password string, hostname string, port string, database string, sslMode string) (*sql.DB, error) {
 	connStr := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=%v", username, password, hostname, port, database, sslMode)
-	return sql.Open("postgres", connStr)
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Println("error: connecting to database")
+		return nil, err
+	}
+	return db, nil
 }
 
 // Close ...
 // close the connection to the database
 func Close(db *sql.DB) (err error) {
-	return db.Close()
+	if err := db.Close(); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Ping ...
