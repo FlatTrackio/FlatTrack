@@ -20,7 +20,7 @@ variables:
   MINIO_ROOT_PASSWORD: minioadmin
   IMAGE_GOLANG_ALPINE: docker.io/golang:1.20.5-alpine3.18
   EXTRA_REGISTRIES: docker.io
-  IMAGE_NODE_ALPINE: docker.io/node:15.14.0-alpine3.13
+  IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.17
   IMAGE_ALPINE: docker.io/alpine:3.14
   IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
   IMAGE_KO: ghcr.io/ko-build/ko:v0.13.0
