@@ -146,11 +146,14 @@ func Logging(next http.Handler) http.Handler {
 	})
 }
 
+// HTTPHeaderBackendAllowTypes heads to check for content type
 type HTTPHeaderBackendAllowTypes string
 
 const (
+	// HTTPHeaderBackendAllowTypesContentType use the Content-Type http header
 	HTTPHeaderBackendAllowTypesContentType HTTPHeaderBackendAllowTypes = "Content-Type"
-	HTTPHeaderBackendAllowTypesAccept      HTTPHeaderBackendAllowTypes = "Accept"
+	// HTTPHeaderBackendAllowTypesAccept use the Accept http header
+	HTTPHeaderBackendAllowTypesAccept HTTPHeaderBackendAllowTypes = "Accept"
 )
 
 // RequireContentType ...
@@ -214,6 +217,7 @@ func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler
 	})
 }
 
+// Router http router
 type Router struct {
 	DB         *sql.DB
 	FileAccess files.FileAccess

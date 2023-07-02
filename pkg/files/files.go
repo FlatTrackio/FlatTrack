@@ -13,6 +13,7 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/common"
 )
 
+// FileAccess to access an S3 compatible backend
 type FileAccess struct {
 	Client     *minio.Client
 	BucketName string
@@ -32,6 +33,7 @@ func Open(endpoint string, accessKey string, secretKey string, bucketName string
 	return FileAccess{Client: mc, BucketName: bucketName}, err
 }
 
+// Init to initialise a bucket
 func (f FileAccess) Init() error {
 	if f.BucketName == "" {
 		return fmt.Errorf("Error: cannot initialise a bucket, because no bucket name was provided")

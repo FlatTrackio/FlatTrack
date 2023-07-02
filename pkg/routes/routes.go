@@ -33,6 +33,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
+	// TODO integrate
 	_ "gitlab.com/flattrack/flattrack/pkg/files"
 	"gitlab.com/flattrack/flattrack/pkg/groups"
 	"gitlab.com/flattrack/flattrack/pkg/health"
@@ -44,6 +45,7 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/users"
 )
 
+// RouteHandler handle routes
 type RouteHandler struct {
 	// db         *sql.DB
 	// fileAccess files.FileAccess
@@ -604,7 +606,7 @@ func PatchProfile(db *sql.DB) http.HandlerFunc {
 // GetSystemInitialized ...
 // check if the server has been initialized
 func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
-	systemManager := system.SystemManager{DB: db}
+	systemManager := &system.Manager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		var code int
@@ -863,7 +865,7 @@ func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 // PostAdminRegister ...
 // register the instance of FlatTrack
 func PostAdminRegister(db *sql.DB) http.HandlerFunc {
-	systemManager := system.SystemManager{DB: db}
+	systemManager := &system.Manager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		var code int
@@ -2305,7 +2307,7 @@ func GetVersion(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
-// GetServeFileStoreObjects ...
+// GetServeFilestoreObjects ...
 // serves files or 404
 func (router Router) GetServeFilestoreObjects(prefix string) http.HandlerFunc {
 	if router.FileAccess.Client == nil {
@@ -2432,7 +2434,7 @@ func HTTPcheckGroupsFromID(db *sql.DB, groupsAllowed ...string) func(http.Handle
 	}
 }
 
-// 404
+// HTTP404 ...
 // responds with 404
 func HTTP404() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

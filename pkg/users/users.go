@@ -39,6 +39,7 @@ var (
 	jwtAlg *jwt.SigningMethodHMAC = jwt.SigningMethodHS256
 )
 
+// UserManager manages user accounts
 type UserManager struct {
 	DB *sql.DB
 }
@@ -335,7 +336,7 @@ func CheckUserPassword(db *sql.DB, email string, password string) (matches bool,
 // GenerateJWTauthToken ...
 // given an email, return a usable JWT token
 func (u UserManager) GenerateJWTauthToken(id string, authNonce string, expiresIn time.Duration) (tokenString string, err error) {
-	systemManager := system.SystemManager{DB: u.DB}
+	systemManager := &system.Manager{DB: u.DB}
 	if expiresIn == 0 {
 		expiresIn = 24 * 5
 	}
@@ -376,7 +377,7 @@ func GetAuthTokenFromHeader(r *http.Request) (string, error) {
 // ValidateJWTauthToken ...
 // given an HTTP request and Authorization header, return if auth is valid
 func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, tokenClaims *types.JWTclaim, err error) {
-	systemManager := system.SystemManager{DB: db}
+	systemManager := &system.Manager{DB: db}
 	secret, err := systemManager.GetJWTsecret()
 	if err != nil {
 		return false, &types.JWTclaim{}, fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
@@ -442,7 +443,7 @@ func InvalidateAllAuthTokens(db *sql.DB, id string) (err error) {
 // GetIDFromJWT ...
 // return the userID in a JWT from a header in a HTTP request
 func GetIDFromJWT(db *sql.DB, r *http.Request) (id string, err error) {
-	systemManager := system.SystemManager{DB: db}
+	systemManager := &system.Manager{DB: db}
 	secret, err := systemManager.GetJWTsecret()
 	if err != nil {
 		return "", fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")

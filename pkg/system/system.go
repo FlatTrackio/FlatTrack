@@ -23,11 +23,12 @@ import (
 	"log"
 )
 
-type SystemManager struct {
+// Manager for system configuration
+type Manager struct {
 	DB *sql.DB
 }
 
-func (s SystemManager) getValue(name string) (output string, err error) {
+func (s *Manager) getValue(name string) (output string, err error) {
 	sqlStatement := `select value from system where name = $1`
 	rows, err := s.DB.Query(sqlStatement, name)
 	if err != nil {
@@ -46,7 +47,7 @@ func (s SystemManager) getValue(name string) (output string, err error) {
 	return output, nil
 }
 
-func (s SystemManager) setValue(name, value string) (err error) {
+func (s *Manager) setValue(name, value string) (err error) {
 	sqlStatement := `update system set value = $2 where name = $1`
 	rows, err := s.DB.Query(sqlStatement, name, value)
 	if err != nil {
@@ -62,24 +63,23 @@ func (s SystemManager) setValue(name, value string) (err error) {
 
 // GetHasInitialized ...
 // return if the FlatTrack instance has initialized
-func (s SystemManager) GetHasInitialized() (string, error) {
+func (s *Manager) GetHasInitialized() (string, error) {
 	return s.getValue("initialized")
 }
 
 // SetHasInitialized ...
 // set if the FlatTrack instance has been initialized
-func (s SystemManager) SetHasInitialized() (err error) {
+func (s *Manager) SetHasInitialized() (err error) {
 	return s.setValue("initialized", "true")
 }
 
 // GetJWTsecret ...
 // return the JWT secret, used in authentication
-func (s SystemManager) GetJWTsecret() (string, error) {
+func (s *Manager) GetJWTsecret() (string, error) {
 	return s.getValue("jwtSecret")
 }
 
-// GeInstanceUUID ...
-// returns the instance UUID
-func (s SystemManager) GetInstanceUUID() (string, error) {
+// GetInstanceUUID returns the instance UUID
+func (s *Manager) GetInstanceUUID() (string, error) {
 	return s.getValue("instanceUUID")
 }

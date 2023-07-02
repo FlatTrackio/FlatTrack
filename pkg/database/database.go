@@ -56,7 +56,7 @@ func Ping(db *sql.DB) (err error) {
 		return err
 	}
 	if zero != 0 {
-		return fmt.Errorf("Wild, this error should never occur.")
+		return fmt.Errorf("wild, this error should never occur")
 	}
 	return nil
 }
