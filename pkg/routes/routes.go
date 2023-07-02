@@ -113,8 +113,8 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 func GetUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to fetch user account"
+		var code int
+		var response string
 		vars := mux.Vars(r)
 		id := vars["id"]
 
@@ -169,8 +169,8 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 func PostUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusBadRequest
-		response := "Failed to create user account"
+		var code int
+		var response string
 
 		var user types.UserSpec
 		body, err := io.ReadAll(r.Body)
@@ -218,8 +218,8 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 func PutUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to updat the user account"
+		var code int
+		var response string
 
 		var userAccount types.UserSpec
 		body, _ := io.ReadAll(r.Body)
@@ -276,8 +276,8 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 func PatchUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the user account"
+		var code int
+		var response string
 
 		var userAccount types.UserSpec
 		body, _ := io.ReadAll(r.Body)
@@ -334,8 +334,8 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the user account as disabled"
+		var code int
+		var response string
 
 		var userAccount types.UserSpec
 		body, _ := io.ReadAll(r.Body)
@@ -435,8 +435,8 @@ func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 func DeleteUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to delete user account"
+		var code int
+		var response string
 
 		vars := mux.Vars(r)
 		userID := vars["id"]
@@ -509,8 +509,8 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 func GetProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to fetch user account"
+		var code int
+		var response string
 
 		user, err := users.GetProfile(db, r)
 		if err == nil && user.ID != "" {
@@ -536,8 +536,8 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 func PutProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the user account"
+		var code int
+		var response string
 
 		var userAccount types.UserSpec
 		body, _ := io.ReadAll(r.Body)
@@ -576,8 +576,8 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 func PatchProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the user account"
+		var code int
+		var response string
 
 		var userAccount types.UserSpec
 		body, _ := io.ReadAll(r.Body)
@@ -735,7 +735,7 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to validate authentication token"
+		var response string
 		code := http.StatusUnauthorized
 
 		valid, claims, err := users.ValidateJWTauthToken(db, r)
@@ -868,8 +868,8 @@ func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to update the flat name"
+		var code int
+		var response string
 
 		var flatName types.FlatName
 		body, _ := io.ReadAll(r.Body)
@@ -908,8 +908,8 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 	systemManager := &system.Manager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to register the FlatTrack instance"
+		var code int
+		var response string
 
 		initialized, err := systemManager.GetHasInitialized()
 		if err == nil && initialized == "true" {
@@ -1029,8 +1029,8 @@ func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 func PostShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to create the shopping list"
+		var code int
+		var response string
 
 		var shoppingList types.ShoppingListSpec
 		body, _ := io.ReadAll(r.Body)
@@ -1086,7 +1086,7 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
 		code := http.StatusBadRequest
-		response := "Failed to patch the shopping list"
+		var response string
 
 		var shoppingList types.ShoppingListSpec
 		body, _ := io.ReadAll(r.Body)
@@ -1143,8 +1143,8 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 func PutShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to update the shopping list"
+		var code int
+		var response string
 
 		var shoppingList types.ShoppingListSpec
 		body, _ := io.ReadAll(r.Body)
@@ -1202,8 +1202,8 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to delete the shopping list"
+		var code int
+		var response string
 
 		vars := mux.Vars(r)
 		listID := vars["id"]
@@ -1339,8 +1339,8 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to create the shopping list item"
+		var code int
+		var response string
 
 		var shoppingItem types.ShoppingItemSpec
 		body, _ := io.ReadAll(r.Body)
@@ -1398,8 +1398,8 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the shopping list completed field"
+		var code int
+		var response string
 
 		var shoppingList types.ShoppingListSpec
 		body, _ := io.ReadAll(r.Body)
@@ -1456,8 +1456,8 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the shopping list item"
+		var code int
+		var response string
 
 		var shoppingItem types.ShoppingItemSpec
 		body, _ := io.ReadAll(r.Body)
@@ -1531,8 +1531,8 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to update the shopping list item"
+		var code int
+		var response string
 
 		var shoppingItem types.ShoppingItemSpec
 		body, _ := io.ReadAll(r.Body)
@@ -1606,8 +1606,8 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the shopping list item obtained field"
+		var code int
+		var response string
 
 		var shoppingItem types.ShoppingItemSpec
 		body, _ := io.ReadAll(r.Body)
@@ -1680,8 +1680,8 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to delete the shopping list item"
+		var code int
+		var response string
 
 		vars := mux.Vars(r)
 		itemID := vars["itemId"]
@@ -1850,7 +1850,7 @@ func GetAllShoppingTags(db *sql.DB) http.HandlerFunc {
 func PostShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to create a shopping tag"
+		var response string
 		code := http.StatusInternalServerError
 
 		var tag types.ShoppingTag
@@ -1973,8 +1973,8 @@ func UpdateShoppingTag(db *sql.DB) http.HandlerFunc {
 func DeleteShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to delete the shopping tag"
+		var code int
+		var response string
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -2044,8 +2044,8 @@ func GetSettingsShoppingListNotes(db *sql.DB) http.HandlerFunc {
 func PutSettingsShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to update the notes for shopping lists"
+		var code int
+		var response string
 
 		var notes types.ShoppingListNotes
 		body, _ := io.ReadAll(r.Body)
@@ -2113,8 +2113,8 @@ func GetSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 func PutSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to update the notes the flat"
+		var code int
+		var response string
 
 		var notes types.FlatNotes
 		body, _ := io.ReadAll(r.Body)
@@ -2303,7 +2303,7 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 	userManager := users.UserManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to confirm your user account"
+		var response string
 		code := http.StatusInternalServerError
 
 		vars := mux.Vars(r)
