@@ -84,7 +84,7 @@ func Start() {
 		return
 	}
 
-	systemManager := system.SystemManager{DB: db}
+	systemManager := &system.Manager{DB: db}
 	systemUUID, err := systemManager.GetInstanceUUID()
 	if err != nil {
 		log.Println("Error getting system UUID:", err)

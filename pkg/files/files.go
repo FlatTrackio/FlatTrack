@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 
 	minio "github.com/minio/minio-go/v7"
@@ -13,6 +13,7 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/common"
 )
 
+// FileAccess to access an S3 compatible backend
 type FileAccess struct {
 	Client     *minio.Client
 	BucketName string
@@ -32,6 +33,7 @@ func Open(endpoint string, accessKey string, secretKey string, bucketName string
 	return FileAccess{Client: mc, BucketName: bucketName}, err
 }
 
+// Init to initialise a bucket
 func (f FileAccess) Init() error {
 	if f.BucketName == "" {
 		return fmt.Errorf("Error: cannot initialise a bucket, because no bucket name was provided")
@@ -46,7 +48,7 @@ func (f FileAccess) Init() error {
 			foundBucket = true
 		}
 	}
-	if foundBucket == true {
+	if foundBucket {
 		return nil
 	}
 	err = f.Client.MakeBucket(context.TODO(), f.BucketName, minio.MakeBucketOptions{})
@@ -71,7 +73,7 @@ func (f FileAccess) Get(name string) (objectBytes []byte, objectInfo minio.Objec
 		log.Printf("%#v\n", err)
 		return []byte{}, minio.ObjectInfo{}, err
 	}
-	objectBytes, err = ioutil.ReadAll(object)
+	objectBytes, err = io.ReadAll(object)
 	if err != nil {
 		log.Printf("%#v\n", err)
 		return []byte{}, minio.ObjectInfo{}, err

@@ -20,6 +20,7 @@ package registration
 
 import (
 	"database/sql"
+
 	"gitlab.com/flattrack/flattrack/pkg/settings"
 	"gitlab.com/flattrack/flattrack/pkg/system"
 	"gitlab.com/flattrack/flattrack/pkg/types"
@@ -35,7 +36,7 @@ var (
 // perform initial FlatTrack instance setup
 func Register(db *sql.DB, registration types.Registration) (successful bool, jwt string, err error) {
 	userManager := users.UserManager{DB: db}
-	systemManager := system.SystemManager{DB: db}
+	systemManager := &system.Manager{DB: db}
 	// TODO add timezone validation
 	err = settings.SetTimezone(db, registration.Timezone)
 	if err != nil {

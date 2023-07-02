@@ -36,7 +36,8 @@ var (
 	AppBuildDate        = "???"
 	AppBuildMode        = "development"
 	AppDbMigrationsPath = "/var/run/ko/migrations"
-	AppAssetsFolder     = "/var/run/ko/web/dist"
+	// #nosec G101
+	AppAssetsFolder = "/var/run/ko/web/dist"
 )
 
 // GetEnvOrDefault ...

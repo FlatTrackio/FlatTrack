@@ -22,6 +22,7 @@ package shoppinglist
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
@@ -32,24 +33,30 @@ func CreateShoppingTag(db *sql.DB, newTag types.ShoppingTag) (tag types.Shopping
 	// validate
 	valid, err := ValidateShoppingTag(db, newTag)
 	if !valid || err != nil {
-		return tag, err
+		return types.ShoppingTag{}, err
 	}
-
 	newTag.AuthorLast = newTag.Author
-
 	// create
 	sqlStatement := `insert into shopping_list_tag (name, author, authorLast)
                          values ($1, $2, $3)
                          returning *`
 	rows, err := db.Query(sqlStatement, newTag.Name, newTag.Author, newTag.AuthorLast)
 	if err != nil {
-		return newTag, err
+		return types.ShoppingTag{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 
 	// return
-	return GetTagObjectFromRows(rows)
+	tag, err = GetTagObjectFromRows(rows)
+	if err != nil {
+		return types.ShoppingTag{}, err
+	}
+	return tag, nil
 }
 
 // GetShoppingListTags ...
@@ -58,15 +65,21 @@ func GetShoppingListTags(db *sql.DB, listID string) (tags []string, err error) {
 	sqlStatement := `select distinct tag from shopping_item where listId = $1 order by tag`
 	rows, err := db.Query(sqlStatement, listID)
 	if err != nil {
-		return tags, err
+		return []string{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
 		var tag string
-		rows.Scan(&tag)
+		if err := rows.Scan(&tag); err != nil {
+			return []string{}, err
+		}
 		tags = append(tags, tag)
 	}
-	return tags, err
+	return tags, nil
 }
 
 // GetShoppingListTag ...
@@ -75,12 +88,18 @@ func GetShoppingListTag(db *sql.DB, listID string, tag string) (tagInDB string, 
 	sqlStatement := `select tag from shopping_item where listId = $1 and tag = $2`
 	rows, err := db.Query(sqlStatement, listID, tag)
 	if err != nil {
-		return tagInDB, err
+		return "", err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
-	rows.Scan(&tagInDB)
-	return tagInDB, err
+	if err := rows.Scan(&tagInDB); err != nil {
+		return "", err
+	}
+	return tagInDB, nil
 }
 
 // UpdateShoppingListTag ...
@@ -88,20 +107,26 @@ func GetShoppingListTag(db *sql.DB, listID string, tag string) (tagInDB string, 
 func UpdateShoppingListTag(db *sql.DB, listID string, tag string, tagUpdate string) (tagNew string, err error) {
 	tagInDB, err := GetShoppingListTag(db, listID, tag)
 	if tagInDB == "" || err != nil {
-		return tagNew, fmt.Errorf("Unable to find tag to update")
+		return "", fmt.Errorf("Unable to find tag to update")
 	}
 	if tagUpdate != "" && len(tagUpdate) == 0 || len(tagUpdate) > 30 {
-		return tagNew, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
+		return "", fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
 	}
 	sqlStatement := `update shopping_item set tag = $3 where listId = $1 and tag = $2 returning tag`
 	rows, err := db.Query(sqlStatement, listID, tag, tagUpdate)
 	if err != nil {
-		return tagNew, err
+		return "", err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
-	rows.Scan(&tagNew)
-	return tagNew, err
+	if err := rows.Scan(&tagNew); err != nil {
+		return "", err
+	}
+	return tagNew, nil
 }
 
 // GetShoppingTag ...
@@ -110,11 +135,19 @@ func GetShoppingTag(db *sql.DB, id string) (tag types.ShoppingTag, err error) {
 	sqlStatement := `select * from shopping_list_tag where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
-		return tag, err
+		return types.ShoppingTag{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
-	return GetTagObjectFromRows(rows)
+	tag, err = GetTagObjectFromRows(rows)
+	if err != nil {
+		return types.ShoppingTag{}, err
+	}
+	return tag, nil
 }
 
 // GetAllShoppingTags ...
@@ -131,10 +164,6 @@ func GetAllShoppingTags(db *sql.DB, options types.ShoppingTagOptions) (tags []ty
 		sqlStatement = `select * from shopping_list_tag
                          where deletionTimestamp = 0
 	                 order by modificationTimestamp asc`
-	} else if options.SortBy == types.ShoppingTagSortByRecentlyUpdated {
-		sqlStatement = `select * from shopping_list_tag
-                         where deletionTimestamp = 0
-                         order by creationTimestamp desc`
 	} else if options.SortBy == types.ShoppingTagSortByLastAdded {
 		sqlStatement = `select * from shopping_list_tag
                          where deletionTimestamp = 0
@@ -150,17 +179,21 @@ func GetAllShoppingTags(db *sql.DB, options types.ShoppingTagOptions) (tags []ty
 	}
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		return tags, err
+		return []types.ShoppingTag{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
 		tag, err := GetTagObjectFromRows(rows)
 		if err != nil {
-			return tags, err
+			return []types.ShoppingTag{}, err
 		}
 		tags = append(tags, tag)
 	}
-	return tags, err
+	return tags, nil
 }
 
 // UpdateShoppingTag ...
@@ -168,19 +201,27 @@ func GetAllShoppingTags(db *sql.DB, options types.ShoppingTagOptions) (tags []ty
 func UpdateShoppingTag(db *sql.DB, id string, tag types.ShoppingTag) (tagUpdated types.ShoppingTag, err error) {
 	tagInDB, err := GetShoppingTag(db, id)
 	if tagInDB.ID == "" || err != nil {
-		return tagUpdated, fmt.Errorf("Unable to find tag to update")
+		return types.ShoppingTag{}, fmt.Errorf("Unable to find tag to update")
 	}
 	if tag.Name != "" && len(tag.Name) == 0 || len(tag.Name) > 30 {
-		return tagUpdated, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
+		return types.ShoppingTag{}, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
 	}
 	sqlStatement := `update shopping_list_tag set name = $2, authorLast = $3, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1 returning *`
 	rows, err := db.Query(sqlStatement, id, tag.Name, tag.AuthorLast)
 	if err != nil {
-		return tagUpdated, err
+		return types.ShoppingTag{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
-	return GetTagObjectFromRows(rows)
+	tagUpdated, err = GetTagObjectFromRows(rows)
+	if err != nil {
+		return types.ShoppingTag{}, err
+	}
+	return tagUpdated, nil
 }
 
 // DeleteShoppingTag ...
@@ -188,14 +229,26 @@ func UpdateShoppingTag(db *sql.DB, id string, tag types.ShoppingTag) (tagUpdated
 func DeleteShoppingTag(db *sql.DB, id string) (err error) {
 	sqlStatement := `delete from shopping_list_tag where id = $1`
 	rows, err := db.Query(sqlStatement, id)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // GetTagObjectFromRows ...
 // returns a shopping tag object from rows
 func GetTagObjectFromRows(rows *sql.Rows) (tag types.ShoppingTag, err error) {
-	rows.Scan(&tag.ID, &tag.Name, &tag.Author, &tag.AuthorLast, &tag.CreationTimestamp, &tag.ModificationTimestamp, &tag.DeletionTimestamp)
+	if err := rows.Scan(&tag.ID, &tag.Name, &tag.Author, &tag.AuthorLast, &tag.CreationTimestamp, &tag.ModificationTimestamp, &tag.DeletionTimestamp); err != nil {
+		return types.ShoppingTag{}, err
+	}
 	err = rows.Err()
-	return tag, err
+	if err != nil {
+		return types.ShoppingTag{}, err
+	}
+	return tag, nil
 }

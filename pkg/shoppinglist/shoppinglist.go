@@ -22,6 +22,7 @@ package shoppinglist
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	"github.com/imdario/mergo"
 
@@ -32,25 +33,25 @@ import (
 // given a shopping list, return it's validity
 func ValidateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec) (valid bool, err error) {
 	if len(shoppingList.Name) == 0 || len(shoppingList.Name) >= 30 || shoppingList.Name == "" {
-		return valid, fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
+		return false, fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
 	}
 	if shoppingList.Notes != "" && len(shoppingList.Notes) > 100 {
-		return valid, fmt.Errorf("Unable to save shopping list notes, as they are too long")
+		return false, fmt.Errorf("Unable to save shopping list notes, as they are too long")
 	}
 	if shoppingList.TemplateID != "" {
 		list, err := GetShoppingList(db, shoppingList.TemplateID)
 		if err != nil || list.ID == "" {
-			return valid, fmt.Errorf("Unable to find list to use as template from provided id")
+			return false, fmt.Errorf("Unable to find list to use as template from provided id")
 		}
 	}
-	return true, err
+	return true, nil
 }
 
 // ValidateShoppingTag ...
 // given a shopping tag, return it's validity
 func ValidateShoppingTag(db *sql.DB, tag types.ShoppingTag) (valid bool, err error) {
 	if tag.Name != "" && len(tag.Name) == 0 || len(tag.Name) >= 30 {
-		return valid, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
+		return false, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
 	}
 	return true, err
 }
@@ -93,27 +94,31 @@ func GetShoppingLists(db *sql.DB, options types.ShoppingListOptions) (shoppingLi
 
 	rows, err := db.Query(sqlStatement, fields...)
 	if err != nil {
-		return shoppingLists, err
+		return []types.ShoppingListSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
 		shoppingList, err := GetListObjectFromRows(rows)
 		if err != nil {
-			return shoppingLists, err
+			return []types.ShoppingListSpec{}, err
 		}
 		shoppingList.Count, err = GetListItemCount(db, shoppingList.ID)
 		if err != nil {
-			return shoppingLists, err
+			return []types.ShoppingListSpec{}, err
 		}
 
-		if options.Selector.Completed == "true" && shoppingList.Completed != true {
+		if options.Selector.Completed == "true" && !shoppingList.Completed {
 			continue
-		} else if options.Selector.Completed == "false" && shoppingList.Completed != false {
+		} else if options.Selector.Completed == "false" && shoppingList.Completed {
 			continue
 		}
 		shoppingLists = append(shoppingLists, shoppingList)
 	}
-	return shoppingLists, err
+	return shoppingLists, nil
 }
 
 // GetShoppingList ...
@@ -122,16 +127,23 @@ func GetShoppingList(db *sql.DB, listID string) (shoppingList types.ShoppingList
 	sqlStatement := `select * from shopping_list where id = $1 and deletionTimestamp = 0`
 	rows, err := db.Query(sqlStatement, listID)
 	if err != nil {
-		return shoppingList, err
+		return types.ShoppingListSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	shoppingList, err = GetListObjectFromRows(rows)
 	if err != nil {
-		return shoppingList, err
+		return types.ShoppingListSpec{}, err
 	}
 	shoppingList.Count, err = GetListItemCount(db, shoppingList.ID)
-	return shoppingList, err
+	if err != nil {
+		return types.ShoppingListSpec{}, err
+	}
+	return shoppingList, nil
 }
 
 // CreateShoppingList ...
@@ -139,7 +151,7 @@ func GetShoppingList(db *sql.DB, listID string) (shoppingList types.ShoppingList
 func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, options types.ShoppingItemOptions) (shoppingListInserted types.ShoppingListSpec, err error) {
 	valid, err := ValidateShoppingList(db, shoppingList)
 	if !valid || err != nil {
-		return shoppingListInserted, err
+		return types.ShoppingListSpec{}, err
 	}
 
 	shoppingList.AuthorLast = shoppingList.Author
@@ -150,22 +162,28 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, options
                          returning *`
 	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.Author, shoppingList.AuthorLast, shoppingList.Completed, shoppingList.TemplateID)
 	if err != nil {
-		return shoppingListInserted, err
+		return types.ShoppingListSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	shoppingListInserted, err = GetListObjectFromRows(rows)
 	if err != nil || shoppingListInserted.ID == "" {
-		return shoppingListInserted, fmt.Errorf("Failed to create shopping list")
+		log.Printf("error getting list object from rows: %v\n", err)
+		return types.ShoppingListSpec{}, fmt.Errorf("Failed to create shopping list")
 	}
+	log.Printf("%+v\n", shoppingListInserted)
 	if shoppingList.TemplateID == "" {
-		return shoppingListInserted, err
+		return shoppingListInserted, nil
 	}
 
 	// if using other list as a template
 	shoppingListItems, err := GetShoppingListItems(db, shoppingList.TemplateID, options)
 	if err != nil {
-		return shoppingListInserted, fmt.Errorf("Failed to fetch items from shopping list")
+		return types.ShoppingListSpec{}, fmt.Errorf("Failed to fetch items from shopping list")
 	}
 
 	for _, item := range shoppingListItems {
@@ -181,11 +199,11 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, options
 		}
 		newItem, err := AddItemToList(db, shoppingListInserted.ID, newItem)
 		if err != nil || newItem.ID == "" {
-			return shoppingListInserted, fmt.Errorf("Failed to add new item to new shopping list from template")
+			log.Printf("error adding item to list: %v\n", err)
+			return types.ShoppingListSpec{}, fmt.Errorf("Failed to add new item to new shopping list from template")
 		}
 	}
-
-	return shoppingListInserted, err
+	return shoppingListInserted, nil
 }
 
 // PatchShoppingList ...
@@ -193,30 +211,35 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, options
 func PatchShoppingList(db *sql.DB, listID string, shoppingList types.ShoppingListSpec) (shoppingListPatched types.ShoppingListSpec, err error) {
 	existingList, err := GetShoppingList(db, listID)
 	if err != nil || existingList.ID == "" {
-		return shoppingListPatched, fmt.Errorf("Failed to fetch existing shopping list")
+		return types.ShoppingListSpec{}, fmt.Errorf("Failed to fetch existing shopping list")
 	}
 	err = mergo.Merge(&shoppingList, existingList)
 	if err != nil {
-		return shoppingListPatched, fmt.Errorf("Failed to update fields in the item")
+		return types.ShoppingListSpec{}, fmt.Errorf("Failed to update fields in the item")
 	}
 	valid, err := ValidateShoppingList(db, existingList)
 	if !valid || err != nil {
-		return shoppingListPatched, err
+		return types.ShoppingListSpec{}, err
 	}
 
 	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $5
                          returning *`
 	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listID)
 	if err != nil {
-		return shoppingListPatched, err
+		return types.ShoppingListSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	shoppingListPatched, err = GetListObjectFromRows(rows)
 	if err != nil || shoppingListPatched.ID == "" {
-		return shoppingListPatched, fmt.Errorf("Failed to patch shopping list")
+		log.Printf("error getting shopping list from rows: %v", err)
+		return types.ShoppingListSpec{}, fmt.Errorf("Failed to patch shopping list")
 	}
-	return shoppingListPatched, err
+	return shoppingListPatched, nil
 }
 
 // UpdateShoppingList ...
@@ -224,22 +247,26 @@ func PatchShoppingList(db *sql.DB, listID string, shoppingList types.ShoppingLis
 func UpdateShoppingList(db *sql.DB, listID string, shoppingList types.ShoppingListSpec) (shoppingListUpdated types.ShoppingListSpec, err error) {
 	valid, err := ValidateShoppingList(db, shoppingList)
 	if !valid || err != nil {
-		return shoppingListUpdated, err
+		return types.ShoppingListSpec{}, err
 	}
-
 	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $5
                          returning *`
 	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listID)
 	if err != nil {
-		return shoppingListUpdated, err
+		return types.ShoppingListSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	shoppingListUpdated, err = GetListObjectFromRows(rows)
 	if err != nil || shoppingListUpdated.ID == "" {
-		return shoppingListUpdated, fmt.Errorf("Failed to create shopping list")
+		log.Printf("error getting shopping list from rows: %v", err)
+		return types.ShoppingListSpec{}, fmt.Errorf("Failed to create shopping list")
 	}
-	return shoppingListUpdated, err
+	return shoppingListUpdated, nil
 }
 
 // SetListCompleted ...
@@ -248,25 +275,34 @@ func SetListCompleted(db *sql.DB, listID string, completed bool, userID string) 
 	sqlStatement := `update shopping_list set completed = $1 where id = $2 returning *`
 	rows, err := db.Query(sqlStatement, completed, listID)
 	if err != nil {
-		return list, err
+		return types.ShoppingListSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
 		list, err = GetListObjectFromRows(rows)
 		if err != nil {
-			return list, err
+			return types.ShoppingListSpec{}, err
 		}
 	}
 
-	return list, err
+	return list, nil
 }
 
 // GetListObjectFromRows ...
 // returns a shopping list object from rows
 func GetListObjectFromRows(rows *sql.Rows) (list types.ShoppingListSpec, err error) {
-	rows.Scan(&list.ID, &list.Name, &list.Notes, &list.Author, &list.AuthorLast, &list.Completed, &list.CreationTimestamp, &list.ModificationTimestamp, &list.DeletionTimestamp, &list.TemplateID)
+	if err := rows.Scan(&list.ID, &list.Name, &list.Notes, &list.Author, &list.AuthorLast, &list.Completed, &list.CreationTimestamp, &list.ModificationTimestamp, &list.DeletionTimestamp, &list.TemplateID); err != nil {
+		return types.ShoppingListSpec{}, err
+	}
 	err = rows.Err()
-	return list, err
+	if err != nil {
+		return types.ShoppingListSpec{}, err
+	}
+	return list, nil
 }
 
 // DeleteShoppingList ...
@@ -276,11 +312,17 @@ func DeleteShoppingList(db *sql.DB, listID string) (err error) {
 	if err != nil {
 		return fmt.Errorf("Failed to remove all items from list")
 	}
-
 	sqlStatement := `delete from shopping_list where id = $1`
 	rows, err := db.Query(sqlStatement, listID)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // GetListCount ...
@@ -289,11 +331,16 @@ func GetListCount(db *sql.DB) (count int, err error) {
 	sqlStatement := `select count(*) from shopping_list`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		return count, err
+		return 0, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
-	rows.Scan(&count)
-
-	return count, err
+	if err := rows.Scan(&count); err != nil {
+		return 0, err
+	}
+	return count, nil
 }

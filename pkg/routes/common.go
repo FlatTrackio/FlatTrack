@@ -20,16 +20,20 @@
 package routes
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
 	"time"
 
-	"database/sql"
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
@@ -49,17 +53,21 @@ func JSONResponse(r *http.Request, w http.ResponseWriter, code int, output types
 	response, _ := json.Marshal(output)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	w.Write(response)
+	if _, err := w.Write(response); err != nil {
+		log.Printf("error: failed to write response; %v\n", err)
+	}
 }
 
 // GetHTTPresponseBodyContents ...
 // convert the body of a HTTP response into a JSONMessageResponse
 func GetHTTPresponseBodyContents(response *http.Response) (output types.JSONMessageResponse) {
-	responseData, err := ioutil.ReadAll(response.Body)
+	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
-	json.Unmarshal(responseData, &output)
+	if err := json.Unmarshal(responseData, &output); err != nil {
+		log.Printf("error: failed to unmarshal response body contents; %v", err)
+	}
 	return output
 }
 
@@ -80,9 +88,31 @@ func HealthHandler(db *sql.DB) {
 	}
 
 	port := common.GetAppHealthPort()
-	http.Handle("/_healthz", Healthz(db))
+	router := mux.NewRouter().StrictSlash(true)
+	r := router.Handle("/_healthz", Healthz(db))
+	server := &http.Server{
+		Handler:           r.GetHandler(),
+		Addr:              common.GetAppHealthPort(),
+		WriteTimeout:      15 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
 	log.Printf("Health listening on %v", port)
-	http.ListenAndServe(port, nil)
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	<-done
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatalf("Server didn't exit gracefully %v", err)
+	}
 }
 
 // GetRequestIP ...
@@ -116,11 +146,14 @@ func Logging(next http.Handler) http.Handler {
 	})
 }
 
+// HTTPHeaderBackendAllowTypes heads to check for content type
 type HTTPHeaderBackendAllowTypes string
 
 const (
+	// HTTPHeaderBackendAllowTypesContentType use the Content-Type http header
 	HTTPHeaderBackendAllowTypesContentType HTTPHeaderBackendAllowTypes = "Content-Type"
-	HTTPHeaderBackendAllowTypesAccept      HTTPHeaderBackendAllowTypes = "Accept"
+	// HTTPHeaderBackendAllowTypesAccept use the Accept http header
+	HTTPHeaderBackendAllowTypesAccept HTTPHeaderBackendAllowTypes = "Accept"
 )
 
 // RequireContentType ...
@@ -135,7 +168,7 @@ func RequireContentType(expectedContentType string) func(http.Handler) http.Hand
 					break
 				}
 			}
-			if foundInRequiredTypes == true {
+			if foundInRequiredTypes {
 				next.ServeHTTP(w, r)
 				return
 			}
@@ -184,6 +217,7 @@ func FrontendHandler(publicDir string, passthrough FrontendOptions) http.Handler
 	})
 }
 
+// Router http router
 type Router struct {
 	DB         *sql.DB
 	FileAccess files.FileAccess
@@ -198,7 +232,6 @@ func (r Router) Handle() {
 	passthrough := FrontendOptions{
 		SetupMessage: common.GetAppSetupMessage(),
 		LoginMessage: common.GetAppLoginMessage(),
-		EmbeddedHTML: template.HTML(common.GetAppEmbeddedHTML()),
 	}
 
 	apiRouters := router.PathPrefix(apiEndpointPrefix).Subrouter()
@@ -238,5 +271,19 @@ func (r Router) Handle() {
 		ReadTimeout:  15 * time.Second,
 	}
 	log.Println("HTTP listening on", port)
-	log.Fatal(srv.ListenAndServe())
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	<-done
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server didn't exit gracefully %v", err)
+	}
 }

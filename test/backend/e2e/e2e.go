@@ -121,7 +121,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		allUserAccountsJSON, err := json.Marshal(allUserAccountsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var allUserAccounts []types.UserSpec
-		json.Unmarshal(allUserAccountsJSON, &allUserAccounts)
+		gomega.Expect(json.Unmarshal(allUserAccountsJSON, &allUserAccounts)).To(gomega.BeNil(), "failed to unmarshal")
 		firstUserAccount := allUserAccounts[0]
 
 		ginkgo.By("listing all user accounts")
@@ -133,7 +133,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountJSON, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(userAccount.ID).To(gomega.Equal(firstUserAccount.ID), "User account ID must equal user account ID from list")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
 		gomega.Expect(userAccount.Names).To(gomega.Equal(firstUserAccount.Names), "User account names must equal user account names from list")
@@ -216,7 +216,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var userAccount types.UserSpec
-			json.Unmarshal(userAccountJSON, &userAccount)
+			gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 			ginkgo.By("checking the response")
 			gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -343,7 +343,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var userAccount types.UserSpec
-			json.Unmarshal(userAccountJSON, &userAccount)
+			gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 			ginkgo.By("checking the response")
 			gomega.Expect(userAccount.ID).To(gomega.Equal(""), "User account ID must be empty")
@@ -397,7 +397,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var userAccount types.UserSpec
-			json.Unmarshal(userAccountJSON, &userAccount)
+			gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 			ginkgo.By("checking the response")
 			gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -413,7 +413,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			userAccountJSON, err = json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			userAccount = types.UserSpec{}
-			json.Unmarshal(userAccountJSON, &userAccount)
+			gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 			ginkgo.By("checking the response")
 			gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -470,7 +470,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountJSON, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -522,7 +522,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			userAccountJSON, err = json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			userAccount = types.UserSpec{}
-			json.Unmarshal(userAccountJSON, &userAccount)
+			gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 			ginkgo.By("checking the account values")
 			gomega.Expect(userAccount.Names).To(gomega.Equal(accountUpdate.Names), "user account names does not match update names")
@@ -558,7 +558,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountJSON, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -574,7 +574,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		confirmsListJSON, err := json.Marshal(confirmsListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var confirmsList []types.UserCreationSecretSpec
-		json.Unmarshal(confirmsListJSON, &confirmsList)
+		gomega.Expect(json.Unmarshal(confirmsListJSON, &confirmsList)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(len(confirmsList) > 0).To(gomega.Equal(true), "must contain at least one confirm")
 
 		ginkgo.By("fetching the user account confirm")
@@ -586,7 +586,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		confirmJSON, err := json.Marshal(confirmResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var confirm types.UserCreationSecretSpec
-		json.Unmarshal(confirmJSON, &confirm)
+		gomega.Expect(json.Unmarshal(confirmJSON, &confirm)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(confirm.ID).ToNot(gomega.Equal(""), "confirm id must not be empty")
 		gomega.Expect(confirm.UserID).ToNot(gomega.Equal(""), "confirm userid must not be empty")
 		gomega.Expect(confirm.Secret).ToNot(gomega.Equal(""), "confirm secret must not be empty")
@@ -626,7 +626,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err = json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccountRegistered types.UserSpec
-		json.Unmarshal(userAccountJSON, &userAccountRegistered)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccountRegistered)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(userAccountRegistered.ID).ToNot(gomega.Equal(""), "user account id must not be empty")
 		gomega.Expect(userAccountRegistered.Registered).To(gomega.Equal(true), "account must be registered")
 
@@ -658,7 +658,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountJSON, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -717,7 +717,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountJSON, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -755,7 +755,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		profileJSON, err := json.Marshal(profileResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var profile types.UserSpec
-		json.Unmarshal(profileJSON, &profile)
+		gomega.Expect(json.Unmarshal(profileJSON, &profile)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(profile.Disabled).To(gomega.Equal(profilePatch.Disabled), "profile disabled does not match profilePatch disabled")
 
 		ginkgo.By("checking validation of the token")
@@ -802,7 +802,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountJSON, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -870,7 +870,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/user/confirm/" + confirmID
 			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
+			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api should have return code of http.StatusNotFound")
 		}
 	})
 
@@ -919,7 +919,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountJSON, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -944,7 +944,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		profileJSON, err := json.Marshal(profileResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var profile types.UserSpec
-		json.Unmarshal(profileJSON, &profile)
+		gomega.Expect(json.Unmarshal(profileJSON, &profile)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(profile.ID).To(gomega.Equal(userAccount.ID), "profile id does not match account id")
 		gomega.Expect(profile.Names).To(gomega.Equal(userAccount.Names), "profile names does not match account names")
 		gomega.Expect(profile.Email).To(gomega.Equal(userAccount.Email), "profile email does not match account email")
@@ -970,7 +970,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		profileJSON, err = json.Marshal(profileResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		profile = types.UserSpec{}
-		json.Unmarshal(profileJSON, &profile)
+		gomega.Expect(json.Unmarshal(profileJSON, &profile)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(profile.ID).To(gomega.Equal(account.ID), "profile id does not match account id")
 		gomega.Expect(profile.Names).To(gomega.Equal(profilePatch.Names), "profile names does not match profilePatch names")
 		gomega.Expect(profile.Email).To(gomega.Equal(profilePatch.Email), "profile email does not match profilePatch email")
@@ -1000,7 +1000,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountsBytes, err := json.Marshal(userAccountsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccounts []types.UserSpec
-		json.Unmarshal(userAccountsBytes, &userAccounts)
+		gomega.Expect(json.Unmarshal(userAccountsBytes, &userAccounts)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(len(userAccounts)).To(gomega.Equal(1), "invalid amount of users")
@@ -1025,7 +1025,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountJSON, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -1041,7 +1041,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountsBytes, err = json.Marshal(userAccountsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		userAccounts = []types.UserSpec{}
-		json.Unmarshal(userAccountsBytes, &userAccounts)
+		gomega.Expect(json.Unmarshal(userAccountsBytes, &userAccounts)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(len(userAccounts)).To(gomega.Equal(2), "invalid amount of users")
@@ -1061,7 +1061,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountsBytes, err = json.Marshal(userAccountsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		userAccounts = []types.UserSpec{}
-		json.Unmarshal(userAccountsBytes, &userAccounts)
+		gomega.Expect(json.Unmarshal(userAccountsBytes, &userAccounts)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(len(userAccounts)).To(gomega.Equal(1), "invalid amount of users")
@@ -1088,7 +1088,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountBytes, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountBytes, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -1102,7 +1102,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountBytes, err = json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		userAccount = types.UserSpec{}
-		json.Unmarshal(userAccountBytes, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountBytes, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not empty")
@@ -1140,7 +1140,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount1 types.UserSpec
-		json.Unmarshal(userAccountBytes, &userAccount1)
+		gomega.Expect(json.Unmarshal(userAccountBytes, &userAccount1)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount1.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -1163,7 +1163,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountBytes, err = json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount2 types.UserSpec
-		json.Unmarshal(userAccountBytes, &userAccount2)
+		gomega.Expect(json.Unmarshal(userAccountBytes, &userAccount2)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount2.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -1190,7 +1190,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		profileJSON, err := json.Marshal(profileResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var profile types.UserSpec
-		json.Unmarshal(profileJSON, &profile)
+		gomega.Expect(json.Unmarshal(profileJSON, &profile)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(profile.Email).ToNot(gomega.Equal(profilePatch.Email), "profile email does not match profilePatch email")
 
 		ginkgo.By("deleting the account1")
@@ -1216,7 +1216,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		userAccount := types.UserSpec{}
-		json.Unmarshal(userAccountJSON, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
@@ -1246,7 +1246,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountBytes, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountBytes, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -1274,7 +1274,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		profileJSON, err := json.Marshal(profileResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var profile types.UserSpec
-		json.Unmarshal(profileJSON, &profile)
+		gomega.Expect(json.Unmarshal(profileJSON, &profile)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(profile.Groups).To(gomega.Equal(account.Groups), "profile email does not match profilePatch email")
 
 		ginkgo.By("deleting the account")
@@ -1306,7 +1306,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountBytes, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountBytes, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -1333,7 +1333,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		profileJSON, err := json.Marshal(profileResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var profile types.UserSpec
-		json.Unmarshal(profileJSON, &profile)
+		gomega.Expect(json.Unmarshal(profileJSON, &profile)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(profile.Groups).To(gomega.Equal(account.Groups), "profile email does not match profilePatch email")
 
 		ginkgo.By("deleting the account")
@@ -1371,7 +1371,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		groupsBytes, err := json.Marshal(groupsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var groups []types.GroupSpec
-		json.Unmarshal(groupsBytes, &groups)
+		gomega.Expect(json.Unmarshal(groupsBytes, &groups)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(groups) >= 2).To(gomega.Equal(true), "There must be at least two groups")
 
@@ -1384,7 +1384,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			groupBytes, err := json.Marshal(groupResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var group types.GroupSpec
-			json.Unmarshal(groupBytes, &group)
+			gomega.Expect(json.Unmarshal(groupBytes, &group)).To(gomega.BeNil(), "failed to unmarshal")
 
 			gomega.Expect(groupItem.ID).To(gomega.Equal(group.ID), "GroupItem ID must match Group ID")
 			gomega.Expect(groupItem.Name).To(gomega.Equal(group.Name), "GroupItem Name must match Group Name")
@@ -1437,7 +1437,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		groupsBytes, err := json.Marshal(groupsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var groups []types.GroupSpec
-		json.Unmarshal(groupsBytes, &groups)
+		gomega.Expect(json.Unmarshal(groupsBytes, &groups)).To(gomega.BeNil(), "failed to unmarshal")
 
 		for _, account := range accounts {
 			accountBytes, err := json.Marshal(account)
@@ -1452,7 +1452,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var userAccount types.UserSpec
-			json.Unmarshal(userAccountJSON, &userAccount)
+			gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 			ginkgo.By("checking the response")
 			gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -1466,7 +1466,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			userAccountJSON, err = json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			userAccount = types.UserSpec{}
-			json.Unmarshal(userAccountJSON, &userAccount)
+			gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 			ginkgo.By("logging in as the new user account")
 			apiEndpoint = apiServerAPIprefix + "/user/auth"
@@ -1523,7 +1523,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountBytes, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountBytes, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("creating the account again")
 		apiEndpoint = apiServerAPIprefix + "/admin/users"
@@ -1554,7 +1554,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -1568,7 +1568,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListsBytes, err := json.Marshal(shoppingListsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingLists []types.ShoppingListSpec
-		json.Unmarshal(shoppingListsBytes, &shoppingLists)
+		gomega.Expect(json.Unmarshal(shoppingListsBytes, &shoppingLists)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingLists)).To(gomega.Equal(1), "there must be one shopping list")
 
@@ -1595,7 +1595,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -1626,7 +1626,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListPatchedBytes, err := json.Marshal(shoppingListPatchedResponseSpec)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingListPatched types.ShoppingListSpec
-			json.Unmarshal(shoppingListPatchedBytes, &shoppingListPatched)
+			gomega.Expect(json.Unmarshal(shoppingListPatchedBytes, &shoppingListPatched)).To(gomega.BeNil(), "failed to unmarshal")
 
 			gomega.Expect(shoppingListPatched.ID).To(gomega.Equal(shoppingListCreated.ID), "shopping list id must be equal to shopping list created id")
 			gomega.Expect(shoppingListPatched.Name).To(gomega.Equal(shoppingListPatch.Name), "shopping list name does not match shopping list created name")
@@ -1656,7 +1656,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -1689,7 +1689,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListUpdatedBytes, err := json.Marshal(shoppingListUpdatedResponseSpec)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingListUpdated types.ShoppingListSpec
-			json.Unmarshal(shoppingListUpdatedBytes, &shoppingListUpdated)
+			gomega.Expect(json.Unmarshal(shoppingListUpdatedBytes, &shoppingListUpdated)).To(gomega.BeNil(), "failed to unmarshal")
 
 			gomega.Expect(shoppingListUpdated.ID).To(gomega.Equal(shoppingListCreated.ID), "shopping list id must be equal to shopping list created id")
 			gomega.Expect(shoppingListUpdated.Name).To(gomega.Equal(shoppingListUpdate.Name), "shopping list name does not match shopping list created name")
@@ -1735,7 +1735,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListBytes, err = json.Marshal(shoppingListResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingListCreated types.ShoppingListSpec
-			json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+			gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 			gomega.Expect(shoppingListCreated.ID).To(gomega.Equal(""), "shopping list created id must not be empty")
 		}
@@ -1757,7 +1757,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -1771,7 +1771,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
 
@@ -1818,7 +1818,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
-			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+			gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
 			gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		}
@@ -1832,7 +1832,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		shoppingListItems = []types.ShoppingItemSpec{}
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(len(newShoppingListItems)), "There should be as many items added as on the shopping list")
 
@@ -1888,7 +1888,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListItemsBytes, err := json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
-			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+			gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
 			gomega.Expect(shoppingItem.ID).To(gomega.Equal(""), "invalid shopping list items must not have ids")
 		}
 	})
@@ -1909,7 +1909,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -1923,7 +1923,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
 
@@ -1979,7 +1979,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		shoppingListItems = []types.ShoppingItemSpec{}
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
 
@@ -2006,7 +2006,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -2020,7 +2020,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
 
@@ -2043,7 +2043,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingItem types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 
@@ -2078,7 +2078,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListItemBytes, err := json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItemUpdated types.ShoppingItemSpec
-			json.Unmarshal(shoppingListItemBytes, &shoppingItemUpdated)
+			gomega.Expect(json.Unmarshal(shoppingListItemBytes, &shoppingItemUpdated)).To(gomega.BeNil(), "failed to unmarshal")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 			gomega.Expect(shoppingItemUpdated.ID).ToNot(gomega.Equal(""), "shopping item id should not be nil")
@@ -2119,7 +2119,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -2133,7 +2133,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
 
@@ -2156,7 +2156,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingItem types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 
@@ -2189,7 +2189,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListItemBytes, err := json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItemUpdated types.ShoppingItemSpec
-			json.Unmarshal(shoppingListItemBytes, &shoppingItemUpdated)
+			gomega.Expect(json.Unmarshal(shoppingListItemBytes, &shoppingItemUpdated)).To(gomega.BeNil(), "failed to unmarshal")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 			gomega.Expect(updatedShoppingListItem.Name).To(gomega.Equal(shoppingItemUpdated.Name), "shopping item name was not updated")
@@ -2222,7 +2222,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -2236,7 +2236,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
 
@@ -2287,7 +2287,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
-			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+			gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
 			gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		}
@@ -2301,7 +2301,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var tags []string
-		json.Unmarshal(shoppingListTagBytes, &tags)
+		gomega.Expect(json.Unmarshal(shoppingListTagBytes, &tags)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(tags)).To(gomega.Equal(3), "invalid amount of tags")
 
@@ -2328,7 +2328,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -2342,7 +2342,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
 
@@ -2393,7 +2393,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
-			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+			gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
 			gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		}
@@ -2414,7 +2414,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingList2Created types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingList2Created)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingList2Created)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingList2Created.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingList2Created.Name).To(gomega.Equal(shoppingList2.Name), "shopping list name does not match shopping list created name2")
@@ -2428,7 +2428,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingList2Items []types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingList2Items)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingList2Items)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
 
@@ -2479,7 +2479,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
-			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+			gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
 			gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingList2Created.ID), "shopping item must belong to a list")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		}
@@ -2493,7 +2493,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var listTags []string
-		json.Unmarshal(shoppingListTagBytes, &listTags)
+		gomega.Expect(json.Unmarshal(shoppingListTagBytes, &listTags)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(listTags)).To(gomega.Equal(3), "invalid amount of tags")
 		containsTagsFromOtherLists := false
@@ -2515,7 +2515,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListTagBytes, err = json.Marshal(shoppingListTags)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var list2Tags []string
-		json.Unmarshal(shoppingListTagBytes, &list2Tags)
+		gomega.Expect(json.Unmarshal(shoppingListTagBytes, &list2Tags)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(list2Tags)).To(gomega.Equal(3), "invalid amount of tags")
 		containsTagsFromOtherLists = false
@@ -2558,7 +2558,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -2572,7 +2572,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
 
@@ -2596,7 +2596,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingItem types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 
@@ -2621,7 +2621,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var listTags []string
-		json.Unmarshal(shoppingListTagBytes, &listTags)
+		gomega.Expect(json.Unmarshal(shoppingListTagBytes, &listTags)).To(gomega.BeNil(), "failed to unmarshal")
 
 		var foundUpdatedTag bool
 		for _, tag := range listTags {
@@ -2664,7 +2664,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingTagBytes, err = json.Marshal(shoppingTagResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingTag types.ShoppingTag
-			json.Unmarshal(shoppingTagBytes, &shoppingTag)
+			gomega.Expect(json.Unmarshal(shoppingTagBytes, &shoppingTag)).To(gomega.BeNil(), "failed to unmarshal")
 			gomega.Expect(shoppingTag.ID).ToNot(gomega.Equal(""), "shopping tag must have an ID")
 		}
 
@@ -2676,7 +2676,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingTagBytes, err := json.Marshal(shoppingTagsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var tags []types.ShoppingTag
-		json.Unmarshal(shoppingTagBytes, &tags)
+		gomega.Expect(json.Unmarshal(shoppingTagBytes, &tags)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(tags)).To(gomega.Equal(len(shoppingTags)), "failed to find the correct number (%v) of shopping tags in length of list (%v)", len(shoppingTags), len(tags))
 		foundTags := 0
@@ -2704,10 +2704,11 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		// get tag
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags/" + tags[0].ID
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		gomega.Expect(err).To(gomega.BeNil(), "http request shouldn't have error")
 		shoppingTagUpdateGetResponse := routes.GetHTTPresponseBodyContents(resp)
 		shoppingTagBytes, err = json.Marshal(shoppingTagUpdateGetResponse.Spec)
 		var shoppingTagUpdated types.ShoppingTag
-		json.Unmarshal(shoppingTagBytes, &shoppingTagUpdated)
+		gomega.Expect(json.Unmarshal(shoppingTagBytes, &shoppingTagUpdated)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK", shoppingTagUpdateGetResponse.Metadata.Response)
 		gomega.Expect(shoppingTagUpdated.ID).To(gomega.Equal(tags[0].ID), "shopping tag must have an ID (%v) matching it's previous ID (%v)", shoppingTagUpdated.ID, tags[0].ID)
@@ -2738,7 +2739,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -2752,7 +2753,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
 
@@ -2803,7 +2804,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
-			json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+			gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
 			gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		}
@@ -2825,7 +2826,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		templatedShoppingListBytes, err := json.Marshal(templatedShoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListTemplatedCreated types.ShoppingListSpec
-		json.Unmarshal(templatedShoppingListBytes, &shoppingListTemplatedCreated)
+		gomega.Expect(json.Unmarshal(templatedShoppingListBytes, &shoppingListTemplatedCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("listing items of the templated shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListTemplatedCreated.ID + "/items"
@@ -2836,7 +2837,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		shoppingListItems = []types.ShoppingItemSpec{}
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(len(newShoppingListItems)).To(gomega.Equal(len(shoppingListItems)), "templated list must have the same amount of items as the orignal list")
 
 		foundTotal := 0
@@ -2880,7 +2881,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
-		json.Unmarshal(shoppingListBytes, &shoppingListCreated)
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
 		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
@@ -2904,7 +2905,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err := json.Marshal(shoppingItemResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingItem types.ShoppingItemSpec
-		json.Unmarshal(shoppingListItemsBytes, &shoppingItem)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 
@@ -2925,7 +2926,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		templatedShoppingListBytes, err := json.Marshal(templatedShoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListTemplatedCreated types.ShoppingListSpec
-		json.Unmarshal(templatedShoppingListBytes, &shoppingListTemplatedCreated)
+		gomega.Expect(json.Unmarshal(templatedShoppingListBytes, &shoppingListTemplatedCreated)).To(gomega.BeNil(), "failed to unmarshal")
 
 		gomega.Expect(shoppingListTemplatedCreated.TemplateID).To(gomega.Equal(shoppingListCreated.ID), "templated list must have templateID field matching origin ID")
 
@@ -2938,7 +2939,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		shoppingListItems := []types.ShoppingItemSpec{}
-		json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
 
 		for _, item := range shoppingListItems {
 			gomega.Expect(item.TemplateID).To(gomega.Equal(shoppingListCreated.ID), "templated list item must have templateID field matching origin ID")
@@ -2960,6 +2961,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	ginkgo.It("should require authorization for protected routes", func() {
 		apiEndpoint := apiServer + "/" + apiServerAPIprefix + "/user/profile"
 		req, err := http.NewRequest("GET", apiEndpoint, nil)
+		gomega.Expect(err).To(gomega.BeNil(), "http request should not have an error")
 		req.Header.Set("Content-Type", "application/json")
 		client := &http.Client{}
 		resp, err := client.Do(req)
@@ -2990,7 +2992,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		json.Unmarshal(userAccountJSON, &userAccount)
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 		ginkgo.By("checking the response")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -3091,6 +3093,7 @@ func httpRequestWithHeader(verb string, url string, data []byte, jwt string) (re
 		jwt = jwtToken
 	}
 	req, err := http.NewRequest(verb, url, bytes.NewBuffer(data))
+	gomega.Expect(err).To(gomega.BeNil(), "http request should not have error")
 	req.Header.Set("Authorization", "bearer "+jwt)
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{}

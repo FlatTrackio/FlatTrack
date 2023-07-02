@@ -23,6 +23,7 @@ import (
 	"net/http"
 
 	"database/sql"
+
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
