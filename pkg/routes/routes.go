@@ -2438,6 +2438,9 @@ func Healthz(db *sql.DB) http.HandlerFunc {
 		code := http.StatusInternalServerError
 
 		err := health.Healthy(db)
+		if err != nil {
+			log.Printf("error app unhealth: %v\n", err)
+		}
 		if err == nil {
 			response = "App healthy"
 			code = http.StatusOK
