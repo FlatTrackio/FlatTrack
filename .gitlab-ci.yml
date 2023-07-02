@@ -357,7 +357,7 @@ lint_backend:
   allow_failure: true
   before_script:
     - apk add git gcc
-    - go get -u golang.org/x/lint/golint
+    - go install golang.org/x/lint/golint@latest
   script:
     - echo -e "GOLINT\n"
     - golint -set_exit_status ./...
