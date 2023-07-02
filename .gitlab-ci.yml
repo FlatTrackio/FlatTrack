@@ -82,7 +82,7 @@ build-backend-smoketest:
   stage: build
   image: $IMAGE_GOLANG_ALPINE
   script:
-    - grep -r 'package main' | sort | cut -d ':' -f1 | grep '.go$' | xargs -n 1 dirname | sort | uniq | grep -v vendor | xargs -I{} go build -o /dev/null './{}'
+    - go build -o /dev/null .
 
 build-container:
   stage: build
