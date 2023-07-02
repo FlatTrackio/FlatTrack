@@ -272,18 +272,18 @@ test_backend_e2e:
     APP_MINIO_USE_SSL: "false"
     CGO_ENABLED: "0"
   services:
-    - name: postgres:12.2-alpine
+    - name: postgres:15.3-alpine
       alias: postgres
-    - name: minio/minio:RELEASE.2022-01-07T01-53-23Z
+    - name: minio/minio:RELEASE.2023-06-29T05-12-28Z
       alias: minio
       command:
         - server
         - /data
   before_script:
     - apk add --no-cache git gcc curl
-    - go install github.com/onsi/ginkgo/ginkgo@v1.16.4
-    - go build -o flattrack main.go
-    - ./flattrack &
+    - go install github.com/onsi/ginkgo/ginkgo@v1.16.5
+    - go build -o ./bin/flattrack main.go
+    - ./bin/flattrack &
     - until curl -s http://localhost:8080; do echo "Waiting for API"; sleep 1s; done
   script:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
