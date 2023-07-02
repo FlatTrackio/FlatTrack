@@ -121,7 +121,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		allUserAccountsJSON, err := json.Marshal(allUserAccountsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var allUserAccounts []types.UserSpec
-		gomega.Expect(gomega.Expect(json.Unmarshal(allUserAccountsJSON, &allUserAccounts)).To(gomega.BeNil(), "failed to unmarshal")).To(gomega.BeNil(), "failed to unmarshal")
+		gomega.Expect(json.Unmarshal(allUserAccountsJSON, &allUserAccounts)).To(gomega.BeNil(), "failed to unmarshal")
 		firstUserAccount := allUserAccounts[0]
 
 		ginkgo.By("listing all user accounts")
@@ -133,7 +133,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
-		gomega.Expect(gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")).To(gomega.BeNil(), "failed to unmarshal")
+		gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 		gomega.Expect(userAccount.ID).To(gomega.Equal(firstUserAccount.ID), "User account ID must equal user account ID from list")
 		gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
 		gomega.Expect(userAccount.Names).To(gomega.Equal(firstUserAccount.Names), "User account names must equal user account names from list")
@@ -343,7 +343,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var userAccount types.UserSpec
-			gomega.Expect(gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")).To(gomega.BeNil(), "failed to unmarshal")
+			gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 			ginkgo.By("checking the response")
 			gomega.Expect(userAccount.ID).To(gomega.Equal(""), "User account ID must be empty")
@@ -397,7 +397,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var userAccount types.UserSpec
-			gomega.Expect(gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")).To(gomega.BeNil(), "failed to unmarshal")
+			gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 			ginkgo.By("checking the response")
 			gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -413,7 +413,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			userAccountJSON, err = json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			userAccount = types.UserSpec{}
-			gomega.Expect(gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")).To(gomega.BeNil(), "failed to unmarshal")
+			gomega.Expect(json.Unmarshal(userAccountJSON, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
 
 			ginkgo.By("checking the response")
 			gomega.Expect(userAccount.ID).ToNot(gomega.Equal(""), "User account ID must not be empty")
@@ -870,7 +870,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint := apiServerAPIprefix + "/user/confirm/" + confirmID
 			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
+			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api should have return code of http.StatusNotFound")
 		}
 	})
 
