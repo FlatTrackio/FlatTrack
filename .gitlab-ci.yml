@@ -301,9 +301,9 @@ spell_check:
   image: $IMAGE_GOLANG_ALPINE
   allow_failure: true
   before_script:
-    - go get -u github.com/client9/misspell/cmd/misspell
+    - go install github.com/client9/misspell/cmd/misspell@latest
   script:
-    - misspell -error src docs kodata/migrations pubic template k8s-manifests README*
+    - misspell -error pkg cmd docs kodata/migrations pubic template k8s-manifests README*
 
 govet:
   stage: lint
