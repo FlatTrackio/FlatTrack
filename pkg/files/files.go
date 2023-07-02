@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 
 	minio "github.com/minio/minio-go/v7"
@@ -46,7 +46,7 @@ func (f FileAccess) Init() error {
 			foundBucket = true
 		}
 	}
-	if foundBucket == true {
+	if foundBucket {
 		return nil
 	}
 	err = f.Client.MakeBucket(context.TODO(), f.BucketName, minio.MakeBucketOptions{})
@@ -71,7 +71,7 @@ func (f FileAccess) Get(name string) (objectBytes []byte, objectInfo minio.Objec
 		log.Printf("%#v\n", err)
 		return []byte{}, minio.ObjectInfo{}, err
 	}
-	objectBytes, err = ioutil.ReadAll(object)
+	objectBytes, err = io.ReadAll(object)
 	if err != nil {
 		log.Printf("%#v\n", err)
 		return []byte{}, minio.ObjectInfo{}, err

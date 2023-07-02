@@ -23,7 +23,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"runtime"
@@ -33,7 +33,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
-	"gitlab.com/flattrack/flattrack/pkg/files"
+	_ "gitlab.com/flattrack/flattrack/pkg/files"
 	"gitlab.com/flattrack/flattrack/pkg/groups"
 	"gitlab.com/flattrack/flattrack/pkg/health"
 	"gitlab.com/flattrack/flattrack/pkg/registration"
@@ -45,9 +45,13 @@ import (
 )
 
 type RouteHandler struct {
-	db         *sql.DB
-	fileAccess files.FileAccess
+	// db         *sql.DB
+	// fileAccess files.FileAccess
 }
+
+// TODO rejig to use NewRoutes(db, fileAccess)
+// TODO restructure to not use a single JSON response in each handler
+//      and instead respond on error afterwards
 
 // GetAllUsers ...
 // swagger:route GET /users users getAllUsers
@@ -59,8 +63,8 @@ type RouteHandler struct {
 func GetAllUsers(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to fetch user accounts"
+		var code int
+		var response string
 
 		userSelectorID := r.FormValue("id")
 		userSelectorNotID := r.FormValue("notId")
@@ -100,14 +104,10 @@ func GetAllUsers(db *sql.DB) http.HandlerFunc {
 func GetUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to fetch user account"
+		var code int
+		var response string
 		vars := mux.Vars(r)
 		id := vars["id"]
-
-		user := types.UserSpec{
-			ID: id,
-		}
 
 		user, err := users.GetUserByID(db, id, false)
 		if err != nil {
@@ -160,12 +160,29 @@ func GetUser(db *sql.DB) http.HandlerFunc {
 func PostUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusBadRequest
-		response := "Failed to create user account"
+		var code int
+		var response string
 
 		var user types.UserSpec
-		body, err := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &user)
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
+		if err := json.Unmarshal(body, &user); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		userAccount, err := users.CreateUser(db, user, user.Password == "")
 		if err == nil && userAccount.ID != "" {
@@ -191,12 +208,20 @@ func PostUser(db *sql.DB) http.HandlerFunc {
 func PutUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to updat the user account"
+		var code int
+		var response string
 
 		var userAccount types.UserSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &userAccount)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &userAccount); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		vars := mux.Vars(r)
 		userID := vars["id"]
@@ -241,12 +266,20 @@ func PutUser(db *sql.DB) http.HandlerFunc {
 func PatchUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the user account"
+		var code int
+		var response string
 
 		var userAccount types.UserSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &userAccount)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &userAccount); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		vars := mux.Vars(r)
 		userID := vars["id"]
@@ -291,12 +324,20 @@ func PatchUser(db *sql.DB) http.HandlerFunc {
 func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the user account as disabled"
+		var code int
+		var response string
 
 		var userAccount types.UserSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &userAccount)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &userAccount); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		vars := mux.Vars(r)
 		userID := vars["id"]
@@ -346,7 +387,7 @@ func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 			return
 		}
 
-		if isAdmin == true && userID == jwtID {
+		if isAdmin && userID == jwtID {
 			code = http.StatusForbidden
 			response = "Unable to disabled own user account"
 			JSONresp := types.JSONMessageResponse{
@@ -384,8 +425,8 @@ func PatchUserDisabled(db *sql.DB) http.HandlerFunc {
 func DeleteUser(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to delete user account"
+		var code int
+		var response string
 
 		vars := mux.Vars(r)
 		userID := vars["id"]
@@ -458,8 +499,8 @@ func DeleteUser(db *sql.DB) http.HandlerFunc {
 func GetProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to fetch user account"
+		var code int
+		var response string
 
 		user, err := users.GetProfile(db, r)
 		if err == nil && user.ID != "" {
@@ -485,12 +526,20 @@ func GetProfile(db *sql.DB) http.HandlerFunc {
 func PutProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the user account"
+		var code int
+		var response string
 
 		var userAccount types.UserSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &userAccount)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &userAccount); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		id, errID := users.GetIDFromJWT(db, r)
 		userAccountUpdated, err := users.UpdateProfile(db, id, userAccount)
@@ -517,12 +566,20 @@ func PutProfile(db *sql.DB) http.HandlerFunc {
 func PatchProfile(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the user account"
+		var code int
+		var response string
 
 		var userAccount types.UserSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &userAccount)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &userAccount); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		id, errID := users.GetIDFromJWT(db, r)
 		userAccountPatched, err := users.PatchProfile(db, id, userAccount)
@@ -550,8 +607,8 @@ func GetSystemInitialized(db *sql.DB) http.HandlerFunc {
 	systemManager := system.SystemManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to fetch if this FlatTrack instance has initialized"
+		var code int
+		var response string
 		initialized, err := systemManager.GetHasInitialized()
 		if err == nil {
 			code = http.StatusOK
@@ -578,13 +635,21 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 	userManager := users.UserManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to authenticate user, incorrect or not found email or password"
-		code := http.StatusUnauthorized
+		var response string
+		var code int
 		jwtToken := ""
 
 		var user types.UserSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &user)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &user); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		userInDB, err := users.GetUserByEmail(db, user.Email, false)
 		if err != nil {
@@ -598,16 +663,16 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 			JSONResponse(r, w, code, JSONresp)
 			return
 		}
-		if userInDB.ID != "" && userInDB.Registered == false {
+		if userInDB.ID != "" && !userInDB.Registered {
 			response = "Account not yet registered"
 			code = http.StatusForbidden
-		} else if userInDB.Disabled == true {
+		} else if userInDB.Disabled {
 			response = "User account has been disabled"
 			code = http.StatusForbidden
 		}
 		// Check password locally, fall back to remote if incorrect
 		matches, err := users.CheckUserPassword(db, userInDB.Email, user.Password)
-		if err == nil && matches == true && code == http.StatusUnauthorized {
+		if err == nil && matches && code == http.StatusUnauthorized {
 			jwtToken, _ = userManager.GenerateJWTauthToken(userInDB.ID, userInDB.AuthNonce, 0)
 			response = "Successfully authenticated user"
 			code = http.StatusOK
@@ -628,11 +693,11 @@ func UserAuth(db *sql.DB) http.HandlerFunc {
 func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to validate authentication token"
-		code := http.StatusUnauthorized
+		var response string
+		var code int
 
 		valid, claims, err := users.ValidateJWTauthToken(db, r)
-		if valid == true && err == nil {
+		if valid && err == nil {
 			response = "Authentication token is valid"
 			code = http.StatusOK
 		} else {
@@ -655,8 +720,8 @@ func UserAuthValidate(db *sql.DB) http.HandlerFunc {
 func UserAuthReset(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to sign out all devices logged in"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		id, err := users.GetIDFromJWT(db, r)
 		if err != nil {
@@ -690,8 +755,8 @@ func UserAuthReset(db *sql.DB) http.HandlerFunc {
 func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to determine group privileges"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		groupName := vars["name"]
@@ -734,8 +799,8 @@ func UserCanIgroup(db *sql.DB) http.HandlerFunc {
 func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch the flat name"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		flatName, err := settings.GetFlatName(db)
 		if flatName == "" {
@@ -761,12 +826,20 @@ func GetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 func SetSettingsFlatName(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to update the flat name"
+		var code int
+		var response string
 
 		var flatName types.FlatName
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &flatName)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &flatName); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		err := settings.SetFlatName(db, flatName.FlatName)
 		if err == nil {
@@ -793,8 +866,8 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 	systemManager := system.SystemManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to register the FlatTrack instance"
+		var code int
+		var response string
 
 		initialized, err := systemManager.GetHasInitialized()
 		if err == nil && initialized == "true" {
@@ -813,8 +886,16 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 		}
 
 		var registrationForm types.Registration
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &registrationForm)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &registrationForm); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		registered, jwt, err := registration.Register(db, registrationForm)
 		if err == nil {
@@ -841,8 +922,8 @@ func PostAdminRegister(db *sql.DB) http.HandlerFunc {
 func GetShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch shopping lists"
-		code := http.StatusNotFound
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -868,8 +949,8 @@ func GetShoppingList(db *sql.DB) http.HandlerFunc {
 func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch shopping lists"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		modificationTimestampAfter, _ := strconv.Atoi(r.FormValue("modificationTimestampAfter"))
 		creationTimestampAfter, _ := strconv.Atoi(r.FormValue("creationTimestampAfter"))
@@ -906,12 +987,20 @@ func GetShoppingLists(db *sql.DB) http.HandlerFunc {
 func PostShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to create the shopping list"
+		var code int
+		var response string
 
 		var shoppingList types.ShoppingListSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &shoppingList)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &shoppingList); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		options := types.ShoppingItemOptions{
 			Selector: types.ShoppingItemSelector{
@@ -945,12 +1034,20 @@ func PostShoppingList(db *sql.DB) http.HandlerFunc {
 func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusBadRequest
-		response := "Failed to patch the shopping list"
+		var code int
+		var response string
 
 		var shoppingList types.ShoppingListSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &shoppingList)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &shoppingList); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		vars := mux.Vars(r)
 		listID := vars["id"]
@@ -995,12 +1092,20 @@ func PatchShoppingList(db *sql.DB) http.HandlerFunc {
 func PutShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to update the shopping list"
+		var code int
+		var response string
 
 		var shoppingList types.ShoppingListSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &shoppingList)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &shoppingList); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		vars := mux.Vars(r)
 		listID := vars["id"]
@@ -1046,8 +1151,8 @@ func PutShoppingList(db *sql.DB) http.HandlerFunc {
 func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to delete the shopping list"
+		var code int
+		var response string
 
 		vars := mux.Vars(r)
 		listID := vars["id"]
@@ -1090,8 +1195,8 @@ func DeleteShoppingList(db *sql.DB) http.HandlerFunc {
 func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch shopping list items"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -1140,8 +1245,8 @@ func GetShoppingListItems(db *sql.DB) http.HandlerFunc {
 func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch shopping list item"
-		code := http.StatusNotFound
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		itemID := vars["itemId"]
@@ -1183,12 +1288,20 @@ func GetShoppingListItem(db *sql.DB) http.HandlerFunc {
 func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to create the shopping list item"
+		var code int
+		var response string
 
 		var shoppingItem types.ShoppingItemSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &shoppingItem)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &shoppingItem); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		vars := mux.Vars(r)
 		listID := vars["id"]
@@ -1234,12 +1347,20 @@ func PostItemToShoppingList(db *sql.DB) http.HandlerFunc {
 func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the shopping list completed field"
+		var code int
+		var response string
 
 		var shoppingList types.ShoppingListSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &shoppingList)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &shoppingList); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		vars := mux.Vars(r)
 		listID := vars["id"]
@@ -1284,12 +1405,20 @@ func PatchShoppingListCompleted(db *sql.DB) http.HandlerFunc {
 func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the shopping list item"
+		var code int
+		var response string
 
 		var shoppingItem types.ShoppingItemSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &shoppingItem)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &shoppingItem); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		vars := mux.Vars(r)
 		itemID := vars["id"]
@@ -1351,12 +1480,20 @@ func PatchShoppingListItem(db *sql.DB) http.HandlerFunc {
 func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to update the shopping list item"
+		var code int
+		var response string
 
 		var shoppingItem types.ShoppingItemSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &shoppingItem)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &shoppingItem); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		vars := mux.Vars(r)
 		itemID := vars["id"]
@@ -1418,12 +1555,20 @@ func PutShoppingListItem(db *sql.DB) http.HandlerFunc {
 func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to patch the shopping list item obtained field"
+		var code int
+		var response string
 
 		var shoppingItem types.ShoppingItemSpec
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &shoppingItem)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &shoppingItem); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		vars := mux.Vars(r)
 		itemID := vars["id"]
@@ -1484,8 +1629,8 @@ func PatchShoppingListItemObtained(db *sql.DB) http.HandlerFunc {
 func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to delete the shopping list item"
+		var code int
+		var response string
 
 		vars := mux.Vars(r)
 		itemID := vars["itemId"]
@@ -1544,8 +1689,8 @@ func DeleteShoppingListItem(db *sql.DB) http.HandlerFunc {
 func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch shopping list item tags"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		listID := vars["listId"]
@@ -1571,8 +1716,8 @@ func GetShoppingListItemTags(db *sql.DB) http.HandlerFunc {
 func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to update shopping list item tag name"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		listID := vars["listId"]
@@ -1594,8 +1739,16 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 		}
 
 		var tagUpdate types.ShoppingTag
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &tagUpdate)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &tagUpdate); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		tag, err = shoppinglist.UpdateShoppingListTag(db, listID, tag, tagUpdate.Name)
 		if err == nil {
@@ -1618,8 +1771,8 @@ func UpdateShoppingListItemTag(db *sql.DB) http.HandlerFunc {
 func GetAllShoppingTags(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch shopping list item tags"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		options := types.ShoppingTagOptions{
 			SortBy: r.FormValue("sortBy"),
@@ -1646,12 +1799,20 @@ func GetAllShoppingTags(db *sql.DB) http.HandlerFunc {
 func PostShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to create a shopping tag"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		var tag types.ShoppingTag
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &tag)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &tag); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		id, errID := users.GetIDFromJWT(db, r)
 		tag.Author = id
@@ -1678,8 +1839,8 @@ func PostShoppingTag(db *sql.DB) http.HandlerFunc {
 func GetShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch a shopping tag"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -1705,8 +1866,8 @@ func GetShoppingTag(db *sql.DB) http.HandlerFunc {
 func UpdateShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to update a shopping tag"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -1727,8 +1888,16 @@ func UpdateShoppingTag(db *sql.DB) http.HandlerFunc {
 		}
 
 		var tagUpdate types.ShoppingTag
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &tagUpdate)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &tagUpdate); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		userID, errID := users.GetIDFromJWT(db, r)
 		tagUpdate.AuthorLast = userID
@@ -1753,8 +1922,8 @@ func UpdateShoppingTag(db *sql.DB) http.HandlerFunc {
 func DeleteShoppingTag(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to delete the shopping tag"
+		var code int
+		var response string
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -1797,8 +1966,8 @@ func DeleteShoppingTag(db *sql.DB) http.HandlerFunc {
 func GetSettingsShoppingListNotes(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch the shopping list notes"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		notes, err := settings.GetShoppingListNotes(db)
 		if notes == "" {
@@ -1824,12 +1993,20 @@ func GetSettingsShoppingListNotes(db *sql.DB) http.HandlerFunc {
 func PutSettingsShoppingList(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to update the notes for shopping lists"
+		var code int
+		var response string
 
 		var notes types.ShoppingListNotes
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &notes)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &notes); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		err := settings.SetShoppingListNotes(db, notes.Notes)
 		if err == nil {
@@ -1856,8 +2033,8 @@ func PutSettingsShoppingList(db *sql.DB) http.HandlerFunc {
 func GetSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch the flat notes"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		notes, err := settings.GetFlatNotes(db)
 		if notes == "" {
@@ -1885,12 +2062,20 @@ func GetSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 func PutSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		code := http.StatusInternalServerError
-		response := "Failed to update the notes the flat"
+		var code int
+		var response string
 
 		var notes types.FlatNotes
-		body, _ := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &notes)
+		body, _ := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &notes); err != nil {
+			log.Printf("error: failed to unmarshal; %v\n", err)
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		err := settings.SetFlatNotes(db, notes.Notes)
 		if err == nil {
@@ -1917,8 +2102,8 @@ func PutSettingsFlatNotes(db *sql.DB) http.HandlerFunc {
 func GetAllGroups(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch groups"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		groups, err := groups.GetAllGroups(db)
 		if err == nil {
@@ -1941,8 +2126,8 @@ func GetAllGroups(db *sql.DB) http.HandlerFunc {
 func GetGroup(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch groups"
-		code := http.StatusNotFound
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -1968,8 +2153,8 @@ func GetGroup(db *sql.DB) http.HandlerFunc {
 func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch user account creation secrets"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		userIDSelector := r.FormValue("userId")
 		userCreationSecretSelector := types.UserCreationSecretSelector{
@@ -1997,8 +2182,8 @@ func GetUserConfirms(db *sql.DB) http.HandlerFunc {
 func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch user account creation secret"
-		code := http.StatusNotFound
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -2024,8 +2209,8 @@ func GetUserConfirm(db *sql.DB) http.HandlerFunc {
 func GetUserConfirmValid(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to fetch user account creation secret"
-		code := http.StatusNotFound
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -2052,8 +2237,8 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 	userManager := users.UserManager{DB: db}
 	return func(w http.ResponseWriter, r *http.Request) {
 		var context string
-		response := "Failed to confirm your user account"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		vars := mux.Vars(r)
 		id := vars["id"]
@@ -2061,8 +2246,15 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 		secret := r.FormValue("secret")
 
 		var user types.UserSpec
-		body, errUnmarshal := ioutil.ReadAll(r.Body)
-		json.Unmarshal(body, &user)
+		body, errUnmarshal := io.ReadAll(r.Body)
+		if err := json.Unmarshal(body, &user); err != nil {
+			JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "failed to read request body",
+				},
+			})
+			return
+		}
 
 		tokenString, err := userManager.ConfirmUserAccount(id, secret, user)
 		if err == nil && errUnmarshal == nil {
@@ -2086,7 +2278,7 @@ func PostUserConfirm(db *sql.DB) http.HandlerFunc {
 // GetVersion ...
 // returns version information about the instance
 func GetVersion(w http.ResponseWriter, r *http.Request) {
-	response := "Fetched version information"
+	var response string
 	version := common.GetAppBuildVersion()
 	commitHash := common.GetAppBuildHash()
 	mode := common.GetAppBuildMode()
@@ -2127,13 +2319,17 @@ func (router Router) GetServeFilestoreObjects(prefix string) http.HandlerFunc {
 		object, objectInfo, err := router.FileAccess.Get(path)
 		if objectInfo.Size == 0 {
 			w.WriteHeader(http.StatusNotFound)
-			w.Write([]byte("File not found"))
+			if _, err := w.Write([]byte("File not found")); err != nil {
+				log.Printf("error: failed to write response; %v", err)
+			}
 			return
 		}
 		if err != nil {
 			log.Printf("%#v\n", err)
 			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte("An error occurred with retrieving the requested object"))
+			if _, err := w.Write([]byte("An error occurred with retrieving the requested object")); err != nil {
+				log.Printf("error: failed to write response; %v\n", err)
+			}
 			return
 		}
 		log.Println(objectInfo.Key, objectInfo.Size, objectInfo.ContentType)
@@ -2141,7 +2337,9 @@ func (router Router) GetServeFilestoreObjects(prefix string) http.HandlerFunc {
 		w.Header().Set("content-type", objectInfo.ContentType)
 		w.Header().Set("accept-ranges", "bytes")
 		w.WriteHeader(http.StatusOK)
-		w.Write(object)
+		if _, err := w.Write(object); err != nil {
+			log.Printf("error: failed to write response; %v\n", err)
+		}
 	}
 }
 
@@ -2170,8 +2368,8 @@ func UnknownEndpoint(w http.ResponseWriter, r *http.Request) {
 // HTTP handler for health checks
 func Healthz(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		response := "App unhealthy"
-		code := http.StatusInternalServerError
+		var response string
+		var code int
 
 		err := health.Healthy(db)
 		if err == nil {
@@ -2195,7 +2393,7 @@ func HTTPvalidateJWT(db *sql.DB) func(http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			var context string
 			completed, claims, err := users.ValidateJWTauthToken(db, r)
-			if completed == true && err == nil {
+			if completed && err == nil {
 				h.ServeHTTP(w, r)
 				return
 			}
@@ -2219,7 +2417,7 @@ func HTTPcheckGroupsFromID(db *sql.DB, groupsAllowed ...string) func(http.Handle
 		return func(w http.ResponseWriter, r *http.Request) {
 			id, errID := users.GetIDFromJWT(db, r)
 			for _, group := range groupsAllowed {
-				if userInGroup, err := groups.CheckUserInGroup(db, id, group); userInGroup == true && err == nil && err == errID {
+				if userInGroup, err := groups.CheckUserInGroup(db, id, group); userInGroup && err == nil && err == errID {
 					h.ServeHTTP(w, r)
 					return
 				}
@@ -2239,6 +2437,8 @@ func HTTPcheckGroupsFromID(db *sql.DB, groupsAllowed ...string) func(http.Handle
 func HTTP404() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`404 not found`))
+		if _, err := w.Write([]byte(`404 not found`)); err != nil {
+			log.Printf("error: failed to write repsonse; %v\n", err)
+		}
 	}
 }

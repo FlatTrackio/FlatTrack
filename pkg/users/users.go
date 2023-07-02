@@ -21,6 +21,7 @@ package users
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -48,7 +49,7 @@ func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (val
 	if len(user.Names) == 0 || len(user.Names) > 60 || user.Names == "" {
 		return false, fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
 	}
-	if common.RegexMatchEmail(user.Email) == false || user.Email == "" {
+	if !common.RegexMatchEmail(user.Email) || user.Email == "" {
 		return false, fmt.Errorf("Unable to use the provided email, as it is either empty or not valid")
 	}
 
@@ -65,22 +66,22 @@ func ValidateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (val
 			return false, fmt.Errorf("Unable to use the provided group '%v' as it is invalid", groupItem)
 		}
 	}
-	if groupsIncludeFlatmember == false {
+	if !groupsIncludeFlatmember {
 		return false, fmt.Errorf("User account must be in the flatmember group")
 	}
 
-	if user.Birthday != 0 && (common.ValidateBirthday(user.Birthday) == false) {
+	if user.Birthday != 0 && !common.ValidateBirthday(user.Birthday) {
 		return false, fmt.Errorf("Unable to use the provided birthday, your birthday year must not be within the last 15 years")
 	}
 
-	if (common.RegexMatchPassword(user.Password) == false || user.Password == "") && allowEmptyPassword == false {
+	if (!common.RegexMatchPassword(user.Password) || user.Password == "") && !allowEmptyPassword {
 		return false, fmt.Errorf("Unable to use the provided password, as it is either empty of invalid")
 	}
-	if user.PhoneNumber != "" && common.RegexMatchPhoneNumber(user.PhoneNumber) == false {
+	if user.PhoneNumber != "" && !common.RegexMatchPhoneNumber(user.PhoneNumber) {
 		return false, fmt.Errorf("Unable to use the provided phone number")
 	}
 
-	return true, err
+	return true, nil
 }
 
 // CreateUser ...
@@ -90,19 +91,19 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
 
 	validUser, err := ValidateUser(db, user, allowEmptyPassword)
 	if !validUser || err != nil {
-		return userInserted, err
+		return types.UserSpec{}, err
 	}
 	localUser, err := GetUserByEmail(db, user.Email, false)
 	if err == nil || localUser.ID != "" {
-		return userInserted, fmt.Errorf("Email address is unable to be used")
+		return types.UserSpec{}, fmt.Errorf("Email address is unable to be used")
 	}
 	if localUser.Email == user.Email {
-		return userInserted, fmt.Errorf("Email address is already taken")
+		return types.UserSpec{}, fmt.Errorf("Email address is already taken")
 	}
 	if user.Password != "" {
 		user.Password = common.HashSHA512(user.Password)
 	}
-	if allowEmptyPassword == false {
+	if !allowEmptyPassword {
 		user.Registered = true
 	}
 
@@ -111,32 +112,35 @@ func CreateUser(db *sql.DB, user types.UserSpec, allowEmptyPassword bool) (userI
                          returning *`
 	rows, err := db.Query(sqlStatement, user.Names, user.Email, user.Password, user.PhoneNumber, user.Birthday, user.ContractAgreement, user.Disabled, user.Registered)
 	if err != nil {
-		return userInserted, err
+		return types.UserSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	userInserted, err = UserObjectFromRows(rows)
 	if err != nil {
-		return userInserted, err
+		return types.UserSpec{}, err
 	}
-
 	updatedGroups, err := groups.UpdateUserGroups(db, userInserted.ID, user.Groups)
-	if updatedGroups == false || err != nil {
-		return userInserted, err
+	if !updatedGroups || err != nil {
+		return types.UserSpec{}, err
 	}
 	userInserted.Groups = user.Groups
 	userInserted.Password = ""
-	if allowEmptyPassword == true {
+	if allowEmptyPassword {
 		userCreationSecretInserted, err = CreateUserCreationSecret(db, userInserted.ID)
 		if err != nil {
-			return userInserted, err
+			return types.UserSpec{}, err
 		}
 		if userCreationSecretInserted.ID == "" {
-			return userInserted, fmt.Errorf("Failed to created a user creation secret")
+			return types.UserSpec{}, fmt.Errorf("Failed to created a user creation secret")
 		}
 	}
 
-	return userInserted, err
+	return userInserted, nil
 }
 
 // GetAllUsers ...
@@ -145,9 +149,13 @@ func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector)
 	sqlStatement := `select * from users where deletionTimestamp = 0 order by names`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		return users, err
+		return []types.UserSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
 		found := true
 		user, err := UserObjectFromRows(rows)
@@ -169,10 +177,10 @@ func GetAllUsers(db *sql.DB, includePassword bool, selectors types.UserSelector)
 			found = !(selectors.NotID == user.ID)
 		}
 		user.Groups = groupsOfUser
-		if includePassword == false {
+		if !includePassword {
 			user.Password = ""
 		}
-		if found == false {
+		if !found {
 			continue
 		}
 		users = append(users, user)
@@ -188,30 +196,38 @@ func GetUser(db *sql.DB, userSelect types.UserSpec, includePassword bool) (user 
 	}
 	if userSelect.Email != "" {
 		if common.RegexMatchEmail(userSelect.Email) {
-			return user, fmt.Errorf("Invalid email address")
+			return types.UserSpec{}, fmt.Errorf("Invalid email address")
 		}
 		return GetUserByEmail(db, userSelect.Email, includePassword)
 	}
-	if includePassword == false {
+	if !includePassword {
 		user.Password = ""
 	}
-	return user, err
+	return user, nil
 }
 
 // UserObjectFromRowsRestricted ...
 // construct a restricted UserSpec from database rows
 func UserObjectFromRowsRestricted(rows *sql.Rows) (user types.UserSpec, err error) {
-	rows.Scan(&user.ID, &user.Names, &user.Email, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
-	err = rows.Err()
-	return user, err
+	if err := rows.Scan(&user.ID, &user.Names, &user.Email, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp); err != nil {
+		return types.UserSpec{}, err
+	}
+	if err := rows.Err(); err != nil {
+		return types.UserSpec{}, err
+	}
+	return user, nil
 }
 
 // UserObjectFromRows ...
 // construct a UserSpec from database rows
 func UserObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
-	rows.Scan(&user.ID, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.AuthNonce, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp)
-	err = rows.Err()
-	return user, err
+	if err := rows.Scan(&user.ID, &user.Names, &user.Email, &user.Password, &user.PhoneNumber, &user.Birthday, &user.ContractAgreement, &user.Disabled, &user.Registered, &user.LastLogin, &user.AuthNonce, &user.CreationTimestamp, &user.ModificationTimestamp, &user.DeletionTimestamp); err != nil {
+		return types.UserSpec{}, err
+	}
+	if err := rows.Err(); err != nil {
+		return types.UserSpec{}, err
+	}
+	return user, nil
 }
 
 // GetUserByID ...
@@ -220,23 +236,27 @@ func GetUserByID(db *sql.DB, id string, includePassword bool) (user types.UserSp
 	sqlStatement := `select * from users where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
-		return user, err
+		return types.UserSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	user, err = UserObjectFromRows(rows)
 	if err != nil {
-		return user, err
+		return types.UserSpec{}, err
 	}
 	groups, err := groups.GetGroupNamesOfUserByID(db, user.ID)
 	if err != nil {
-		return user, err
+		return types.UserSpec{}, err
 	}
 	user.Groups = groups
-	if includePassword == false {
+	if !includePassword {
 		user.Password = ""
 	}
-	return user, err
+	return user, nil
 }
 
 // GetUserByEmail ...
@@ -245,26 +265,30 @@ func GetUserByEmail(db *sql.DB, email string, includePassword bool) (user types.
 	sqlStatement := `select * from users where email = $1`
 	rows, err := db.Query(sqlStatement, email)
 	if err != nil {
-		return user, err
+		return types.UserSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	user, err = UserObjectFromRows(rows)
 	if err != nil {
-		return user, err
+		return types.UserSpec{}, err
 	}
 	if user.ID == "" {
-		return user, fmt.Errorf("Failed to find user")
+		return types.UserSpec{}, fmt.Errorf("Failed to find user")
 	}
 	groups, err := groups.GetGroupNamesOfUserByID(db, user.ID)
 	if err != nil {
-		return user, err
+		return types.UserSpec{}, err
 	}
 	user.Groups = groups
-	if includePassword == false {
+	if !includePassword {
 		user.Password = ""
 	}
-	return user, err
+	return user, nil
 }
 
 // DeleteUserByID ...
@@ -280,16 +304,21 @@ func DeleteUserByID(db *sql.DB, id string) (err error) {
 			return err
 		}
 	}
-
 	err = DeleteUserCreationSecretByUserID(db, id)
 	if err != nil {
 		return err
 	}
-
 	sqlStatement := `update users set email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
 	rows, err := db.Query(sqlStatement, id)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // CheckUserPassword ...
@@ -297,10 +326,10 @@ func DeleteUserByID(db *sql.DB, id string) (err error) {
 func CheckUserPassword(db *sql.DB, email string, password string) (matches bool, err error) {
 	user, err := GetUserByEmail(db, email, true)
 	if err != nil {
-		return matches, err
+		return false, err
 	}
 	passwordHashed := common.HashSHA512(password)
-	return user.Password == passwordHashed, err
+	return user.Password == passwordHashed, nil
 }
 
 // GenerateJWTauthToken ...
@@ -324,7 +353,10 @@ func (u UserManager) GenerateJWTauthToken(id string, authNonce string, expiresIn
 	})
 
 	tokenString, err = token.SignedString([]byte(secret))
-	return tokenString, err
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }
 
 // GetAuthTokenFromHeader ...
@@ -361,7 +393,7 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, tokenClaims 
 		return false, &types.JWTclaim{}, err
 	}
 
-	if token.Valid == false {
+	if !token.Valid {
 		return false, &types.JWTclaim{}, fmt.Errorf("Unable to use existing login token as it is invalid")
 	}
 	if err := token.Claims.Valid(); err != nil {
@@ -372,7 +404,7 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, tokenClaims 
 	}
 
 	reqClaims, ok := token.Claims.(*types.JWTclaim)
-	if ok == false {
+	if !ok {
 		return false, &types.JWTclaim{}, fmt.Errorf("Unable to read JWT claims")
 	}
 	user, err := GetUserByID(db, reqClaims.ID, true)
@@ -384,7 +416,7 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, tokenClaims 
 		return false, &types.JWTclaim{}, fmt.Errorf("Authentication has been invalidated, please log in again")
 	}
 
-	if user.Disabled == true {
+	if user.Disabled {
 		return false, &types.JWTclaim{}, fmt.Errorf("Your user account is disabled")
 	}
 
@@ -396,8 +428,15 @@ func ValidateJWTauthToken(db *sql.DB, r *http.Request) (valid bool, tokenClaims 
 func InvalidateAllAuthTokens(db *sql.DB, id string) (err error) {
 	sqlStatement := `update users set authNonce = md5(random()::text || clock_timestamp()::text)::uuid where id = $1`
 	rows, err := db.Query(sqlStatement, id)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // GetIDFromJWT ...
@@ -428,9 +467,10 @@ func GetIDFromJWT(db *sql.DB, r *http.Request) (id string, err error) {
 	reqClaims := token.Claims.(*types.JWTclaim)
 	user, err := GetUserByID(db, reqClaims.ID, true)
 	if err != nil || user.ID == "" {
+		log.Printf("error getting user by ID; %v\n", err)
 		return "", fmt.Errorf("Unable to find the user account which the authentication token belongs to")
 	}
-	return user.ID, err
+	return user.ID, nil
 }
 
 // GetProfile ...
@@ -438,11 +478,13 @@ func GetIDFromJWT(db *sql.DB, r *http.Request) (id string, err error) {
 func GetProfile(db *sql.DB, r *http.Request) (user types.UserSpec, err error) {
 	id, err := GetIDFromJWT(db, r)
 	if err != nil {
-		return user, err
+		return types.UserSpec{}, err
 	}
-
 	user, err = GetUserByID(db, id, false)
-	return user, err
+	if err != nil {
+		return types.UserSpec{}, err
+	}
+	return user, nil
 }
 
 // PatchProfile ...
@@ -450,25 +492,25 @@ func GetProfile(db *sql.DB, r *http.Request) (user types.UserSpec, err error) {
 func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
 	existingUserAccount, err := GetUserByID(db, id, true)
 	if err != nil || existingUserAccount.ID == "" {
-		return userAccountPatched, fmt.Errorf("Failed to find user account")
+		return types.UserSpec{}, fmt.Errorf("Failed to find user account")
 	}
 	if userAccount.Email != "" && userAccount.Email != existingUserAccount.Email {
 		localUser, err := GetUserByEmail(db, userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
-			return userAccountPatched, fmt.Errorf("Email address is unable to be used")
+			return types.UserSpec{}, fmt.Errorf("Email address is unable to be used")
 		}
 	}
 	err = mergo.Merge(&userAccount, existingUserAccount)
 	if err != nil {
-		return userAccountPatched, fmt.Errorf("Failed to update fields in the user account")
+		return types.UserSpec{}, fmt.Errorf("Failed to update fields in the user account")
 	}
 	noUpdatePassword := userAccount.Password == existingUserAccount.Password
 	valid, err := ValidateUser(db, userAccount, noUpdatePassword)
 	if !valid || err != nil {
-		return existingUserAccount, err
+		return types.UserSpec{}, err
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
-	if noUpdatePassword == true {
+	if noUpdatePassword {
 		passwordHashed = userAccount.Password
 	}
 
@@ -477,18 +519,22 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday)
 	if err != nil {
 		// TODO add roll back, if there's failure
-		return userAccountPatched, err
+		return types.UserSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	userAccountPatched, err = UserObjectFromRowsRestricted(rows)
 	if err != nil || userAccountPatched.ID == "" {
-		return userAccountPatched, fmt.Errorf("Failed to patch user account")
+		return types.UserSpec{}, fmt.Errorf("Failed to patch user account")
 	}
 
 	userAccountPatched.Groups = existingUserAccount.Groups
 	userAccountPatched.Password = ""
-	return userAccountPatched, err
+	return userAccountPatched, nil
 }
 
 // PatchProfileAdmin ...
@@ -496,25 +542,25 @@ func PatchProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccoun
 func PatchProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
 	existingUserAccount, err := GetUserByID(db, id, true)
 	if err != nil || existingUserAccount.ID == "" {
-		return userAccountPatched, fmt.Errorf("Failed to find user account")
+		return types.UserSpec{}, fmt.Errorf("Failed to find user account")
 	}
 	if userAccount.Email != "" && userAccount.Email != existingUserAccount.Email {
 		localUser, err := GetUserByEmail(db, userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
-			return userAccountPatched, fmt.Errorf("Email address is unable to be used")
+			return types.UserSpec{}, fmt.Errorf("Email address is unable to be used")
 		}
 	}
 	err = mergo.Merge(&userAccount, existingUserAccount)
 	if err != nil {
-		return userAccountPatched, fmt.Errorf("Failed to update fields in the user account")
+		return types.UserSpec{}, fmt.Errorf("Failed to update fields in the user account")
 	}
 	noUpdatePassword := userAccount.Password == existingUserAccount.Password
 	valid, err := ValidateUser(db, userAccount, noUpdatePassword)
 	if !valid || err != nil {
-		return existingUserAccount, err
+		return types.UserSpec{}, err
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
-	if noUpdatePassword == true {
+	if noUpdatePassword {
 		passwordHashed = userAccount.Password
 	}
 
@@ -523,23 +569,28 @@ func PatchProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userA
 	rows, err := db.Query(sqlStatement, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Registered, userAccount.LastLogin, userAccount.AuthNonce, id)
 	if err != nil {
 		// TODO add roll back, if there's failure
-		return userAccountPatched, err
+		return types.UserSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	userAccountPatched, err = UserObjectFromRows(rows)
 	if err != nil || userAccountPatched.ID == "" {
-		return userAccountPatched, fmt.Errorf("Failed to patch user account")
+		log.Printf("error getting user object from rows: %v\n", err)
+		return types.UserSpec{}, fmt.Errorf("Failed to patch user account")
 	}
 
 	updatedGroups, err := groups.UpdateUserGroups(db, id, userAccount.Groups)
-	if updatedGroups == false || err != nil {
-		return userAccountPatched, err
+	if !updatedGroups || err != nil {
+		return types.UserSpec{}, err
 	}
 
 	userAccountPatched.Password = ""
 	userAccountPatched.Groups = userAccount.Groups
-	return userAccountPatched, err
+	return userAccountPatched, nil
 }
 
 // UpdateProfile ...
@@ -547,16 +598,16 @@ func PatchProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userA
 func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
 	valid, err := ValidateUser(db, userAccount, false)
 	if !valid || err != nil {
-		return userAccountUpdated, err
+		return types.UserSpec{}, err
 	}
 	existingUserAccount, err := GetUserByID(db, id, true)
 	if err != nil || existingUserAccount.ID == "" {
-		return userAccountUpdated, fmt.Errorf("Failed to find user account")
+		return types.UserSpec{}, fmt.Errorf("Failed to find user account")
 	}
 	if userAccount.Email != existingUserAccount.Email {
 		localUser, err := GetUserByEmail(db, userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
-			return userAccountUpdated, fmt.Errorf("Email address is unable to be used")
+			return types.UserSpec{}, fmt.Errorf("Email address is unable to be used")
 		}
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
@@ -566,17 +617,21 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement)
 	if err != nil {
 		// TODO add roll back, if there's failure
-		return userAccountUpdated, err
+		return types.UserSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	userAccountUpdated, err = UserObjectFromRowsRestricted(rows)
 	if err != nil || userAccountUpdated.ID == "" {
-		return userAccountUpdated, fmt.Errorf("Failed to update profile")
+		log.Printf("error getting user object from rows (restricted): %v\n", err)
+		return types.UserSpec{}, fmt.Errorf("Failed to update profile")
 	}
-
 	userAccountUpdated.Groups = existingUserAccount.Groups
-	return userAccountUpdated, err
+	return userAccountUpdated, nil
 }
 
 // UpdateProfileAdmin ...
@@ -584,16 +639,16 @@ func UpdateProfile(db *sql.DB, id string, userAccount types.UserSpec) (userAccou
 func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
 	valid, err := ValidateUser(db, userAccount, false)
 	if !valid || err != nil {
-		return userAccountUpdated, err
+		return types.UserSpec{}, err
 	}
 	existingUserAccount, err := GetUserByID(db, id, true)
 	if err != nil || existingUserAccount.ID == "" {
-		return userAccountUpdated, fmt.Errorf("Failed to find user account")
+		return types.UserSpec{}, fmt.Errorf("Failed to find user account")
 	}
 	if userAccount.Email != existingUserAccount.Email {
 		localUser, err := GetUserByEmail(db, userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
-			return userAccountUpdated, fmt.Errorf("Email address is unable to be used")
+			return types.UserSpec{}, fmt.Errorf("Email address is unable to be used")
 		}
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
@@ -603,31 +658,40 @@ func UpdateProfileAdmin(db *sql.DB, id string, userAccount types.UserSpec) (user
 	rows, err := db.Query(sqlStatement, id, userAccount.Names, userAccount.Email, passwordHashed, userAccount.PhoneNumber, userAccount.Birthday, userAccount.ContractAgreement, userAccount.Registered, userAccount.LastLogin)
 	if err != nil {
 		// TODO add roll back, if there's failure
-		return userAccountUpdated, err
+		return types.UserSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	userAccountUpdated, err = UserObjectFromRows(rows)
 	if err != nil || userAccountUpdated.ID == "" {
-		return userAccountUpdated, fmt.Errorf("Failed to update profile")
+		return types.UserSpec{}, fmt.Errorf("Failed to update profile")
 	}
 
 	updatedGroups, err := groups.UpdateUserGroups(db, id, userAccount.Groups)
-	if updatedGroups == false || err != nil {
-		return userAccountUpdated, err
+	if !updatedGroups || err != nil {
+		// TODO this could potentially panic, if err is nil
+		return types.UserSpec{}, err
 	}
 	userAccountUpdated.Groups = userAccount.Groups
 
 	userAccountUpdated.Password = ""
-	return userAccountUpdated, err
+	return userAccountUpdated, nil
 }
 
 // UserCreationSecretsFromRows ...
 // constructs a UserCreationSecretSpec from rows
 func UserCreationSecretsFromRows(rows *sql.Rows) (creationSecret types.UserCreationSecretSpec, err error) {
-	rows.Scan(&creationSecret.ID, &creationSecret.UserID, &creationSecret.Secret, &creationSecret.Valid, creationSecret.CreationTimestamp, &creationSecret.ModificationTimestamp, &creationSecret.DeletionTimestamp)
-	err = rows.Err()
-	return creationSecret, err
+	if err := rows.Scan(&creationSecret.ID, &creationSecret.UserID, &creationSecret.Secret, &creationSecret.Valid, creationSecret.CreationTimestamp, &creationSecret.ModificationTimestamp, &creationSecret.DeletionTimestamp); err != nil {
+		return types.UserCreationSecretSpec{}, err
+	}
+	if err := rows.Err(); err != nil {
+		return types.UserCreationSecretSpec{}, err
+	}
+	return creationSecret, nil
 }
 
 // GetAllUserCreationSecrets ...
@@ -636,21 +700,25 @@ func GetAllUserCreationSecrets(db *sql.DB, secretsSelector types.UserCreationSec
 	sqlStatement := `select * from user_creation_secret`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		return creationSecrets, err
+		return []types.UserCreationSecretSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
 		creationSecret, err := UserCreationSecretsFromRows(rows)
 		if err != nil {
-			return creationSecrets, fmt.Errorf("Failed to list user creation secrets")
+			return []types.UserCreationSecretSpec{}, fmt.Errorf("Failed to list user creation secrets")
 		}
 		if secretsSelector.UserID != "" {
 			userExists, err := UserAccountExists(db, secretsSelector.UserID)
 			if err != nil {
-				return creationSecrets, err
+				return []types.UserCreationSecretSpec{}, err
 			}
-			if userExists == false {
-				return creationSecrets, fmt.Errorf("Unable to find user account")
+			if !userExists {
+				return []types.UserCreationSecretSpec{}, fmt.Errorf("Unable to find user account")
 			}
 			if creationSecret.UserID != secretsSelector.UserID {
 				continue
@@ -658,7 +726,7 @@ func GetAllUserCreationSecrets(db *sql.DB, secretsSelector types.UserCreationSec
 		}
 		creationSecrets = append(creationSecrets, creationSecret)
 	}
-	return creationSecrets, err
+	return creationSecrets, nil
 }
 
 // GetUserCreationSecret ...
@@ -667,12 +735,19 @@ func GetUserCreationSecret(db *sql.DB, id string) (creationSecret types.UserCrea
 	sqlStatement := `select * from user_creation_secret where id = $1`
 	rows, err := db.Query(sqlStatement, id)
 	if err != nil {
-		return creationSecret, err
+		return types.UserCreationSecretSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	creationSecret, err = UserCreationSecretsFromRows(rows)
-	return creationSecret, err
+	if err != nil {
+		return types.UserCreationSecretSpec{}, err
+	}
+	return creationSecret, nil
 }
 
 // CreateUserCreationSecret ...
@@ -683,12 +758,19 @@ func CreateUserCreationSecret(db *sql.DB, userID string) (userCreationSecretInse
                          returning *`
 	rows, err := db.Query(sqlStatement, userID)
 	if err != nil {
-		return userCreationSecretInserted, err
+		return types.UserCreationSecretSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	userCreationSecretInserted, err = UserCreationSecretsFromRows(rows)
-	return userCreationSecretInserted, err
+	if err != nil {
+		return types.UserCreationSecretSpec{}, err
+	}
+	return userCreationSecretInserted, nil
 }
 
 // DeleteUserCreationSecret ...
@@ -696,8 +778,15 @@ func CreateUserCreationSecret(db *sql.DB, userID string) (userCreationSecretInse
 func DeleteUserCreationSecret(db *sql.DB, id string) (err error) {
 	sqlStatement := `delete from user_creation_secret where id = $1`
 	rows, err := db.Query(sqlStatement, id)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // DeleteUserCreationSecretByUserID ...
@@ -705,29 +794,36 @@ func DeleteUserCreationSecret(db *sql.DB, id string) (err error) {
 func DeleteUserCreationSecretByUserID(db *sql.DB, userID string) (err error) {
 	sqlStatement := `delete from user_creation_secret where userId = $1`
 	rows, err := db.Query(sqlStatement, userID)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // ConfirmUserAccount ...
 // confirms the user account
 func (u UserManager) ConfirmUserAccount(id string, secret string, user types.UserSpec) (tokenString string, err error) {
 	if user.Password == "" {
-		return tokenString, fmt.Errorf("Unable to confirm account, a password must be provided to complete registration")
+		return "", fmt.Errorf("Unable to confirm account, a password must be provided to complete registration")
 	}
 	userCreationSecret, err := GetUserCreationSecret(u.DB, id)
 	if err != nil {
-		return tokenString, err
+		return "", err
 	}
 	if userCreationSecret.ID == "" {
-		return tokenString, fmt.Errorf("Unable to find account confirmation secret")
+		return "", fmt.Errorf("Unable to find account confirmation secret")
 	}
 	if secret != userCreationSecret.Secret {
-		return tokenString, fmt.Errorf("Unable to confirm account, as the secret doesn't match")
+		return "", fmt.Errorf("Unable to confirm account, as the secret doesn't match")
 	}
 	userInDB, err := GetUserByID(u.DB, userCreationSecret.UserID, false)
 	if err != nil {
-		return tokenString, err
+		return "", err
 	}
 
 	userAccountPatch := types.UserSpec{
@@ -740,14 +836,20 @@ func (u UserManager) ConfirmUserAccount(id string, secret string, user types.Use
 	}
 	userConfirmed, err := PatchProfileAdmin(u.DB, userCreationSecret.UserID, userAccountPatch)
 	if err != nil {
-		return tokenString, err
+		return "", err
 	}
-	if userConfirmed.ID == "" || userConfirmed.Registered == false {
-		return tokenString, fmt.Errorf("Failed to patch profile")
+	if userConfirmed.ID == "" || !userConfirmed.Registered {
+		return "", fmt.Errorf("Failed to patch profile")
 	}
 	err = DeleteUserCreationSecret(u.DB, id)
-
-	return u.GenerateJWTauthToken(userInDB.ID, userInDB.AuthNonce, 0)
+	if err != nil {
+		return "", err
+	}
+	tokenString, err = u.GenerateJWTauthToken(userInDB.ID, userInDB.AuthNonce, 0)
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }
 
 // UserAccountExists ...
@@ -758,12 +860,21 @@ func UserAccountExists(db *sql.DB, id string) (exists bool, err error) {
 	if err != nil {
 		return false, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	var userIDFromDB string
-	rows.Scan(&userIDFromDB)
+	if err := rows.Scan(&userIDFromDB); err != nil {
+		return false, err
+	}
 	err = rows.Err()
-	return userIDFromDB == id, err
+	if err != nil {
+		return false, err
+	}
+	return userIDFromDB == id, nil
 }
 
 // GenerateNewAuthNonce ...
@@ -775,10 +886,17 @@ func GenerateNewAuthNonce(db *sql.DB, id string) (err error) {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	_, err = UserObjectFromRows(rows)
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // PatchUserDisabledAdmin ...
@@ -790,9 +908,15 @@ func PatchUserDisabledAdmin(db *sql.DB, id string, disabled bool) (userAccount t
 	if err != nil {
 		return userAccount, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	userAccount, err = UserObjectFromRows(rows)
-	return userAccount, err
-
+	if err != nil {
+		return types.UserSpec{}, err
+	}
+	return userAccount, nil
 }

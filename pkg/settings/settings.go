@@ -21,6 +21,7 @@ package settings
 import (
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 // GetFlatName ...
@@ -29,13 +30,20 @@ func GetFlatName(db *sql.DB) (flatName string, err error) {
 	sqlStatement := `select value from settings where name = 'flatName'`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		return flatName, err
+		return "", err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
-		rows.Scan(&flatName)
+		err = rows.Scan(&flatName)
+		if err != nil {
+			return "", err
+		}
 	}
-	return flatName, err
+	return flatName, nil
 }
 
 // SetFlatName ...
@@ -46,8 +54,15 @@ func SetFlatName(db *sql.DB, flatName string) (err error) {
 	}
 	sqlStatement := `update settings set value = $1 where name = $2;`
 	rows, err := db.Query(sqlStatement, flatName, "flatName")
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // GetTimezone ...
@@ -56,13 +71,20 @@ func GetTimezone(db *sql.DB) (timezone string, err error) {
 	sqlStatement := `select value from settings where name = 'timezone'`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		return timezone, err
+		return "", err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
-		rows.Scan(&timezone)
+		err = rows.Scan(&timezone)
+		if err != nil {
+			return "", err
+		}
 	}
-	return timezone, err
+	return timezone, nil
 }
 
 // SetTimezone ...
@@ -70,8 +92,15 @@ func GetTimezone(db *sql.DB) (timezone string, err error) {
 func SetTimezone(db *sql.DB, timezone string) (err error) {
 	sqlStatement := `update settings set value = $1 where name = 'timezone';`
 	rows, err := db.Query(sqlStatement, timezone)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // GetLanguage ...
@@ -80,13 +109,19 @@ func GetLanguage(db *sql.DB) (language string, err error) {
 	sqlStatement := `select value from settings where name = 'language'`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		return language, err
+		return "", err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
-		rows.Scan(&language)
+		if err := rows.Scan(&language); err != nil {
+			return "", err
+		}
 	}
-	return language, err
+	return language, nil
 }
 
 // SetLanguage ...
@@ -94,8 +129,15 @@ func GetLanguage(db *sql.DB) (language string, err error) {
 func SetLanguage(db *sql.DB, language string) (err error) {
 	sqlStatement := `update settings set value = $1 where name = 'language';`
 	rows, err := db.Query(sqlStatement, language)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // GetShoppingListNotes ...
@@ -104,11 +146,20 @@ func GetShoppingListNotes(db *sql.DB) (notes string, err error) {
 	sqlStatement := `select value from settings where name = 'shoppingListNotes'`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		return notes, err
+		return "", err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
-		rows.Scan(&notes)
+		if err := rows.Scan(&notes); err != nil {
+			return "", err
+		}
+		if err := rows.Err(); err != nil {
+			return "", err
+		}
 	}
 	return notes, err
 }
@@ -121,7 +172,14 @@ func SetShoppingListNotes(db *sql.DB, notes string) (err error) {
 	}
 	sqlStatement := `update settings set value = $1 where name = 'shoppingListNotes';`
 	rows, err := db.Query(sqlStatement, notes)
-	defer rows.Close()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	return err
 }
 
@@ -131,13 +189,22 @@ func GetFlatNotes(db *sql.DB) (notes string, err error) {
 	sqlStatement := `select value from settings where name = 'flatNotes'`
 	rows, err := db.Query(sqlStatement)
 	if err != nil {
-		return notes, err
+		return "", err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
-		rows.Scan(&notes)
+		if err := rows.Scan(&notes); err != nil {
+			return "", err
+		}
+		if err := rows.Err(); err != nil {
+			return "", err
+		}
 	}
-	return notes, err
+	return notes, nil
 }
 
 // SetFlatNotes ...
@@ -148,6 +215,13 @@ func SetFlatNotes(db *sql.DB, notes string) (err error) {
 	}
 	sqlStatement := `update settings set value = $1 where name = 'flatNotes';`
 	rows, err := db.Query(sqlStatement, notes)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }

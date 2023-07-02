@@ -20,6 +20,7 @@ package groups
 
 import (
 	"database/sql"
+	"log"
 
 	"gitlab.com/flattrack/flattrack/pkg/common"
 	"gitlab.com/flattrack/flattrack/pkg/types"
@@ -30,8 +31,15 @@ import (
 func AddUserToGroup(db *sql.DB, userID string, groupID string) (err error) {
 	sqlStatement := `insert into user_to_groups (userid, groupid) values ($1, $2)`
 	rows, err := db.Query(sqlStatement, userID, groupID)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // RemoveUserFromGroup ...
@@ -39,16 +47,29 @@ func AddUserToGroup(db *sql.DB, userID string, groupID string) (err error) {
 func RemoveUserFromGroup(db *sql.DB, userID string, groupID string) (err error) {
 	sqlStatement := `delete from user_to_groups where userid = $1 and groupid = $2`
 	rows, err := db.Query(sqlStatement, userID, groupID)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // GroupObjectFromRows ...
 // constructs a group object from database rows
 func GroupObjectFromRows(rows *sql.Rows) (group types.GroupSpec, err error) {
-	rows.Scan(&group.ID, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp)
+	err = rows.Scan(&group.ID, &group.Name, &group.DefaultGroup, &group.Description, &group.CreationTimestamp, &group.ModificationTimestamp, &group.DeletionTimestamp)
+	if err != nil {
+		return types.GroupSpec{}, err
+	}
 	err = rows.Err()
-	return group, err
+	if err != nil {
+		return types.GroupSpec{}, err
+	}
+	return group, nil
 }
 
 // GetAllGroups ...
@@ -59,16 +80,23 @@ func GetAllGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 	if err != nil {
 		return groups, err
 	}
-	defer rows.Close()
+	if err != nil {
+		return []types.GroupSpec{}, err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
 		var group types.GroupSpec
 		group, err = GroupObjectFromRows(rows)
 		if err != nil {
-			return groups, err
+			return []types.GroupSpec{}, err
 		}
 		groups = append(groups, group)
 	}
-	return groups, err
+	return groups, nil
 }
 
 // GetGroupByName ...
@@ -79,10 +107,17 @@ func GetGroupByName(db *sql.DB, name string) (group types.GroupSpec, err error) 
 	if err != nil {
 		return group, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	group, err = GroupObjectFromRows(rows)
-	return group, err
+	if err != nil {
+		return types.GroupSpec{}, err
+	}
+	return group, nil
 }
 
 // GetGroupByID ...
@@ -93,10 +128,17 @@ func GetGroupByID(db *sql.DB, id string) (group types.GroupSpec, err error) {
 	if err != nil {
 		return group, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	group, err = GroupObjectFromRows(rows)
-	return group, err
+	if err != nil {
+		return types.GroupSpec{}, err
+	}
+	return group, nil
 }
 
 // GetGroupsOfUserByID ...
@@ -106,22 +148,28 @@ func GetGroupsOfUserByID(db *sql.DB, userID string) (groups []types.GroupSpec, e
 	sqlStatement := `select groupid from user_to_groups where userid = $1`
 	rows, err := db.Query(sqlStatement, userID)
 	if err != nil {
-		return groups, err
+		return []types.GroupSpec{}, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
 		var groupID string
-		rows.Scan(&groupID)
+		if err := rows.Scan(&groupID); err != nil {
+			return []types.GroupSpec{}, err
+		}
 		groupIDs = append(groupIDs, groupID)
 	}
 	for _, groupID := range groupIDs {
 		group, err := GetGroupByID(db, groupID)
 		if err != nil {
-			return groups, err
+			return []types.GroupSpec{}, err
 		}
 		groups = append(groups, group)
 	}
-	return groups, err
+	return groups, nil
 }
 
 // GetGroupNamesOfUserByID ...
@@ -129,12 +177,12 @@ func GetGroupsOfUserByID(db *sql.DB, userID string) (groups []types.GroupSpec, e
 func GetGroupNamesOfUserByID(db *sql.DB, userID string) (groups []string, err error) {
 	groupsFull, err := GetGroupsOfUserByID(db, userID)
 	if err != nil {
-		return groups, err
+		return []string{}, err
 	}
 	for _, groupItem := range groupsFull {
 		groups = append(groups, groupItem.Name)
 	}
-	return groups, err
+	return groups, nil
 }
 
 // CheckUserInGroup ...
@@ -142,14 +190,14 @@ func GetGroupNamesOfUserByID(db *sql.DB, userID string) (groups []string, err er
 func CheckUserInGroup(db *sql.DB, userID string, group string) (found bool, err error) {
 	groups, err := GetGroupNamesOfUserByID(db, userID)
 	if err != nil {
-		return found, err
+		return false, err
 	}
 	for _, groupItem := range groups {
 		if groupItem == group {
-			return true, err
+			return true, nil
 		}
 	}
-	return found, err
+	return false, nil
 }
 
 // GetDefaultGroups ...
@@ -160,7 +208,11 @@ func GetDefaultGroups(db *sql.DB) (groups []types.GroupSpec, err error) {
 	if err != nil {
 		return groups, err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
 		var group types.GroupSpec
 		group, err = GroupObjectFromRows(rows)
@@ -186,12 +238,15 @@ func UpdateUserGroups(db *sql.DB, userID string, groups []string) (complete bool
 		}
 		shouldBeInGroup := common.StringInStringSlice(group.Name, groups)
 		groupFull, err := GetGroupByName(db, group.Name)
-		if inGroup == true && shouldBeInGroup == false {
+		if err != nil {
+			return false, err
+		}
+		if inGroup && !shouldBeInGroup {
 			err = RemoveUserFromGroup(db, userID, groupFull.ID)
 			if err != nil {
 				return false, err
 			}
-		} else if inGroup == false && shouldBeInGroup == true {
+		} else if !inGroup && shouldBeInGroup {
 			err = AddUserToGroup(db, userID, groupFull.ID)
 			if err != nil {
 				return false, err
@@ -200,5 +255,5 @@ func UpdateUserGroups(db *sql.DB, userID string, groups []string) (complete bool
 			continue
 		}
 	}
-	return true, err
+	return true, nil
 }

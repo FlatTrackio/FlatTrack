@@ -49,9 +49,14 @@ func Ping(db *sql.DB) (err error) {
 		log.Println("Error querying database", err.Error())
 		return err
 	}
-	rows.Scan(&zero)
+	if err := rows.Scan(&zero); err != nil {
+		return err
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
 	if zero != 0 {
 		return fmt.Errorf("Wild, this error should never occur.")
 	}
-	return rows.Err()
+	return nil
 }

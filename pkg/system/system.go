@@ -20,6 +20,7 @@ package system
 
 import (
 	"database/sql"
+	"log"
 )
 
 type SystemManager struct {
@@ -30,20 +31,33 @@ func (s SystemManager) getValue(name string) (output string, err error) {
 	sqlStatement := `select value from system where name = $1`
 	rows, err := s.DB.Query(sqlStatement, name)
 	if err != nil {
-		return output, err
+		return "", err
 	}
-	defer rows.Close()
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	for rows.Next() {
-		rows.Scan(&output)
+		if err := rows.Scan(&output); err != nil {
+			return "", err
+		}
 	}
-	return output, err
+	return output, nil
 }
 
 func (s SystemManager) setValue(name, value string) (err error) {
 	sqlStatement := `update system set value = $2 where name = $1`
 	rows, err := s.DB.Query(sqlStatement, name, value)
-	defer rows.Close()
-	return err
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
 }
 
 // GetHasInitialized ...
