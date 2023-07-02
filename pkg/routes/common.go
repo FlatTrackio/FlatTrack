@@ -92,7 +92,7 @@ func HealthHandler(db *sql.DB) {
 	r := router.Handle("/_healthz", Healthz(db))
 	server := &http.Server{
 		Handler:           r.GetHandler(),
-		Addr:              common.GetAppMetricsPort(),
+		Addr:              common.GetAppHealthPort(),
 		WriteTimeout:      15 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
