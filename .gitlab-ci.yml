@@ -52,7 +52,7 @@ variables:
   set -x
   echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
   export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
-  export APP_BUILD_DATE=$(date --date="${CI_COMMIT_TIMESTAMP//[T+]/ }" '+%Y.%m.%d.%H%M')
+  export APP_BUILD_DATE=$(date --date="$(echo ${CI_COMMIT_TIMESTAMP//[T]/ } | sed 's/+.*//g')" '+%Y.%m.%d.%H%M')
   if [[ -z "$CI_COMMIT_TAG" ]]; then
     PRINTABLE_COMMIT_HASH="-$APP_BUILD_HASH"
   fi
