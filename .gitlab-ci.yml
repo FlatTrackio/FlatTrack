@@ -161,7 +161,7 @@ build-helm-chart:
     paths:
       - .helm-root
   only:
-    - master
+    - main
 
 build-frontend:
   stage: build
@@ -218,7 +218,7 @@ build-zip-backend:
       done
   only:
     - tags
-    - master
+    - main
   artifacts:
     expire_in: 1 day
     paths:
@@ -238,7 +238,7 @@ build-zip-copy-extras:
     - cp example.env $RELEASE_FOLDER_NAME
   only:
     - tags
-    - master
+    - main
   artifacts:
     expire_in: 1 day
     paths:
@@ -259,7 +259,7 @@ build-zip:
     - tar cvf $RELEASE_FOLDER_NAME.tar.gz $RELEASE_FOLDER_NAME
   only:
     - tags
-    - master
+    - main
   artifacts:
     paths:
       - flattrack*.tar.gz
@@ -409,4 +409,4 @@ pages:
     paths:
     - public
   only:
-    - master
+    - main
