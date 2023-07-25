@@ -1,4 +1,5 @@
 stages:
+  - conform
   - lint
   - test
   - build
@@ -410,3 +411,21 @@ pages:
     - public
   only:
     - main
+
+conform:
+  stage: conform
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  image:
+    name: docker.io/library/alpine:3.18
+    entrypoint: [""]
+  before_script:
+    - apk add --no-cache curl git
+    - git fetch origin
+    - |
+      curl -sSL \
+        -o /usr/local/bin/conform \
+        https://github.com/siderolabs/conform/releases/download/v0.1.0-alpha.27/conform-linux-amd64
+    - chmod +x /usr/local/bin/conform
+  script:
+    - conform enforce --commit-ref=refs/remotes/origin/main
