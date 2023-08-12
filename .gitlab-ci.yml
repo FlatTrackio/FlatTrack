@@ -124,6 +124,8 @@ build-container:
 
 copy-container-image-to-dockerhub:
   stage: post-build
+  only:
+    - main
   image: $IMAGE_GOLANG_ALPINE
   before_script:
     - go install github.com/google/go-containerregistry/cmd/crane@latest
@@ -414,8 +416,8 @@ pages:
 
 conform:
   stage: conform
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+  only:
+    - merge_requests
   image:
     name: docker.io/library/alpine:3.18
     entrypoint: [""]
