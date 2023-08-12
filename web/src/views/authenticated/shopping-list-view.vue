@@ -104,7 +104,7 @@
         <b-tag type="is-success" v-if="completed">Completed</b-tag>
         <b-tag type="is-warning" v-else-if="!completed">Uncompleted</b-tag>
         <br/>
-        <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block is-marginless" v-model="itemDisplayState">
+        <b-tabs :position="deviceIsMobile ? 'is-centered' : ''" class="block is-marginless" v-model="itemDisplayState" :expanded="deviceIsMobile">
           <b-tab-item icon="format-list-checks" label="All"></b-tab-item>
           <b-tab-item icon="playlist-remove" label="Unobtained"></b-tab-item>
           <b-tab-item icon="playlist-check" label="Obtained"></b-tab-item>
@@ -662,6 +662,8 @@ export default {
     window.addEventListener('scroll', this.ManageStickyHeader, true)
     this.LoopStart()
     window.addEventListener('focus', this.ResetLoopTime, true)
+    // TODO better way to do this? why does this not pull in through the data state function?
+    this.itemDisplayState = shoppinglistCommon.GetShoppingListObtainedFilter(this.id)
   },
   mounted () {
     if (typeof this.ItemId !== 'undefined') {
