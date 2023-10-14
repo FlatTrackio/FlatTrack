@@ -24,6 +24,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/lib/pq"
+
 	"github.com/imdario/mergo"
 
 	"gitlab.com/flattrack/flattrack/pkg/types"
@@ -154,13 +156,23 @@ func CreateShoppingList(db *sql.DB, shoppingList types.ShoppingListSpec, options
 		return types.ShoppingListSpec{}, err
 	}
 
+	if shoppingList.TemplateID != "" {
+		templateList, err := GetShoppingList(db, shoppingList.TemplateID)
+		if err != nil {
+			return types.ShoppingListSpec{}, err
+		}
+		shoppingList.TotalTagExclude = templateList.TotalTagExclude
+	} else {
+		shoppingList.TotalTagExclude = []string{}
+	}
+
 	shoppingList.AuthorLast = shoppingList.Author
 	shoppingList.Completed = false
 
-	sqlStatement := `insert into shopping_list (name, notes, author, authorLast, completed, templateId)
-                         values ($1, $2, $3, $4, $5, $6)
+	sqlStatement := `insert into shopping_list (name, notes, author, authorLast, completed, templateId, total_tag_exclude)
+                         values ($1, $2, $3, $4, $5, $6, $7)
                          returning *`
-	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.Author, shoppingList.AuthorLast, shoppingList.Completed, shoppingList.TemplateID)
+	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.Author, shoppingList.AuthorLast, shoppingList.Completed, shoppingList.TemplateID, pq.Array(shoppingList.TotalTagExclude))
 	if err != nil {
 		return types.ShoppingListSpec{}, err
 	}
@@ -222,9 +234,9 @@ func PatchShoppingList(db *sql.DB, listID string, shoppingList types.ShoppingLis
 		return types.ShoppingListSpec{}, err
 	}
 
-	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $5
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, total_tag_exclude = $5, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $6
                          returning *`
-	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listID)
+	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, pq.Array(shoppingList.TotalTagExclude), listID)
 	if err != nil {
 		return types.ShoppingListSpec{}, err
 	}
@@ -249,9 +261,10 @@ func UpdateShoppingList(db *sql.DB, listID string, shoppingList types.ShoppingLi
 	if !valid || err != nil {
 		return types.ShoppingListSpec{}, err
 	}
-	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $5
+
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, total_tag_exclude = $5::text[], modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $6
                          returning *`
-	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, listID)
+	rows, err := db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, pq.Array(shoppingList.TotalTagExclude), listID)
 	if err != nil {
 		return types.ShoppingListSpec{}, err
 	}
@@ -295,7 +308,7 @@ func SetListCompleted(db *sql.DB, listID string, completed bool, userID string) 
 // GetListObjectFromRows ...
 // returns a shopping list object from rows
 func GetListObjectFromRows(rows *sql.Rows) (list types.ShoppingListSpec, err error) {
-	if err := rows.Scan(&list.ID, &list.Name, &list.Notes, &list.Author, &list.AuthorLast, &list.Completed, &list.CreationTimestamp, &list.ModificationTimestamp, &list.DeletionTimestamp, &list.TemplateID); err != nil {
+	if err := rows.Scan(&list.ID, &list.Name, &list.Notes, &list.Author, &list.AuthorLast, &list.Completed, &list.CreationTimestamp, &list.ModificationTimestamp, &list.DeletionTimestamp, &list.TemplateID, pq.Array(&list.TotalTagExclude)); err != nil {
 		return types.ShoppingListSpec{}, err
 	}
 	err = rows.Err()
