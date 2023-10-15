@@ -19,14 +19,14 @@ variables:
   POSTGRES_PASSWORD: flattrack
   MINIO_ROOT_USER: minioadmin
   MINIO_ROOT_PASSWORD: minioadmin
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.20.7-alpine3.18
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.21.3-alpine3.18@sha256:926f7f7e1ab8509b4e91d5ec6d5916ebb45155b0c8920291ba9f361d65385806
   EXTRA_REGISTRIES: docker.io
-  IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.17
-  IMAGE_ALPINE: docker.io/alpine:3.14
+  IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.17@sha256:8f60bc701ea888b5daa02f38ddd0c3c71ce9b65c30d481418b713ccd22bd4e32
+  IMAGE_ALPINE: docker.io/alpine:3.18@sha256:eece025e432126ce23f223450a0326fbebde39cdf496a85d8c016293fc851978
   IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
-  IMAGE_KO: ghcr.io/ko-build/ko:v0.14.1
-  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.53.3
-  VERSION_COSIGN: v2.0.2
+  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.53.3@sha256:1e0e2867b387bf68762427db499a963e43582b06819992db205fc31daa75ceea
+  VERSION_KO: 0.14.1
+  VERSION_COSIGN: v2.2.0
   COSIGN_YES: "true"
 
 .container-registry-login-ko: &container-registry-login-ko |
@@ -80,8 +80,12 @@ variables:
   mkdir -p $RELEASE_FOLDER_NAME
 
 .setup-cosign: &setup-cosign |
-  curl -L https://github.com/sigstore/cosign/releases/download/$VERSION_COSIGN/cosign-linux-amd64  -o /usr/local/bin/cosign
+  curl -sSL https://github.com/sigstore/cosign/releases/download/$VERSION_COSIGN/cosign-linux-amd64  -o /usr/local/bin/cosign
   chmod +x /usr/local/bin/cosign
+
+.setup-ko: &setup-ko |
+  curl -sSL https://github.com/ko-build/ko/releases/download/v${VERSION_KO}/ko_${VERSION_KO}_Linux_x86_64.tar.gz -o /tmp/ko.tar.gz
+  < /tmp/ko.tar.gz tar -C /usr/local/bin -xvf - ko
 
 build-backend-smoketest:
   stage: build
@@ -92,7 +96,7 @@ build-backend-smoketest:
 build-container:
   stage: build
   image:
-    name: $IMAGE_KO
+    name: $IMAGE_GOLANG_ALPINE
     entrypoint: [""]
   retry: 2
   id_tokens:
@@ -101,8 +105,10 @@ build-container:
   variables:
     KO_DOCKER_REPO: "$CI_REGISTRY_IMAGE"
   before_script:
-    - *container-registry-login-ko
+    - apk add --no-cache curl
+    - *setup-ko
     - *setup-cosign
+    - *container-registry-login-ko
     - *image-build-taggable-name
     - *image-pre-build-release-version
   script:
