@@ -141,6 +141,10 @@ func AddItemToList(db *sql.DB, listID string, item types.ShoppingItemSpec) (item
 		return types.ShoppingItemSpec{}, err
 	}
 
+	if item.Tag == "" {
+		item.Tag = "Untagged"
+	}
+
 	item.AuthorLast = item.Author
 
 	sqlStatement := `insert into shopping_item (listId, name, price, quantity, notes, author, authorLast, tag, obtained, templateId)
@@ -181,6 +185,10 @@ func PatchItem(db *sql.DB, listid string, itemID string, item types.ShoppingItem
 		return types.ShoppingItemSpec{}, err
 	}
 
+	if item.Tag == "" {
+		item.Tag = "Untagged"
+	}
+
 	sqlStatement := `update shopping_item set name = $2, price = $3, quantity = $4, notes = $5, authorLast = $6, tag = $7, obtained = $8, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1 returning *`
 	rows, err := db.Query(sqlStatement, itemID, item.Name, item.Price, item.Quantity, item.Notes, item.AuthorLast, item.Tag, item.Obtained)
 	if err != nil {
@@ -214,6 +222,10 @@ func UpdateItem(db *sql.DB, listID string, itemID string, item types.ShoppingIte
 	valid, err := ValidateShoppingListItem(db, item)
 	if !valid || err != nil {
 		return types.ShoppingItemSpec{}, err
+	}
+
+	if item.Tag == "" {
+		item.Tag = "Untagged"
 	}
 
 	sqlStatement := `update shopping_item set name = $3, price = $4, quantity = $5, notes = $6, authorLast = $7, tag = $8, obtained = $9, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where listId = $1 and id = $2 returning *`

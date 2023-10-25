@@ -17,11 +17,30 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
-            <ul>
-              <li><router-link :to="{ name: 'View shopping list', params: { id: shoppingListId } }">{{ shoppingListName }}</router-link></li>
-              <li class="is-active"><router-link :to="{ name: 'New shopping list item', params: { id: shoppingListId } }">New shopping item</router-link></li>
-            </ul>
+        <nav
+          class="breadcrumb is-medium has-arrow-separator"
+          aria-label="breadcrumbs"
+        >
+          <ul>
+            <li>
+              <router-link
+                :to="{
+                  name: 'View shopping list',
+                  params: { id: shoppingListId },
+                }"
+                >{{ shoppingListName }}</router-link
+              >
+            </li>
+            <li class="is-active">
+              <router-link
+                :to="{
+                  name: 'New shopping list item',
+                  params: { id: shoppingListId },
+                }"
+                >New shopping item</router-link
+              >
+            </li>
+          </ul>
         </nav>
         <div>
           <h1 class="title is-1">New shopping item</h1>
@@ -39,7 +58,8 @@
               @icon-right-click="name = ''"
               @keyup.enter.native="PostShoppingListItem"
               autofocus
-              required>
+              required
+            >
             </b-input>
           </b-field>
           <b-field label="Notes (optional)" class="is-marginless">
@@ -53,7 +73,8 @@
               icon-right="close-circle"
               icon-right-clickable
               @icon-right-click="notes = ''"
-              maxlength="40">
+              maxlength="40"
+            >
             </b-input>
           </b-field>
           <b-field label="Price (optional)">
@@ -67,7 +88,8 @@
               icon-right-clickable
               @icon-right-click="price = ''"
               @keyup.enter.native="PostShoppingListItem"
-              size="is-medium">
+              size="is-medium"
+            >
             </b-input>
           </b-field>
           <b-field label="Quantity">
@@ -79,14 +101,17 @@
               expanded
               required
               controls-position="compact"
-              icon="numeric">
+              icon="numeric"
+            >
             </b-numberinput>
           </b-field>
           <div>
             <div class="field has-addons">
               <label class="label">Tag (optional)</label>
               <p class="control">
-                <infotooltip message="To manage tags, navigate to the Apps -> Shopping List -> Manage tags page"/>
+                <infotooltip
+                  message="To manage tags, navigate to the Apps -> Shopping List -> Manage tags page"
+                />
               </p>
             </div>
             <b-field class="is-marginless">
@@ -95,16 +120,42 @@
                   icon-left="menu-down"
                   type="is-primary"
                   slot="trigger"
-                  size="is-medium">
+                  size="is-medium"
+                >
                 </b-button>
 
-                <b-dropdown-item disabled v-if="tags.length > 0">Tags in all lists</b-dropdown-item>
-                <div v-for="existingTag in tags" v-bind:key="existingTag">
-                  <b-dropdown-item v-if="existingTag.name !== '' && existingTag.name.length > 0 && typeof existingTag.name !== 'undefined'" :value="existingTag.name" @click="tag = existingTag.name">{{ existingTag.name }}</b-dropdown-item>
+                <b-dropdown-item disabled v-if="tagsList.length > 0"
+                  >Tags in this list</b-dropdown-item
+                >
+                <div
+                  v-for="existingListTag in tagsList"
+                  v-bind:key="existingListTag"
+                >
+                  <b-dropdown-item
+                    v-if="
+                      existingListTag !== '' &&
+                      existingListTag.length > 0 &&
+                      typeof existingListTag !== 'undefined'
+                    "
+                    :value="existingListTag"
+                    @click="tag = existingListTag"
+                    >{{ existingListTag }}</b-dropdown-item
+                  >
                 </div>
-                <b-dropdown-item disabled v-if="tagsList.length > 0">Tags in this list</b-dropdown-item>
-                <div v-for="existingListTag in tagsList" v-bind:key="existingListTag">
-                  <b-dropdown-item v-if="existingListTag !== '' && existingListTag.length > 0 && typeof existingListTag !== 'undefined'" :value="existingListTag" @click="tag = existingListTag">{{ existingListTag }}</b-dropdown-item>
+                <b-dropdown-item disabled v-if="tags.length > 0"
+                  >Tags in all lists</b-dropdown-item
+                >
+                <div v-for="existingTag in tags" v-bind:key="existingTag">
+                  <b-dropdown-item
+                    v-if="
+                      existingTag.name !== '' &&
+                      existingTag.name.length > 0 &&
+                      typeof existingTag.name !== 'undefined'
+                    "
+                    :value="existingTag.name"
+                    @click="tag = existingTag.name"
+                    >{{ existingTag.name }}</b-dropdown-item
+                  >
                 </div>
               </b-dropdown>
               <b-input
@@ -118,15 +169,13 @@
                 icon-right="close-circle"
                 icon-right-clickable
                 @icon-right-click="tag = ''"
-                size="is-medium">
+                size="is-medium"
+              >
               </b-input>
             </b-field>
           </div>
-          <b-field
-            label="Obtained">
-            <b-checkbox
-              size="is-medium"
-              v-model="obtained">
+          <b-field label="Obtained">
+            <b-checkbox size="is-medium" v-model="obtained">
               Obtained
             </b-checkbox>
           </b-field>
@@ -138,7 +187,8 @@
             expanded
             :loading="submitLoading"
             :disabled="submitLoading"
-            @click="PostShoppingListItem">
+            @click="PostShoppingListItem"
+          >
             Add item
           </b-button>
         </div>
@@ -148,72 +198,92 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import shoppinglist from '@/requests/authenticated/shoppinglist'
+import common from "@/common/common";
+import shoppinglist from "@/requests/authenticated/shoppinglist";
 
 export default {
-  name: 'shopping-item-new',
+  name: "shopping-item-new",
   components: {
-    infotooltip: () => import('@/components/common/info-tooltip.vue')
+    infotooltip: () => import("@/components/common/info-tooltip.vue"),
   },
-  data () {
+  data() {
     return {
       shoppingListId: this.$route.params.id,
-      shoppingListName: '',
+      shoppingListName: "",
       tags: [],
       tagsList: [],
       submitLoading: false,
-      name: '',
-      notes: '',
+      name: "",
+      notes: "",
       price: 0,
       quantity: 1,
       tag: undefined,
-      obtained: false
-    }
+      obtained: false,
+    };
   },
   methods: {
-    PostShoppingListItem () {
-      this.submitLoading = true
-      if (this.notes === '') {
-        this.notes = undefined
+    PostShoppingListItem() {
+      this.submitLoading = true;
+      if (this.notes === "") {
+        this.notes = undefined;
       }
       if (this.price === 0) {
-        this.price = undefined
+        this.price = undefined;
       } else {
-        this.price = parseFloat(this.price)
+        this.price = parseFloat(this.price);
+      }
+      if (this.tag === "") {
+        this.tag = "Untagged";
       }
 
-      shoppinglist.PostShoppingListItem(this.shoppingListId, this.name, this.notes, this.price, this.quantity, this.tag, this.obtained).then(resp => {
-        var item = resp.data.spec
-        if (item.id !== '' || typeof item.id === 'undefined') {
-          this.$router.go(-1)
-        } else {
-          this.submitLoading = false
-          common.DisplayFailureToast('Unable to find created shopping item')
-        }
-      }).catch(err => {
-        this.submitLoading = false
-        common.DisplayFailureToast(`Failed to add shopping list item - ${err.response.data.metadata.response}`)
-      })
-    }
+      shoppinglist
+        .PostShoppingListItem(
+          this.shoppingListId,
+          this.name,
+          this.notes,
+          this.price,
+          this.quantity,
+          this.tag,
+          this.obtained
+        )
+        .then((resp) => {
+          var item = resp.data.spec;
+          if (item.id !== "" || typeof item.id === "undefined") {
+            this.$router.go(-1);
+          } else {
+            this.submitLoading = false;
+            common.DisplayFailureToast("Unable to find created shopping item");
+          }
+        })
+        .catch((err) => {
+          this.submitLoading = false;
+          common.DisplayFailureToast(
+            `Failed to add shopping list item - ${err.response.data.metadata.response}`
+          );
+        });
+    },
   },
-  async beforeMount () {
-    shoppinglist.GetShoppingList(this.shoppingListId).then(resp => {
-      var list = resp.data.spec
-      this.shoppingListName = list.name
-      return shoppinglist.GetAllShoppingListItemTags()
-    }).then(resp => {
-      this.tags = resp.data.list || []
-      return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
-    }).then(resp => {
-      this.tagsList = resp.data.list || []
-    })
+  async beforeMount() {
+    shoppinglist
+      .GetShoppingList(this.shoppingListId)
+      .then((resp) => {
+        var list = resp.data.spec;
+        this.shoppingListName = list.name;
+        return shoppinglist.GetAllShoppingListItemTags();
+      })
+      .then((resp) => {
+        this.tags = resp.data.list || [];
+        return shoppinglist.GetShoppingListItemTags(this.shoppingListId);
+      })
+      .then((resp) => {
+        this.tagsList = resp.data.list || [];
+      });
     if (this.$route.query.tag) {
-      this.tag = this.$route.query.tag
+      this.tag = this.$route.query.tag;
     }
     if (this.$route.query.name) {
-      this.name = this.$route.query.name
+      this.name = this.$route.query.name;
     }
-  }
-}
+  },
+};
 </script>

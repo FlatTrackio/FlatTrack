@@ -97,17 +97,18 @@ type UserSelector struct {
 // ShoppingListSpec ...
 // fields for a shopping list
 type ShoppingListSpec struct {
-	ID                    string `json:"id"`
-	Name                  string `json:"name"`
-	Notes                 string `json:"notes,omitempty"`
-	TemplateID            string `json:"templateId,omitempty"`
-	Completed             bool   `json:"completed"`
-	Count                 int    `json:"count,omitempty"`
-	Author                string `json:"author"`
-	AuthorLast            string `json:"authorLast"`
-	CreationTimestamp     int    `json:"creationTimestamp"`
-	ModificationTimestamp int    `json:"modificationTimestamp"`
-	DeletionTimestamp     int    `json:"deletionTimestamp"`
+	ID                    string   `json:"id"`
+	Name                  string   `json:"name"`
+	Notes                 string   `json:"notes,omitempty"`
+	TemplateID            string   `json:"templateId,omitempty"`
+	Completed             bool     `json:"completed"`
+	Count                 int      `json:"count,omitempty"`
+	Author                string   `json:"author"`
+	AuthorLast            string   `json:"authorLast"`
+	TotalTagExclude       []string `json:"totalTagExclude,omitempty"`
+	CreationTimestamp     int      `json:"creationTimestamp"`
+	ModificationTimestamp int      `json:"modificationTimestamp"`
+	DeletionTimestamp     int      `json:"deletionTimestamp"`
 }
 
 // ShoppingListSortType ...
