@@ -187,11 +187,9 @@ build-frontend:
     - npm run build
   after_script:
     - |
-      if [[ ! -z "$CI_COMMIT_TAG" ]]; then
-        mkdir -p "${RELEASE_FOLDER_NAME}/dist"
-        cd web/dist
-        cp -R . "${RELEASE_FOLDER_NAME}/dist"
-      fi
+      mkdir -p "${RELEASE_FOLDER_NAME}/dist"
+      cd web/dist
+      cp -R . "${RELEASE_FOLDER_NAME}/dist"
   artifacts:
     expire_in: 1 day
     paths:
