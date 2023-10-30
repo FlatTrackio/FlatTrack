@@ -23,7 +23,7 @@
         <p class="subtitle is-5 mb-0" style="float: left">
           <b>{{ name }}</b>
           ${{ currentPrice }}/${{ totalPrice }} ({{
-            (currentPrice / totalPrice).toFixed(2) || 0
+            Math.round((currentPrice / totalPrice) * 100 * 100) / 100
           }}%)
           <span
             @click="PatchShoppingListCompleted(id, !completed)"
@@ -497,14 +497,24 @@
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br />
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{
-            (currentPrice / totalPrice).toFixed(2) || 0
+            Math.round((currentPrice / totalPrice) * 100 * 100) / 100
           }}%)
+          <infotooltip
+            :message="
+              'Total price including excluded item prices is $' +
+              totalAllInclusivePrice
+            "
+          />
           <br />
           <span v-if="flatmates.length > 1">
-            <b>Split price</b>: ${{
-              equalPricePerPerson.toFixed(2)
-            }}
-              <infotooltip :message="'Split is the divided price between ' + flatmates.length + ' flatmates'">
+            <b>Split price</b>: ${{ equalPricePerPerson.toFixed(2) }}
+            <infotooltip
+              :message="
+                'Split is the divided price between ' +
+                flatmates.length +
+                ' flatmates'
+              "
+            />
           </span>
         </p>
         <b-field>
@@ -703,7 +713,7 @@ export default {
       import("@/components/authenticated/shopping-list-item-card-view.vue"),
     floatingAddButton: () =>
       import("@/components/common/floating-add-button.vue"),
-    infotooltip: () => import('@/components/common/info-tooltip.vue')
+    infotooltip: () => import("@/components/common/info-tooltip.vue"),
   },
   computed: {
     ItemId() {
@@ -760,6 +770,20 @@ export default {
         if (this.totalTagExcludeList.includes(item.tag)) {
           return;
         }
+        if (typeof item.price !== "number") {
+          item.price = 0;
+        }
+        totalPrice += (item.price || 0) * item.quantity;
+      });
+      totalPrice = totalPrice.toFixed(2);
+      return totalPrice;
+    },
+    totalAllInclusivePrice() {
+      if (this.listFull.length === 0) {
+        return 0;
+      }
+      var totalPrice = 0;
+      this.listFull.forEach((item) => {
         if (typeof item.price !== "number") {
           item.price = 0;
         }
@@ -853,6 +877,9 @@ export default {
 
       shoppinglist.GetAllShoppingListItemTags().then((resp) => {
         this.itemIsLoading = false;
+        if (resp.data.list === null) {
+          return;
+        }
         this.tags = resp.data.list.map((i) => i.name) || [];
       });
       shoppinglist.GetShoppingListItemTags(this.id).then((resp) => {
@@ -1029,6 +1056,10 @@ export default {
     },
     GetFlatmates() {
       flatmates.GetAllFlatmates().then((resp) => {
+        if (resp.data.list === null) {
+          this.flatmates = [];
+          return;
+        }
         this.flatmates = resp.data.list;
       });
     },
