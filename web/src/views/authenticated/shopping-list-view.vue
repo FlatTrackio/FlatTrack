@@ -23,7 +23,7 @@
         <p class="subtitle is-5 mb-0" style="float: left">
           <b>{{ name }}</b>
           ${{ currentPrice }}/${{ totalPrice }} ({{
-            Math.round((currentPrice / totalPrice) * 100 * 100) / 100 || 0
+            (currentPrice / totalPrice).toFixed(2) || 0
           }}%)
           <span
             @click="PatchShoppingListCompleted(id, !completed)"
@@ -497,8 +497,15 @@
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br />
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{
-            Math.round((currentPrice / totalPrice) * 100 * 100) / 100 || 0
+            (currentPrice / totalPrice).toFixed(2) || 0
           }}%)
+          <br />
+          <span v-if="flatmates.length > 1">
+            <b>Split price</b>: ${{
+              equalPricePerPerson.toFixed(2)
+            }}
+              <infotooltip :message="'Split is the divided price between ' + flatmates.length + ' flatmates'">
+          </span>
         </p>
         <b-field>
           <b-button
@@ -688,6 +695,7 @@ export default {
       totalTagExcludeList: [],
       tags: [],
       tagsList: [],
+      flatmates: [],
     };
   },
   components: {
@@ -695,6 +703,7 @@ export default {
       import("@/components/authenticated/shopping-list-item-card-view.vue"),
     floatingAddButton: () =>
       import("@/components/common/floating-add-button.vue"),
+    infotooltip: () => import('@/components/common/info-tooltip.vue')
   },
   computed: {
     ItemId() {
@@ -739,7 +748,7 @@ export default {
         }
         currentPrice += (item.price || 0) * item.quantity;
       });
-      currentPrice = Math.round(currentPrice * 100) / 100;
+      currentPrice = currentPrice.toFixed(2);
       return currentPrice;
     },
     totalPrice() {
@@ -756,8 +765,11 @@ export default {
         }
         totalPrice += (item.price || 0) * item.quantity;
       });
-      totalPrice = Math.round(totalPrice * 100) / 100;
+      totalPrice = totalPrice.toFixed(2);
       return totalPrice;
+    },
+    equalPricePerPerson() {
+      return this.totalPrice / this.flatmates.length;
     },
   },
   methods: {
@@ -839,22 +851,16 @@ export default {
           );
         });
 
-      shoppinglist
-        .GetAllShoppingListItemTags()
-        .then((resp) => {
-          this.itemIsLoading = false;
-          this.tags = resp.data.list.map((i) => i.name) || [];
-          return shoppinglist.GetShoppingListItemTags(this.id);
-        })
-        .then((resp) => {
-          this.tagsList = resp.data.list || [];
-          if (
-            typeof this.templateId === "undefined" ||
-            this.templateId === ""
-          ) {
-            return;
-          }
-        });
+      shoppinglist.GetAllShoppingListItemTags().then((resp) => {
+        this.itemIsLoading = false;
+        this.tags = resp.data.list.map((i) => i.name) || [];
+      });
+      shoppinglist.GetShoppingListItemTags(this.id).then((resp) => {
+        this.tagsList = resp.data.list || [];
+        if (typeof this.templateId === "undefined" || this.templateId === "") {
+          return;
+        }
+      });
     },
     UpdateShoppingList(name, notes, completed, totalTagExcludeList) {
       this.notesFromEmpty = false;
@@ -1021,6 +1027,11 @@ export default {
     TagIsExcluded(tag) {
       return this.totalTagExcludeList.includes(tag);
     },
+    GetFlatmates() {
+      flatmates.GetAllFlatmates().then((resp) => {
+        this.flatmates = resp.data.list;
+      });
+    },
   },
   watch: {
     sortBy() {
@@ -1066,6 +1077,7 @@ export default {
   async beforeMount() {
     this.GetShoppingList();
     this.GetShoppingListItems();
+    this.GetFlatmates();
     if (window.innerWidth <= 330) {
       this.ratherSmallerScreen = true;
     }
