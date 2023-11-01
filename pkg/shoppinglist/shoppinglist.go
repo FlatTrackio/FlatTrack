@@ -64,6 +64,14 @@ func GetShoppingLists(db *sql.DB, options types.ShoppingListOptions) (shoppingLi
 	sqlStatement := `select * from shopping_list where deletionTimestamp = 0 `
 	fields := []interface{}{}
 
+	if options.SortBy == types.ShoppingListSortByTemplated {
+		sqlStatement = `with popularity as (
+                          select id, (select count(*) from shopping_list where templateid = c.id) as tally from shopping_list c)
+                        select id, name, notes, author, authorlast, completed, creationtimestamp, modificationtimestamp, deletiontimestamp, templateid, total_tag_exclude
+                        from shopping_list
+                        join popularity using(id) where deletiontimestamp = 0 `
+	}
+
 	if options.Selector.ModificationTimestampAfter != 0 {
 		sqlStatement += fmt.Sprintf(`and modificationTimestamp > $%v `, len(fields)+1)
 		fields = append(fields, options.Selector.ModificationTimestampAfter)
@@ -73,19 +81,22 @@ func GetShoppingLists(db *sql.DB, options types.ShoppingListOptions) (shoppingLi
 		fields = append(fields, options.Selector.CreationTimestampAfter)
 	}
 
-	if options.SortBy == types.ShoppingListSortByRecentlyUpdated {
+	switch options.SortBy {
+	case types.ShoppingListSortByRecentlyUpdated:
 		sqlStatement += `order by modificationTimestamp desc `
-	} else if options.SortBy == types.ShoppingListSortByLastUpdated {
+	case types.ShoppingListSortByLastUpdated:
 		sqlStatement += `order by modificationTimestamp asc `
-	} else if options.SortBy == types.ShoppingListSortByRecentlyAdded {
+	case types.ShoppingListSortByRecentlyAdded:
 		sqlStatement += `order by creationTimestamp asc `
-	} else if options.SortBy == types.ShoppingListSortByLastAdded {
+	case types.ShoppingListSortByLastAdded:
 		sqlStatement += `order by creationTimestamp asc `
-	} else if options.SortBy == types.ShoppingListSortByAlphabeticalDescending {
+	case types.ShoppingListSortByAlphabeticalDescending:
 		sqlStatement += `order by name asc `
-	} else if options.SortBy == types.ShoppingListSortByAlphabeticalAscending {
+	case types.ShoppingListSortByAlphabeticalAscending:
 		sqlStatement += `order by name desc `
-	} else {
+	case types.ShoppingListSortByTemplated:
+		sqlStatement += `order by popularity.tally desc, shopping_list.creationtimestamp desc `
+	default:
 		sqlStatement += `order by creationTimestamp desc `
 	}
 

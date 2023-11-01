@@ -126,6 +126,7 @@
                   type="is-primary"
                   slot="trigger"
                   size="is-medium"
+                  v-if="tagsList.length > 0 || tags.length > 0"
                 >
                 </b-button>
                 <b-dropdown-item disabled v-if="tagsList.length > 0"
