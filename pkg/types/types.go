@@ -124,6 +124,7 @@ const (
 	ShoppingListSortByLastUpdated            = "lastUpdated"
 	ShoppingListSortByAlphabeticalDescending = "alphabeticalDescending"
 	ShoppingListSortByAlphabeticalAscending  = "alphabeticalAscending"
+	ShoppingListSortByTemplated              = "templated"
 )
 
 // ShoppingListOptions ...
