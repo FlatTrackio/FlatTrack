@@ -23,7 +23,7 @@
         <p class="subtitle is-5 mb-0" style="float: left">
           <b>{{ name }}</b>
           ${{ currentPrice }}/${{ totalPrice }} ({{
-            Math.round((currentPrice || 0 / totalPrice || 0) * 100 * 100) / 100
+            Math.round((100 * currentPrice) / totalPrice)
           }}%)
           <span
             @click="PatchShoppingListCompleted(id, !completed)"
@@ -497,7 +497,7 @@
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br />
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{
-            Math.round((currentPrice || 0 / totalPrice || 0) * 100 * 100) / 100
+            Math.round((100 * currentPrice) / totalPrice)
           }}%)
           <infotooltip
             :message="
