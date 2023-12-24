@@ -19,14 +19,12 @@ variables:
   POSTGRES_PASSWORD: flattrack
   MINIO_ROOT_USER: minioadmin
   MINIO_ROOT_PASSWORD: minioadmin
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.21.3-alpine3.18@sha256:926f7f7e1ab8509b4e91d5ec6d5916ebb45155b0c8920291ba9f361d65385806
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.21.5-alpine3.18@sha256:d8b99943fb0587b79658af03d4d4e8b57769b21dcf08a8401352a9f2a7228754
   EXTRA_REGISTRIES: docker.io
-  IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.17@sha256:8f60bc701ea888b5daa02f38ddd0c3c71ce9b65c30d481418b713ccd22bd4e32
+  IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.18@sha256:32427bc0620132b2d9e79e405a1b27944d992501a20417a7f407427cc4c2b672
   IMAGE_ALPINE: docker.io/alpine:3.18@sha256:eece025e432126ce23f223450a0326fbebde39cdf496a85d8c016293fc851978
   IMAGE_PYTHON: docker.io/python:3.8-buster@sha256:04c3f641c2254c229fd2f704c5199ff4bea57d26c1c29008ae3a4afddde98709
   IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.53.3@sha256:1e0e2867b387bf68762427db499a963e43582b06819992db205fc31daa75ceea
-  VERSION_KO: 0.14.1
-  VERSION_COSIGN: v2.2.0
   COSIGN_YES: "true"
 
 .container-registry-login-ko: &container-registry-login-ko |
@@ -79,13 +77,8 @@ variables:
   export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
   mkdir -p $RELEASE_FOLDER_NAME
 
-.setup-cosign: &setup-cosign |
-  curl -sSL https://github.com/sigstore/cosign/releases/download/$VERSION_COSIGN/cosign-linux-amd64  -o /usr/local/bin/cosign
-  chmod +x /usr/local/bin/cosign
-
-.setup-ko: &setup-ko |
-  curl -sSL https://github.com/ko-build/ko/releases/download/v${VERSION_KO}/ko_${VERSION_KO}_Linux_x86_64.tar.gz -o /tmp/ko.tar.gz
-  < /tmp/ko.tar.gz tar -C /usr/local/bin -xvf - ko
+.setup-testing-repo: &setup-testing-repo |
+  echo 'https://dl-cdn.alpinelinux.org/alpine/edge/testing' | tee -a /etc/apk/repositories
 
 build-backend-smoketest:
   stage: build
@@ -105,9 +98,8 @@ build-container:
   variables:
     KO_DOCKER_REPO: "$CI_REGISTRY_IMAGE"
   before_script:
-    - apk add --no-cache curl
-    - *setup-ko
-    - *setup-cosign
+    - *setup-testing-repo
+    - apk add --no-cache curl ko cosign
     - *container-registry-login-ko
     - *image-build-taggable-name
     - *image-pre-build-release-version
