@@ -1,0 +1,41 @@
+site_name: FlatTrack
+strict: true
+repo_name: "flattrack/flattrack"
+repo_url: https://gitlab.com/flattrack/flattrack
+site_url: https://flattrack.io
+
+markdown_extensions:
+  - codehilite
+  - meta
+  - toc:
+      permalink: " ¶"
+
+
+plugins:
+  - material-plausible
+
+extra:
+  analytics:
+    provider: plausible
+    domain: flattrack.gitlab.io
+
+theme:
+  name: material
+  features:
+    - tabs
+    - instant
+  palette:
+    primary: "blue"
+    accent: "green"
+
+nav:
+  - Welcome: index.md
+  - Community: community.md
+  - Contibuting: contributing.md
+  - Design guidelines: design-guidelines.md
+  - Development: development.md
+  - Testing: testing.md
+  - Configuration: configuration.md
+  - Deployment: deployment.md
+  - API: api.md
+  - Roadmap: roadmap.md

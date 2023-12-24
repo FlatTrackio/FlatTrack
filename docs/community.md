@@ -1,10 +1,8 @@
-#+TITLE: Community
-#+AUTHOR: Caleb Woodbine <calebwoodbine.public@gmail.com>
-
-* Community
+# Community
 
 Responsibilities and expectations for contributing and interacting.
 
-** TLDR;
+## TLDR;
+
 Be excellent to one another.
 
