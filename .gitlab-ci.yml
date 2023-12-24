@@ -23,7 +23,7 @@ variables:
   EXTRA_REGISTRIES: docker.io
   IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.17@sha256:8f60bc701ea888b5daa02f38ddd0c3c71ce9b65c30d481418b713ccd22bd4e32
   IMAGE_ALPINE: docker.io/alpine:3.18@sha256:eece025e432126ce23f223450a0326fbebde39cdf496a85d8c016293fc851978
-  IMAGE_FIRN: registry.gitlab.com/bobymcbobs/container-images/firn:0.0.13-alpha.0
+  IMAGE_PYTHON: docker.io/python:3.8-buster@sha256:04c3f641c2254c229fd2f704c5199ff4bea57d26c1c29008ae3a4afddde98709
   IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.53.3@sha256:1e0e2867b387bf68762427db499a963e43582b06819992db205fc31daa75ceea
   VERSION_KO: 0.14.1
   VERSION_COSIGN: v2.2.0
@@ -403,21 +403,28 @@ lint_helm_chart:
     - helm lint deployments/flattrack
 
 pages:
-  image:
-    # use temporary firn container image instead of theiceshelf/firn image, until tagging is in CI
-    name: $IMAGE_FIRN
-    entrypoint: [""]
+  image: $IMAGE_PYTHON
   stage: pages
   before_script:
-    - cd docs
+    - pip install mkdocs-material material-plausible-plugin
   script:
-  - firn build
-  - mv _firn/_site ../public
-  - cp -r ../.helm-root/* ../public
+    - mkdocs build
+    - mv site public
   artifacts:
     paths:
-    - public
+      - public
   only:
+    - main
+
+pages-smoketest:
+  image: $IMAGE_PYTHON
+  stage: lint
+  before_script:
+    - pip install mkdocs-material material-plausible-plugin
+  script:
+    - mkdocs build
+    - mv site public
+  except:
     - main
 
 conform:
