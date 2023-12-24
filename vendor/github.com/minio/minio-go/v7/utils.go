@@ -255,7 +255,7 @@ func parseRFC7231Time(lastModified string) (time.Time, error) {
 
 // ToObjectInfo converts http header values into ObjectInfo type,
 // extracts metadata and fills in all the necessary fields in ObjectInfo.
-func ToObjectInfo(bucketName string, objectName string, h http.Header) (ObjectInfo, error) {
+func ToObjectInfo(bucketName, objectName string, h http.Header) (ObjectInfo, error) {
 	var err error
 	// Trim off the odd double quotes from ETag in the beginning and end.
 	etag := trimEtag(h.Get("ETag"))
@@ -526,6 +526,14 @@ var supportedQueryValues = map[string]bool{
 // isStandardQueryValue will return true when the passed in query string parameter is supported rather than customized.
 func isStandardQueryValue(qsKey string) bool {
 	return supportedQueryValues[qsKey]
+}
+
+// Per documentation at https://docs.aws.amazon.com/AmazonS3/latest/userguide/LogFormat.html#LogFormatCustom, the
+// set of query params starting with "x-" are ignored by S3.
+const allowedCustomQueryPrefix = "x-"
+
+func isCustomQueryValue(qsKey string) bool {
+	return strings.HasPrefix(qsKey, allowedCustomQueryPrefix)
 }
 
 var (

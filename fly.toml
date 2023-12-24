@@ -1,19 +1,9 @@
-# fly.toml app configuration file generated for derby-flattrack-islive-xyz on 2023-05-22T08:00:36+12:00
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
-
-app = "derby-flattrack-islive-xyz"
-primary_region = "syd"
-kill_signal = "SIGINT"
-kill_timeout = "5s"
-
 [build]
   image = "flattrack/flattrack:0.16.1"
 
 [env]
   APP_DB_DATABASE = "postgres"
-  APP_DB_HOST = "derby-flattrack-islive-xyz-postgres.internal"
+  APP_DB_HOST = "flattrack-postgres.internal"
   APP_DB_PASSWORD = "postgres"
   APP_DB_USERNAME = "postgres"
   APP_HTTP_REAL_IP_HEADER = "Fly-Client-Ip"
