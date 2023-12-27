@@ -30,6 +30,23 @@ import (
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
+var (
+	ErrFailedToAddItemToShoppingListFromTemplate = fmt.Errorf("Failed to add new item to new shopping list from template")
+	ErrFailedToCreateShoppingList                = fmt.Errorf("Failed to create shopping list")
+	ErrFailedToFindShoppingTagToUpdate           = fmt.Errorf("Unable to find tag to update")
+	ErrFailedToGetExistingShoppingList           = fmt.Errorf("Failed to get existing shopping list")
+	ErrFailedToGetItemsFromShoppingList          = fmt.Errorf("Failed to get items from shopping list")
+	ErrFailedToPatchShoppingList                 = fmt.Errorf("Failed to patch shopping list")
+	ErrFailedToRemoveAllItemsFromList            = fmt.Errorf("Failed to remove all items from list")
+	ErrFailedToUpdateShoppingItemFields          = fmt.Errorf("Failed to update fields in the item")
+	ErrInvalidItemQuantityMustBeOne              = fmt.Errorf("Unable to use item quantity must be at least one")
+	ErrInvalidShoppingItemName                   = fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
+	ErrInvalidShoppingItemTag                    = fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
+	ErrInvalidShoppingListNotes                  = fmt.Errorf("Unable to save shopping list notes, as they are too long")
+	ErrInvalidShoppingItemNotes                  = fmt.Errorf("Unable to save shopping item notes, as they are too long")
+	ErrShoppingListByIDNotFoundForTemplate       = fmt.Errorf("Unable to find list to use as template from provided id")
+)
+
 type Manager struct {
 	db *sql.DB
 }
@@ -56,15 +73,15 @@ func (m *Manager) ShoppingList() *ShoppingListManager {
 // given a shopping list, return it's validity
 func (m *ShoppingListManager) ValidateShoppingList(shoppingList types.ShoppingListSpec) (valid bool, err error) {
 	if len(shoppingList.Name) == 0 || len(shoppingList.Name) >= 30 || shoppingList.Name == "" {
-		return false, fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
+		return false, ErrInvalidShoppingItemName
 	}
 	if shoppingList.Notes != "" && len(shoppingList.Notes) > 100 {
-		return false, fmt.Errorf("Unable to save shopping list notes, as they are too long")
+		return false, ErrInvalidShoppingListNotes
 	}
 	if shoppingList.TemplateID != "" {
 		list, err := m.GetShoppingList(shoppingList.TemplateID)
 		if err != nil || list.ID == "" {
-			return false, fmt.Errorf("Unable to find list to use as template from provided id")
+			return false, ErrShoppingListByIDNotFoundForTemplate
 		}
 	}
 	return true, nil
@@ -208,7 +225,7 @@ func (m *ShoppingListManager) CreateShoppingList(shoppingList types.ShoppingList
 	shoppingListInserted, err = getListObjectFromRows(rows)
 	if err != nil || shoppingListInserted.ID == "" {
 		log.Printf("error getting list object from rows: %v\n", err)
-		return types.ShoppingListSpec{}, fmt.Errorf("Failed to create shopping list")
+		return types.ShoppingListSpec{}, ErrFailedToCreateShoppingList
 	}
 	log.Printf("%+v\n", shoppingListInserted)
 	if shoppingList.TemplateID == "" {
@@ -218,7 +235,10 @@ func (m *ShoppingListManager) CreateShoppingList(shoppingList types.ShoppingList
 	// if using other list as a template
 	shoppingListItems, err := m.manager.ShoppingItem().GetShoppingListItems(shoppingList.TemplateID, options)
 	if err != nil {
-		return types.ShoppingListSpec{}, fmt.Errorf("Failed to fetch items from shopping list")
+		if err := m.DeleteShoppingList(shoppingListInserted.ID); err != nil {
+			return types.ShoppingListSpec{}, err
+		}
+		return types.ShoppingListSpec{}, ErrFailedToGetItemsFromShoppingList
 	}
 
 	for _, item := range shoppingListItems {
@@ -232,10 +252,13 @@ func (m *ShoppingListManager) CreateShoppingList(shoppingList types.ShoppingList
 			AuthorLast: shoppingList.Author,
 			TemplateID: shoppingList.TemplateID,
 		}
-		newItem, err := m.manager.ShoppingItem().AddItemToList(shoppingListInserted.ID, newItem)
-		if err != nil || newItem.ID == "" {
+		_, err := m.manager.ShoppingItem().AddItemToList(shoppingListInserted.ID, newItem)
+		if err != nil {
 			log.Printf("error adding item to list: %v\n", err)
-			return types.ShoppingListSpec{}, fmt.Errorf("Failed to add new item to new shopping list from template")
+			if err := m.DeleteShoppingList(shoppingListInserted.ID); err != nil {
+				return types.ShoppingListSpec{}, err
+			}
+			return types.ShoppingListSpec{}, ErrFailedToAddItemToShoppingListFromTemplate
 		}
 	}
 	return shoppingListInserted, nil
@@ -246,11 +269,11 @@ func (m *ShoppingListManager) CreateShoppingList(shoppingList types.ShoppingList
 func (m *ShoppingListManager) PatchShoppingList(listID string, shoppingList types.ShoppingListSpec) (shoppingListPatched types.ShoppingListSpec, err error) {
 	existingList, err := m.GetShoppingList(listID)
 	if err != nil || existingList.ID == "" {
-		return types.ShoppingListSpec{}, fmt.Errorf("Failed to fetch existing shopping list")
+		return types.ShoppingListSpec{}, ErrFailedToGetExistingShoppingList
 	}
 	err = mergo.Merge(&shoppingList, existingList)
 	if err != nil {
-		return types.ShoppingListSpec{}, fmt.Errorf("Failed to update fields in the item")
+		return types.ShoppingListSpec{}, ErrFailedToUpdateShoppingItemFields
 	}
 	valid, err := m.ValidateShoppingList(existingList)
 	if !valid || err != nil {
@@ -272,7 +295,7 @@ func (m *ShoppingListManager) PatchShoppingList(listID string, shoppingList type
 	shoppingListPatched, err = getListObjectFromRows(rows)
 	if err != nil || shoppingListPatched.ID == "" {
 		log.Printf("error getting shopping list from rows: %v", err)
-		return types.ShoppingListSpec{}, fmt.Errorf("Failed to patch shopping list")
+		return types.ShoppingListSpec{}, ErrFailedToPatchShoppingList
 	}
 	return shoppingListPatched, nil
 }
@@ -300,7 +323,7 @@ func (m *ShoppingListManager) UpdateShoppingList(listID string, shoppingList typ
 	shoppingListUpdated, err = getListObjectFromRows(rows)
 	if err != nil || shoppingListUpdated.ID == "" {
 		log.Printf("error getting shopping list from rows: %v", err)
-		return types.ShoppingListSpec{}, fmt.Errorf("Failed to create shopping list")
+		return types.ShoppingListSpec{}, ErrFailedToCreateShoppingList
 	}
 	return shoppingListUpdated, nil
 }
@@ -346,7 +369,7 @@ func getListObjectFromRows(rows *sql.Rows) (list types.ShoppingListSpec, err err
 func (m *ShoppingListManager) DeleteShoppingList(listID string) (err error) {
 	err = m.manager.ShoppingItem().RemoveAllItemsFromList(listID)
 	if err != nil {
-		return fmt.Errorf("Failed to remove all items from list")
+		return ErrFailedToRemoveAllItemsFromList
 	}
 	sqlStatement := `delete from shopping_list where id = $1`
 	rows, err := m.db.Query(sqlStatement, listID)

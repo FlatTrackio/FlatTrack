@@ -69,8 +69,12 @@ func (m *Manager) setValue(name, value string) (err error) {
 
 // GetHasInitialized ...
 // return if the FlatTrack instance has initialized
-func (m *Manager) GetHasInitialized() (string, error) {
-	return m.getValue("initialized")
+func (m *Manager) GetHasInitialized() (bool, error) {
+	val, err := m.getValue("initialized")
+	if err != nil {
+		return false, err
+	}
+	return val == "true", nil
 }
 
 // SetHasInitialized ...

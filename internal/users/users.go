@@ -39,6 +39,42 @@ var (
 	jwtAlg *jwt.SigningMethodHMAC = jwt.SigningMethodHS256
 )
 
+var (
+	ErrAuthInvalid                                       = fmt.Errorf("Authentication has been invalidated, please log in again")
+	ErrEmailAddressAlreadyUsed                           = fmt.Errorf("Email address is unable to be used")
+	ErrFailedToCreateUserCreationSecret                  = fmt.Errorf("Failed to create a user creation secret")
+	ErrFailedToFindAccount                               = fmt.Errorf("Failed to find user account")
+	ErrFailedToFindUser                                  = fmt.Errorf("Failed to find user")
+	ErrFailedToListUserCreationSecrets                   = fmt.Errorf("Failed to list user creation secrets")
+	ErrFailedToPatchProfile                              = fmt.Errorf("Failed to patch profile")
+	ErrFailedToPatchUserAccount                          = fmt.Errorf("Failed to patch user account")
+	ErrFailedToUpdateUserAccount                         = fmt.Errorf("Failed to update user account")
+	ErrFailedToUpdateProfile                             = fmt.Errorf("Failed to update profile")
+	ErrInvalidEmailAddress                               = fmt.Errorf("Invalid email address")
+	ErrNoGroupsProvided                                  = fmt.Errorf("No groups provided; please select at least one group")
+	ErrUserAccountConfirmPasswordRequiredForRegistration = fmt.Errorf("Unable to confirm account, a password must be provided to complete registration")
+	ErrUserAccountConfirmSecretDoesNotMatch              = fmt.Errorf("Unable to confirm account, as the secret doesn't match")
+	ErrFailedToFindSystemAuthSecret                      = fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
+	ErrFailedToFindAccountConfirmSecret                  = fmt.Errorf("Unable to find account confirmation secret")
+	ErrFailedToFindAuthToken                             = fmt.Errorf("Unable to find authorization token")
+	ErrFailedToFindAuthTokenAccountID                    = fmt.Errorf("Unable to find the user account which the authentication token belongs to")
+	ErrFailedToFindUserAccount                           = fmt.Errorf("Unable to find user account")
+	ErrFailedToReadJWTClaims                             = fmt.Errorf("Unable to read JWT claims")
+	ErrAuthTokenExpired                                  = fmt.Errorf("Unable to use existing login token as it is invalid")
+	ErrAuthTokenFailed                                   = fmt.Errorf("Unable to use login token provided, please log in again")
+	ErrUserAccountNotFound                               = fmt.Errorf("Failed to find user account")
+	ErrUserAccountInvalidBirthday                        = fmt.Errorf("Unable to use the provided birthday, your birthday year must not be within the last 15 years")
+	ErrUserAccountInvalidEmail                           = fmt.Errorf("Unable to use the provided email, as it is either empty or not valid")
+	ErrUserAccountInvalidGroup                           = fmt.Errorf("Unable to use the provided group as it is invalid")
+	ErrUserAccountInvalidName                            = fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
+	ErrUserAccountInvalidPassword                        = fmt.Errorf("Unable to use the provided password, as it is either empty of invalid")
+	ErrUserAccountInvalidPhoneNumber                     = fmt.Errorf("Unable to use the provided phone number")
+	ErrUserAccountMustBeInFlatmemberGroup                = fmt.Errorf("User account must be in the flatmember group")
+	ErrUserAccountIsDisabled                             = fmt.Errorf("Your user account is disabled")
+	ErrAuthorizationHeaderNotFound                       = fmt.Errorf("Unable to find authorization token (header doesn't exist)")
+	ErrUserAccountCreationSecretNotFound                 = fmt.Errorf("Failed to find user account creation secret")
+)
+
 // UserManager manages user accounts
 type Manager struct {
 	groups *groups.Manager
@@ -58,14 +94,14 @@ func NewManager(db *sql.DB) *Manager {
 // given a UserSpec, return if it's valid
 func (m *Manager) ValidateUser(user types.UserSpec, allowEmptyPassword bool) (valid bool, err error) {
 	if len(user.Names) == 0 || len(user.Names) > 60 || user.Names == "" {
-		return false, fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
+		return false, ErrUserAccountInvalidName
 	}
 	if !common.RegexMatchEmail(user.Email) || user.Email == "" {
-		return false, fmt.Errorf("Unable to use the provided email, as it is either empty or not valid")
+		return false, ErrInvalidEmailAddress
 	}
 
 	if len(user.Groups) == 0 {
-		return false, fmt.Errorf("No groups provided; please select at least one group")
+		return false, ErrNoGroupsProvided
 	}
 	groupsIncludeFlatmember := false
 	for _, groupItem := range user.Groups {
@@ -74,22 +110,22 @@ func (m *Manager) ValidateUser(user types.UserSpec, allowEmptyPassword bool) (va
 		}
 		group, err := m.groups.GetGroupByName(groupItem)
 		if err != nil || group.ID == "" {
-			return false, fmt.Errorf("Unable to use the provided group '%v' as it is invalid", groupItem)
+			return false, ErrUserAccountInvalidGroup
 		}
 	}
 	if !groupsIncludeFlatmember {
-		return false, fmt.Errorf("User account must be in the flatmember group")
+		return false, ErrUserAccountMustBeInFlatmemberGroup
 	}
 
 	if user.Birthday != 0 && !common.ValidateBirthday(user.Birthday) {
-		return false, fmt.Errorf("Unable to use the provided birthday, your birthday year must not be within the last 15 years")
+		return false, ErrUserAccountInvalidBirthday
 	}
 
 	if (!common.RegexMatchPassword(user.Password) || user.Password == "") && !allowEmptyPassword {
-		return false, fmt.Errorf("Unable to use the provided password, as it is either empty of invalid")
+		return false, ErrUserAccountInvalidPassword
 	}
 	if user.PhoneNumber != "" && !common.RegexMatchPhoneNumber(user.PhoneNumber) {
-		return false, fmt.Errorf("Unable to use the provided phone number")
+		return false, ErrUserAccountInvalidPassword
 	}
 
 	return true, nil
@@ -105,11 +141,8 @@ func (m *Manager) CreateUser(user types.UserSpec, allowEmptyPassword bool) (user
 		return types.UserSpec{}, err
 	}
 	localUser, err := m.GetUserByEmail(user.Email, false)
-	if err == nil || localUser.ID != "" {
-		return types.UserSpec{}, fmt.Errorf("Email address is unable to be used")
-	}
-	if localUser.Email == user.Email {
-		return types.UserSpec{}, fmt.Errorf("Email address is already taken")
+	if err == nil || localUser.Email == user.Email || localUser.ID != "" {
+		return types.UserSpec{}, ErrEmailAddressAlreadyUsed
 	}
 	if user.Password != "" {
 		user.Password = common.HashSHA512(user.Password)
@@ -130,24 +163,23 @@ func (m *Manager) CreateUser(user types.UserSpec, allowEmptyPassword bool) (user
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	userInserted, err = userObjectFromRows(rows)
-	if err != nil {
-		return types.UserSpec{}, err
+	for rows.Next() {
+		userInserted, err = userObjectFromRows(rows)
+		if err != nil {
+			return types.UserSpec{}, err
+		}
 	}
-	updatedGroups, err := m.groups.UpdateUserGroups(userInserted.ID, user.Groups)
-	if !updatedGroups || err != nil {
+	if err := m.groups.UpdateUserGroups(userInserted.ID, user.Groups); err != nil {
 		return types.UserSpec{}, err
 	}
 	userInserted.Groups = user.Groups
 	userInserted.Password = ""
 	if allowEmptyPassword {
-		userCreationSecretInserted, err = m.CreateUserCreationSecret(userInserted.ID)
-		if err != nil {
+		if userCreationSecretInserted, err = m.CreateUserCreationSecret(userInserted.ID); err != nil {
 			return types.UserSpec{}, err
 		}
 		if userCreationSecretInserted.ID == "" {
-			return types.UserSpec{}, fmt.Errorf("Failed to created a user creation secret")
+			return types.UserSpec{}, ErrFailedToCreateUserCreationSecret
 		}
 	}
 
@@ -207,7 +239,7 @@ func (m *Manager) GetUser(userSelect types.UserSpec, includePassword bool) (user
 	}
 	if userSelect.Email != "" {
 		if common.RegexMatchEmail(userSelect.Email) {
-			return types.UserSpec{}, fmt.Errorf("Invalid email address")
+			return types.UserSpec{}, ErrInvalidEmailAddress
 		}
 		return m.GetUserByEmail(userSelect.Email, includePassword)
 	}
@@ -254,10 +286,14 @@ func (m *Manager) GetUserByID(id string, includePassword bool) (user types.UserS
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	user, err = userObjectFromRows(rows)
-	if err != nil {
-		return types.UserSpec{}, err
+	for rows.Next() {
+		user, err = userObjectFromRows(rows)
+		if err != nil {
+			return types.UserSpec{}, err
+		}
+	}
+	if user.ID == "" {
+		return types.UserSpec{}, ErrUserAccountNotFound
 	}
 	groups, err := m.groups.GetGroupNamesOfUserByID(user.ID)
 	if err != nil {
@@ -283,13 +319,14 @@ func (m *Manager) GetUserByEmail(email string, includePassword bool) (user types
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	user, err = userObjectFromRows(rows)
-	if err != nil {
-		return types.UserSpec{}, err
+	for rows.Next() {
+		user, err = userObjectFromRows(rows)
+		if err != nil {
+			return types.UserSpec{}, err
+		}
 	}
 	if user.ID == "" {
-		return types.UserSpec{}, fmt.Errorf("Failed to find user")
+		return types.UserSpec{}, ErrFailedToFindAccount
 	}
 	groups, err := m.groups.GetGroupNamesOfUserByID(user.ID)
 	if err != nil {
@@ -374,11 +411,11 @@ func (m *Manager) GenerateJWTauthToken(id string, authNonce string, expiresIn ti
 func GetAuthTokenFromHeader(r *http.Request) (string, error) {
 	tokenHeader := r.Header.Get("Authorization")
 	if tokenHeader == "" {
-		return "", fmt.Errorf("Unable to find authorization token (header doesn't exist)")
+		return "", ErrAuthorizationHeaderNotFound
 	}
 	authorizationHeader := strings.Split(tokenHeader, " ")
 	if authorizationHeader[0] != "bearer" || len(authorizationHeader) <= 1 {
-		return "", fmt.Errorf("Unable to find authorization token (must be as bearer)")
+		return "", ErrAuthorizationHeaderNotFound
 	}
 	return authorizationHeader[1], nil
 }
@@ -388,7 +425,7 @@ func GetAuthTokenFromHeader(r *http.Request) (string, error) {
 func (m *Manager) ValidateJWTauthToken(r *http.Request) (valid bool, tokenClaims *types.JWTclaim, err error) {
 	secret, err := m.system.GetJWTsecret()
 	if err != nil {
-		return false, &types.JWTclaim{}, fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
+		return false, &types.JWTclaim{}, ErrFailedToFindSystemAuthSecret
 	}
 	tokenHeaderJWT, err := GetAuthTokenFromHeader(r)
 	if err != nil {
@@ -403,30 +440,30 @@ func (m *Manager) ValidateJWTauthToken(r *http.Request) (valid bool, tokenClaims
 	}
 
 	if !token.Valid {
-		return false, &types.JWTclaim{}, fmt.Errorf("Unable to use existing login token as it is invalid")
+		return false, &types.JWTclaim{}, ErrAuthInvalid
 	}
 	if err := token.Claims.Valid(); err != nil {
-		return false, &types.JWTclaim{}, fmt.Errorf("Unable to use existing login token as it is invalid")
+		return false, &types.JWTclaim{}, ErrAuthInvalid
 	}
 	if token.Method.Alg() != jwtAlg.Alg() {
-		return false, &types.JWTclaim{}, fmt.Errorf("Unable to use login token provided, please log in again")
+		return false, &types.JWTclaim{}, ErrAuthTokenFailed
 	}
 
 	reqClaims, ok := token.Claims.(*types.JWTclaim)
 	if !ok {
-		return false, &types.JWTclaim{}, fmt.Errorf("Unable to read JWT claims")
+		return false, &types.JWTclaim{}, ErrFailedToReadJWTClaims
 	}
 	user, err := m.GetUserByID(reqClaims.ID, true)
 	if err != nil || user.ID == "" || user.DeletionTimestamp != 0 {
-		return false, &types.JWTclaim{}, fmt.Errorf("Unable to find the user account which the authentication token belongs to")
+		return false, &types.JWTclaim{}, ErrFailedToFindAuthTokenAccountID
 	}
 
 	if reqClaims.AuthNonce != user.AuthNonce {
-		return false, &types.JWTclaim{}, fmt.Errorf("Authentication has been invalidated, please log in again")
+		return false, &types.JWTclaim{}, ErrAuthInvalid
 	}
 
 	if user.Disabled {
-		return false, &types.JWTclaim{}, fmt.Errorf("Your user account is disabled")
+		return false, &types.JWTclaim{}, ErrUserAccountIsDisabled
 	}
 
 	return token.Valid, reqClaims, nil
@@ -450,18 +487,19 @@ func (m *Manager) InvalidateAllAuthTokens(id string) (err error) {
 
 // GetIDFromJWT ...
 // return the userID in a JWT from a header in a HTTP request
+// TODO move into internal/httpserver/common.go
 func (m *Manager) GetIDFromJWT(r *http.Request) (id string, err error) {
 	secret, err := m.system.GetJWTsecret()
 	if err != nil {
-		return "", fmt.Errorf("Unable to find FlatTrack system auth secret. Please contact system administrators or support")
+		return "", ErrFailedToFindSystemAuthSecret
 	}
 	tokenHeader := r.Header.Get("Authorization")
 	if tokenHeader == "" {
-		return "", fmt.Errorf("Unable to find authorization token (header doesn't exist)")
+		return "", ErrAuthorizationHeaderNotFound
 	}
 	authorizationHeader := strings.Split(tokenHeader, " ")
 	if authorizationHeader[0] != "bearer" || len(authorizationHeader) <= 1 {
-		return "", fmt.Errorf("Unable to find authorization token (must be as bearer)")
+		return "", ErrAuthorizationHeaderNotFound
 	}
 	tokenHeaderJWT := authorizationHeader[1]
 	claims := &types.JWTclaim{}
@@ -476,13 +514,14 @@ func (m *Manager) GetIDFromJWT(r *http.Request) (id string, err error) {
 	user, err := m.GetUserByID(reqClaims.ID, true)
 	if err != nil || user.ID == "" {
 		log.Printf("error getting user by ID; %v\n", err)
-		return "", fmt.Errorf("Unable to find the user account which the authentication token belongs to")
+		return "", ErrFailedToFindAuthTokenAccountID
 	}
 	return user.ID, nil
 }
 
 // GetProfile ...
 // return user from ID in JWT from HTTP request
+// TODO move into internal/httpserver/common.go
 func (m *Manager) GetProfile(r *http.Request) (user types.UserSpec, err error) {
 	id, err := m.GetIDFromJWT(r)
 	if err != nil {
@@ -500,17 +539,17 @@ func (m *Manager) GetProfile(r *http.Request) (user types.UserSpec, err error) {
 func (m *Manager) PatchProfile(id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
 	existingUserAccount, err := m.GetUserByID(id, true)
 	if err != nil || existingUserAccount.ID == "" {
-		return types.UserSpec{}, fmt.Errorf("Failed to find user account")
+		return types.UserSpec{}, ErrFailedToFindAccount
 	}
 	if userAccount.Email != "" && userAccount.Email != existingUserAccount.Email {
 		localUser, err := m.GetUserByEmail(userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
-			return types.UserSpec{}, fmt.Errorf("Email address is unable to be used")
+			return types.UserSpec{}, ErrEmailAddressAlreadyUsed
 		}
 	}
 	err = mergo.Merge(&userAccount, existingUserAccount)
 	if err != nil {
-		return types.UserSpec{}, fmt.Errorf("Failed to update fields in the user account")
+		return types.UserSpec{}, ErrFailedToPatchProfile
 	}
 	noUpdatePassword := userAccount.Password == existingUserAccount.Password
 	valid, err := m.ValidateUser(userAccount, noUpdatePassword)
@@ -534,10 +573,15 @@ func (m *Manager) PatchProfile(id string, userAccount types.UserSpec) (userAccou
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	userAccountPatched, err = userObjectFromRowsRestricted(rows)
-	if err != nil || userAccountPatched.ID == "" {
-		return types.UserSpec{}, fmt.Errorf("Failed to patch user account")
+	for rows.Next() {
+		userAccountPatched, err = userObjectFromRowsRestricted(rows)
+		if err != nil {
+			log.Println("error patching user account:", err)
+			return types.UserSpec{}, ErrFailedToPatchProfile
+		}
+	}
+	if userAccountPatched.ID == "" {
+		return types.UserSpec{}, ErrFailedToPatchProfile
 	}
 
 	userAccountPatched.Groups = existingUserAccount.Groups
@@ -550,17 +594,17 @@ func (m *Manager) PatchProfile(id string, userAccount types.UserSpec) (userAccou
 func (m *Manager) PatchProfileAdmin(id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
 	existingUserAccount, err := m.GetUserByID(id, true)
 	if err != nil || existingUserAccount.ID == "" {
-		return types.UserSpec{}, fmt.Errorf("Failed to find user account")
+		return types.UserSpec{}, ErrFailedToFindUserAccount
 	}
 	if userAccount.Email != "" && userAccount.Email != existingUserAccount.Email {
 		localUser, err := m.GetUserByEmail(userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
-			return types.UserSpec{}, fmt.Errorf("Email address is unable to be used")
+			return types.UserSpec{}, ErrEmailAddressAlreadyUsed
 		}
 	}
 	err = mergo.Merge(&userAccount, existingUserAccount)
 	if err != nil {
-		return types.UserSpec{}, fmt.Errorf("Failed to update fields in the user account")
+		return types.UserSpec{}, ErrFailedToPatchProfile
 	}
 	noUpdatePassword := userAccount.Password == existingUserAccount.Password
 	valid, err := m.ValidateUser(userAccount, noUpdatePassword)
@@ -584,15 +628,18 @@ func (m *Manager) PatchProfileAdmin(id string, userAccount types.UserSpec) (user
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	userAccountPatched, err = userObjectFromRows(rows)
-	if err != nil || userAccountPatched.ID == "" {
-		log.Printf("error getting user object from rows: %v\n", err)
-		return types.UserSpec{}, fmt.Errorf("Failed to patch user account")
+	for rows.Next() {
+		userAccountPatched, err = userObjectFromRows(rows)
+		if err != nil {
+			log.Printf("error getting user object from rows: %v\n", err)
+			return types.UserSpec{}, ErrFailedToPatchUserAccount
+		}
+	}
+	if userAccountPatched.ID == "" {
+		return types.UserSpec{}, ErrFailedToPatchUserAccount
 	}
 
-	updatedGroups, err := m.groups.UpdateUserGroups(id, userAccount.Groups)
-	if !updatedGroups || err != nil {
+	if err := m.groups.UpdateUserGroups(id, userAccount.Groups); err != nil {
 		return types.UserSpec{}, err
 	}
 
@@ -610,12 +657,12 @@ func (m *Manager) UpdateProfile(id string, userAccount types.UserSpec) (userAcco
 	}
 	existingUserAccount, err := m.GetUserByID(id, true)
 	if err != nil || existingUserAccount.ID == "" {
-		return types.UserSpec{}, fmt.Errorf("Failed to find user account")
+		return types.UserSpec{}, ErrFailedToFindAccount
 	}
 	if userAccount.Email != existingUserAccount.Email {
 		localUser, err := m.GetUserByEmail(userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
-			return types.UserSpec{}, fmt.Errorf("Email address is unable to be used")
+			return types.UserSpec{}, ErrEmailAddressAlreadyUsed
 		}
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
@@ -632,11 +679,15 @@ func (m *Manager) UpdateProfile(id string, userAccount types.UserSpec) (userAcco
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	userAccountUpdated, err = userObjectFromRowsRestricted(rows)
-	if err != nil || userAccountUpdated.ID == "" {
-		log.Printf("error getting user object from rows (restricted): %v\n", err)
-		return types.UserSpec{}, fmt.Errorf("Failed to update profile")
+	for rows.Next() {
+		userAccountUpdated, err = userObjectFromRowsRestricted(rows)
+		if err != nil {
+			log.Printf("error getting user object from rows (restricted): %v\n", err)
+			return types.UserSpec{}, ErrFailedToUpdateProfile
+		}
+	}
+	if userAccountUpdated.ID == "" {
+		return types.UserSpec{}, ErrFailedToUpdateProfile
 	}
 	userAccountUpdated.Groups = existingUserAccount.Groups
 	return userAccountUpdated, nil
@@ -651,12 +702,12 @@ func (m *Manager) UpdateProfileAdmin(id string, userAccount types.UserSpec) (use
 	}
 	existingUserAccount, err := m.GetUserByID(id, true)
 	if err != nil || existingUserAccount.ID == "" {
-		return types.UserSpec{}, fmt.Errorf("Failed to find user account")
+		return types.UserSpec{}, ErrFailedToFindAccount
 	}
 	if userAccount.Email != existingUserAccount.Email {
 		localUser, err := m.GetUserByEmail(userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
-			return types.UserSpec{}, fmt.Errorf("Email address is unable to be used")
+			return types.UserSpec{}, ErrEmailAddressAlreadyUsed
 		}
 	}
 	passwordHashed := common.HashSHA512(userAccount.Password)
@@ -673,14 +724,17 @@ func (m *Manager) UpdateProfileAdmin(id string, userAccount types.UserSpec) (use
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	userAccountUpdated, err = userObjectFromRows(rows)
-	if err != nil || userAccountUpdated.ID == "" {
-		return types.UserSpec{}, fmt.Errorf("Failed to update profile")
+	for rows.Next() {
+		userAccountUpdated, err = userObjectFromRows(rows)
+		if userAccountUpdated.ID == "" {
+			return types.UserSpec{}, ErrFailedToUpdateProfile
+		}
+	}
+	if err != nil {
+		return types.UserSpec{}, ErrFailedToUpdateProfile
 	}
 
-	updatedGroups, err := m.groups.UpdateUserGroups(id, userAccount.Groups)
-	if !updatedGroups || err != nil {
+	if err := m.groups.UpdateUserGroups(id, userAccount.Groups); err != nil {
 		// TODO this could potentially panic, if err is nil
 		return types.UserSpec{}, err
 	}
@@ -718,7 +772,7 @@ func (m *Manager) GetAllUserCreationSecrets(secretsSelector types.UserCreationSe
 	for rows.Next() {
 		creationSecret, err := userCreationSecretsFromRows(rows)
 		if err != nil {
-			return []types.UserCreationSecretSpec{}, fmt.Errorf("Failed to list user creation secrets")
+			return []types.UserCreationSecretSpec{}, ErrFailedToListUserCreationSecrets
 		}
 		if secretsSelector.UserID != "" {
 			userExists, err := m.UserAccountExists(secretsSelector.UserID)
@@ -726,7 +780,7 @@ func (m *Manager) GetAllUserCreationSecrets(secretsSelector types.UserCreationSe
 				return []types.UserCreationSecretSpec{}, err
 			}
 			if !userExists {
-				return []types.UserCreationSecretSpec{}, fmt.Errorf("Unable to find user account")
+				return []types.UserCreationSecretSpec{}, ErrFailedToFindUserAccount
 			}
 			if creationSecret.UserID != secretsSelector.UserID {
 				continue
@@ -750,10 +804,14 @@ func (m *Manager) GetUserCreationSecret(id string) (creationSecret types.UserCre
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	creationSecret, err = userCreationSecretsFromRows(rows)
-	if err != nil {
-		return types.UserCreationSecretSpec{}, err
+	for rows.Next() {
+		creationSecret, err = userCreationSecretsFromRows(rows)
+		if err != nil {
+			return types.UserCreationSecretSpec{}, err
+		}
+	}
+	if creationSecret.ID == "" {
+		return types.UserCreationSecretSpec{}, ErrUserAccountCreationSecretNotFound
 	}
 	return creationSecret, nil
 }
@@ -773,10 +831,11 @@ func (m *Manager) CreateUserCreationSecret(userID string) (userCreationSecretIns
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	userCreationSecretInserted, err = userCreationSecretsFromRows(rows)
-	if err != nil {
-		return types.UserCreationSecretSpec{}, err
+	for rows.Next() {
+		userCreationSecretInserted, err = userCreationSecretsFromRows(rows)
+		if err != nil {
+			return types.UserCreationSecretSpec{}, err
+		}
 	}
 	return userCreationSecretInserted, nil
 }
@@ -817,17 +876,17 @@ func (m *Manager) DeleteUserCreationSecretByUserID(userID string) (err error) {
 // confirms the user account
 func (m *Manager) ConfirmUserAccount(id string, secret string, user types.UserSpec) (tokenString string, err error) {
 	if user.Password == "" {
-		return "", fmt.Errorf("Unable to confirm account, a password must be provided to complete registration")
+		return "", ErrUserAccountConfirmPasswordRequiredForRegistration
 	}
 	userCreationSecret, err := m.GetUserCreationSecret(id)
 	if err != nil {
 		return "", err
 	}
 	if userCreationSecret.ID == "" {
-		return "", fmt.Errorf("Unable to find account confirmation secret")
+		return "", ErrFailedToFindAccountConfirmSecret
 	}
 	if secret != userCreationSecret.Secret {
-		return "", fmt.Errorf("Unable to confirm account, as the secret doesn't match")
+		return "", ErrUserAccountConfirmSecretDoesNotMatch
 	}
 	userInDB, err := m.GetUserByID(userCreationSecret.UserID, false)
 	if err != nil {
@@ -847,7 +906,7 @@ func (m *Manager) ConfirmUserAccount(id string, secret string, user types.UserSp
 		return "", err
 	}
 	if userConfirmed.ID == "" || !userConfirmed.Registered {
-		return "", fmt.Errorf("Failed to patch profile")
+		return "", ErrFailedToPatchProfile
 	}
 	err = m.DeleteUserCreationSecret(id)
 	if err != nil {
@@ -873,14 +932,15 @@ func (m *Manager) UserAccountExists(id string) (exists bool, err error) {
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
 	var userIDFromDB string
-	if err := rows.Scan(&userIDFromDB); err != nil {
-		return false, err
-	}
-	err = rows.Err()
-	if err != nil {
-		return false, err
+	for rows.Next() {
+		if err := rows.Scan(&userIDFromDB); err != nil {
+			return false, err
+		}
+		err = rows.Err()
+		if err != nil {
+			return false, err
+		}
 	}
 	return userIDFromDB == id, nil
 }
@@ -899,10 +959,11 @@ func (m *Manager) GenerateNewAuthNonce(id string) (err error) {
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	_, err = userObjectFromRows(rows)
-	if err != nil {
-		return err
+	for rows.Next() {
+		_, err = userObjectFromRows(rows)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -921,10 +982,11 @@ func (m *Manager) PatchUserDisabledAdmin(id string, disabled bool) (userAccount 
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	userAccount, err = userObjectFromRows(rows)
-	if err != nil {
-		return types.UserSpec{}, err
+	for rows.Next() {
+		userAccount, err = userObjectFromRows(rows)
+		if err != nil {
+			return types.UserSpec{}, err
+		}
 	}
 	return userAccount, nil
 }

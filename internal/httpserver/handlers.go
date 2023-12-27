@@ -27,6 +27,8 @@ func httpUseMiddleware(handler http.HandlerFunc, middlewares ...func(http.Handle
 	return handler
 }
 
+// TODO handle io.ReadAll err
+
 // FrontendOptions ...
 // options to send to the frontend index.html for templating
 type frontendOptions struct {
@@ -84,7 +86,7 @@ func (h *HTTPServer) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 			log.Printf("error getting id from jwt: %v\n", err)
 			JSONResponse(r, w, http.StatusNotFound, types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
-					Response: "Unable to get user id from token",
+					Response: "failed to get user account id from token",
 				},
 			})
 			return
@@ -97,14 +99,14 @@ func (h *HTTPServer) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		log.Printf("error getting all users: %v\n", err)
 		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: "Error getting a list of all users",
+				Response: "failed to get a list of all users",
 			},
 		})
 		return
 	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: "Fetched user accounts",
+			Response: "fetched user accounts",
 		},
 		List: users,
 	}
@@ -115,62 +117,47 @@ func (h *HTTPServer) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 // get a user by id or email (whatever is provided in the given respective order)
 func (h *HTTPServer) GetUser(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 	vars := mux.Vars(r)
 	id := vars["id"]
 
 	user, err := h.users.GetUserByID(id, false)
 	if err != nil {
 		context = err.Error()
-		code = http.StatusNotFound
-		response = "Failed to find user"
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to find user",
 			},
 			Spec: types.UserSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 	if user.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find user"
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to find user",
 			},
 			Spec: types.UserSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
-	if err == nil {
-		code = http.StatusOK
-		response = "Fetched user account"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
-	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched user account",
 		},
 		Spec: user,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PostUser ...
 // create a user
 func (h *HTTPServer) PostUser(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var user types.UserSpec
 	body, err := io.ReadAll(r.Body)
@@ -194,33 +181,44 @@ func (h *HTTPServer) PostUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userAccount, err := h.users.CreateUser(user, user.Password == "")
-	if err == nil && userAccount.ID != "" {
-		code = http.StatusCreated
-		response = "Created user account"
-		context = fmt.Sprintf("'%v'", userAccount.ID)
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to create user account",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	context = fmt.Sprintf("'%v'", userAccount.ID)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "created user account",
 		},
 		Spec: userAccount,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
 // PutUser ...
 // updates a user account by their id
 func (h *HTTPServer) PutUser(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var userAccount types.UserSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &userAccount); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -234,49 +232,58 @@ func (h *HTTPServer) PutUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	user, err := h.users.GetUserByID(userID, false)
-	if err != nil || user.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find user"
+	_, err = h.users.GetUserByID(userID, false)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account by id: " + userID,
 			},
-			Spec: types.UserSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
 
 	// TODO disallow admins to remove their own admin group access
 	userAccountUpdated, err := h.users.UpdateProfileAdmin(userID, userAccount)
-	if err == nil && userAccountUpdated.ID != "" {
-		code = http.StatusOK
-		response = "Successfully updated the user account"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to update user account by id: " + userID,
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "updated user account",
 		},
 		Spec: userAccountUpdated,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PatchUser ...
 // patches a user account by their id
 func (h *HTTPServer) PatchUser(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var userAccount types.UserSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &userAccount); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -290,49 +297,58 @@ func (h *HTTPServer) PatchUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	user, err := h.users.GetUserByID(userID, false)
-	if err != nil || user.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find user"
+	_, err = h.users.GetUserByID(userID, false)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account by id: " + userID,
 			},
-			Spec: types.UserSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
 
 	// TODO disallow admins to remove their own admin group access
 	userAccountPatched, err := h.users.PatchProfileAdmin(userID, userAccount)
-	if err == nil && userAccountPatched.ID != "" {
-		code = http.StatusOK
-		response = "Successfully patched the user account"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to patch user account by id: " + userID,
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "patched user account",
 		},
 		Spec: userAccountPatched,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PatchUserDisabled ...
 // patches a user account's disabled field by their id
 func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var userAccount types.UserSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &userAccount); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -346,189 +362,197 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	user, err := h.users.GetUserByID(userID, false)
-	if err != nil || user.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find user"
+	_, err = h.users.GetUserByID(userID, false)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account by id: " + userID,
 			},
-			Spec: types.UserSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	jwtID, errID := h.users.GetIDFromJWT(r)
-	if errID != nil {
-		code = http.StatusBadRequest
-		response = "Failed get user ID from token"
+	jwtID, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account id from token",
 			},
-			Spec: types.UserSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
-	isAdmin, errGroup := h.groups.CheckUserInGroup(jwtID, "admin")
-	if errGroup != nil {
-		code = http.StatusInternalServerError
-		response = "Failed to check for user in group"
+	isAdmin, err := h.groups.CheckUserInGroup(jwtID, "admin")
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to check user in group",
 			},
-			Spec: types.UserSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
 	if isAdmin && userID == jwtID {
-		code = http.StatusForbidden
-		response = "Unable to disabled own user account"
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "unable to disable user account of invoker",
 			},
-			Spec: types.UserSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusForbidden, JSONresp)
 		return
 	}
 
 	userAccountPatched, err := h.users.PatchUserDisabledAdmin(userID, userAccount.Disabled)
-	if err == nil {
-		code = http.StatusOK
-		response = "Successfully patched the user account disabled field"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to patch user account by id: " + userID,
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "disabled user account",
 		},
 		Spec: userAccountPatched,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // DeleteUser ...
 // delete a user
 func (h *HTTPServer) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
 	userInDB, err := h.users.GetUserByID(userID, false)
-	if err != nil || userInDB.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find user"
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account by id: " + userID,
 			},
-			Spec: false,
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	myUserID, errID := h.users.GetIDFromJWT(r)
-	if errID != nil {
-		code = http.StatusBadRequest
-		response = "Failed to get user account ID from token"
+	myUserID, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account id from token",
 			},
-			Spec: false,
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
 	if myUserID == userID {
-		code = http.StatusForbidden
-		response = "Deleting own user account is disallowed"
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "unable to delete user account of invoker",
 			},
-			Spec: nil,
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusForbidden, JSONresp)
 		return
 	}
 
-	err = h.users.DeleteUserByID(userInDB.ID)
-	if err == nil {
-		code = http.StatusOK
-		response = "Deleted user account"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err := h.users.DeleteUserByID(userInDB.ID); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "deleted user account",
 		},
-		Spec: err == nil,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetProfile ...
 // returns the authenticated user's profile
 func (h *HTTPServer) GetProfile(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	user, err := h.users.GetProfile(r)
-	if err == nil && user.ID != "" {
-		code = http.StatusOK
-		response = "Fetched user account"
-	} else {
-		code = http.StatusNotFound
-		response = "Failed to find your profile"
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	if user.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to find user",
+			},
+			Spec: types.UserSpec{},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched profile",
 		},
 		Spec: user,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PutProfile ...
 // Update a user account their id from their JWT
 func (h *HTTPServer) PutProfile(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var userAccount types.UserSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &userAccount); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -539,34 +563,56 @@ func (h *HTTPServer) PutProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
-	userAccountUpdated, err := h.users.UpdateProfile(id, userAccount)
-	if err == nil && errID == nil && userAccountUpdated.ID != "" {
-		code = http.StatusOK
-		response = "Successfully patched the user account"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	userAccountUpdated, err := h.users.UpdateProfile(id, userAccount)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to update user account",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "updated user account",
 		},
 		Spec: userAccountUpdated,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PatchProfile ...
 // patches a user account their id from their JWT
 func (h *HTTPServer) PatchProfile(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var userAccount types.UserSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &userAccount); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -577,49 +623,74 @@ func (h *HTTPServer) PatchProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
-	userAccountPatched, err := h.users.PatchProfile(id, userAccount)
-	if err == nil && errID == nil && userAccountPatched.ID != "" {
-		code = http.StatusOK
-		response = "Successfully patched the user account"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	userAccountPatched, err := h.users.PatchProfile(id, userAccount)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to patch user account",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "patched user account",
 		},
 		Spec: userAccountPatched,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetSystemInitialized ...
 // check if the server has been initialized
 func (h *HTTPServer) GetSystemInitialized(w http.ResponseWriter, r *http.Request) {
 	var context string
-	code := http.StatusInternalServerError
-	response := "Failed to fetch if this FlatTrack instance has initialized"
 
-	initialized, err := h.system.GetHasInitialized()
-	if err == nil {
-		code = http.StatusOK
+	initialised, err := h.system.GetHasInitialized()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get system initialise status",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	if err == nil && initialized == "true" {
-		response = "This FlatTrack instance has initialized"
-	} else if err == nil && initialized == "false" {
-		response = "This FlatTrack instance has not initialized"
+	if !initialised {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "not initialised",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "initialised",
 		},
-		Data: initialized == "true",
+		Data: initialised,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // UserAuth ...
@@ -713,136 +784,187 @@ func (h *HTTPServer) UserAuth(w http.ResponseWriter, r *http.Request) {
 // validate an auth token
 func (h *HTTPServer) UserAuthValidate(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var response string
-	code := http.StatusUnauthorized
 
 	valid, claims, err := h.users.ValidateJWTauthToken(r)
-	if valid && err == nil {
-		response = "Authentication token is valid"
-		code = http.StatusOK
-	} else {
-		response = err.Error()
-		context = fmt.Sprintf("for user with ID '%v'", claims.ID)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to validate auth token",
+			},
+			Data: false,
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusUnauthorized, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	context = fmt.Sprintf("for user with ID '%v'", claims.ID)
+	if !valid {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "auth token is not valid",
+			},
+			Data: valid,
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusUnauthorized, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "auth token is valid",
 		},
 		Data: valid,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // UserAuthReset ...
 // invalidates all JWTs
 func (h *HTTPServer) UserAuthReset(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to sign out all devices logged in"
-	code := http.StatusInternalServerError
 
 	id, err := h.users.GetIDFromJWT(r)
 	if err != nil {
-		response = "Failed to find account"
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to find user account with id: " + id,
 			},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
-	err = h.users.GenerateNewAuthNonce(id)
-	if err == nil {
-		response = "Successfully signed out all devices logged in"
-		code = http.StatusOK
+	if err := h.users.GenerateNewAuthNonce(id); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to find user account with id: " + id,
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "reset all authentication tokens",
 		},
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // UserCanIgroup ...
 // respond whether the current user account is in a group
 func (h *HTTPServer) UserCanIgroup(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to determine group privileges"
-	code := http.StatusInternalServerError
 
 	vars := mux.Vars(r)
 	groupName := vars["name"]
 
-	group, err := h.groups.GetGroupByName(groupName)
-	if err != nil || group.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find group"
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account id from token",
 			},
-			Spec: types.GroupSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
-	userIsInGroup, err := h.groups.CheckUserInGroup(id, groupName)
-	if err == nil && errID == nil {
-		response = "Determined if user account can perform tasks of group"
-		code = http.StatusOK
+	group, err := h.groups.GetGroupByName(groupName)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get group by name: " + groupName,
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
 
-	log.Println(response, context)
+	userIsInGroup, err := h.groups.CheckUserInGroup(id, group.Name)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to check whether user is in group",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched user is in group",
 		},
 		Data: userIsInGroup,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetSettingsFlatName ...
 // responds with the name of the flat
 func (h *HTTPServer) GetSettingsFlatName(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch the flat name"
-	code := http.StatusInternalServerError
-
 	flatName, err := h.settings.GetFlatName()
-	if flatName == "" {
-		response = "Flat name is not set"
-		code = http.StatusOK
-	} else if err == nil {
-		response = "Fetched the flat name"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get flat name setting",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	if flatName == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "flat name is not set",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched flat name",
 		},
 		Spec: flatName,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // SetSettingsFlatName ...
 // update the flat's name
 func (h *HTTPServer) SetSettingsFlatName(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var flatName types.FlatName
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &flatName); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -853,49 +975,66 @@ func (h *HTTPServer) SetSettingsFlatName(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err := h.settings.SetFlatName(flatName.FlatName)
-	if err == nil {
-		code = http.StatusOK
-		response = "Successfully set flat name"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err := h.settings.SetFlatName(flatName.FlatName); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to set flat name setting",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "set flat name",
 		},
-		Spec: err == nil,
+		Spec: true,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PostAdminRegister ...
 // register the instance of FlatTrack
 func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	initialized, err := h.system.GetHasInitialized()
-	if err == nil && initialized == "true" {
-		response = "This instance is already registered"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get system initialised status",
 			},
-			Spec: true,
-			Data: "",
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if initialized {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "system is initialised",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusOK, JSONresp)
 		return
 	}
 
 	var registrationForm types.Registration
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &registrationForm); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -907,56 +1046,61 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	registered, jwt, err := h.registration.Register(registrationForm)
-	if err == nil {
-		code = http.StatusCreated
-		response = "Successfully registered the FlatTrack instance"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to register instance",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "registered",
 		},
 		Spec: registered,
 		Data: jwt,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
 // GetShoppingList ...
 // responds with list of shopping lists
 func (h *HTTPServer) GetShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch shopping lists"
-	code := http.StatusNotFound
-
 	vars := mux.Vars(r)
 	id := vars["id"]
 
 	shoppingList, err := h.shoppinglist.ShoppingList().GetShoppingList(id)
-	if err == nil && shoppingList.ID != "" {
-		response = "Fetched the shopping lists"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched shopping list",
 		},
 		Spec: shoppingList,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetShoppingLists ...
 // responds with shopping list by id
 func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch shopping lists"
-	code := http.StatusInternalServerError
-
 	modificationTimestampAfter, _ := strconv.Atoi(r.FormValue("modificationTimestampAfter"))
 	creationTimestampAfter, _ := strconv.Atoi(r.FormValue("creationTimestampAfter"))
 	limit, _ := strconv.Atoi(r.FormValue("limit"))
@@ -972,29 +1116,43 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shoppingLists, err := h.shoppinglist.ShoppingList().GetShoppingLists(options)
-	if err == nil {
-		response = "Fetched the shopping lists"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping lists",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched shopping lists",
 		},
 		List: shoppingLists,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PostShoppingList ...
 // creates a new shopping list to add items to
 func (h *HTTPServer) PostShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var shoppingList types.ShoppingListSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &shoppingList); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1013,42 +1171,55 @@ func (h *HTTPServer) PostShoppingList(w http.ResponseWriter, r *http.Request) {
 
 	id, err := h.users.GetIDFromJWT(r)
 	if err != nil {
-		log.Printf("error: %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get userid from token",
+				Response: "failed to get user account id from token",
 			},
-		})
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 	shoppingList.Author = id
 	shoppingListInserted, err := h.shoppinglist.ShoppingList().CreateShoppingList(shoppingList, options)
-	if err == nil {
-		code = http.StatusCreated
-		response = "Successfully created the shopping list"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to create shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "created shopping list",
 		},
 		Spec: shoppingListInserted,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
 // PatchShoppingList ...
 // patches an existing shopping list
 func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
-	code := http.StatusBadRequest
-	var response string
 
 	var shoppingList types.ShoppingListSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &shoppingList); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1063,48 +1234,69 @@ func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 	listID := vars["id"]
 
 	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
-	shoppingList.AuthorLast = id
-	shoppingListPatched, err := h.shoppinglist.ShoppingList().PatchShoppingList(listID, shoppingList)
-	if err == nil && errID == nil && shoppingListPatched.ID != "" {
-		code = http.StatusOK
-		response = "Successfully patched the shopping list"
-	} else {
-		response = err.Error()
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	shoppingList.AuthorLast = id
+	shoppingListPatched, err := h.shoppinglist.ShoppingList().PatchShoppingList(list.ID, shoppingList)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to patch shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "patched shopping list",
 		},
 		Spec: shoppingListPatched,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PutShoppingList ...
 // updates an existing shopping list
 func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var shoppingList types.ShoppingListSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &shoppingList); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1118,90 +1310,99 @@ func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	listID := vars["id"]
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account id from token",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
-	shoppingList.AuthorLast = id
-	shoppingListUpdated, err := h.shoppinglist.ShoppingList().UpdateShoppingList(listID, shoppingList)
-	if err == nil && errID == nil && shoppingListUpdated.ID != "" {
-		code = http.StatusOK
-		response = "Successfully updated the shopping list"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
+
+	shoppingList.AuthorLast = id
+	shoppingListUpdated, err := h.shoppinglist.ShoppingList().UpdateShoppingList(list.ID, shoppingList)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to update shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "updated shopping list",
 		},
 		Spec: shoppingListUpdated,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // DeleteShoppingList ...
 // delete a new shopping list by it's id
 func (h *HTTPServer) DeleteShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	vars := mux.Vars(r)
 	listID := vars["id"]
 
 	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
-	err = h.shoppinglist.ShoppingList().DeleteShoppingList(listID)
-	if err == nil {
-		code = http.StatusOK
-		response = "Successfully deleted the shopping list"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err := h.shoppinglist.ShoppingList().DeleteShoppingList(list.ID); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to delete shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "deleted shopping list",
 		},
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetShoppingListItems ...
 // responds with shopping items by list id
 func (h *HTTPServer) GetShoppingListItems(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch shopping list items"
-	code := http.StatusInternalServerError
-
 	vars := mux.Vars(r)
 	id := vars["id"]
 
@@ -1213,86 +1414,109 @@ func (h *HTTPServer) GetShoppingListItems(w http.ResponseWriter, r *http.Request
 	}
 
 	list, err := h.shoppinglist.ShoppingList().GetShoppingList(id)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
 	// TODO add item selectors for this endpoint
-	shoppingListItems, err := h.shoppinglist.ShoppingItem().GetShoppingListItems(id, options)
-	if err == nil {
-		response = "Fetched the shopping list items"
-		code = http.StatusOK
+	shoppingListItems, err := h.shoppinglist.ShoppingItem().GetShoppingListItems(list.ID, options)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list items",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched shopping list items",
 		},
 		List: shoppingListItems,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetShoppingListItem ...
 // responds with list of shopping lists
 func (h *HTTPServer) GetShoppingListItem(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch shopping list item"
-	code := http.StatusNotFound
-
 	vars := mux.Vars(r)
 	itemID := vars["itemId"]
 	listID := vars["listId"]
 
 	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
-	shoppingListItem, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(listID, itemID)
-	if err == nil && shoppingListItem.ID != "" {
-		response = "Fetched the shopping list item"
-		code = http.StatusOK
+	shoppingListItem, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(list.ID, itemID)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	if shoppingListItem.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetch shopping list item",
 		},
 		Spec: shoppingListItem,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PostItemToShoppingList ...
 // adds an item to a shopping list
 func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var shoppingItem types.ShoppingItemSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &shoppingItem); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1306,50 +1530,71 @@ func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	listID := vars["id"]
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account id from token",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
-	shoppingItem.Author = id
-	shoppingItemInserted, err := h.shoppinglist.ShoppingItem().AddItemToList(listID, shoppingItem)
-	if err == nil && errID == nil {
-		code = http.StatusCreated
-		response = "Successfully created the shopping list item"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
 	}
-	log.Println(response, context)
+
+	shoppingItem.Author = id
+	shoppingItemInserted, err := h.shoppinglist.ShoppingItem().AddItemToList(list.ID, shoppingItem)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to add item to shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "added item to shopping list",
 		},
 		Spec: shoppingItemInserted,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
 // PatchShoppingListCompleted ...
 // adds an item to a shopping list
 func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var shoppingList types.ShoppingListSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &shoppingList); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1363,49 +1608,70 @@ func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.R
 	vars := mux.Vars(r)
 	listID := vars["id"]
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	userID, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account id from token",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
-	patchedList, err := h.shoppinglist.ShoppingList().SetListCompleted(listID, shoppingList.Completed, id)
-	if err == nil && errID == nil {
-		code = http.StatusOK
-		response = "Successfully patched the shopping list completed field"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
+
+	patchedList, err := h.shoppinglist.ShoppingList().SetListCompleted(list.ID, shoppingList.Completed, userID)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to set shopping list as completed",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "shopping list set as completed",
 		},
 		Spec: patchedList,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PatchShoppingListItem ...
 // patches an item in a shopping list
 func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var shoppingItem types.ShoppingItemSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &shoppingItem); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1420,65 +1686,104 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 	itemID := vars["id"]
 	listID := vars["listId"]
 
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
 	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if list.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(listID, itemID)
-	if err != nil || item.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list item"
+	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(list.ID, itemID)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list",
 			},
-			Spec: types.ShoppingItemSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if item.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
 	shoppingItem.AuthorLast = id
-	patchedItem, err := h.shoppinglist.ShoppingItem().PatchItem(listID, itemID, shoppingItem)
-	if err == nil && errID == nil {
-		code = http.StatusOK
-		response = "Successfully patched the shopping list item"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	patchedItem, err := h.shoppinglist.ShoppingItem().PatchItem(listID, item.ID, shoppingItem)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to patch shopping list item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "patched shopping list item",
 		},
 		Spec: patchedItem,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PutShoppingListItem ...
 // updates an item in a shopping list
 func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var shoppingItem types.ShoppingItemSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &shoppingItem); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1493,65 +1798,104 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 	itemID := vars["id"]
 	listID := vars["listId"]
 
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
 	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if list.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(listID, itemID)
-	if err != nil || item.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list item"
+	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(list.ID, itemID)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list item",
 			},
-			Spec: types.ShoppingItemSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if item.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
 	shoppingItem.AuthorLast = id
-	updatedItem, err := h.shoppinglist.ShoppingItem().UpdateItem(listID, itemID, shoppingItem)
-	if err == nil && errID == nil {
-		code = http.StatusOK
-		response = "Successfully updated the shopping list item"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	updatedItem, err := h.shoppinglist.ShoppingItem().UpdateItem(listID, item.ID, shoppingItem)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to update shopping list item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "updated shopping list item",
 		},
 		Spec: updatedItem,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PatchShoppingListItemObtained ...
 // patches an item in a shopping list
 func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var shoppingItem types.ShoppingItemSpec
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &shoppingItem); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1566,166 +1910,255 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 	itemID := vars["id"]
 	listID := vars["listId"]
 
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
 	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if list.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(listID, itemID)
-	if err != nil || item.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list item"
+	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(list.ID, itemID)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list item",
 			},
-			Spec: types.ShoppingItemSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if item.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
-	patchedItem, err := h.shoppinglist.ShoppingItem().SetItemObtained(listID, itemID, shoppingItem.Obtained, id)
-	if err == nil && errID == nil {
-		code = http.StatusOK
-		response = "Successfully patched the shopping list item obtained field"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	patchedItem, err := h.shoppinglist.ShoppingItem().SetItemObtained(listID, item.ID, shoppingItem.Obtained, id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "set shopping list item as obtained",
 		},
 		Spec: patchedItem,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // DeleteShoppingListItem ...
 // delete a shopping list item by it's id
 func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	vars := mux.Vars(r)
 	itemID := vars["itemId"]
 	listID := vars["listId"]
 
 	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if list.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(listID, itemID)
-	if err != nil || item.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list item"
+	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(list.ID, itemID)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping list item",
 			},
-			Spec: types.ShoppingItemSpec{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if item.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	err = h.shoppinglist.ShoppingItem().RemoveItemFromList(itemID, listID)
-	if err == nil {
-		code = http.StatusOK
-		response = "Successfully deleted the shopping list item"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err := h.shoppinglist.ShoppingItem().RemoveItemFromList(item.ID, list.ID); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to remove item from shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "removed item from shopping list",
 		},
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetShoppingListItemTags ...
 // responds with tags used in shopping list items from a list
 func (h *HTTPServer) GetShoppingListItemTags(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch shopping list item tags"
-	code := http.StatusInternalServerError
-
 	vars := mux.Vars(r)
 	listID := vars["listId"]
 
-	tags, err := h.shoppinglist.ShoppingTag().GetShoppingListTags(listID)
-	if err == nil {
-		response = "Fetched the shopping list item tags"
-		code = http.StatusOK
+	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	if list.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+	tags, err := h.shoppinglist.ShoppingTag().GetShoppingListTags(list.ID)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get tags from shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched tags from shopping list",
 		},
 		List: tags,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // UpdateShoppingListItemTag ...
 // updates then tag name used in shopping list items from a list
 func (h *HTTPServer) UpdateShoppingListItemTag(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to update shopping list item tag name"
-	code := http.StatusInternalServerError
-
 	vars := mux.Vars(r)
 	listID := vars["listId"]
 	tag := vars["tagName"]
 
 	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
-	if err != nil || list.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping list"
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to update shopping list tag",
 			},
-			Spec: types.ShoppingListSpec{},
 		}
-		JSONResponse(r, w, code, JSONresp)
-		log.Println(response, context)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if list.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
 	var tagUpdate types.ShoppingTag
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &tagUpdate); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1736,56 +2169,74 @@ func (h *HTTPServer) UpdateShoppingListItemTag(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	tag, err = h.shoppinglist.ShoppingTag().UpdateShoppingListTag(listID, tag, tagUpdate.Name)
-	if err == nil {
-		response = "Updated the shopping list item tag name"
-		code = http.StatusOK
+	tagUpdated, err := h.shoppinglist.ShoppingTag().UpdateShoppingListTag(list.ID, tag, tagUpdate.Name)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to update shopping list tag",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "updated shopping list tag",
 		},
-		Spec: tag,
+		Spec: tagUpdated,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetAllShoppingTags ...
 // responds with all tags used in shopping list items
 func (h *HTTPServer) GetAllShoppingTags(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch shopping list item tags"
-	code := http.StatusInternalServerError
-
 	options := types.ShoppingTagOptions{
 		SortBy: r.FormValue("sortBy"),
 	}
 
 	tags, err := h.shoppinglist.ShoppingTag().GetAllShoppingTags(options)
-	if err == nil {
-		response = "Fetched the shopping list item tags"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list tags",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched shopping list tags",
 		},
 		List: tags,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PostShoppingTag ...
 // creates a tag name
 func (h *HTTPServer) PostShoppingTag(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var response string
-	code := http.StatusInternalServerError
 
 	var tag types.ShoppingTag
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &tag); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1796,77 +2247,144 @@ func (h *HTTPServer) PostShoppingTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, errID := h.users.GetIDFromJWT(r)
-	tag.Author = id
-	tag, err := h.shoppinglist.ShoppingTag().CreateShoppingTag(tag)
-	if err == nil && errID == nil {
-		response = "Updated a shopping tag"
-		code = http.StatusCreated
-	} else {
-		response = err.Error()
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	tag.Author = id
+	tagCreated, err := h.shoppinglist.ShoppingTag().CreateShoppingTag(tag)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to create shopping tag",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "created shopping tag",
 		},
-		Spec: tag,
+		Spec: tagCreated,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
 // GetShoppingTag ...
 // gets a shopping tag by id
 func (h *HTTPServer) GetShoppingTag(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch a shopping tag"
-	code := http.StatusInternalServerError
-
 	vars := mux.Vars(r)
 	id := vars["id"]
 
 	tag, err := h.shoppinglist.ShoppingTag().GetShoppingTag(id)
-	if err == nil {
-		response = "Fetched a shopping tag"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping tag",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	if tag.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping tag",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched shopping tag",
 		},
 		Spec: tag,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // UpdateShoppingTag ...
 // updates a tag name
 func (h *HTTPServer) UpdateShoppingTag(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to update a shopping tag"
-	code := http.StatusInternalServerError
-
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	tagInDB, err := h.shoppinglist.ShoppingTag().GetShoppingTag(id)
-	if err != nil || tagInDB.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping tag"
+	userID, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get user account from id",
 			},
-			Spec: types.ShoppingTag{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if userID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account from id",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+
+	tag, err := h.shoppinglist.ShoppingTag().GetShoppingTag(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping tag",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if tag.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping tag",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
 	var tagUpdate types.ShoppingTag
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &tagUpdate); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1876,100 +2394,121 @@ func (h *HTTPServer) UpdateShoppingTag(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-
-	userID, errID := h.users.GetIDFromJWT(r)
 	tagUpdate.AuthorLast = userID
-	tag, err := h.shoppinglist.ShoppingTag().UpdateShoppingTag(id, tagUpdate)
-	if err == nil && errID == nil {
-		response = "Updated a shopping tag"
-		code = http.StatusOK
+	tagUpdated, err := h.shoppinglist.ShoppingTag().UpdateShoppingTag(tag.ID, tagUpdate)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to update shopping tag",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "updated shopping tag",
 		},
-		Spec: tag,
+		Spec: tagUpdated,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // DeleteShoppingTag ...
 // deletes a shopping tag by id
 func (h *HTTPServer) DeleteShoppingTag(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	tagInDB, err := h.shoppinglist.ShoppingTag().GetShoppingTag(id)
-	if err != nil || tagInDB.ID == "" {
-		code = http.StatusNotFound
-		response = "Failed to find shopping tag"
+	tag, err := h.shoppinglist.ShoppingTag().GetShoppingTag(id)
+	if err != nil {
+		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: response,
+				Response: "failed to get shopping tag",
 			},
-			Spec: types.ShoppingTag{},
 		}
-		log.Println(response, context)
-		JSONResponse(r, w, code, JSONresp)
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if tag.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping tag",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
-	err = h.shoppinglist.ShoppingTag().DeleteShoppingTag(id)
-	if err == nil {
-		code = http.StatusOK
-		response = "Successfully deleted the shopping tag"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
+	if err := h.shoppinglist.ShoppingTag().DeleteShoppingTag(tag.ID); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to delete shopping tag",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "deleted shopping tag",
 		},
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetSettingsShoppingListNotes ...
 // responds with the notes for shopping lists
 func (h *HTTPServer) GetSettingsShoppingListNotes(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch the shopping list notes"
-	code := http.StatusInternalServerError
-
 	notes, err := h.settings.GetShoppingListNotes()
-	if notes == "" {
-		response = "There are no notes set for the shopping list"
-		code = http.StatusOK
-	} else if err == nil {
-		response = "Fetched the shopping list notes"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping notes",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched shopping notes",
 		},
 		Spec: notes,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PutSettingsShoppingList ...
 // update the notes for shopping lists
 func (h *HTTPServer) PutSettingsShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var notes types.ShoppingListNotes
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &notes); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -1980,61 +2519,75 @@ func (h *HTTPServer) PutSettingsShoppingList(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err := h.settings.SetShoppingListNotes(notes.Notes)
-	if err == nil {
-		code = http.StatusOK
-		response = "Successfully set shopping list notes"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
-		notes.Notes = ""
+	if err := h.settings.SetShoppingListNotes(notes.Notes); err != nil {
+		context = err.Error()
+		code := http.StatusInternalServerError
+		if err.Error() == "Unable to set shopping list notes as it is either invalid, too short, or too long" {
+			code = http.StatusBadRequest
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping notes",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, code, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "set shopping notes",
 		},
 		Spec: notes.Notes,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetSettingsFlatNotes ...
 // responds with the notes for flat
 func (h *HTTPServer) GetSettingsFlatNotes(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch the flat notes"
-	code := http.StatusInternalServerError
-
 	notes, err := h.settings.GetFlatNotes()
-	if notes == "" {
-		response = "There are no notes set for the flat"
-		code = http.StatusOK
-	} else if err == nil {
-		response = "Fetched the flat notes"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get flat notes",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched flat notes",
 		},
 		Spec: types.FlatNotes{
 			Notes: notes,
 		},
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PutSettingsFlatNotes ...
 // update the notes for flat
 func (h *HTTPServer) PutSettingsFlatNotes(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var code int
-	var response string
 
 	var notes types.FlatNotes
-	body, _ := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &notes); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
@@ -2045,75 +2598,85 @@ func (h *HTTPServer) PutSettingsFlatNotes(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	err := h.settings.SetFlatNotes(notes.Notes)
-	if err == nil {
-		code = http.StatusOK
-		response = "Successfully set flat notes"
-	} else {
-		code = http.StatusBadRequest
-		response = err.Error()
-		notes.Notes = ""
+	if err := h.settings.SetFlatNotes(notes.Notes); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get flat notes",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "set flat notes",
 		},
 		Spec: notes.Notes,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetAllGroups ...
 // returns a list of all groups
 func (h *HTTPServer) GetAllGroups(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch groups"
-	code := http.StatusInternalServerError
-
 	groups, err := h.groups.GetAllGroups()
-	if err == nil {
-		response = "Fetched all groups"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get groups",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched groups",
 		},
 		List: groups,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetGroup ...
 // returns a group by id
 func (h *HTTPServer) GetGroup(w http.ResponseWriter, r *http.Request) {
+	var context string
+
 	vars := mux.Vars(r)
 	id := vars["id"]
 
 	group, err := h.groups.GetGroupByID(id)
 	if err != nil {
-		log.Printf("error: failed to fetch group (%v); %v\n", id, err)
-		JSONResponse(r, w, http.StatusNotFound, types.JSONMessageResponse{
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: "Failed to fetch a group",
+				Response: "failed to get group",
 			},
-		})
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 	if group.ID == "" {
-		log.Printf("error: failed to fetch group (%v); %v\n", id, err)
-		JSONResponse(r, w, http.StatusNotFound, types.JSONMessageResponse{
+		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: "Group not found",
+				Response: "failed to get group",
 			},
-		})
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 	JSONResponse(r, w, http.StatusOK, types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: "Fetched the group",
+			Response: "fetched group",
 		},
 		Spec: group,
 	})
@@ -2121,94 +2684,121 @@ func (h *HTTPServer) GetGroup(w http.ResponseWriter, r *http.Request) {
 
 // GetUserConfirms ...
 // returns a list of account confirms
+// TODO should this exist?
 func (h *HTTPServer) GetUserConfirms(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch user account creation secrets"
-	code := http.StatusInternalServerError
-
 	userIDSelector := r.FormValue("userId")
 	userCreationSecretSelector := types.UserCreationSecretSelector{
 		UserID: userIDSelector,
 	}
 
 	creationSecrets, err := h.users.GetAllUserCreationSecrets(userCreationSecretSelector)
-	if err == nil {
-		response = "Fetched the user account creation secrets"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user creation secrets",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched user creation secrets",
 		},
 		List: creationSecrets,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetUserConfirm ...
 // returns an account confirm by id
 func (h *HTTPServer) GetUserConfirm(w http.ResponseWriter, r *http.Request) {
+	var context string
+
 	vars := mux.Vars(r)
 	id := vars["id"]
 
 	creationSecret, err := h.users.GetUserCreationSecret(id)
 	if err != nil {
-		log.Printf("error getting user creation secret: %v\n", err)
-		JSONResponse(r, w, http.StatusNotFound, types.JSONMessageResponse{
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: "Failed to get user creation secret",
+				Response: "failed to get user creation secret",
 			},
-		})
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 	if creationSecret.ID == "" {
-		JSONResponse(r, w, http.StatusNotFound, types.JSONMessageResponse{
+		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: "Failed to get user creation secret",
+				Response: "failed to get user creation secret",
 			},
-		})
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
-	JSONResponse(r, w, http.StatusOK, types.JSONMessageResponse{
+	log.Printf("%+v\n", creationSecret)
+	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: "Fetched the user account creation secret",
+			Response: "fetched user creation secret",
 		},
 		Spec: creationSecret,
-	})
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // GetUserConfirmValid ...
 // returns if an account confirm is valid by id
+// TODO should this exist?
 func (h *HTTPServer) GetUserConfirmValid(w http.ResponseWriter, r *http.Request) {
 	var context string
-	response := "Failed to fetch user account creation secret"
-	code := http.StatusNotFound
-
 	vars := mux.Vars(r)
 	id := vars["id"]
 
 	creationSecret, err := h.users.GetUserCreationSecret(id)
-	if err == nil && creationSecret.ID != "" {
-		response = "Fetched the user account creation secret"
-		code = http.StatusOK
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user creation secret",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
 	}
-	log.Println(response, context)
+	if creationSecret.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user creation secret",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched user creation secret valid",
 		},
-		Data: creationSecret.ID != "",
+		Data: creationSecret.ID != "" && creationSecret.Secret != "" && creationSecret.Valid,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // PostUserConfirm ...
 // confirm a user account
 func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 	var context string
-	var response string
-	code := http.StatusInternalServerError
 
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -2216,7 +2806,16 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 	secret := r.FormValue("secret")
 
 	var user types.UserSpec
-	body, errUnmarshal := io.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
 	if err := json.Unmarshal(body, &user); err != nil {
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2227,26 +2826,32 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokenString, err := h.users.ConfirmUserAccount(id, secret, user)
-	if err == nil && errUnmarshal == nil {
-		response = "Your user account has been confirmed"
-		code = http.StatusOK
-	} else {
-		response = err.Error()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to confirm user account",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
-	log.Println(response, context)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "confirmed user account",
 		},
 		Data: tokenString,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
 // GetVersion ...
 // returns version information about the instance
 func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
-	response := "Fetched version information"
+	var context string
+
 	version := common.GetAppBuildVersion()
 	commitHash := common.GetAppBuildHash()
 	mode := common.GetAppBuildMode()
@@ -2255,10 +2860,9 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 	osType := runtime.GOOS
 	osArch := runtime.GOARCH
 
-	log.Println(response)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "fetched version information",
 		},
 		Data: types.SystemVersion{
 			Version:       version,
@@ -2270,6 +2874,7 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 			OSArch:        osArch,
 		},
 	}
+	log.Println(JSONresp.Metadata.Response, context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2335,24 +2940,27 @@ func (h *HTTPServer) UnknownEndpoint(w http.ResponseWriter, r *http.Request) {
 // Healthz ...
 // HTTP handler for health checks
 func (h *HTTPServer) Healthz(w http.ResponseWriter, r *http.Request) {
-	response := "App unhealthy"
-	code := http.StatusInternalServerError
+	var context string
 
-	err := h.health.Healthy()
-	if err != nil {
-		log.Printf("error app unhealth: %v\n", err)
-	}
-	if err == nil {
-		response = "App healthy"
-		code = http.StatusOK
+	if err := h.health.Healthy(); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "not healthy",
+			},
+			Data: false,
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
 	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: response,
+			Response: "healthy",
 		},
-		Data: err == nil,
+		Data: true,
 	}
-	JSONResponse(r, w, code, JSONresp)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
 // HTTPvalidateJWT ...

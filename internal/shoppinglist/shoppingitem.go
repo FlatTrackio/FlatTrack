@@ -21,7 +21,6 @@ package shoppinglist
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	"github.com/imdario/mergo"
@@ -45,21 +44,21 @@ func (m *Manager) ShoppingItem() *ShoppingItemManager {
 // given a shopping list item, return it's validity
 func (m *ShoppingItemManager) ValidateShoppingListItem(item types.ShoppingItemSpec) (valid bool, err error) {
 	if len(item.Name) == 0 || len(item.Name) >= 30 || item.Name == "" {
-		return false, fmt.Errorf("Unable to use the provided name, as it is either empty or too long or too short")
+		return false, ErrInvalidShoppingItemName
 	}
 	if item.Notes != "" && len(item.Notes) >= 40 {
-		return false, fmt.Errorf("Unable to save shopping list notes, as they are too long")
+		return false, ErrInvalidShoppingItemNotes
 	}
 	if item.Tag != "" && len(item.Tag) == 0 || len(item.Tag) >= 30 {
-		return false, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
+		return false, ErrInvalidShoppingItemTag
 	}
 	if item.Quantity < 1 {
-		return false, fmt.Errorf("Item quantity must be at least one")
+		return false, ErrInvalidItemQuantityMustBeOne
 	}
 	if item.TemplateID != "" {
 		list, err := m.manager.ShoppingList().GetShoppingList(item.TemplateID)
 		if err != nil || list.ID == "" {
-			return false, fmt.Errorf("Unable to find list to use as template from provided id")
+			return false, ErrShoppingListByIDNotFoundForTemplate
 		}
 	}
 	return true, nil
@@ -77,9 +76,16 @@ func (m *ShoppingItemManager) GetShoppingListItems(listID string, options types.
 
 	sqlQueryValues := []interface{}{listID}
 	sqlStatement := `select * from shopping_item where listId = $1`
-	if options.Selector.Obtained != "" {
+	if options.Selector.Obtained != "" && options.Selector.TemplateListItemSelector != "" {
 		sqlStatement += ` and obtained = $2`
 		sqlQueryValues = append(sqlQueryValues, obtained)
+	}
+	switch options.Selector.TemplateListItemSelector {
+	case "unobtained":
+		sqlStatement += ` and obtained = false`
+	case "obtained":
+		sqlStatement += ` and obtained = true`
+	default:
 	}
 	if options.SortBy == types.ShoppingItemSortByHighestPrice {
 		sqlStatement += ` order by price desc, name asc`
@@ -185,11 +191,11 @@ func (m *ShoppingItemManager) AddItemToList(listID string, item types.ShoppingIt
 func (m *ShoppingItemManager) PatchItem(listid string, itemID string, item types.ShoppingItemSpec) (itemPatched types.ShoppingItemSpec, err error) {
 	existingItem, err := m.GetShoppingListItem(listid, itemID)
 	if err != nil || existingItem.ID == "" {
-		return types.ShoppingItemSpec{}, fmt.Errorf("Failed to fetch existing shopping list")
+		return types.ShoppingItemSpec{}, ErrFailedToGetExistingShoppingList
 	}
 	err = mergo.Merge(&item, existingItem)
 	if err != nil {
-		return types.ShoppingItemSpec{}, fmt.Errorf("Failed to update fields in the item")
+		return types.ShoppingItemSpec{}, ErrFailedToUpdateShoppingItemFields
 	}
 
 	valid, err := m.ValidateShoppingListItem(existingItem)
