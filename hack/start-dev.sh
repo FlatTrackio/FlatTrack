@@ -4,7 +4,7 @@ cd $(dirname $0)
 cd $(git rev-parse --show-toplevel)
 
 CONTAINER_RUNTIME="${1:-podman}"
-TMATE_SOCKET="/tmp/tmate-flattrack-${USER}"
+TMATE_SOCKET="/tmp/tmate-flattrack-${USER}-${RANDOM}"
 
 IMAGE_POSTGRES=postgres:15.3-alpine
 IMAGE_MINIO=minio/minio:RELEASE.2023-06-29T05-12-28Z

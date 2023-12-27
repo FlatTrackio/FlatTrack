@@ -13,11 +13,14 @@ import (
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/gomega"
 
-	"gitlab.com/flattrack/flattrack/pkg/common"
-	"gitlab.com/flattrack/flattrack/pkg/database"
-	"gitlab.com/flattrack/flattrack/pkg/migrations"
-	"gitlab.com/flattrack/flattrack/pkg/registration"
-	"gitlab.com/flattrack/flattrack/pkg/routes"
+	"gitlab.com/flattrack/flattrack/internal/common"
+	"gitlab.com/flattrack/flattrack/internal/database"
+	"gitlab.com/flattrack/flattrack/internal/httpserver"
+	"gitlab.com/flattrack/flattrack/internal/migrations"
+	"gitlab.com/flattrack/flattrack/internal/registration"
+	"gitlab.com/flattrack/flattrack/internal/settings"
+	"gitlab.com/flattrack/flattrack/internal/system"
+	"gitlab.com/flattrack/flattrack/internal/users"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
@@ -44,19 +47,25 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	}
 
 	// _ = godotenv.Load(".env")
-	db, err := database.Open(common.GetDBusername(), common.GetDBpassword(), common.GetDBhost(), common.GetDBport(), common.GetDBdatabase(), common.GetDBsslMode())
+	db, err := database.Open()
 	if err != nil {
 		log.Fatalln(err)
 		return
 	}
 
+	users := users.NewManager(db)
+	migrations := migrations.NewManager(db)
+	settings := settings.NewManager(db)
+	system := system.NewManager(db)
+	registration := registration.NewManager(users, system, settings)
+
 	ginkgo.BeforeSuite(func() {
-		err = migrations.Reset(db)
+		err = migrations.Reset()
 		gomega.Expect(err).To(gomega.BeNil(), "failed to reset migrations")
-		err = migrations.Migrate(db)
+		err = migrations.Migrate()
 		gomega.Expect(err).To(gomega.BeNil(), "failed to migrate")
 
-		registered, jwt, err := registration.Register(db, regstrationForm)
+		registered, jwt, err := registration.Register(regstrationForm)
 
 		gomega.Expect(err).To(gomega.BeNil(), "failed to register the instance")
 		gomega.Expect(jwt).ToNot(gomega.Equal(""), "failed to register the instance")
@@ -66,9 +75,9 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	})
 
 	ginkgo.AfterSuite(func() {
-		err = migrations.Reset(db)
+		err = migrations.Reset()
 		gomega.Expect(err).To(gomega.BeNil(), "failed to reset migrations")
-		err = migrations.Migrate(db)
+		err = migrations.Migrate()
 		gomega.Expect(err).To(gomega.BeNil(), "failed to migrate")
 	})
 
@@ -78,7 +87,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		gomega.Expect(routes.GetHTTPresponseBodyContents(resp).Metadata.URL).To(gomega.Equal(fmt.Sprintf("/%v", apiEndpoint)))
+		gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Metadata.URL).To(gomega.Equal(fmt.Sprintf("/%v", apiEndpoint)))
 	})
 
 	ginkgo.It("should be initialized", func() {
@@ -87,7 +96,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		gomega.Expect(routes.GetHTTPresponseBodyContents(resp).Data.(bool)).To(gomega.Equal(true), "instance should be initialized")
+		gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)).To(gomega.Equal(true), "instance should be initialized")
 	})
 
 	ginkgo.It("should have a flat name", func() {
@@ -96,7 +105,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		gomega.Expect(routes.GetHTTPresponseBodyContents(resp).Spec.(string)).ToNot(gomega.Equal(""), "flatName should not be empty")
+		gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec.(string)).ToNot(gomega.Equal(""), "flatName should not be empty")
 	})
 
 	// TODO /api/admin/register - not yet possible in the same manner
@@ -107,7 +116,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		response := routes.GetHTTPresponseBodyContents(resp)
+		response := httpserver.GetHTTPresponseBodyContents(resp)
 		gomega.Expect(len(response.List.([]interface{})) > 0).To(gomega.Equal(true), "should at least one user account")
 	})
 
@@ -117,7 +126,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		allUserAccountsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		allUserAccountsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		allUserAccountsJSON, err := json.Marshal(allUserAccountsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var allUserAccounts []types.UserSpec
@@ -129,7 +138,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -211,7 +220,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-			response := routes.GetHTTPresponseBodyContents(resp)
+			response := httpserver.GetHTTPresponseBodyContents(resp)
 			userAccountResponse := response.Spec
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
@@ -339,7 +348,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), apiServerAPIprefix+" should return error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api have return code of http.StatusBadRequest")
-			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var userAccount types.UserSpec
@@ -393,7 +402,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var userAccount types.UserSpec
@@ -409,7 +418,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-			userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+			userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err = json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			userAccount = types.UserSpec{}
@@ -465,7 +474,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		response := routes.GetHTTPresponseBodyContents(resp)
+		response := httpserver.GetHTTPresponseBodyContents(resp)
 		userAccountResponse := response.Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
@@ -518,7 +527,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-			userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+			userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err = json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			userAccount = types.UserSpec{}
@@ -554,7 +563,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -570,7 +579,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v?userID=%v", apiServer, apiEndpoint, userAccount.ID), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		confirmsListResponse := routes.GetHTTPresponseBodyContents(resp).List
+		confirmsListResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		confirmsListJSON, err := json.Marshal(confirmsListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var confirmsList []types.UserCreationSecretSpec
@@ -582,7 +591,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		confirmResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		confirmResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		confirmJSON, err := json.Marshal(confirmResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var confirm types.UserCreationSecretSpec
@@ -597,7 +606,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		confirmValid := routes.GetHTTPresponseBodyContents(resp).Data
+		confirmValid := httpserver.GetHTTPresponseBodyContents(resp).Data
 		gomega.Expect(confirmValid.(bool)).To(gomega.Equal(true), "confirm valid must be true")
 
 		ginkgo.By("fetching the user account confirm")
@@ -609,7 +618,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), confirmUserAccountJSON, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), fmt.Sprintf("api have return code of http.StatusOK; %v", routes.GetHTTPresponseBodyContents(resp).Metadata.Response))
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), fmt.Sprintf("api have return code of http.StatusOK; %v", httpserver.GetHTTPresponseBodyContents(resp).Metadata.Response))
 
 		ginkgo.By("fetching the user account confirm to check for it to be unavailable")
 		apiEndpoint = apiServerAPIprefix + "/admin/useraccountconfirms/" + confirmsList[0].ID
@@ -622,7 +631,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err = json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccountRegistered types.UserSpec
@@ -654,7 +663,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -670,7 +679,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 		gomega.Expect(userAccountLoginResponseData).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 		ginkgo.By("checking validation of the token")
@@ -678,7 +687,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginValid := routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+		userAccountLoginValid := httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
 		gomega.Expect(userAccountLoginValid).To(gomega.Equal(true), "JWT should be valid")
 
 		ginkgo.By("deleting the account")
@@ -692,7 +701,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
-		userAccountLoginValid = routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+		userAccountLoginValid = httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
 		gomega.Expect(userAccountLoginValid).To(gomega.Equal(false), "JWT should be valid")
 	})
 
@@ -713,7 +722,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -729,7 +738,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 		gomega.Expect(userAccountLoginResponseData).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 		ginkgo.By("checking validation of the token")
@@ -737,7 +746,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginValid := routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+		userAccountLoginValid := httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
 		gomega.Expect(userAccountLoginValid).To(gomega.Equal(true), "JWT should be valid")
 
 		ginkgo.By("patching the account")
@@ -749,7 +758,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-		response := routes.GetHTTPresponseBodyContents(resp)
+		response := httpserver.GetHTTPresponseBodyContents(resp)
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		profileResponse := response.Spec
 		profileJSON, err := json.Marshal(profileResponse)
@@ -763,7 +772,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
-		userAccountLoginValid = routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+		userAccountLoginValid = httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
 		gomega.Expect(userAccountLoginValid).To(gomega.Equal(false), "JWT should be valid")
 
 		ginkgo.By("deleting the account")
@@ -777,7 +786,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
-		userAccountLoginValid = routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+		userAccountLoginValid = httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
 		gomega.Expect(userAccountLoginValid).To(gomega.Equal(false), "JWT should be valid")
 	})
 
@@ -798,7 +807,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -814,7 +823,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 		gomega.Expect(userAccountLoginResponseData).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 		ginkgo.By("resetting auth")
@@ -887,14 +896,14 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), userAccountLoginData, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 		gomega.Expect(userAccountLoginResponseData).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 		ginkgo.By("checking validation of the token")
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), userAccountLoginData, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginValid := routes.GetHTTPresponseBodyContents(resp).Data
+		userAccountLoginValid := httpserver.GetHTTPresponseBodyContents(resp).Data
 		gomega.Expect(userAccountLoginValid).To(gomega.Equal(true), "JWT should be valid")
 	})
 
@@ -915,7 +924,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -932,7 +941,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 		gomega.Expect(userAccountLoginResponseData).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 		ginkgo.By("checking the profile")
@@ -940,7 +949,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		profileResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		profileResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		profileJSON, err := json.Marshal(profileResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var profile types.UserSpec
@@ -966,7 +975,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		profileResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+		profileResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 		profileJSON, err = json.Marshal(profileResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		profile = types.UserSpec{}
@@ -996,7 +1005,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		userAccountsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		userAccountsBytes, err := json.Marshal(userAccountsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccounts []types.UserSpec
@@ -1021,7 +1030,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -1037,7 +1046,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountsResponse = routes.GetHTTPresponseBodyContents(resp).List
+		userAccountsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
 		userAccountsBytes, err = json.Marshal(userAccountsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		userAccounts = []types.UserSpec{}
@@ -1057,7 +1066,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountsResponse = routes.GetHTTPresponseBodyContents(resp).List
+		userAccountsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
 		userAccountsBytes, err = json.Marshal(userAccountsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		userAccounts = []types.UserSpec{}
@@ -1084,7 +1093,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -1098,7 +1107,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err = json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		userAccount = types.UserSpec{}
@@ -1136,7 +1145,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount1 types.UserSpec
@@ -1159,7 +1168,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err = json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount2 types.UserSpec
@@ -1173,7 +1182,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 		gomega.Expect(userAccountLoginResponseData).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 		ginkgo.By("patching the profile")
@@ -1186,7 +1195,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api have return code of http.StatusBadRequest")
-		profileResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		profileResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		profileJSON, err := json.Marshal(profileResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var profile types.UserSpec
@@ -1212,7 +1221,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		userAccount := types.UserSpec{}
@@ -1242,7 +1251,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -1256,7 +1265,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 		gomega.Expect(userAccountLoginResponseData).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 		ginkgo.By("patching the profile")
@@ -1268,7 +1277,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-		response := routes.GetHTTPresponseBodyContents(resp)
+		response := httpserver.GetHTTPresponseBodyContents(resp)
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		profileResponse := response.Spec
 		profileJSON, err := json.Marshal(profileResponse)
@@ -1299,7 +1308,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
-		response := routes.GetHTTPresponseBodyContents(resp)
+		response := httpserver.GetHTTPresponseBodyContents(resp)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := response.Spec
@@ -1316,7 +1325,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 		gomega.Expect(userAccountLoginResponseData).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 		ginkgo.By("updating the profile")
@@ -1327,7 +1336,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-		response = routes.GetHTTPresponseBodyContents(resp)
+		response = httpserver.GetHTTPresponseBodyContents(resp)
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		profileResponse := response.Spec
 		profileJSON, err := json.Marshal(profileResponse)
@@ -1367,7 +1376,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		groupsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		groupsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		groupsBytes, err := json.Marshal(groupsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var groups []types.GroupSpec
@@ -1380,7 +1389,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-			groupResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			groupResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			groupBytes, err := json.Marshal(groupResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var group types.GroupSpec
@@ -1433,7 +1442,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		groupsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		groupsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		groupsBytes, err := json.Marshal(groupsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var groups []types.GroupSpec
@@ -1448,7 +1457,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-			userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err := json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var userAccount types.UserSpec
@@ -1462,7 +1471,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-			userAccountResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+			userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 			userAccountJSON, err = json.Marshal(userAccountResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			userAccount = types.UserSpec{}
@@ -1473,7 +1482,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-			jwt := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+			jwt := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 			gomega.Expect(jwt).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 			defer func() {
@@ -1496,7 +1505,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 				resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, jwt)
 				gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 				gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-				canIgroupResponse := routes.GetHTTPresponseBodyContents(resp).Data.(bool)
+				canIgroupResponse := httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
 				gomega.Expect(canIgroupResponse).To(gomega.Equal(expectGroup), "Group was expected for this user account", account.Names, account.Groups, groupItem.Name, expectGroup)
 			}
 		}
@@ -1519,7 +1528,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountBytes, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -1550,7 +1559,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -1564,7 +1573,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListsBytes, err := json.Marshal(shoppingListsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingLists []types.ShoppingListSpec
@@ -1591,7 +1600,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -1620,7 +1629,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
 			resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListPatchBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			shoppingListPatchedResponse := routes.GetHTTPresponseBodyContents(resp)
+			shoppingListPatchedResponse := httpserver.GetHTTPresponseBodyContents(resp)
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 			shoppingListPatchedResponseSpec := shoppingListPatchedResponse.Spec
 			shoppingListPatchedBytes, err := json.Marshal(shoppingListPatchedResponseSpec)
@@ -1652,7 +1661,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -1683,7 +1692,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
 			resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListUpdateBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			shoppingListUpdatedResponse := routes.GetHTTPresponseBodyContents(resp)
+			shoppingListUpdatedResponse := httpserver.GetHTTPresponseBodyContents(resp)
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 			shoppingListUpdatedResponseSpec := shoppingListUpdatedResponse.Spec
 			shoppingListUpdatedBytes, err := json.Marshal(shoppingListUpdatedResponseSpec)
@@ -1731,7 +1740,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api have return code of http.StatusOK")
-			shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListBytes, err = json.Marshal(shoppingListResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingListCreated types.ShoppingListSpec
@@ -1753,7 +1762,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -1767,7 +1776,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
@@ -1814,7 +1823,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
 			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
@@ -1828,7 +1837,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse = routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		shoppingListItems = []types.ShoppingItemSpec{}
@@ -1884,7 +1893,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api have return code of http.StatusBadRequest")
-			shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err := json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
@@ -1905,7 +1914,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -1919,7 +1928,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
@@ -1975,7 +1984,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
-		shoppingListItemsResponse = routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		shoppingListItems = []types.ShoppingItemSpec{}
@@ -2002,7 +2011,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -2016,7 +2025,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
@@ -2039,7 +2048,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-		shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingItem types.ShoppingItemSpec
@@ -2074,7 +2083,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items/" + shoppingItem.ID
 			resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			shoppingItemResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingItemResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemBytes, err := json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItemUpdated types.ShoppingItemSpec
@@ -2115,7 +2124,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -2129,7 +2138,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
@@ -2152,7 +2161,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-		shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingItem types.ShoppingItemSpec
@@ -2185,7 +2194,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items/" + shoppingItem.ID
 			resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			shoppingItemResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingItemResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemBytes, err := json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItemUpdated types.ShoppingItemSpec
@@ -2218,7 +2227,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -2232,7 +2241,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
@@ -2283,7 +2292,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
 			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
@@ -2297,7 +2306,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListTags := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListTags := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var tags []string
@@ -2324,7 +2333,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -2338,7 +2347,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
@@ -2389,7 +2398,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
 			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
@@ -2410,7 +2419,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse = routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingList2Created types.ShoppingListSpec
@@ -2424,7 +2433,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse = routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingList2Items []types.ShoppingItemSpec
@@ -2475,7 +2484,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.ID + "/items"
 			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
@@ -2489,7 +2498,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListTags := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListTags := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var listTags []string
@@ -2511,7 +2520,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListTags = routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListTags = httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListTagBytes, err = json.Marshal(shoppingListTags)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var list2Tags []string
@@ -2554,7 +2563,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -2568,7 +2577,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
@@ -2592,7 +2601,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListItemBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-		shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingItem types.ShoppingItemSpec
@@ -2617,7 +2626,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListTags := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListTags := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListTagBytes, err := json.Marshal(shoppingListTags)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var listTags []string
@@ -2660,7 +2669,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingTagBytes, "")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			shoppingTagResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingTagResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingTagBytes, err = json.Marshal(shoppingTagResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingTag types.ShoppingTag
@@ -2672,7 +2681,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingTagsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingTagsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingTagBytes, err := json.Marshal(shoppingTagsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var tags []types.ShoppingTag
@@ -2705,7 +2714,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags/" + tags[0].ID
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "http request shouldn't have error")
-		shoppingTagUpdateGetResponse := routes.GetHTTPresponseBodyContents(resp)
+		shoppingTagUpdateGetResponse := httpserver.GetHTTPresponseBodyContents(resp)
 		shoppingTagBytes, err = json.Marshal(shoppingTagUpdateGetResponse.Spec)
 		var shoppingTagUpdated types.ShoppingTag
 		gomega.Expect(json.Unmarshal(shoppingTagBytes, &shoppingTagUpdated)).To(gomega.BeNil(), "failed to unmarshal")
@@ -2735,7 +2744,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -2749,7 +2758,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListItems []types.ShoppingItemSpec
@@ -2800,7 +2809,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
 			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 			var shoppingItem types.ShoppingItemSpec
@@ -2822,7 +2831,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		templatedShoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		templatedShoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		templatedShoppingListBytes, err := json.Marshal(templatedShoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListTemplatedCreated types.ShoppingListSpec
@@ -2833,7 +2842,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse = routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		shoppingListItems = []types.ShoppingItemSpec{}
@@ -2877,7 +2886,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		shoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListBytes, err = json.Marshal(shoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListCreated types.ShoppingListSpec
@@ -2901,7 +2910,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListItemBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-		shoppingItemResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListItemsBytes, err := json.Marshal(shoppingItemResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingItem types.ShoppingItemSpec
@@ -2922,7 +2931,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		templatedShoppingListResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		templatedShoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		templatedShoppingListBytes, err := json.Marshal(templatedShoppingListResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var shoppingListTemplatedCreated types.ShoppingListSpec
@@ -2935,7 +2944,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		shoppingListItemsResponse := routes.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
 		shoppingListItemsBytes, err = json.Marshal(shoppingListItemsResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		shoppingListItems := []types.ShoppingItemSpec{}
@@ -2961,13 +2970,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	ginkgo.It("should require authorization for protected routes", func() {
 		apiEndpoint := apiServer + "/" + apiServerAPIprefix + "/user/profile"
 		req, err := http.NewRequest("GET", apiEndpoint, nil)
+		req.Header.Add("Accept", "application/json")
 		gomega.Expect(err).To(gomega.BeNil(), "http request should not have an error")
-		req.Header.Set("Content-Type", "application/json")
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusUnauthorized), "endpoint should be restricted")
-		requestResp := routes.GetHTTPresponseBodyContents(resp)
+		requestResp := httpserver.GetHTTPresponseBodyContents(resp)
 		gomega.Expect(requestResp.Metadata.Response).To(gomega.Equal("Unauthorized"), "")
 	})
 
@@ -2988,7 +2997,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
-		userAccountResponse := routes.GetHTTPresponseBodyContents(resp).Spec
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		userAccountJSON, err := json.Marshal(userAccountResponse)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 		var userAccount types.UserSpec
@@ -3004,7 +3013,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		userAccountLoginResponseData := routes.GetHTTPresponseBodyContents(resp).Data.(string)
+		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 		gomega.Expect(userAccountLoginResponseData).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 		ginkgo.By("trying to use an admin route")
@@ -3026,7 +3035,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		gomega.Expect(routes.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(""), "notes should be empty")
+		gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(""), "notes should be empty")
 
 		ginkgo.By("updating the notes")
 		notesUpdate := types.ShoppingListNotes{
@@ -3045,7 +3054,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-		gomega.Expect(routes.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(notesUpdate.Notes), "notes should be empty")
+		gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(notesUpdate.Notes), "notes should be empty")
 
 		ginkgo.By("resetting the notes")
 		notesUpdate = types.ShoppingListNotes{
@@ -3076,14 +3085,14 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			resp, err := httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), notesUpdateBytes, "")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api have return code of http.StatusOK")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			gomega.Expect(routes.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(""), "notes should be empty")
+			gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(""), "notes should be empty")
 
 			ginkgo.By("fetching the notes")
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/settings/notes"
 			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
-			gomega.Expect(routes.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(""), "notes should be empty")
+			gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(""), "notes should be empty")
 		}
 	})
 })
@@ -3095,7 +3104,7 @@ func httpRequestWithHeader(verb string, url string, data []byte, jwt string) (re
 	req, err := http.NewRequest(verb, url, bytes.NewBuffer(data))
 	gomega.Expect(err).To(gomega.BeNil(), "http request should not have error")
 	req.Header.Set("Authorization", "bearer "+jwt)
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 	client := &http.Client{}
 	resp, err = client.Do(req)
 	return resp, err

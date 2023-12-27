@@ -497,7 +497,7 @@
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br />
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{
-            Math.round((100 * currentPrice) / totalPrice)
+            Math.round((100 * currentPrice) / totalPrice) || 0
           }}%)
           <infotooltip
             :message="
@@ -627,6 +627,14 @@
                 <b-checkbox
                   v-for="existingTag in tags"
                   v-model="totalTagExcludeList"
+                  v-click="
+                    UpdateShoppingList(
+                      name,
+                      notes,
+                      completed,
+                      totalTagExcludeList
+                    )
+                  "
                   :native-value="existingTag"
                   size="is-medium"
                 >
@@ -640,6 +648,14 @@
                 <b-checkbox
                   v-for="existingListTag in tagsList"
                   v-model="totalTagExcludeList"
+                  v-click="
+                    UpdateShoppingList(
+                      name,
+                      notes,
+                      completed,
+                      totalTagExcludeList
+                    )
+                  "
                   :native-value="existingListTag"
                   size="is-medium"
                 >
@@ -1090,19 +1106,11 @@ export default {
       var enableAnimations = common.GetEnableAnimations();
       if (
         this.completed === true &&
-        enableAnimations === "true" &&
+        enableAnimations !== "false" &&
         this.canAnimate === true
       ) {
         common.Hooray();
       }
-    },
-    totalTagExcludeList() {
-      this.UpdateShoppingList(
-        this.name,
-        this.notes,
-        this.completed,
-        this.totalTagExcludeList
-      );
     },
   },
   async beforeMount() {

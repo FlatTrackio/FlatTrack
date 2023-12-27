@@ -18,5 +18,5 @@ import (
 )
 
 func main() {
-	flattrack.Start()
+	flattrack.Run()
 }

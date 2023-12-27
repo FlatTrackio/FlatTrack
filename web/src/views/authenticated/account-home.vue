@@ -20,9 +20,12 @@
         <h1 class="title is-1">My Account</h1>
         <p class="subtitle is-4">Manage your account</p>
         <p></p>
-        <br>
-        <div v-for="app in apps" v-bind:key="app" >
-          <div class="card pointer-cursor-on-hover" @click="$router.push({ name: app.routeName })">
+        <br />
+        <div v-for="app in apps" v-bind:key="app">
+          <div
+            class="card pointer-cursor-on-hover"
+            @click="$router.push({ name: app.routeName })"
+          >
             <div class="card-content">
               <div class="media">
                 <div class="media-left">
@@ -33,16 +36,24 @@
                   <p class="subtitle is-5">{{ app.description }}</p>
                 </div>
                 <div class="media-right">
-                  <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                  <b-icon
+                    icon="chevron-right"
+                    size="is-medium"
+                    type="is-midgray"
+                  ></b-icon>
                 </div>
               </div>
             </div>
-            <div class="content">
-            </div>
+            <div class="content"></div>
           </div>
           <br />
         </div>
-        <div class="card pointer-cursor-on-hover" v-if="typeof CurrentTheme === 'object'" disabled>
+        <div
+          class="card pointer-cursor-on-hover"
+          v-if="typeof CurrentTheme === 'object'"
+          disabled
+          style="display: none"
+        >
           <div class="card-content">
             <div class="media">
               <div class="media-left">
@@ -54,8 +65,7 @@
               </div>
             </div>
           </div>
-          <div class="content">
-          </div>
+          <div class="content"></div>
         </div>
       </section>
     </div>
@@ -63,42 +73,40 @@
 </template>
 
 <script>
-import theme from '@/common/theme'
+import theme from "@/common/theme";
 
 export default {
-  name: 'Account home',
-  data () {
+  name: "Account home",
+  data() {
     return {
       apps: [
         {
-          name: 'Profile',
-          description: 'Manage your general information',
-          icon: 'account-circle',
-          routeName: 'Account Profile'
+          name: "Profile",
+          description: "Manage your general information",
+          icon: "account-circle",
+          routeName: "Account Profile",
         },
         {
-          name: 'Security',
-          description: 'Manage your account security',
-          icon: 'lock-question',
-          routeName: 'Account Security'
+          name: "Security",
+          description: "Manage your account security",
+          icon: "lock-question",
+          routeName: "Account Security",
         },
         {
-          name: 'Settings',
-          description: 'Manage settings for this device',
-          icon: 'account-cog',
-          routeName: 'Account Settings'
-        }
-      ]
-    }
+          name: "Settings",
+          description: "Manage settings for this device",
+          icon: "account-cog",
+          routeName: "Account Settings",
+        },
+      ],
+    };
   },
   computed: {
-    CurrentTheme () {
-      return theme.GetTheme()
-    }
-  }
-}
+    CurrentTheme() {
+      return theme.GetTheme();
+    },
+  },
+};
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>
