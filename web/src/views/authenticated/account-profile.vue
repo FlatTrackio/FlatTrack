@@ -17,25 +17,40 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
-            <ul>
-              <li><router-link :to="{ name: 'Account' }">My account</router-link></li>
-              <li class="is-active"><router-link :to="{ name: 'Account Profile' }">Profile</router-link></li>
-            </ul>
+        <nav
+          class="breadcrumb is-medium has-arrow-separator"
+          aria-label="breadcrumbs"
+        >
+          <ul>
+            <li>
+              <router-link :to="{ name: 'Account' }">My account</router-link>
+            </li>
+            <li class="is-active">
+              <router-link :to="{ name: 'Account Profile' }"
+                >Profile</router-link
+              >
+            </li>
+          </ul>
         </nav>
         <h1 class="title is-1">Profile</h1>
         <p class="subtitle is-3">Manage your account</p>
-        <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
+        <b-loading
+          :is-full-page="false"
+          :active.sync="pageLoading"
+          :can-cancel="false"
+        ></b-loading>
         <div class="card">
           <div class="card-content">
             <div class="media">
               <div class="media-content">
                 <figure class="image is-128x128">
-                  <img src="@/assets/256x256.png" alt="Placeholder image">
+                  <img src="@/assets/256x256.png" alt="Placeholder image" />
                 </figure>
-                <br/>
+                <br />
                 <p class="title is-3">{{ names }}</p>
-                <p class="subtitle is-5">Joined {{ TimestampToCalendar(creationTimestamp) }}</p>
+                <p class="subtitle is-5">
+                  Joined {{ TimestampToCalendar(creationTimestamp) }}
+                </p>
               </div>
             </div>
           </div>
@@ -64,7 +79,8 @@
             icon-right-clickable
             @icon-right-click="names = ''"
             @keyup.enter.native="PatchProfile"
-            required>
+            required
+          >
           </b-input>
         </b-field>
 
@@ -80,7 +96,8 @@
             icon-right-clickable
             @icon-right-click="email = ''"
             @keyup.enter.native="PatchProfile"
-            required>
+            required
+          >
           </b-input>
         </b-field>
         <b-field label="Phone number (optional)">
@@ -94,7 +111,8 @@
             icon-right-clickable
             @icon-right-click="phoneNumber = ''"
             @keyup.enter.native="PatchProfile"
-            maxlength="30">
+            maxlength="30"
+          >
           </b-input>
         </b-field>
 
@@ -108,17 +126,19 @@
             placeholder="Click to select birthday"
             icon="cake-variant"
             size="is-medium"
-            trap-focus>
+            trap-focus
+          >
           </b-datepicker>
         </b-field>
-        <br/>
+        <br />
         <b-button
           type="is-success"
           size="is-medium"
           icon-left="delta"
           native-type="submit"
           expanded
-          @click="PatchProfile">
+          @click="PatchProfile"
+        >
           Update profile
         </b-button>
       </section>
@@ -131,11 +151,19 @@ import common from '@/common/common'
 import profile from '@/requests/authenticated/profile'
 
 export default {
-  name: 'profile',
+  name: 'account-profile',
   data () {
     const today = new Date()
-    const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDate())
-    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())
+    const maxDate = new Date(
+      today.getFullYear() - 15,
+      today.getMonth(),
+      today.getDate()
+    )
+    const minDate = new Date(
+      today.getFullYear() - 100,
+      today.getMonth(),
+      today.getDate()
+    )
 
     return {
       maxDate: maxDate,
@@ -149,16 +177,16 @@ export default {
       phoneNumber: '',
       groups: [],
       password: '',
-      birthday: 0,
       creationTimestamp: ''
     }
   },
   methods: {
     GetProfile () {
-      profile.GetProfile().then(resp => {
+      profile.GetProfile().then((resp) => {
         this.names = resp.data.spec.names
         this.birthday = resp.data.spec.birthday || null
-        this.jsBirthday = this.birthday !== null ? new Date(this.birthday * 1000) : null
+        this.jsBirthday =
+          this.birthday !== null ? new Date(this.birthday * 1000) : null
         this.focusedDate = this.jsBirthday
         this.phoneNumber = resp.data.spec.phoneNumber
         this.groups = resp.data.spec.groups
@@ -169,22 +197,41 @@ export default {
     },
     PatchProfile () {
       if (this.password !== this.passwordConfirm) {
-        common.DisplayFailureToast('Unable to use password as they either do not match')
+        common.DisplayFailureToast(
+          'Unable to use password as they either do not match'
+        )
         return
       }
-      var birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0
-      profile.PatchProfile(this.names, this.email, this.phoneNumber, this.birthday, this.password).then(resp => {
-        if (resp.data.spec.id === '') {
-          common.DisplayFailureToast('Failed to update profile')
-          return
-        }
-        common.DisplaySuccessToast('Successfully updated your profile')
-      }).catch(err => {
-        common.DisplayFailureToast('Failed to update profile' + '<br/>' + err.response.data.metadata.response)
-      })
+      profile
+        .PatchProfile(
+          this.names,
+          this.email,
+          this.phoneNumber,
+          this.birthday,
+          this.password
+        )
+        .then((resp) => {
+          if (resp.data.spec.id === '') {
+            common.DisplayFailureToast('Failed to update profile')
+            return
+          }
+          common.DisplaySuccessToast('Successfully updated your profile')
+        })
+        .catch((err) => {
+          common.DisplayFailureToast(
+            'Failed to update profile' +
+              '<br/>' +
+              err.response.data.metadata.response
+          )
+        })
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
+    }
+  },
+  computed: {
+    birthday () {
+      return new Date(this.jsBirthday || 0).getTime() / 1000 || 0
     }
   },
   async beforeMount () {

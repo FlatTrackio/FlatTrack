@@ -46,15 +46,6 @@ function SetThemeDefault () {
   SetTheme('light')
 }
 
-// SetThemeDefaultIfNotSet
-// sets the default theme if there is no theme set
-function SetThemeDefaultIfNotSet () {
-  var currentTheme = GetTheme()
-  if (typeof currentTheme.name === 'undefined') {
-    SetTheme(themeDefault)
-  }
-}
-
 export default {
   GetTheme,
   SetTheme,

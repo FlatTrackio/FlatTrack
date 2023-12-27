@@ -17,15 +17,28 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
-            <ul>
-              <li><router-link :to="{ name: 'Admin home' }">Admin</router-link></li>
-              <li class="is-active"><router-link :to="{ name: 'Admin settings' }">Settings</router-link></li>
-            </ul>
+        <nav
+          class="breadcrumb is-medium has-arrow-separator"
+          aria-label="breadcrumbs"
+        >
+          <ul>
+            <li>
+              <router-link :to="{ name: 'Admin home' }">Admin</router-link>
+            </li>
+            <li class="is-active">
+              <router-link :to="{ name: 'Admin settings' }"
+                >Settings</router-link
+              >
+            </li>
+          </ul>
         </nav>
         <h1 class="title is-1">Settings</h1>
         <p class="subtitle is-4">General FlatTrack settings</p>
-        <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
+        <b-loading
+          :is-full-page="false"
+          :active.sync="pageLoading"
+          :can-cancel="false"
+        ></b-loading>
         <div>
           <label class="label">Flat name</label>
           <b-field>
@@ -41,14 +54,16 @@
               @icon-right-click="flatName = ''"
               @keyup.enter.native="PostFlatName"
               expanded
-              required>
+              required
+            >
             </b-input>
             <p class="control">
               <b-button
                 type="is-primary"
                 size="is-medium"
                 icon-left="check"
-                @click="PostFlatName">
+                @click="PostFlatName"
+              >
               </b-button>
             </p>
           </b-field>
@@ -66,19 +81,21 @@
               icon-right="close-circle"
               icon-right-clickable
               @icon-right-click="flatNotes = ''"
-              expanded>
+              expanded
+            >
             </b-input>
             <p class="control">
               <b-button
                 type="is-primary"
                 size="is-medium"
                 icon-left="check"
-                @click="PutFlatNotes">
+                @click="PutFlatNotes"
+              >
               </b-button>
             </p>
           </b-field>
         </div>
-        <br/>
+        <br />
       </section>
     </div>
   </div>
@@ -90,7 +107,7 @@ import settings from '@/requests/admin/settings'
 import common from '@/common/common'
 
 export default {
-  name: 'Flatmates',
+  name: 'admin-settings',
   data () {
     return {
       pageLoading: true,
@@ -99,13 +116,16 @@ export default {
     }
   },
   async beforeMount () {
-    flatInfo.GetFlatName().then(resp => {
-      this.flatName = resp.data.spec
-      return flatInfo.GetFlatNotes()
-    }).then(resp => {
-      this.flatNotes = resp.data.spec.notes
-      this.pageLoading = false
-    })
+    flatInfo
+      .GetFlatName()
+      .then((resp) => {
+        this.flatName = resp.data.spec
+        return flatInfo.GetFlatNotes()
+      })
+      .then((resp) => {
+        this.flatNotes = resp.data.spec.notes
+        this.pageLoading = false
+      })
   },
   methods: {
     PostFlatName () {
@@ -113,22 +133,34 @@ export default {
         common.DisplayFailureToast('Error: Flat name must not be empty')
         return
       }
-      settings.PostFlatName(this.flatName).then(resp => {
-        common.DisplaySuccessToast('Set flat name')
-      }).catch(err => {
-        common.DisplayFailureToast('Failed set the flat name' + '<br/>' + (err.response.data.metadata.response || err))
-      })
+      settings
+        .PostFlatName(this.flatName)
+        .then((resp) => {
+          common.DisplaySuccessToast('Set flat name')
+        })
+        .catch((err) => {
+          common.DisplayFailureToast(
+            'Failed set the flat name' +
+              '<br/>' +
+              (err.response.data.metadata.response || err)
+          )
+        })
     },
     PutFlatNotes () {
       if (this.flatName === '') {
         common.DisplayFailureToast('Error: Flat notes must not be empty')
         return
       }
-      settings.PutFlatNotes(this.flatNotes).then(resp => {
-        common.DisplaySuccessToast('Set flat notes')
-      }).catch(err => {
-        common.DisplayFailureToast('Failed set the flat notes' + '<br/>' + (err))
-      })
+      settings
+        .PutFlatNotes(this.flatNotes)
+        .then((resp) => {
+          common.DisplaySuccessToast('Set flat notes')
+        })
+        .catch((err) => {
+          common.DisplayFailureToast(
+            'Failed set the flat notes' + '<br/>' + err
+          )
+        })
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)

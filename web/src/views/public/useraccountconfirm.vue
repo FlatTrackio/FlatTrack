@@ -15,31 +15,44 @@
 
 <template>
   <div>
-    <headerDisplay/>
+    <headerDisplay />
     <div class="container">
       <section class="section">
         <h1 class="title is-1">Confirm your account</h1>
-        <p class="subtitle is-4">
-          Final things to complete your sign up
-        </p>
+        <p class="subtitle is-4">Final things to complete your sign up</p>
 
-        <b-message type="is-danger" has-icon v-if="((typeof id === 'undefined' || id === '') || idValid !== true) && pageHasLoaded === true">
+        <b-message
+          type="is-danger"
+          has-icon
+          v-if="
+            (typeof id === 'undefined' || id === '' || idValid !== true) &&
+            pageHasLoaded === true
+          "
+        >
           Token Id is missing or is invalid.
-          <br/>
-          <br/>
+          <br />
+          <br />
           The link that you were provided appears to be damaged or invalid.
-          <br/>
+          <br />
           Please contact your system administrator or support.
         </b-message>
-        <b-message type="is-danger" has-icon v-if="typeof secret === 'undefined' || secret === ''">
+        <b-message
+          type="is-danger"
+          has-icon
+          v-if="typeof secret === 'undefined' || secret === ''"
+        >
           Missing a confirmation secret.
-          <br/>
-          <br/>
+          <br />
+          <br />
           The link that you were provided appears to be damaged or invalid.
-          <br/>
+          <br />
           Please contact your system administrator or support.
         </b-message>
-        <div v-if="idValid === true && typeof secret !== 'undefined' && secret !== ''">
+        <div
+          v-if="
+            idValid === true && typeof secret !== 'undefined' && secret !== ''
+          "
+        >
           <b-field label="Phone number (optional)">
             <b-input
               type="tel"
@@ -51,7 +64,8 @@
               icon-right-clickable
               @icon-right-click="phoneNumber = ''"
               @keyup.enter.native="PostUserConfirm"
-              maxlength="30">
+              maxlength="30"
+            >
             </b-input>
           </b-field>
 
@@ -65,15 +79,18 @@
               placeholder="Click to select birthday"
               icon="cake-variant"
               size="is-medium"
-              trap-focus>
+              trap-focus
+            >
             </b-datepicker>
           </b-field>
-          <br/>
+          <br />
 
           <div class="field has-addons is-marginless">
             <h1 class="title is-6 is-marginless">Password</h1>
             <p class="control">
-              <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
+              <infotooltip
+                message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"
+              />
             </p>
           </div>
           <b-field>
@@ -91,7 +108,8 @@
               icon-right-clickable
               @icon-right-click="password = ''"
               @keyup.enter.native="PostUserConfirm"
-              required>
+              required
+            >
             </b-input>
           </b-field>
 
@@ -110,7 +128,8 @@
               icon-right-clickable
               @icon-right-click="passwordConfirm = ''"
               @keyup.enter.native="PostUserConfirm"
-              required>
+              required
+            >
             </b-input>
           </b-field>
 
@@ -120,7 +139,8 @@
             icon-left="check"
             native-type="submit"
             expanded
-            @click="PostUserConfirm">
+            @click="PostUserConfirm"
+          >
             Confirm my account
           </b-button>
         </div>
@@ -133,14 +153,21 @@
 import { LoadingProgrammatic as Loading } from 'buefy'
 import common from '@/common/common'
 import confirm from '@/requests/public/useraccountconfirm'
-import dayjs from 'dayjs'
 
 export default {
-  name: 'Account confirmation',
+  name: 'account-confirmation',
   data () {
     const today = new Date()
-    const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDay())
-    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())
+    const maxDate = new Date(
+      today.getFullYear() - 15,
+      today.getMonth(),
+      today.getDay()
+    )
+    const minDate = new Date(
+      today.getFullYear() - 100,
+      today.getMonth(),
+      today.getDate()
+    )
 
     return {
       minDate: minDate,
@@ -166,30 +193,42 @@ export default {
         common.DisplayFailureToast('Passwords do not match')
         return
       }
-      var birthday = Number(dayjs(this.jsBirthday).unix()) || 0
-
       const loadingComponent = Loading.open({
         container: null
       })
-      confirm.PostUserConfirm(this.id, this.secret, this.phoneNumber, this.birthday, this.password).then(resp => {
-        if (resp.data.data === '') {
-          common.DisplayFailureToast(resp.data.metadata.response)
-          return
-        }
-        localStorage.setItem('authToken', resp.data.data)
-        common.DisplaySuccessToast(resp.data.metadata.response)
-        setTimeout(() => {
+      confirm
+        .PostUserConfirm(
+          this.id,
+          this.secret,
+          this.phoneNumber,
+          this.birthday,
+          this.password
+        )
+        .then((resp) => {
+          if (resp.data.data === '') {
+            common.DisplayFailureToast(resp.data.metadata.response)
+            return
+          }
+          localStorage.setItem('authToken', resp.data.data)
+          common.DisplaySuccessToast(resp.data.metadata.response)
+          setTimeout(() => {
+            loadingComponent.close()
+            window.location.href = '/'
+          }, 2 * 1000)
+        })
+        .catch((err) => {
           loadingComponent.close()
-          window.location.href = '/'
-        }, 2 * 1000)
-      }).catch(err => {
-        loadingComponent.close()
-        common.DisplayFailureToast(err.response.data.metadata.response)
-      })
+          common.DisplayFailureToast(err.response.data.metadata.response)
+        })
+    }
+  },
+  computed: {
+    birthday () {
+      return new Date(this.jsBirthday || 0).getTime() / 1000 || 0
     }
   },
   async beforeMount () {
-    confirm.GetTokenValid(this.id).then(resp => {
+    confirm.GetTokenValid(this.id).then((resp) => {
       this.idValid = resp.data.data
       this.pageHasLoaded = true
     })
@@ -197,6 +236,4 @@ export default {
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

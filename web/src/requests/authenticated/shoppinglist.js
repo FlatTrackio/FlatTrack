@@ -16,11 +16,11 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import Request from "@/requests/requests";
+import Request from '@/requests/requests'
 
 // GetShoppingLists
 // returns a list of all shopping lists
-function GetShoppingLists(
+function GetShoppingLists (
   completed,
   sortBy,
   creationTimestampAfter,
@@ -28,135 +28,135 @@ function GetShoppingLists(
   limit
 ) {
   return Request({
-    url: "/api/apps/shoppinglist/lists",
-    method: "GET",
+    url: '/api/apps/shoppinglist/lists',
+    method: 'GET',
     params: {
       completed,
       sortBy,
       creationTimestampAfter,
       modificationTimestampAfter,
-      limit,
-    },
-  });
+      limit
+    }
+  })
 }
 
 // GetShoppingList
 // returns a shopping list
-function GetShoppingList(id) {
+function GetShoppingList (id) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}`,
-    method: "GET",
-  });
+    method: 'GET'
+  })
 }
 
 // PostShoppingList
 // given a name and optional notes, create a shopping list
-function PostShoppingList(name, notes, templateId, templateListItemSelector) {
+function PostShoppingList (name, notes, templateId, templateListItemSelector) {
   return Request({
-    url: "/api/apps/shoppinglist/lists",
-    method: "POST",
+    url: '/api/apps/shoppinglist/lists',
+    method: 'POST',
     data: {
       name,
       notes,
-      templateId,
+      templateId
     },
     params: {
-      templateListItemSelector,
-    },
-  });
+      templateListItemSelector
+    }
+  })
 }
 
 // PatchShoppingList
 // given a name and optional notes, patch a shopping list
-function PatchShoppingList(id, name, notes) {
+function PatchShoppingList (id, name, notes) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}`,
-    method: "PATCH",
+    method: 'PATCH',
     data: {
       name,
-      notes,
-    },
-  });
+      notes
+    }
+  })
 }
 
 // UpdateShoppingList
 // given a name and optional notes, patch a shopping list
-function UpdateShoppingList(id, name, notes, completed, totalTagExclude) {
+function UpdateShoppingList (id, name, notes, completed, totalTagExclude) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}`,
-    method: "PUT",
+    method: 'PUT',
     data: {
       name,
       notes,
       completed,
-      totalTagExclude,
-    },
-  });
+      totalTagExclude
+    }
+  })
 }
 
 // PatchShoppingListCompleted
 // given a bool, patch a shopping list's completed field
-function PatchShoppingListCompleted(id, completed) {
+function PatchShoppingListCompleted (id, completed) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}/completed`,
-    method: "PATCH",
+    method: 'PATCH',
     data: {
-      completed,
-    },
-  });
+      completed
+    }
+  })
 }
 
 // DeleteShoppingList
 // deletes a shopping list
-function DeleteShoppingList(id) {
+function DeleteShoppingList (id) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}`,
-    method: "DELETE",
-  });
+    method: 'DELETE'
+  })
 }
 
 // GetShoppingListItems
 // returns shopping list items by id
-function GetShoppingListItems(id, sortBy, obtained) {
+function GetShoppingListItems (id, sortBy, obtained) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}/items`,
-    method: "GET",
+    method: 'GET',
     params: {
       sortBy,
-      obtained,
-    },
-  });
+      obtained
+    }
+  })
 }
 
 // GetShoppingListItem
 // returns shopping item by id
-function GetShoppingListItem(listId, itemId) {
+function GetShoppingListItem (listId, itemId) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
-    method: "GET",
-  });
+    method: 'GET'
+  })
 }
 
 // PostShoppingListItem
 // adds to the shopping list
-function PostShoppingListItem(id, name, notes, price, quantity, tag, obtained) {
+function PostShoppingListItem (id, name, notes, price, quantity, tag, obtained) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}/items`,
-    method: "POST",
+    method: 'POST',
     data: {
       name,
       notes,
       price,
       quantity,
       tag,
-      obtained,
-    },
-  });
+      obtained
+    }
+  })
 }
 
 // PatchShoppingListItem
 // patches the shopping list item
-function PatchShoppingListItem(
+function PatchShoppingListItem (
   listId,
   itemId,
   name,
@@ -167,20 +167,20 @@ function PatchShoppingListItem(
 ) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
-    method: "PATCH",
+    method: 'PATCH',
     data: {
       name,
       notes,
       price,
       quantity,
-      tag,
-    },
-  });
+      tag
+    }
+  })
 }
 
 // UpdateShoppingListItem
 // updates the shopping list item
-function UpdateShoppingListItem(
+function UpdateShoppingListItem (
   listId,
   itemId,
   name,
@@ -192,142 +192,142 @@ function UpdateShoppingListItem(
 ) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
-    method: "PUT",
+    method: 'PUT',
     data: {
       name,
       notes,
       price,
       quantity,
       tag,
-      obtained,
-    },
-  });
+      obtained
+    }
+  })
 }
 
 // PatchShoppingListItemObtained
 // adds to the shopping list
-function PatchShoppingListItemObtained(listId, itemId, obtained) {
+function PatchShoppingListItemObtained (listId, itemId, obtained) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}/obtained`,
-    method: "PATCH",
+    method: 'PATCH',
     data: {
-      obtained,
-    },
-  });
+      obtained
+    }
+  })
 }
 
 // DeleteShoppingListItem
 // adds to the shopping list
-function DeleteShoppingListItem(listId, itemId) {
+function DeleteShoppingListItem (listId, itemId) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/items/${itemId}`,
-    method: "DELETE",
-  });
+    method: 'DELETE'
+  })
 }
 
 // GetShoppingListItemTags
 // fetches all tags used in a list
-function GetShoppingListItemTags(listId) {
+function GetShoppingListItemTags (listId) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/tags`,
-    method: "GET",
-  });
+    method: 'GET'
+  })
 }
 
 // GetAllShoppingListItemTags
 // fetches all tags
-function GetAllShoppingListItemTags() {
+function GetAllShoppingListItemTags () {
   return Request({
     url: `/api/apps/shoppinglist/tags`,
-    method: "GET",
-  });
+    method: 'GET'
+  })
 }
 
 // UpdateShoppingListItemTag
 // updates a tag name used in a list
-function UpdateShoppingListItemTag(listId, tagName, tagNameNew) {
+function UpdateShoppingListItemTag (listId, tagName, tagNameNew) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${listId}/tags/${tagName}`,
-    method: "PUT",
+    method: 'PUT',
     data: {
-      name: tagNameNew,
-    },
-  });
+      name: tagNameNew
+    }
+  })
 }
 
 // PostShoppingTag
 // creates a shopping tag
-function PostShoppingTag(name) {
+function PostShoppingTag (name) {
   return Request({
     url: `/api/apps/shoppinglist/tags`,
-    method: "POST",
+    method: 'POST',
     data: {
-      name,
-    },
-  });
+      name
+    }
+  })
 }
 
 // GetShoppingTags
 // returns a list of shopping tags
-function GetShoppingTags(sortBy) {
+function GetShoppingTags (sortBy) {
   return Request({
     url: `/api/apps/shoppinglist/tags`,
-    method: "GET",
+    method: 'GET',
     params: {
-      sortBy,
-    },
-  });
+      sortBy
+    }
+  })
 }
 
 // GetShoppingTag
 // returns a list of shopping tag
-function GetShoppingTag(id) {
+function GetShoppingTag (id) {
   return Request({
     url: `/api/apps/shoppinglist/tags/${id}`,
-    method: "GET",
-  });
+    method: 'GET'
+  })
 }
 
 // UpdateShoppingTag
 // updates a shopping tag name
-function UpdateShoppingTag(id, name) {
+function UpdateShoppingTag (id, name) {
   return Request({
     url: `/api/apps/shoppinglist/tags/${id}`,
-    method: "PUT",
+    method: 'PUT',
     data: {
-      name,
-    },
-  });
+      name
+    }
+  })
 }
 
 // DeleteShoppingTag
 // removes a shopping tag
-function DeleteShoppingTag(id) {
+function DeleteShoppingTag (id) {
   return Request({
     url: `/api/apps/shoppinglist/tags/${id}`,
-    method: "DELETE",
-  });
+    method: 'DELETE'
+  })
 }
 
 // GetShoppingListNotes
 // returns a notes of shopping lists
-function GetShoppingListNotes() {
+function GetShoppingListNotes () {
   return Request({
     url: `/api/apps/shoppinglist/settings/notes`,
-    method: "GET",
-  });
+    method: 'GET'
+  })
 }
 
 // PutShoppingListNotes
 // updates a notes of shopping lists
-function PutShoppingListNotes(notes) {
+function PutShoppingListNotes (notes) {
   return Request({
     url: `/api/admin/settings/shoppingListNotes`,
-    method: "PUT",
+    method: 'PUT',
     data: {
-      notes,
-    },
-  });
+      notes
+    }
+  })
 }
 
 export default {
@@ -357,5 +357,5 @@ export default {
   DeleteShoppingTag,
 
   GetShoppingListNotes,
-  PutShoppingListNotes,
-};
+  PutShoppingListNotes
+}

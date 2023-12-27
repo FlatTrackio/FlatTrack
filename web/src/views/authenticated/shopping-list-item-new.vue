@@ -199,42 +199,42 @@
 </template>
 
 <script>
-import common from "@/common/common";
-import shoppinglist from "@/requests/authenticated/shoppinglist";
+import common from '@/common/common'
+import shoppinglist from '@/requests/authenticated/shoppinglist'
 
 export default {
-  name: "shopping-item-new",
+  name: 'shopping-item-new',
   components: {
-    infotooltip: () => import("@/components/common/info-tooltip.vue"),
+    infotooltip: () => import('@/components/common/info-tooltip.vue')
   },
-  data() {
+  data () {
     return {
       shoppingListId: this.$route.params.id,
-      shoppingListName: "",
+      shoppingListName: '',
       tags: [],
       tagsList: [],
       submitLoading: false,
-      name: "",
-      notes: "",
+      name: '',
+      notes: '',
       price: 0,
       quantity: 1,
       tag: undefined,
-      obtained: false,
-    };
+      obtained: false
+    }
   },
   methods: {
-    PostShoppingListItem() {
-      this.submitLoading = true;
-      if (this.notes === "") {
-        this.notes = undefined;
+    PostShoppingListItem () {
+      this.submitLoading = true
+      if (this.notes === '') {
+        this.notes = undefined
       }
       if (this.price === 0) {
-        this.price = undefined;
+        this.price = undefined
       } else {
-        this.price = parseFloat(this.price);
+        this.price = parseFloat(this.price)
       }
-      if (this.tag === "") {
-        this.tag = "Untagged";
+      if (this.tag === '') {
+        this.tag = 'Untagged'
       }
 
       shoppinglist
@@ -248,43 +248,43 @@ export default {
           this.obtained
         )
         .then((resp) => {
-          var item = resp.data.spec;
-          if (item.id !== "" || typeof item.id === "undefined") {
-            this.$router.go(-1);
+          var item = resp.data.spec
+          if (item.id !== '' || typeof item.id === 'undefined') {
+            this.$router.go(-1)
           } else {
-            this.submitLoading = false;
-            common.DisplayFailureToast("Unable to find created shopping item");
+            this.submitLoading = false
+            common.DisplayFailureToast('Unable to find created shopping item')
           }
         })
         .catch((err) => {
-          this.submitLoading = false;
+          this.submitLoading = false
           common.DisplayFailureToast(
             `Failed to add shopping list item - ${err.response.data.metadata.response}`
-          );
-        });
-    },
+          )
+        })
+    }
   },
-  async beforeMount() {
+  async beforeMount () {
     shoppinglist
       .GetShoppingList(this.shoppingListId)
       .then((resp) => {
-        var list = resp.data.spec;
-        this.shoppingListName = list.name;
-        return shoppinglist.GetAllShoppingListItemTags();
+        var list = resp.data.spec
+        this.shoppingListName = list.name
+        return shoppinglist.GetAllShoppingListItemTags()
       })
       .then((resp) => {
-        this.tags = resp.data.list || [];
-        return shoppinglist.GetShoppingListItemTags(this.shoppingListId);
+        this.tags = resp.data.list || []
+        return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
       })
       .then((resp) => {
-        this.tagsList = resp.data.list || [];
-      });
+        this.tagsList = resp.data.list || []
+      })
     if (this.$route.query.tag) {
-      this.tag = this.$route.query.tag;
+      this.tag = this.$route.query.tag
     }
     if (this.$route.query.name) {
-      this.name = this.$route.query.name;
+      this.name = this.$route.query.name
     }
-  },
-};
+  }
+}
 </script>

@@ -146,26 +146,26 @@
 </template>
 
 <script>
-import common from "@/common/common";
-import shoppinglist from "@/requests/authenticated/shoppinglist";
+import common from '@/common/common'
+import shoppinglist from '@/requests/authenticated/shoppinglist'
 
 export default {
-  name: "shopping-list-new",
-  data() {
+  name: 'shopping-list-new',
+  data () {
     return {
-      name: "",
-      notes: "",
-      listTemplate: "",
-      templateListItemSelector: "all",
-      lists: [],
-    };
+      name: '',
+      notes: '',
+      listTemplate: '',
+      templateListItemSelector: 'all',
+      lists: []
+    }
   },
   methods: {
-    PostNewShoppingList() {
-      if (this.notes === "") {
-        this.notes = undefined;
+    PostNewShoppingList () {
+      if (this.notes === '') {
+        this.notes = undefined
       }
-      this.submitLoading = true;
+      this.submitLoading = true
       shoppinglist
         .PostShoppingList(
           this.name,
@@ -174,30 +174,30 @@ export default {
           this.templateListItemSelector
         )
         .then((resp) => {
-          this.submitLoading = false;
-          var list = resp.data.spec;
-          if (list.id !== "" || typeof list.id === "undefined") {
+          this.submitLoading = false
+          var list = resp.data.spec
+          if (list.id !== '' || typeof list.id === 'undefined') {
             this.$router.push({
-              name: "View shopping list",
-              params: { id: list.id },
-            });
+              name: 'View shopping list',
+              params: { id: list.id }
+            })
           } else {
-            common.DisplayFailureToast("Unable to find created shopping list");
+            common.DisplayFailureToast('Unable to find created shopping list')
           }
         })
         .catch((err) => {
-          this.submitLoading = false;
+          this.submitLoading = false
           common.DisplayFailureToast(
             `Failed to create shopping list - ${err.response.data.metadata.response}`
-          );
-        });
-    },
+          )
+        })
+    }
   },
-  async beforeMount() {
-    shoppinglist.GetShoppingLists(undefined, "templated").then((resp) => {
-      this.lists = resp.data.list || [];
-    });
-    this.name = this.$route.query.name;
-  },
-};
+  async beforeMount () {
+    shoppinglist.GetShoppingLists(undefined, 'templated').then((resp) => {
+      this.lists = resp.data.list || []
+    })
+    this.name = this.$route.query.name
+  }
+}
 </script>

@@ -17,11 +17,22 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
-            <ul>
-              <li><router-link :to="{ name: 'Admin accounts' }">Accounts</router-link></li>
-              <li class="is-active"><router-link :to="{ name: 'Admin new account' }">New account</router-link></li>
-            </ul>
+        <nav
+          class="breadcrumb is-medium has-arrow-separator"
+          aria-label="breadcrumbs"
+        >
+          <ul>
+            <li>
+              <router-link :to="{ name: 'Admin accounts' }"
+                >Accounts</router-link
+              >
+            </li>
+            <li class="is-active">
+              <router-link :to="{ name: 'Admin new account' }"
+                >New account</router-link
+              >
+            </li>
+          </ul>
         </nav>
         <h1 class="title is-1">New account</h1>
         <p class="subtitle is-4">Add a new flatmate</p>
@@ -39,7 +50,8 @@
             @icon-right-click="names = ''"
             @keyup.enter.native="PostUserAccount"
             autofocus
-            required>
+            required
+          >
           </b-input>
         </b-field>
 
@@ -55,7 +67,8 @@
             icon-right-clickable
             @icon-right-click="email = ''"
             @keyup.enter.native="PostUserAccount"
-            required>
+            required
+          >
           </b-input>
         </b-field>
 
@@ -72,13 +85,17 @@
               placeholder="Select groups"
               size="is-medium"
               @keyup.enter.native="PostUserAccount"
-              @typing="GetFilteredGroups" />
+              @typing="GetFilteredGroups"
+            />
           </b-field>
         </section>
-        <br/>
+        <br />
 
         <div class="field">
-          <b-checkbox v-model="setOnlyRequiredFields">Allow your flatmate to set their password, phone number, and birthday</b-checkbox>
+          <b-checkbox v-model="setOnlyRequiredFields"
+            >Allow your flatmate to set their password, phone number, and
+            birthday</b-checkbox
+          >
         </div>
         <div v-if="!setOnlyRequiredFields">
           <b-field label="Phone number (optional)">
@@ -92,7 +109,8 @@
               icon-right-clickable
               @icon-right-click="phoneNumber = ''"
               @keyup.enter.native="PostUserAccount"
-              maxlength="30">
+              maxlength="30"
+            >
             </b-input>
           </b-field>
 
@@ -105,15 +123,18 @@
               placeholder="Click to select birthday"
               icon="cake-variant"
               size="is-medium"
-              trap-focus>
+              trap-focus
+            >
             </b-datepicker>
           </b-field>
-          <br/>
+          <br />
 
           <div class="field has-addons">
             <label class="label">Password</label>
             <p class="control">
-              <infotooltip message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"/>
+              <infotooltip
+                message="Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"
+              />
             </p>
           </div>
           <b-field>
@@ -131,7 +152,8 @@
               icon-right-clickable
               @icon-right-click="password = ''"
               @keyup.enter.native="PostUserAccount"
-              required>
+              required
+            >
             </b-input>
           </b-field>
 
@@ -150,13 +172,19 @@
               icon-right-clickable
               @icon-right-click="passwordConfirm = ''"
               @keyup.enter.native="PostUserAccount"
-              required>
+              required
+            >
             </b-input>
           </b-field>
         </div>
         <div v-else>
           <div class="notification is-warning mb-4">
-            <p class="subtitle is-6"><b>Please note:</b> email account verification is not available yet, however QR code verification is. If this in an inconvenience, uncheck the checkbox above to fill all fields out for the new account.</p>
+            <p class="subtitle is-6">
+              <b>Please note:</b> email account verification is not available
+              yet, however QR code verification is. If this in an inconvenience,
+              uncheck the checkbox above to fill all fields out for the new
+              account.
+            </p>
           </div>
         </div>
 
@@ -169,7 +197,8 @@
           expanded
           :loading="pageLoading"
           :disabled="pageLoading"
-          @click="PostUserAccount">
+          @click="PostUserAccount"
+        >
           Create user account
         </b-button>
       </section>
@@ -183,11 +212,19 @@ import groups from '@/requests/authenticated/groups'
 import adminFlatmates from '@/requests/admin/flatmates'
 
 export default {
-  name: 'new account',
+  name: 'new-account',
   data () {
     const today = new Date()
-    const maxDate = new Date(today.getFullYear() - 15, today.getMonth(), today.getDay())
-    const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDay())
+    const maxDate = new Date(
+      today.getFullYear() - 15,
+      today.getMonth(),
+      today.getDay()
+    )
+    const minDate = new Date(
+      today.getFullYear() - 100,
+      today.getMonth(),
+      today.getDay()
+    )
 
     return {
       pageLoading: false,
@@ -214,24 +251,30 @@ export default {
       return common.TimestampToCalendar(timestamp)
     },
     GetAvailableGroups () {
-      groups.GetGroups().then(resp => {
-        this.availableGroups = resp.data.list
-        this.groups = resp.data.list
-        resp.data.list.map(group => {
-          if (group.defaultGroup === true) {
-            this.groupsFull = [...this.groupsFull, group]
-          }
+      groups
+        .GetGroups()
+        .then((resp) => {
+          this.availableGroups = resp.data.list
+          this.groups = resp.data.list
+          resp.data.list.map((group) => {
+            if (group.defaultGroup === true) {
+              this.groupsFull = [...this.groupsFull, group]
+            }
+          })
         })
-      }).catch(err => {
-        common.DisplayFailureToast('Failed to list groups' + '<br/>' + err.response.data.metadata.response)
-      })
+        .catch((err) => {
+          common.DisplayFailureToast(
+            'Failed to list groups' +
+              '<br/>' +
+              err.response.data.metadata.response
+          )
+        })
     },
     GetFilteredGroups (text) {
       this.groups = this.availableGroups.filter((group) => {
-        return group.name
-          .toString()
-          .toLowerCase()
-          .indexOf(text.toLowerCase()) >= 0
+        return (
+          group.name.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
+        )
       })
     },
     PostUserAccount () {
@@ -242,24 +285,40 @@ export default {
       this.birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0
 
       var groups = []
-      this.groupsFull.map(group => {
+      this.groupsFull.map((group) => {
         if (group === '' || group.name === '') {
           return
         }
         groups.push(group.name)
       })
-      adminFlatmates.PostFlatmate(this.names, this.email, this.phoneNumber, this.birthday, groups, this.password).then(resp => {
-        common.DisplaySuccessToast('Created user account')
-        setTimeout(() => {
-          if (this.setOnlyRequiredFields === true) {
-            this.$router.push({ name: 'View user account', params: { id: resp.data.spec.id } })
-          } else {
-            this.$router.push({ name: 'Admin accounts' })
-          }
-        }, 1.5 * 1000)
-      }).catch(err => {
-        common.DisplayFailureToast('Failed to create user account' + `<br/>${err.response.data.metadata.response}`)
-      })
+      adminFlatmates
+        .PostFlatmate(
+          this.names,
+          this.email,
+          this.phoneNumber,
+          this.birthday,
+          groups,
+          this.password
+        )
+        .then((resp) => {
+          common.DisplaySuccessToast('Created user account')
+          setTimeout(() => {
+            if (this.setOnlyRequiredFields === true) {
+              this.$router.push({
+                name: 'View user account',
+                params: { id: resp.data.spec.id }
+              })
+            } else {
+              this.$router.push({ name: 'Admin accounts' })
+            }
+          }, 1.5 * 1000)
+        })
+        .catch((err) => {
+          common.DisplayFailureToast(
+            'Failed to create user account' +
+              `<br/>${err.response.data.metadata.response}`
+          )
+        })
     }
   },
   async beforeMount () {

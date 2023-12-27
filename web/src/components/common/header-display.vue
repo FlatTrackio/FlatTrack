@@ -17,33 +17,22 @@
   <div>
     <section class="hero is-info navbar-shadow">
       <div class="hero-body">
-        <p class="title">
-          FlatTrack
-        </p>
-        <p class="subtitle">
-          Collaborate with your flatmates
-        </p>
+        <p class="title">FlatTrack</p>
+        <p class="subtitle">Collaborate with your flatmates</p>
       </div>
     </section>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
-
 export default {
   name: 'header-display',
-  props: {
-  },
+  props: {},
   data () {
-    return {
-    }
+    return {}
   },
-  created () {
-  }
+  created () {}
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

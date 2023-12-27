@@ -12,16 +12,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import { register } from 'register-service-worker'
-import { SnackbarProgrammatic as Snackbar, ToastProgrammatic as Toast } from 'buefy'
+import { ToastProgrammatic as Toast } from 'buefy'
 
 if (import.meta.env.NODE_ENV === 'production') {
   register(`${import.meta.env.BASE_URL}service-worker.js`, {
-    ready () {
-    },
-    registered () {
-    },
-    cached () {
-    },
+    ready () {},
+    registered () {},
+    cached () {},
     updatefound () {
       window.location.reload(true)
     },
@@ -32,8 +29,7 @@ if (import.meta.env.NODE_ENV === 'production') {
         type: 'is-success'
       })
     },
-    offline () {
-    },
+    offline () {},
     error (error) {
       console.error('Error during service worker registration:', error)
     }

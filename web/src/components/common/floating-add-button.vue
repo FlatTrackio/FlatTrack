@@ -14,9 +14,15 @@
 -->
 
 <template>
-  <div :class="deviceIsMobile ? 'floating-add-button-mobile' : ''" class="floating-add-button">
+  <div
+    :class="deviceIsMobile ? 'floating-add-button-mobile' : ''"
+    class="floating-add-button"
+  >
     <md-speed-dial md-direction="bottom md-bottom-right">
-      <md-speed-dial-target @click="goToRouterLinkOrRunFunc" class="floating-add-button-colour">
+      <md-speed-dial-target
+        @click="goToRouterLinkOrRunFunc"
+        class="floating-add-button-colour"
+      >
         <md-icon>add</md-icon>
       </md-speed-dial-target>
     </md-speed-dial>
@@ -27,7 +33,7 @@
 import common from '@/common/common'
 
 export default {
-  name: 'floating add button',
+  name: 'floating-add-button',
   data () {
     return {
       deviceIsMobile: false
@@ -58,18 +64,18 @@ export default {
 
 <style scope>
 .floating-add-button {
-    display: block;
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    z-index: 100;
+  display: block;
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 100;
 }
 
 .floating-add-button-mobile {
-    margin-bottom: 50px;
+  margin-bottom: 50px;
 }
 
 .floating-add-button-colour {
-    background-color: #448aff;
+  background-color: #448aff;
 }
 </style>

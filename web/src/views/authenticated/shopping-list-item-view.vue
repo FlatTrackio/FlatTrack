@@ -240,57 +240,57 @@
 </template>
 
 <script>
-import common from "@/common/common";
-import shoppinglist from "@/requests/authenticated/shoppinglist";
-import flatmates from "@/requests/authenticated/flatmates";
-import { DialogProgrammatic as Dialog } from "buefy";
+import common from '@/common/common'
+import shoppinglist from '@/requests/authenticated/shoppinglist'
+import flatmates from '@/requests/authenticated/flatmates'
+import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
-  name: "shopping-item-view",
+  name: 'shopping-item-view',
   components: {
-    infotooltip: () => import("@/components/common/info-tooltip.vue"),
+    infotooltip: () => import('@/components/common/info-tooltip.vue')
   },
-  data() {
+  data () {
     return {
       prevRoute: null,
       shoppingListId: this.$route.params.listId,
-      shoppingListName: "",
-      authorNames: "",
-      authorLastNames: "",
+      shoppingListName: '',
+      authorNames: '',
+      authorLastNames: '',
       tags: [],
       tagsList: [],
       itemIsLoading: true,
       submitLoading: false,
       deleteLoading: false,
-      templateListName: "",
+      templateListName: '',
       id: this.$route.params.itemId,
-      name: "",
-      notes: "",
+      name: '',
+      notes: '',
       price: 0,
       quantity: 1,
       tag: undefined,
       obtained: false,
-      author: "",
-      authorLast: "",
+      author: '',
+      authorLast: '',
       templateId: undefined,
       creationTimestamp: 0,
-      modificationTimestamp: 0,
-    };
+      modificationTimestamp: 0
+    }
   },
   methods: {
-    UpdateShoppingListItem() {
-      this.submitLoading = true;
-      if (this.notes === "") {
-        this.notes = undefined;
+    UpdateShoppingListItem () {
+      this.submitLoading = true
+      if (this.notes === '') {
+        this.notes = undefined
       }
       if (this.price === 0) {
-        this.price = undefined;
+        this.price = undefined
       }
-      if (this.tag === "") {
-        this.tag = "Untagged";
+      if (this.tag === '') {
+        this.tag = 'Untagged'
       }
 
-      this.price = Number(this.price);
+      this.price = Number(this.price)
       shoppinglist
         .UpdateShoppingListItem(
           this.shoppingListId,
@@ -303,130 +303,130 @@ export default {
           this.obtained
         )
         .then((resp) => {
-          var item = resp.data.spec;
-          if (item.id !== "" && typeof item.id !== "undefined") {
-            common.DisplaySuccessToast("Updated item successfully");
-            this.$router.go(-1);
+          var item = resp.data.spec
+          if (item.id !== '' && typeof item.id !== 'undefined') {
+            common.DisplaySuccessToast('Updated item successfully')
+            this.$router.go(-1)
           } else {
-            this.submitLoading = false;
-            common.DisplayFailureToast("Unable to find created shopping item");
+            this.submitLoading = false
+            common.DisplayFailureToast('Unable to find created shopping item')
           }
         })
         .catch((err) => {
           common.DisplayFailureToast(
-            "Failed to add shopping list item" +
-              " - " +
+            'Failed to add shopping list item' +
+              ' - ' +
               err.response.data.metadata.response
-          );
-          this.submitLoading = false;
-        });
+          )
+          this.submitLoading = false
+        })
     },
-    DeleteShoppingListItem(listId, itemId) {
+    DeleteShoppingListItem (listId, itemId) {
       Dialog.confirm({
-        title: "Delete item",
+        title: 'Delete item',
         message:
-          "Are you sure that you wish to delete this shopping list item?" +
-          "<br/>" +
-          "This action cannot be undone.",
-        confirmText: "Delete item",
-        type: "is-danger",
+          'Are you sure that you wish to delete this shopping list item?' +
+          '<br/>' +
+          'This action cannot be undone.',
+        confirmText: 'Delete item',
+        type: 'is-danger',
         hasIcon: true,
         onConfirm: () => {
-          this.deleteLoading = true;
+          this.deleteLoading = true
           shoppinglist
             .DeleteShoppingListItem(listId, itemId)
             .then((resp) => {
-              common.DisplaySuccessToast(resp.data.metadata.response);
+              common.DisplaySuccessToast(resp.data.metadata.response)
               setTimeout(() => {
                 this.$router.push({
-                  name: "View shopping list",
-                  params: { id: this.shoppingListId },
-                });
-              }, 1 * 1000);
+                  name: 'View shopping list',
+                  params: { id: this.shoppingListId }
+                })
+              }, 1 * 1000)
             })
             .catch((err) => {
-              this.deleteLoading = false;
+              this.deleteLoading = false
               common.DisplayFailureToast(
-                "Failed to delete shopping list item" +
-                  " - " +
+                'Failed to delete shopping list item' +
+                  ' - ' +
                   err.response.data.metadata.response
-              );
-            });
-        },
-      });
+              )
+            })
+        }
+      })
     },
-    TimestampToCalendar(timestamp) {
-      return common.TimestampToCalendar(timestamp);
-    },
+    TimestampToCalendar (timestamp) {
+      return common.TimestampToCalendar(timestamp)
+    }
   },
-  async beforeMount() {
+  async beforeMount () {
     shoppinglist
       .GetShoppingList(this.shoppingListId)
       .then((resp) => {
-        var list = resp.data.spec;
-        this.shoppingListName = list.name;
-        return shoppinglist.GetShoppingListItem(this.shoppingListId, this.id);
+        var list = resp.data.spec
+        this.shoppingListName = list.name
+        return shoppinglist.GetShoppingListItem(this.shoppingListId, this.id)
       })
       .then((resp) => {
-        var item = resp.data.spec;
-        this.name = item.name;
-        this.notes = item.notes;
-        this.price = item.price;
-        this.quantity = item.quantity;
-        this.tag = item.tag;
-        this.obtained = item.obtained;
-        this.author = item.author;
-        this.authorLast = item.authorLast;
-        this.creationTimestamp = item.creationTimestamp;
-        this.modificationTimestamp = item.modificationTimestamp;
-        this.templateId = item.templateId;
-        return flatmates.GetFlatmate(item.author);
+        var item = resp.data.spec
+        this.name = item.name
+        this.notes = item.notes
+        this.price = item.price
+        this.quantity = item.quantity
+        this.tag = item.tag
+        this.obtained = item.obtained
+        this.author = item.author
+        this.authorLast = item.authorLast
+        this.creationTimestamp = item.creationTimestamp
+        this.modificationTimestamp = item.modificationTimestamp
+        this.templateId = item.templateId
+        return flatmates.GetFlatmate(item.author)
       })
       .then((resp) => {
-        this.authorNames = resp.data.spec.names;
-        return flatmates.GetFlatmate(this.authorLast);
+        this.authorNames = resp.data.spec.names
+        return flatmates.GetFlatmate(this.authorLast)
       })
       .then((resp) => {
-        this.authorLastNames = resp.data.spec.names;
-        return shoppinglist.GetAllShoppingListItemTags();
+        this.authorLastNames = resp.data.spec.names
+        return shoppinglist.GetAllShoppingListItemTags()
       })
       .then((resp) => {
-        this.itemIsLoading = false;
-        this.tags = resp.data.list || [];
-        return shoppinglist.GetShoppingListItemTags(this.shoppingListId);
+        this.itemIsLoading = false
+        this.tags = resp.data.list || []
+        return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
       })
       .then((resp) => {
-        this.tagsList = resp.data.list || [];
-        if (typeof this.templateId === "undefined" || this.templateId === "") {
-          return;
+        this.tagsList = resp.data.list || []
+        if (typeof this.templateId === 'undefined' || this.templateId === '') {
+          return
         }
-        return shoppinglist.GetShoppingList(this.templateId);
+        return shoppinglist.GetShoppingList(this.templateId)
       })
       .then((resp) => {
-        if (typeof this.templateId === "undefined" || this.templateId === "") {
-          return;
+        if (typeof this.templateId === 'undefined' || this.templateId === '') {
+          return
         }
-        this.templateListName = resp.data.spec.name;
+        this.templateListName = resp.data.spec.name
       })
       .catch((err) => {
         if (err.response.status === 404) {
           common.DisplayFailureToast(
-            "Error item not found" +
-              "<br/>" +
+            'Error item not found' +
+              '<br/>' +
               err.response.data.metadata.response
-          );
+          )
           this.$router.push({
-            name: "View shopping list",
-            params: { id: this.shoppingListId },
-          });
-          return;
+            name: 'View shopping list',
+            params: { id: this.shoppingListId }
+          })
+          return
         }
         common.DisplayFailureToast(
-          "Error loading the shopping list item" +
-            "<br/>" +
+          'Error loading the shopping list item' +
+            '<br/>' +
             err.response.data.metadata.response
-        );
-      });
-  },
-};
+        )
+      })
+  }
+}
 </script>

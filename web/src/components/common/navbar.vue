@@ -15,14 +15,19 @@
 
 <template>
   <div class="navbar-z">
-    <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
+    <b-loading
+      :is-full-page="false"
+      :active.sync="pageLoading"
+      :can-cancel="false"
+    ></b-loading>
     <section>
       <div class="block">
         <b-sidebar
           type="is-white"
           fullheight="true"
           can-cancel="false"
-          open="true">
+          open="true"
+        >
           <div class="hero is-info is-bold navbar-text navbar-shadow">
             <!-- <div class="block"> -->
             <!--   <img -->
@@ -35,27 +40,93 @@
           <div class="p-1">
             <b-menu>
               <b-menu-list label="General">
-                <b-menu-item icon="home" label="Home" tag="router-link" to="/"></b-menu-item>
-                <b-menu-item icon="information-outline" label="My flat" tag="router-link" :to="{ name: 'My Flat' }"></b-menu-item>
-                <b-menu-item icon="information-outline" label="About FlatTrack" tag="router-link" :to="{ name: 'About FlatTrack' }"></b-menu-item>
+                <b-menu-item
+                  icon="home"
+                  label="Home"
+                  tag="router-link"
+                  to="/"
+                ></b-menu-item>
+                <b-menu-item
+                  icon="information-outline"
+                  label="My flat"
+                  tag="router-link"
+                  :to="{ name: 'My Flat' }"
+                ></b-menu-item>
+                <b-menu-item
+                  icon="information-outline"
+                  label="About FlatTrack"
+                  tag="router-link"
+                  :to="{ name: 'About FlatTrack' }"
+                ></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Apps">
-                <b-menu-item icon="format-list-checks" label="Shopping list" tag="router-link" :to="{ name: 'Shopping list' }"></b-menu-item>
-                <b-menu-item icon="account-group" label="Flatmates" tag="router-link" :to="{ name: 'My Flatmates' }"></b-menu-item>
-                <b-menu-item icon="apps" label="Apps" tag="router-link" :to="{ name: 'Apps' }"></b-menu-item>
+                <b-menu-item
+                  icon="format-list-checks"
+                  label="Shopping list"
+                  tag="router-link"
+                  :to="{ name: 'Shopping list' }"
+                ></b-menu-item>
+                <b-menu-item
+                  icon="account-group"
+                  label="Flatmates"
+                  tag="router-link"
+                  :to="{ name: 'My Flatmates' }"
+                ></b-menu-item>
+                <b-menu-item
+                  icon="apps"
+                  label="Apps"
+                  tag="router-link"
+                  :to="{ name: 'Apps' }"
+                ></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Admin" v-if="canUserAccountAdmin">
-                <b-menu-item icon="account-group" label="Flatmates" tag="router-link" :to="{ name: 'Admin accounts' }"></b-menu-item>
-                <b-menu-item icon="settings" label="Admin apps" tag="router-link" :to="{ name: 'Admin home' }"></b-menu-item>
+                <b-menu-item
+                  icon="account-group"
+                  label="Flatmates"
+                  tag="router-link"
+                  :to="{ name: 'Admin accounts' }"
+                ></b-menu-item>
+                <b-menu-item
+                  icon="settings"
+                  label="Admin apps"
+                  tag="router-link"
+                  :to="{ name: 'Admin home' }"
+                ></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Help">
-                <b-menu-item icon="open-in-new" label="FlatTrack help" tag="a" target="_blank" href="https://flattrack.io/help" disabled></b-menu-item>
-                <b-menu-item icon="phone" label="Contact admin" tag="router-link" :to="{ name: 'My Flatmates', query: { 'group': 'admin' }}"></b-menu-item>
+                <b-menu-item
+                  icon="open-in-new"
+                  label="FlatTrack help"
+                  tag="a"
+                  target="_blank"
+                  href="https://flattrack.io/help"
+                  disabled
+                ></b-menu-item>
+                <b-menu-item
+                  icon="phone"
+                  label="Contact admin"
+                  tag="router-link"
+                  :to="{ name: 'My Flatmates', query: { group: 'admin' } }"
+                ></b-menu-item>
               </b-menu-list>
               <b-menu-list label="Account">
-                <b-menu-item icon="account-circle" label="Profile" tag="router-link" :to="{ name: 'Account Profile' }"></b-menu-item>
-                <b-menu-item icon="account" label="My Account" tag="router-link" :to="{ name: 'Account' }"></b-menu-item>
-                <b-menu-item icon="exit-to-app" label="Sign out" @click="signOut"></b-menu-item>
+                <b-menu-item
+                  icon="account-circle"
+                  label="Profile"
+                  tag="router-link"
+                  :to="{ name: 'Account Profile' }"
+                ></b-menu-item>
+                <b-menu-item
+                  icon="account"
+                  label="My Account"
+                  tag="router-link"
+                  :to="{ name: 'Account' }"
+                ></b-menu-item>
+                <b-menu-item
+                  icon="exit-to-app"
+                  label="Sign out"
+                  @click="signOut"
+                ></b-menu-item>
               </b-menu-list>
             </b-menu>
           </div>
@@ -67,11 +138,10 @@
 
 <script>
 import common from '@/common/common'
-import flatInfo from '@/requests/authenticated/flatInfo'
 import cani from '@/requests/authenticated/can-i'
 
 export default {
-  name: 'navbar',
+  name: 'nav-bar',
   data () {
     return {
       isActive: true,
@@ -90,7 +160,7 @@ export default {
     }
   },
   async beforeMount () {
-    cani.GetCanIgroup('admin').then(resp => {
+    cani.GetCanIgroup('admin').then((resp) => {
       this.canUserAccountAdmin = resp.data.data
       this.pageLoading = false
     })
@@ -100,34 +170,34 @@ export default {
 
 <style>
 .navbar-z {
-    z-index: 100;
+  z-index: 100;
 }
 
 .p-1 {
-    padding-left: 1em!important;
-    padding-bottom: 1em!important;
-    padding-right: 1em!important;
+  padding-left: 1em !important;
+  padding-bottom: 1em !important;
+  padding-right: 1em !important;
 }
 
-  .p-1 .menu {
-    margin-top: 23px;
+.p-1 .menu {
+  margin-top: 23px;
 }
 
 .navbar-text {
-    text-align: center;
-    padding: 15px;
+  text-align: center;
+  padding: 15px;
 }
 
 .navbar-text .title {
-    color: white;
+  color: white;
 }
 
 .align-bottom {
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 40px;
-    background-color: #496c8a40;
-    position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  background-color: #496c8a40;
+  position: absolute;
 }
 </style>
