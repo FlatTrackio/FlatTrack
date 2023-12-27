@@ -17,11 +17,22 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
-            <ul>
-              <li><router-link :to="{ name: 'Shopping list' }">Shopping list</router-link></li>
-              <li class="is-active"><router-link :to="{ name: 'Manage shopping tags' }">Shopping tags</router-link></li>
-            </ul>
+        <nav
+          class="breadcrumb is-medium has-arrow-separator"
+          aria-label="breadcrumbs"
+        >
+          <ul>
+            <li>
+              <router-link :to="{ name: 'Shopping list' }"
+                >Shopping list</router-link
+              >
+            </li>
+            <li class="is-active">
+              <router-link :to="{ name: 'Manage shopping tags' }"
+                >Shopping tags</router-link
+              >
+            </li>
+          </ul>
         </nav>
         <h1 class="title is-1">Shopping tags</h1>
         <p class="subtitle is-3">Manage tags used in your lists</p>
@@ -35,7 +46,8 @@
               type="search"
               expanded
               v-model="tagSearch"
-              ref="search">
+              ref="search"
+            >
             </b-input>
             <p class="control">
               <b-select
@@ -43,32 +55,38 @@
                 icon="sort"
                 v-model="sortBy"
                 size="is-medium"
-                expanded>
+                expanded
+              >
                 <option value="recentlyAdded">Recently Added</option>
                 <option value="lastAdded">Last Added</option>
                 <option value="recentlyUpdated">Recently Updated</option>
                 <option value="lastUpdated">Last Updated</option>
                 <option value="alphabeticalDescending">A-z</option>
                 <option value="alphabeticalAscending">z-A</option>
-            </b-select>
-          </p>
+              </b-select>
+            </p>
           </b-field>
-          <b-loading :is-full-page="false" :active.sync="pageLoading" :can-cancel="false"></b-loading>
+          <b-loading
+            :is-full-page="false"
+            :active.sync="pageLoading"
+            :can-cancel="false"
+          ></b-loading>
           <section>
             <div class="card pointer-cursor-on-hover" @click="AddNewTag">
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
-                    <b-icon
-                      icon="tag"
-                      size="is-medium">
-                    </b-icon>
+                    <b-icon icon="tag" size="is-medium"> </b-icon>
                   </div>
                   <div class="media-content">
                     <p class="title is-4">Add a new tag</p>
                   </div>
                   <div class="media-right">
-                    <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                    <b-icon
+                      icon="chevron-right"
+                      size="is-medium"
+                      type="is-midgray"
+                    ></b-icon>
                   </div>
                 </div>
               </div>
@@ -77,13 +95,27 @@
         </div>
         <!-- TODO fix floating button -->
         <floatingAddButton :func="AddNewTag" v-if="displayFloatingAddButton" />
-        <br/>
+        <br />
         <div v-if="tagsFiltered.length > 0">
           <!-- Card per-tag -->
           <div v-for="(tag, index) in tagsFiltered" v-bind:key="tag">
-            <tagCard :tag="tag" :index="index" :tags="tags" @displayFloatingAddButton="(value) => { displayFloatingAddButton = value }" />
+            <tagCard
+              :tag="tag"
+              :index="index"
+              :tags="tags"
+              @displayFloatingAddButton="
+                (value) => {
+                  displayFloatingAddButton = value;
+                }
+              "
+              @tags="
+                (t) => {
+                  tags = t;
+                }
+              "
+            />
           </div>
-          <br/>
+          <br />
           <p>{{ tagsFiltered.length }} tag(s)</p>
         </div>
         <div v-else>
@@ -91,12 +123,28 @@
             <div class="card-content card-content-list">
               <div class="media">
                 <div class="media-left">
-                  <b-icon icon="tag" size="is-medium" type="is-midgray"></b-icon>
+                  <b-icon
+                    icon="tag"
+                    size="is-medium"
+                    type="is-midgray"
+                  ></b-icon>
                 </div>
                 <div class="media-content">
-                  <p class="subtitle is-4" v-if="tagSearch === '' && tags.length === 0 && !pageLoading">No tags added yet.</p>
-                  <p class="subtitle is-4" v-else-if="tagSearch !== '' && !pageLoading">No tags found.</p>
-                  <p class="subtitle is-4" v-else-if="pageLoading">Loading tags...</p>
+                  <p
+                    class="subtitle is-4"
+                    v-if="tagSearch === '' && tags.length === 0 && !pageLoading"
+                  >
+                    No tags added yet.
+                  </p>
+                  <p
+                    class="subtitle is-4"
+                    v-else-if="tagSearch !== '' && !pageLoading"
+                  >
+                    No tags found.
+                  </p>
+                  <p class="subtitle is-4" v-else-if="pageLoading">
+                    Loading tags...
+                  </p>
                 </div>
               </div>
             </div>
@@ -113,7 +161,7 @@ import shoppinglist from '@/requests/authenticated/shoppinglist'
 import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
-  name: 'Shopping Tags',
+  name: 'shopping-tags',
   data () {
     return {
       displayFloatingAddButton: true,
@@ -125,8 +173,10 @@ export default {
     }
   },
   components: {
-    floatingAddButton: () => import('@/components/common/floating-add-button.vue'),
-    tagCard: () => import('@/components/authenticated/shopping-list-tag-card.vue')
+    floatingAddButton: () =>
+      import('@/components/common/floating-add-button.vue'),
+    tagCard: () =>
+      import('@/components/authenticated/shopping-list-tag-card.vue')
   },
   computed: {
     tagsFiltered () {
@@ -140,12 +190,17 @@ export default {
   },
   methods: {
     GetShoppingTags () {
-      shoppinglist.GetShoppingTags(this.sortBy).then(resp => {
-        this.tags = resp.data.list || []
-        this.pageLoading = false
-      }).catch(err => {
-        common.DisplayFailureToast(`Hmmm seems somethings gone wrong loading the shopping tags; ${err.response.data.metadata.response}`)
-      })
+      shoppinglist
+        .GetShoppingTags(this.sortBy)
+        .then((resp) => {
+          this.tags = resp.data.list || []
+          this.pageLoading = false
+        })
+        .catch((err) => {
+          common.DisplayFailureToast(
+            `Hmmm seems somethings gone wrong loading the shopping tags; ${err.response.data.metadata.response}`
+          )
+        })
     },
     AddNewTag () {
       this.displayFloatingAddButton = false
@@ -161,14 +216,19 @@ export default {
         },
         trapFocus: true,
         onConfirm: (value) => {
-          shoppinglist.PostShoppingTag(value).then(() => {
-            this.pageLoading = true
-            this.GetShoppingTags()
-            this.displayFloatingAddButton = true
-          }).catch(err => {
-            common.DisplayFailureToast(`Failed to create tag; ${err.response.data.metadata.response}`)
-            this.displayFloatingAddButton = true
-          })
+          shoppinglist
+            .PostShoppingTag(value)
+            .then(() => {
+              this.pageLoading = true
+              this.GetShoppingTags()
+              this.displayFloatingAddButton = true
+            })
+            .catch((err) => {
+              common.DisplayFailureToast(
+                `Failed to create tag; ${err.response.data.metadata.response}`
+              )
+              this.displayFloatingAddButton = true
+            })
         },
         onCancel: () => {
           this.displayFloatingAddButton = true
@@ -176,7 +236,6 @@ export default {
       })
     },
     TagDisplayState (tag) {
-      var vm = this
       return this.SearchTags(tag)
     },
     SearchTags (tag) {
@@ -208,6 +267,4 @@ export default {
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

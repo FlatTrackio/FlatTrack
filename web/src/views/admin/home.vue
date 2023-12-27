@@ -20,9 +20,12 @@
         <h1 class="title is-1">Admin apps</h1>
         <p class="subtitle is-4">Manage FlatTrack</p>
         <p></p>
-        <br>
-        <div v-for="app in apps" v-bind:key="app" >
-          <div class="card pointer-cursor-on-hover" @click="$router.push({ name: app.routeName })">
+        <br />
+        <div v-for="app in apps" v-bind:key="app">
+          <div
+            class="card pointer-cursor-on-hover"
+            @click="$router.push({ name: app.routeName })"
+          >
             <div class="card-content">
               <div class="media">
                 <div class="media-left">
@@ -33,12 +36,15 @@
                   <p class="subtitle is-5">{{ app.description }}</p>
                 </div>
                 <div class="media-right">
-                  <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+                  <b-icon
+                    icon="chevron-right"
+                    size="is-medium"
+                    type="is-midgray"
+                  ></b-icon>
                 </div>
               </div>
             </div>
-            <div class="content">
-            </div>
+            <div class="content"></div>
           </div>
           <br />
         </div>
@@ -49,7 +55,7 @@
 
 <script>
 export default {
-  name: 'Admin home',
+  name: 'admin-home',
   data () {
     return {
       apps: [
@@ -71,6 +77,4 @@ export default {
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

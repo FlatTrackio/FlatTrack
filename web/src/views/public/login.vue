@@ -94,89 +94,89 @@
 </template>
 
 <script>
-import { LoadingProgrammatic as Loading } from "buefy";
-import login from "@/requests/public/login";
-import common from "@/common/common";
+import { LoadingProgrammatic as Loading } from 'buefy'
+import login from '@/requests/public/login'
+import common from '@/common/common'
 
 export default {
-  name: "login",
-  data() {
+  name: 'login-page',
+  data () {
     return {
       redirect: this.$route.query.redirect || undefined,
       authToken: this.$route.query.authToken || undefined,
       message: common.GetLoginMessage() || undefined,
-      email: "",
-      password: "",
-    };
+      email: '',
+      password: ''
+    }
   },
   components: {
-    headerDisplay: () => import("@/components/common/header-display.vue"),
+    headerDisplay: () => import('@/components/common/header-display.vue')
   },
   methods: {
-    postLogin() {
+    postLogin () {
       const loadingComponent = Loading.open({
-        container: null,
-      });
-      setTimeout(() => loadingComponent.close(), 20 * 1000);
+        container: null
+      })
+      setTimeout(() => loadingComponent.close(), 20 * 1000)
       login
         .PostUserAuth(this.email, this.password)
         .then((resp) => {
-          common.SetAuthToken(resp.data.data);
+          common.SetAuthToken(resp.data.data)
           setTimeout(() => {
-            loadingComponent.close();
-            if (typeof this.redirect !== "undefined" && this.redirect) {
-              this.$router.push({ path: this.redirect });
-              return;
+            loadingComponent.close()
+            if (typeof this.redirect !== 'undefined' && this.redirect) {
+              this.$router.push({ path: this.redirect })
+              return
             }
-            window.location.href = "/";
-          }, 2 * 1000);
+            window.location.href = '/'
+          }, 2 * 1000)
         })
         .catch((err) => {
-          loadingComponent.close();
+          loadingComponent.close()
           common.DisplayFailureToast(
             err.response.data.metadata.response || err
-          );
-        });
+          )
+        })
     },
-    checkForLoginToken() {
-      var authToken = common.GetAuthToken();
+    checkForLoginToken () {
+      var authToken = common.GetAuthToken()
       if (
         !(
-          typeof authToken === "undefined" ||
+          typeof authToken === 'undefined' ||
           authToken === null ||
-          authToken === ""
+          authToken === ''
         )
       ) {
         login.GetUserAuth(false).then((res) => {
           // verify token via request or something
           const loadingComponent = Loading.open({
-            container: null,
-          });
+            container: null
+          })
           common.DisplaySuccessToast(
-            "You are still signed in, going to the home page..."
-          );
+            'You are still signed in, going to the home page...'
+          )
           setTimeout(() => {
-            loadingComponent.close();
+            loadingComponent.close()
 
             if (this.redirect !== null) {
-              this.$router.push({ path: this.redirect });
-              return;
+              this.$router.push({ path: this.redirect })
+              return
             }
-            this.$router.push({ name: "Home" });
-          }, 2 * 1000);
-        });
+            this.$router.push({ name: 'Home' })
+          }, 2 * 1000)
+        })
       }
-    },
-  },
-  mounted() {
-    if (typeof this.$route.query.authToken !== "undefined") {
-      common.SetAuthToken(this.$route.query.authToken);
-      this.$router.push({ name: "Home" });
-      return;
     }
-    this.checkForLoginToken();
   },
-};
+  mounted () {
+    if (typeof this.$route.query.authToken !== 'undefined') {
+      common.SetAuthToken(this.$route.query.authToken)
+      this.$router.push({ name: 'Home' })
+      return
+    }
+    this.checkForLoginToken()
+  }
+}
 </script>
 
 <style scoped></style>

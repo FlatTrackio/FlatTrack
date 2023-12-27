@@ -19,19 +19,38 @@
       <div class="card pointer-cursor-on-hover">
         <div class="card-content">
           <div class="media">
-            <div class="media-left" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
+            <div
+              class="media-left"
+              @click="
+                $router.push({
+                  name: 'View shopping list',
+                  params: { id: list.id },
+                })
+              "
+            >
               <b-icon
                 icon="cart-outline"
                 :type="list.completed === true ? 'is-success' : ''"
-                size="is-medium">
+                size="is-medium"
+              >
               </b-icon>
             </div>
-            <div class="media-content" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
+            <div
+              class="media-content"
+              @click="
+                $router.push({
+                  name: 'View shopping list',
+                  params: { id: list.id },
+                })
+              "
+            >
               <div class="display-items-on-the-same-line">
                 <p class="title is-4">{{ list.name }}</p>
               </div>
               <p class="subtitle is-6">
-                <span v-if="list.creationTimestamp == list.modificationTimestamp">
+                <span
+                  v-if="list.creationTimestamp == list.modificationTimestamp"
+                >
                   Created {{ TimestampToCalendar(list.creationTimestamp) }}
                 </span>
                 <span v-else>
@@ -46,36 +65,47 @@
                   icon-right="delete"
                   :loading="itemDeleting"
                   v-if="deviceIsMobile === false"
-                  @click="DeleteShoppingList(list.id)" />
+                  @click="DeleteShoppingList(list.id)"
+                />
               </b-tooltip>
-              <b-icon icon="chevron-right" size="is-medium" type="is-midgray"></b-icon>
+              <b-icon
+                icon="chevron-right"
+                size="is-medium"
+                type="is-midgray"
+              ></b-icon>
             </div>
           </div>
-          <div v-if="!mini" class="content" @click="$router.push({ name: 'View shopping list', params: { id: list.id } })">
+          <div
+            v-if="!mini"
+            class="content"
+            @click="
+              $router.push({
+                name: 'View shopping list',
+                params: { id: list.id },
+              })
+            "
+          >
             <div>
-              <b-tag
-                :type="list.completed ? 'is-info' : 'is-warning'">
-                {{ list.completed ? 'Completed' : 'Uncompleted' }}
+              <b-tag :type="list.completed ? 'is-info' : 'is-warning'">
+                {{ list.completed ? "Completed" : "Uncompleted" }}
               </b-tag>
             </div>
-            <br/>
+            <br />
             <span v-if="list.notes !== '' && typeof list.notes !== 'undefined'">
               <i>
                 {{ PreviewNotes(list.notes) }}
               </i>
-              <br/>
-              <br/>
+              <br />
+              <br />
             </span>
             <div v-if="typeof list.count !== 'undefined' && list.count > 0">
               {{ list.count }} item(s)
             </div>
-            <div v-else>
-              0 items
-            </div>
+            <div v-else>0 items</div>
           </div>
         </div>
       </div>
-      <br/>
+      <br />
     </section>
   </div>
 </template>
@@ -118,21 +148,34 @@ export default {
     DeleteShoppingList (id) {
       Dialog.confirm({
         title: 'Delete shopping list',
-        message: 'Are you sure that you wish to delete this shopping list?' + '<br/>' + 'This action cannot be undone.',
+        message:
+          'Are you sure that you wish to delete this shopping list?' +
+          '<br/>' +
+          'This action cannot be undone.',
         confirmText: 'Delete shopping list',
         type: 'is-danger',
         hasIcon: true,
         onConfirm: () => {
           this.deleteLoading = true
           window.clearInterval(this.intervalLoop)
-          shoppinglist.DeleteShoppingList(id).then(resp => {
-            this.lists.splice(this.index, 1)
-            common.DisplaySuccessToast('Deleted the shopping list')
-            shoppinglistCommon.DeleteShoppingListFromCache(id)
-          }).catch(err => {
-            this.deleteLoading = false
-            common.DisplayFailureToast('Failed to delete the shopping list' + '<br/>' + err.response.data.metadata.response)
-          })
+          shoppinglist
+            .DeleteShoppingList(id)
+            .then((resp) => {
+              let removedFromLists = this.lists
+              removedFromLists.splice(this.index, 1)
+              this.$emit('lists', removedFromLists)
+
+              common.DisplaySuccessToast('Deleted the shopping list')
+              shoppinglistCommon.DeleteShoppingListFromCache(id)
+            })
+            .catch((err) => {
+              this.deleteLoading = false
+              common.DisplayFailureToast(
+                'Failed to delete the shopping list' +
+                  '<br/>' +
+                  err.response.data.metadata.response
+              )
+            })
         }
       })
     },
@@ -140,18 +183,16 @@ export default {
       return common.TimestampToCalendar(timestamp)
     }
   },
-  async beforeMount () {
-  }
+  async beforeMount () {}
 }
 </script>
 
 <style>
 .display-items-on-the-same-line {
-    display: flex;
-
+  display: flex;
 }
 
 .display-items-on-the-same-line div {
-    margin-left: 10px;
+  margin-left: 10px;
 }
 </style>

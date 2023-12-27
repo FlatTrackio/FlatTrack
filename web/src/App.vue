@@ -19,7 +19,10 @@
       <topbar v-if="onMobile && !publicPages" />
       <navbar v-if="!onMobile && !publicPages && displayNavigationBar" />
     </div>
-    <div class="pad-bottom full-height main-view-container" :class="{ 'pad-left': !publicPages && !onMobile && displayNavigationBar }">
+    <div
+      class="pad-bottom full-height main-view-container"
+      :class="{ 'pad-left': !publicPages && !onMobile && displayNavigationBar }"
+    >
       <router-view class="main-view" />
     </div>
     <div>
@@ -29,8 +32,6 @@
 </template>
 
 <script>
-import Vue from 'vue'
-import Component from 'vue-class-component'
 import themes from '@/common/theme'
 import routerCommon from '@/router/common'
 
@@ -71,17 +72,16 @@ export default {
     }
   }
 }
-
 </script>
 
 <style lang="scss">
 @import "../node_modules/bulma/sass/utilities/_all";
 
-$material-icons-font-path: '../node_modules/material-icons/iconfont/';
+$material-icons-font-path: "../node_modules/material-icons/iconfont/";
 
-@import '../node_modules/material-icons/iconfont/material-icons.scss';
+@import "../node_modules/material-icons/iconfont/material-icons.scss";
 
-@import '../node_modules/@mdi/font/css/materialdesignicons.min.css';
+@import "../node_modules/@mdi/font/css/materialdesignicons.min.css";
 
 $midgray: #c9c9c9;
 $lightred: #b55c5c;
@@ -89,18 +89,54 @@ $primary: #00a7d6;
 $primary-invert: findColorInvert($primary);
 
 $colors: (
-    "white": ($white, $black),
-    "black": ($black, $white),
-    "light": ($light, $light-invert),
-    "midgray": ($midgray, #c9c9c9),
-    "dark": ($dark, $dark-invert),
-    "primary": ($primary, $primary-invert),
-    "info": ($info, $info-invert),
-    "success": ($success, $success-invert),
-    "warning": ($warning, $warning-invert),
-    "danger": ($danger, $danger-invert),
-    "lightred": ($lightred, #b55c5c),
-    "lightyellow": (#e2ab1f, #e2ab1f)
+  "white": (
+    $white,
+    $black,
+  ),
+  "black": (
+    $black,
+    $white,
+  ),
+  "light": (
+    $light,
+    $light-invert,
+  ),
+  "midgray": (
+    $midgray,
+    #c9c9c9,
+  ),
+  "dark": (
+    $dark,
+    $dark-invert,
+  ),
+  "primary": (
+    $primary,
+    $primary-invert,
+  ),
+  "info": (
+    $info,
+    $info-invert,
+  ),
+  "success": (
+    $success,
+    $success-invert,
+  ),
+  "warning": (
+    $warning,
+    $warning-invert,
+  ),
+  "danger": (
+    $danger,
+    $danger-invert,
+  ),
+  "lightred": (
+    $lightred,
+    #b55c5c,
+  ),
+  "lightyellow": (
+    #e2ab1f,
+    #e2ab1f,
+  ),
 );
 
 $link: hsl(217, 71%, 53%);
@@ -108,124 +144,126 @@ $link-invert: $black;
 $link-focus-border: $primary;
 $breadcrumb-item-color: $link;
 
-@import '../node_modules/bulma/bulma.sass';
-@import '../node_modules/buefy/src/scss/buefy.scss';
-
+@import "../node_modules/bulma/bulma.sass";
+@import "../node_modules/buefy/src/scss/buefy.scss";
 </style>
 
 <style>
 body {
-  font-family: BlinkMacSystemFont,-apple-system,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,Helvetica,Arial,sans-serif !important;
+  font-family: BlinkMacSystemFont, -apple-system, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, Helvetica, Arial,
+    sans-serif !important;
 }
 
 .darken a.is-disabled {
-    color: black;
+  color: black;
 }
 
 .card-margin {
-    margin-top: 10px;
-    margin-bottom: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 .pad-left {
-    margin-left: 260px;
+  margin-left: 260px;
 }
 
 .pad-top {
-    margin-top: 20px;
+  margin-top: 20px;
 }
 
 .pad-bottom {
-    margin-bottom: 100px;
+  margin-bottom: 100px;
 }
 
 .full-height {
-    height: 100%;
+  height: 100%;
 }
 
 html {
-    background-color: #fbfbfb;
+  background-color: #fbfbfb;
 }
 
 .pointer-cursor-on-hover {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .card {
-    user-select: none;
-    border: 1px dashed rgba(0, 0, 0, .0);
-    transition: box-shadow 0.4s, border 0.2s;
+  user-select: none;
+  border: 1px dashed rgba(0, 0, 0, 0);
+  transition: box-shadow 0.4s, border 0.2s;
 }
 
 .card:hover {
-    background-color: #fbfbfb;
-    transition: box-shadow 0.4s, background-color 0.3s, border 0.2s;
-    box-shadow: black 0 0px 45px -30px;
-    border: 1px solid darkgray;
+  background-color: #fbfbfb;
+  transition: box-shadow 0.4s, background-color 0.3s, border 0.2s;
+  box-shadow: black 0 0px 45px -30px;
+  border: 1px solid darkgray;
 }
 
 .card:active {
-    background-color: #f1f0f0;
-    transition: height 0.1s, width 0.1s, margin 0.1s, box-shadow 0.4s;
-    height: calc(100% - 8px);
-    border: 1px dashed #000000;
-    box-shadow: black 0 0px 66px -27px;
-    top: 1px;
+  background-color: #f1f0f0;
+  transition: height 0.1s, width 0.1s, margin 0.1s, box-shadow 0.4s;
+  height: calc(100% - 8px);
+  border: 1px dashed #000000;
+  box-shadow: black 0 0px 66px -27px;
+  top: 1px;
 }
 
-.hero-body, .section {
-    padding-top: 2rem;
-    padding-right: 1rem;
-    padding-bottom: 4rem;
-    padding-left: 1rem;
+.hero-body,
+.section {
+  padding-top: 2rem;
+  padding-right: 1rem;
+  padding-bottom: 4rem;
+  padding-left: 1rem;
 }
 
 .form-width {
-    width: 380px;
-    margin: auto;
+  width: 380px;
+  margin: auto;
 }
 
 .button {
-    box-shadow: #ffffff -1px -1px 4px 0px, #bababa 1px 1px 4px 0px;
+  box-shadow: #ffffff -1px -1px 4px 0px, #bababa 1px 1px 4px 0px;
 }
 
 .navbar-shadow {
-    box-shadow: 0px -9px 23px 4px #292929;
+  box-shadow: 0px -9px 23px 4px #292929;
 }
 
 .remove-shadow {
-    box-shadow: none;
+  box-shadow: none;
 }
 
 .notes-highlight {
-    background-color: #fff;
-    padding: 10px;
-    box-shadow: 0 0 30px -35px #000;
-    border-radius: 5px;
+  background-color: #fff;
+  padding: 10px;
+  box-shadow: 0 0 30px -35px #000;
+  border-radius: 5px;
 }
 
 *::-webkit-scrollbar {
-    width: 12px;
+  width: 12px;
 }
 *::-webkit-scrollbar-track {
-    background: white;
+  background: white;
 }
 *::-webkit-scrollbar-thumb {
-    background-color: #c3c3c3;
-    border-radius: 20px;
-    border: 3px solid white;
-    transition: background-color 0.3s, border 0.3s;
+  background-color: #c3c3c3;
+  border-radius: 20px;
+  border: 3px solid white;
+  transition: background-color 0.3s, border 0.3s;
 }
 *::-webkit-scrollbar-thumb:hover {
-    background-color: #b1b1b1;
-    border-radius: 20px;
-    border: 2px solid white;
-    transition: background-color 0.3s, border 0.3s;
+  background-color: #b1b1b1;
+  border-radius: 20px;
+  border: 2px solid white;
+  transition: background-color 0.3s, border 0.3s;
 }
 
-@media (max-width : 870px) {
-    .form-width {
-        width: calc(100% - 25px);
-    }
+@media (max-width: 870px) {
+  .form-width {
+    width: calc(100% - 25px);
+  }
 }
 </style>

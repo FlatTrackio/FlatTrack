@@ -73,40 +73,40 @@
 </template>
 
 <script>
-import theme from "@/common/theme";
+import theme from '@/common/theme'
 
 export default {
-  name: "Account home",
-  data() {
+  name: 'account-home',
+  data () {
     return {
       apps: [
         {
-          name: "Profile",
-          description: "Manage your general information",
-          icon: "account-circle",
-          routeName: "Account Profile",
+          name: 'Profile',
+          description: 'Manage your general information',
+          icon: 'account-circle',
+          routeName: 'Account Profile'
         },
         {
-          name: "Security",
-          description: "Manage your account security",
-          icon: "lock-question",
-          routeName: "Account Security",
+          name: 'Security',
+          description: 'Manage your account security',
+          icon: 'lock-question',
+          routeName: 'Account Security'
         },
         {
-          name: "Settings",
-          description: "Manage settings for this device",
-          icon: "account-cog",
-          routeName: "Account Settings",
-        },
-      ],
-    };
+          name: 'Settings',
+          description: 'Manage settings for this device',
+          icon: 'account-cog',
+          routeName: 'Account Settings'
+        }
+      ]
+    }
   },
   computed: {
-    CurrentTheme() {
-      return theme.GetTheme();
-    },
-  },
-};
+    CurrentTheme () {
+      return theme.GetTheme()
+    }
+  }
+}
 </script>
 
 <style scoped></style>

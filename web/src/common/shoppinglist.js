@@ -21,7 +21,7 @@
 function RestructureShoppingListToTags (responseList) {
   var currentTag = ''
   var list = []
-  responseList.forEach(item => {
+  responseList.forEach((item) => {
     if (currentTag !== item.tag) {
       currentTag = item.tag
       var newItem = {
@@ -35,7 +35,7 @@ function RestructureShoppingListToTags (responseList) {
     var currentListPosition = list.length - 1
     var currentSubListItems = list[currentListPosition].items
     list[currentListPosition].items = [...currentSubListItems, item]
-    list[currentListPosition].price += (item.price * item.quantity || 0)
+    list[currentListPosition].price += item.price * item.quantity || 0
   })
   return list
 }
@@ -49,7 +49,10 @@ function GetShoppingListFromCache (id) {
 
 // given an id writes a list to the cache
 function WriteShoppingListToCache (id, items) {
-  localStorage.setItem(`shoppinglist.list.${id}.items`, JSON.stringify(items || []))
+  localStorage.setItem(
+    `shoppinglist.list.${id}.items`,
+    JSON.stringify(items || [])
+  )
 }
 
 // DeleteShoppingListFromCache
@@ -61,12 +64,6 @@ function DeleteShoppingListFromCache (id, items) {
 // returns if the shopping list should auto refresh
 function GetShoppingListAutoRefresh () {
   return localStorage.getItem('shoppinglist.autorefresh')
-}
-
-// WriteShoppingListAutoRefresh
-// writes if the shopping list should auto refresh
-function WriteShoppingListAutoRefresh (autorefresh) {
-  return localStorage.setItem('shoppinglist.autorefresh', autorefresh)
 }
 
 // GetShoppingListSortBy
@@ -84,7 +81,9 @@ function WriteShoppingListSortBy (sortBy) {
 // GetShoppingListObtainedFilter
 // returns the shopping list obtained filter
 function GetShoppingListObtainedFilter (id) {
-  return Number(localStorage.getItem(`shoppinglist.list.${id}.obtainedFilter`)) || 0
+  return (
+    Number(localStorage.getItem(`shoppinglist.list.${id}.obtainedFilter`)) || 0
+  )
 }
 
 // WriteShoppingListObtainedFilter

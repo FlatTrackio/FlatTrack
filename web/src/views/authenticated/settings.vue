@@ -51,22 +51,22 @@
 </template>
 
 <script>
-import common from "@/common/common";
+import common from '@/common/common'
 
 export default {
-  name: "profile",
-  data() {
+  name: 'settings-home',
+  data () {
     return {
-      enableAnimations: common.GetEnableAnimations() !== "false",
-    };
+      enableAnimations: common.GetEnableAnimations() !== 'false'
+    }
   },
   watch: {
-    enableAnimations() {
-      common.WriteEnableAnimations(this.enableAnimations);
-      if (this.enableAnimations !== "false") {
-        common.Hooray();
+    enableAnimations () {
+      common.WriteEnableAnimations(this.enableAnimations)
+      if (this.enableAnimations !== 'false') {
+        common.Hooray()
       }
-    },
-  },
-};
+    }
+  }
+}
 </script>

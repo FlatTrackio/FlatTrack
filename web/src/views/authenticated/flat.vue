@@ -17,32 +17,51 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav class="breadcrumb is-medium has-arrow-separator" aria-label="breadcrumbs">
-            <ul>
-              <li><router-link :to="{ name: 'Home' }">Home</router-link></li>
-              <li class="is-active"><router-link :to="{ name: 'My Flat' }">My flat</router-link></li>
-            </ul>
+        <nav
+          class="breadcrumb is-medium has-arrow-separator"
+          aria-label="breadcrumbs"
+        >
+          <ul>
+            <li><router-link :to="{ name: 'Home' }">Home</router-link></li>
+            <li class="is-active">
+              <router-link :to="{ name: 'My Flat' }">My flat</router-link>
+            </li>
+          </ul>
         </nav>
-        <h1 v-if="hasInitialLoaded || name !== ''" class="title is-1">{{ name }}</h1>
-        <b-skeleton v-else size="is-medium" width="35%" :animated="true"></b-skeleton>
+        <h1 v-if="hasInitialLoaded || name !== ''" class="title is-1">
+          {{ name }}
+        </h1>
+        <b-skeleton
+          v-else
+          size="is-medium"
+          width="35%"
+          :animated="true"
+        ></b-skeleton>
         <p class="subtitle is-3">About your flat</p>
         <b-message type="is-primary" v-if="notes !== ''">
           <span v-for="line in notesSplit" v-bind:key="line">
             {{ line }}
-            <br/>
+            <br />
           </span>
         </b-message>
         <b-message type="is-warning" v-else>
           This section for describing such things as, but not limited to:
-          <br/>
-          <ul style="list-style-type: disc;">
+          <br />
+          <ul style="list-style-type: disc">
             <li>how the flat life is</li>
             <li>rules</li>
             <li>regulations</li>
             <li>culture</li>
           </ul>
         </b-message>
-        <b-button icon-left="pencil" v-if="canUserAccountAdmin === true" type="is-warning" @click="$router.push({ name: 'Admin settings' })" rounded>Edit message</b-button>
+        <b-button
+          icon-left="pencil"
+          v-if="canUserAccountAdmin === true"
+          type="is-warning"
+          @click="$router.push({ name: 'Admin settings' })"
+          rounded
+          >Edit message</b-button
+        >
       </section>
     </div>
   </div>
@@ -54,7 +73,7 @@ import cani from '@/requests/authenticated/can-i'
 import common from '@/common/common'
 
 export default {
-  name: 'flat',
+  name: 'flat-home',
   data () {
     return {
       name: '',
@@ -66,18 +85,21 @@ export default {
   },
   async beforeMount () {
     this.name = common.GetFlatnameFromCache() || this.name
-    flatInfo.GetFlatName().then(resp => {
-      if (this.name !== resp.data.spec) {
-        this.name = resp.data.spec
-        common.WriteFlatnameToCache(resp.data.spec)
-      }
-      return flatInfo.GetFlatNotes()
-    }).then(resp => {
-      this.notes = resp.data.spec.notes
-      this.notesSplit = this.notes.split('\n')
-      this.hasInitialLoaded = true
-    })
-    cani.GetCanIgroup('admin').then(resp => {
+    flatInfo
+      .GetFlatName()
+      .then((resp) => {
+        if (this.name !== resp.data.spec) {
+          this.name = resp.data.spec
+          common.WriteFlatnameToCache(resp.data.spec)
+        }
+        return flatInfo.GetFlatNotes()
+      })
+      .then((resp) => {
+        this.notes = resp.data.spec.notes
+        this.notesSplit = this.notes.split('\n')
+        this.hasInitialLoaded = true
+      })
+    cani.GetCanIgroup('admin').then((resp) => {
       this.canUserAccountAdmin = resp.data.data
     })
   }

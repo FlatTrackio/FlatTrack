@@ -16,7 +16,11 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { ToastProgrammatic as Toast, DialogProgrammatic as Dialog, LoadingProgrammatic as Loading } from 'buefy'
+import {
+  ToastProgrammatic as Toast,
+  DialogProgrammatic as Dialog,
+  LoadingProgrammatic as Loading
+} from 'buefy'
 import dayjs from 'dayjs'
 import dayjsCalendar from 'dayjs/plugin/calendar'
 import confetti from 'canvas-confetti'
@@ -82,6 +86,7 @@ function SignoutDialog () {
       setTimeout(() => {
         DeleteAuthToken()
         window.location.href = '/login'
+        loadingComponent.close()
       }, 1 * 1000)
     }
   })
@@ -90,7 +95,9 @@ function SignoutDialog () {
 // TimestampToCalendar
 // converts a unix timestamp to a human readable string
 function TimestampToCalendar (timestamp) {
-  return dayjs(timestamp * 1000).calendar(null, {}).toLowerCase()
+  return dayjs(timestamp * 1000)
+    .calendar(null, {})
+    .toLowerCase()
 }
 
 // DeviceIsMobile
@@ -170,13 +177,17 @@ function GetUserIDFromJWT () {
 // GetSetupMessage
 // returns a message to display on setup
 function GetSetupMessage () {
-  return document.head.querySelector('[name~=setupmessage][content]').content || ''
+  return (
+    document.head.querySelector('[name~=setupmessage][content]').content || ''
+  )
 }
 
 // GetLoginMessage
 // returns a message to display on login
 function GetLoginMessage () {
-  return document.head.querySelector('[name~=loginmessage][content]').content || ''
+  return (
+    document.head.querySelector('[name~=loginmessage][content]').content || ''
+  )
 }
 
 export default {

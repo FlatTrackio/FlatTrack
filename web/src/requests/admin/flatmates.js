@@ -37,7 +37,15 @@ function PostFlatmate (names, email, phoneNumber, birthday, groups, password) {
 
 // PatchFlatmate
 // patches a user account
-function PatchFlatmate (id, names, email, phoneNumber, birthday, groups, password) {
+function PatchFlatmate (
+  id,
+  names,
+  email,
+  phoneNumber,
+  birthday,
+  groups,
+  password
+) {
   return Request({
     url: `/api/admin/users/${id}`,
     method: 'PATCH',
@@ -54,7 +62,15 @@ function PatchFlatmate (id, names, email, phoneNumber, birthday, groups, passwor
 
 // PutFlatmate
 // updates a user account
-function PutFlatmate (id, names, email, phoneNumber, birthday, groups, password) {
+function PutFlatmate (
+  id,
+  names,
+  email,
+  phoneNumber,
+  birthday,
+  groups,
+  password
+) {
   return Request({
     url: `/api/admin/users/${id}`,
     method: 'PUT',
@@ -77,23 +93,6 @@ function PatchFlatmateDisabled (id, disabled) {
     method: 'PATCH',
     data: {
       disabled
-    }
-  })
-}
-
-// PatchFlatmate
-// updates a user account
-function UpdateFlatmate (id, names, email, phoneNumber, birthday, groups, password) {
-  return Request({
-    url: `/api/admin/users/${id}`,
-    method: 'PUT',
-    data: {
-      names,
-      email,
-      phoneNumber,
-      birthday,
-      groups,
-      password
     }
   })
 }

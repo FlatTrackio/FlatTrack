@@ -14,41 +14,39 @@
 -->
 
 <template>
-    <div>
-      <headerDisplay/>
-      <div class="container">
-        <section class="section">
-          <h1 class="title is-1">Connection error</h1>
-          <b-message
-            has-icon
-            type="is-warning">
+  <div>
+    <headerDisplay />
+    <div class="container">
+      <section class="section">
+        <h1 class="title is-1">Connection error</h1>
+        <b-message has-icon type="is-warning">
           <p class="subtitle is-4">
-            Hmmm... something appears to have gone wrong with your FlatTrack instance.
+            Hmmm... something appears to have gone wrong with your FlatTrack
+            instance.
             <br />
             <br />
             Please contact your system administrator.
             <br />
             <br />
           </p>
-          </b-message>
-            <b-button
-              type="is-white"
-              @click="Reload"
-              size="is-medium"
-              rounded
-              expanded>
-              Refresh
-            </b-button>
-        </section>
-      </div>
+        </b-message>
+        <b-button
+          type="is-white"
+          @click="Reload"
+          size="is-medium"
+          rounded
+          expanded
+        >
+          Refresh
+        </b-button>
+      </section>
     </div>
+  </div>
 </template>
 
 <script>
-import common from '@/common/common'
-
 export default {
-  name: 'login',
+  name: 'unavailable-page',
   components: {
     headerDisplay: () => import('@/components/common/header-display.vue')
   },
@@ -60,5 +58,4 @@ export default {
 }
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

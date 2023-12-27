@@ -15,16 +15,21 @@
 
 <template>
   <div id="topbar">
-    <b-navbar class="navbar-shadow gradient-blue" :fixed-top="ratherSmallerScreen !== true" type="is-info" transparent="false">
+    <b-navbar
+      class="navbar-shadow gradient-blue"
+      :fixed-top="ratherSmallerScreen !== true"
+      type="is-info"
+      transparent="false"
+    >
       <template slot="brand">
         <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
           <!-- <img -->
           <!--   src="" -->
           <!--   alt="FlatTrack logo" -->
           <!--   /> -->
-          <h1 class="title is-5" style="color: #fff;">
+          <h1 class="title is-5" style="color: #fff">
             FlatTrack
-            <span style="font-weight: normal;">
+            <span style="font-weight: normal">
               {{ flatName }}
             </span>
           </h1>
@@ -34,10 +39,18 @@
         <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
           Home
         </b-navbar-item>
-        <b-navbar-item href="https://flattrack.io/help" tag="a" target="_blank" v-if="false">
+        <b-navbar-item
+          href="https://flattrack.io/help"
+          tag="a"
+          target="_blank"
+          v-if="false"
+        >
           FlatTrack Help
         </b-navbar-item>
-        <b-navbar-item tag="router-link" :to="{ name: 'My Flatmates', query: { 'group': 'admin' }}">
+        <b-navbar-item
+          tag="router-link"
+          :to="{ name: 'My Flatmates', query: { group: 'admin' } }"
+        >
           Contact admin
         </b-navbar-item>
         <b-navbar-item tag="router-link" :to="{ name: 'My Flat' }">
@@ -46,9 +59,7 @@
         <b-navbar-item tag="router-link" :to="{ name: 'About FlatTrack' }">
           About FlatTrack
         </b-navbar-item>
-        <b-navbar-item @click="signOut">
-          Sign out
-        </b-navbar-item>
+        <b-navbar-item @click="signOut"> Sign out </b-navbar-item>
       </template>
     </b-navbar>
   </div>
@@ -57,10 +68,9 @@
 <script>
 import common from '@/common/common'
 import flatInfo from '@/requests/authenticated/flatInfo'
-import { DialogProgrammatic as Dialog, LoadingProgrammatic as Loading } from 'buefy'
 
 export default {
-  name: 'topbar',
+  name: 'top-bar',
   data () {
     return {
       flatName: 'My Flat',
@@ -72,7 +82,7 @@ export default {
       common.SignoutDialog()
     },
     GetFlatInfo () {
-      flatInfo.GetFlatName().then(resp => {
+      flatInfo.GetFlatName().then((resp) => {
         this.flatName = resp.data.spec
       })
     }
@@ -88,10 +98,10 @@ export default {
 
 <style>
 #topbar {
-    z-index: 100;
+  z-index: 100;
 }
 
 .gradient-blue {
-    background-image: linear-gradient(141deg, #04a6d7, #209cee 71%, #3287f5);
+  background-image: linear-gradient(141deg, #04a6d7, #209cee 71%, #3287f5);
 }
 </style>
