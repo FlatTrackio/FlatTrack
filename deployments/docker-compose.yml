@@ -1,3 +1,4 @@
+---
 # IMPORTANT NOTE:
 #   - this docker-compose set up is not ready for production
 #     it is recommended to add an SSL/TLS to the set up, so the connection is secure.

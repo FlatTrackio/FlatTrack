@@ -34,7 +34,6 @@ type Manager struct {
 func NewManager() *Manager {
 	envFile := common.GetAppEnvFile()
 	_ = godotenv.Load(envFile)
-	log.Println(common.GetMigrationsPath(), common.GetAppDistFolder())
 	db, err := database.Open()
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)

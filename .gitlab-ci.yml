@@ -1,6 +1,7 @@
+---
 stages:
   - conform
-  - lint
+  - codequality
   - test
   - build
   - post-build
@@ -10,36 +11,23 @@ include:
   template: Dependency-Scanning.gitlab-ci.yml
 
 variables:
-  ARCH_DEFAULT: "amd64"
-  ARCHES: amd64 arm64 arm
   APP_BUILD_VERSION: 0.0.0
   APP_BUILD_MODE: development
   POSTGRES_DB: flattrack
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
-  MINIO_ROOT_USER: minioadmin
-  MINIO_ROOT_PASSWORD: minioadmin
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.21.5-alpine3.18@sha256:d8b99943fb0587b79658af03d4d4e8b57769b21dcf08a8401352a9f2a7228754
   EXTRA_REGISTRIES: docker.io
   IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.18@sha256:32427bc0620132b2d9e79e405a1b27944d992501a20417a7f407427cc4c2b672
-  IMAGE_ALPINE: docker.io/alpine:3.18@sha256:eece025e432126ce23f223450a0326fbebde39cdf496a85d8c016293fc851978
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.21.5-alpine3.18@sha256:9390a996e9f957842f07dff1e9661776702575dd888084e72d86eaa382ad56e3
   IMAGE_PYTHON: docker.io/python:3.8-buster@sha256:04c3f641c2254c229fd2f704c5199ff4bea57d26c1c29008ae3a4afddde98709
   IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.53.3@sha256:1e0e2867b387bf68762427db499a963e43582b06819992db205fc31daa75ceea
   COSIGN_YES: "true"
-
-.container-registry-login-ko: &container-registry-login-ko |
-  ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
-  ko login "docker.io" -u "${DOCKERHUB_USERNAME}" -p "${DOCKERHUB_PASSWORD}"
 
 .container-registry-login-crane: &container-registry-login-crane |
   mkdir -p $(getent passwd $(id -u) | cut -d ':' -f6)/.docker
   cat << EOF > $(getent passwd $(id -u) | cut -d ':' -f6)/.docker/config.json
   {
     "auths": {
-      "$CI_REGISTRY": {
-        "username": "$CI_REGISTRY_USER",
-        "password": "$CI_REGISTRY_PASSWORD"
-      },
       "https://index.docker.io/v1/": {
         "auth": "$DOCKERHUB_AUTH"
       }
@@ -47,25 +35,16 @@ variables:
   }
   EOF
 
-.image-build-taggable-name: &image-build-taggable-name |
-  set -x
+.image-set-build-env: &image-set-build-env |
   echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
   export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
-  export APP_BUILD_DATE=$(date --date="$(echo ${CI_COMMIT_TIMESTAMP//[T]/ } | sed 's/+.*//g')" '+%Y.%m.%d.%H%M')
-  if [[ -z "$CI_COMMIT_TAG" ]]; then
-    PRINTABLE_COMMIT_HASH="-$APP_BUILD_HASH"
-  fi
-  if [[ ! "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]] && [[ -z "$CI_COMMIT_TAG" ]]; then
-    BRANCH_NAME="-$CI_COMMIT_BRANCH"
-  fi
-  PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
-
-.image-pre-build-release-version: &image-pre-build-release-version |
+  export APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
   export APP_BUILD_VERSION=0.0.0
-  export APP_BUILD_MODE=production
-  export IMAGE_DESTINATIONS="latest$BRANCH_NAME"
+  export APP_BUILD_MODE=staging
+  export IMAGE_DESTINATIONS="latest"
   if [[ ! -z "$CI_COMMIT_TAG" ]]; then
     export APP_BUILD_VERSION="$CI_COMMIT_TAG"
+    export APP_BUILD_MODE=production
     export IMAGE_DESTINATIONS="$APP_BUILD_VERSION"
   fi
   export VITE_APP_AppBuildVersion="$APP_BUILD_VERSION"
@@ -73,20 +52,13 @@ variables:
   export VITE_APP_AppBuildHash="$APP_BUILD_HASH"
   export VITE_APP_AppBuildMode="$APP_BUILD_MODE"
 
-.zip-prepare: &zip-prepare |
-  export RELEASE_FOLDER_NAME="flattrack$BRANCH_NAME$PRINTABLE_COMMIT_HASH"
-  mkdir -p $RELEASE_FOLDER_NAME
-
 .setup-testing-repo: &setup-testing-repo |
   echo 'https://dl-cdn.alpinelinux.org/alpine/edge/testing' | tee -a /etc/apk/repositories
 
-build-backend-smoketest:
-  stage: build
-  image: $IMAGE_GOLANG_ALPINE
-  script:
-    - go build -o /dev/null .
-
 build-container:
+  only:
+    - main
+    - tags
   stage: build
   image:
     name: $IMAGE_GOLANG_ALPINE
@@ -98,25 +70,17 @@ build-container:
   variables:
     KO_DOCKER_REPO: "$CI_REGISTRY_IMAGE"
   before_script:
+    - set -x
     - *setup-testing-repo
-    - apk add --no-cache curl ko cosign
-    - *container-registry-login-ko
-    - *image-build-taggable-name
-    - *image-pre-build-release-version
+    - apk add --no-cache curl cosign ko git
+    - export KO_DOCKER_REPO="$(echo ${KO_DOCKER_REPO} | tr '[:upper:]' '[:lower:]')"
+    - ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
+    - *image-set-build-env
   script:
     - |
       mkdir -p ./kodata/{web/dist,}
       cp -r ./web/dist ./kodata/web
-    - |
-      IMAGE="$(ko publish \
-      --jobs 100 \
-      --bare \
-      --tags "${IMAGE_DESTINATIONS}" \
-      .)"
-    - cosign sign --recursive -y "$IMAGE"
-    - cosign download sbom $IMAGE > /tmp/sbom-spdx.json
-    - cosign attest -y --recursive --predicate /tmp/sbom-spdx.json $IMAGE
-    # TODO use common script - ${CI_PROJECT_DIR}/hack/build-container.sh production
+    - ./hack/publish.sh --sign
   needs:
     - build-frontend
 
@@ -128,8 +92,7 @@ copy-container-image-to-dockerhub:
   before_script:
     - go install github.com/google/go-containerregistry/cmd/crane@latest
     - *container-registry-login-crane
-    - *image-build-taggable-name
-    - *image-pre-build-release-version
+    - *image-set-build-env
   script:
     - |
       [ -z "${EXTRA_REGISTRIES}" ] && exit 0
@@ -141,13 +104,12 @@ copy-container-image-to-dockerhub:
 
 build-helm-chart:
   stage: build
-  image: $IMAGE_ALPINE
+  image: $IMAGE_GOLANG_ALPINE
   variables:
     HELM_LINK: https://get.helm.sh/helm-v3.4.0-linux-amd64.tar.gz
     HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
   allow_failure: true
   before_script:
-    - *image-build-taggable-name
     - apk add curl
     - curl -L -o helm.tar.gz $HELM_LINK
     - |
@@ -169,9 +131,7 @@ build-frontend:
   retry: 2
   image: $IMAGE_NODE_ALPINE
   before_script:
-    - *image-build-taggable-name
-    - *image-pre-build-release-version
-    - *zip-prepare
+    - *image-set-build-env
     - cd web
     - apk add --no-cache make g++
     - npm i
@@ -189,81 +149,6 @@ build-frontend:
     paths:
       - web/dist
       - flattrack*/
-
-build-zip-backend:
-  stage: build
-  retry: 2
-  image: $IMAGE_GOLANG_ALPINE
-  before_script:
-    - *image-build-taggable-name
-    - *image-pre-build-release-version
-    - *zip-prepare
-  script:
-    - |
-      for ARCH in $ARCHES; do
-        echo "Building backend for $ARCH";
-        PRINTABLE_ARCH="-$ARCH"
-        if [ $ARCH = $ARCH_DEFAULT ]; then
-          PRINTABLE_ARCH=
-        fi
-        CGO_ENABLED=0 GOOS=linux GOARCH="$ARCH" go build \
-          -a \
-          -installsuffix cgo \
-          -ldflags "-extldflags '-static' -s -w \
-          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildVersion=$APP_BUILD_VERSION \
-          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildHash=$APP_BUILD_HASH \
-          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildDate=$APP_BUILD_DATE \
-          -X gitlab.com/flattrack/flattrack/pkg/common.AppBuildMode=$APP_BUILD_MODE" \
-          -o $RELEASE_FOLDER_NAME/flattrack$PRINTABLE_ARCH \
-          main.go
-      done
-  only:
-    - tags
-    - main
-  artifacts:
-    expire_in: 1 day
-    paths:
-      - flattrack*
-
-build-zip-copy-extras:
-  stage: build
-  retry: 2
-  image: $IMAGE_ALPINE
-  before_script:
-    - *image-build-taggable-name
-    - *image-pre-build-release-version
-    - *zip-prepare
-  script:
-    - cp -r kodata/migrations $RELEASE_FOLDER_NAME/migrations
-    - cp -r templates $RELEASE_FOLDER_NAME/templates
-    - cp example.env $RELEASE_FOLDER_NAME
-  only:
-    - tags
-    - main
-  artifacts:
-    expire_in: 1 day
-    paths:
-      - flattrack*
-
-build-zip:
-  stage: post-build
-  retry: 2
-  image: $IMAGE_ALPINE
-  needs:
-    - build-zip-backend
-    - build-zip-copy-extras
-  before_script:
-    - *image-build-taggable-name
-    - *image-pre-build-release-version
-    - *zip-prepare
-  script:
-    - tar cvf $RELEASE_FOLDER_NAME.tar.gz $RELEASE_FOLDER_NAME
-  only:
-    - tags
-    - main
-  artifacts:
-    paths:
-      - flattrack*.tar.gz
 
 test_backend_e2e:
   stage: test
@@ -301,59 +186,65 @@ test_backend_e2e:
     - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
     - pkill flattrack || true
 
-spell_check:
-  stage: lint
-  image: $IMAGE_GOLANG_ALPINE
-  allow_failure: true
-  before_script:
-    - go install github.com/client9/misspell/cmd/misspell@latest
-  script:
-    - misspell -error pkg cmd docs kodata/migrations pubic template k8s-manifests README*
-
-govet:
-  stage: lint
-  image: $IMAGE_GOLANG_ALPINE
-  script:
-    - go vet -v ./...
-
-gofmt:
-  stage: lint
-  image: $IMAGE_GOLANG_ALPINE
-  script:
-    - find . -name "*.go" | grep -E -v vendor | xargs gofmt -s -l -d -w -s
-
-goimports:
-  stage: lint
+build-backend-smoketest:
+  stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   before_script:
     - apk add --no-cache git
-    - go install golang.org/x/tools/cmd/goimports@latest
   script:
-    - find . -type f -name '*.go' -not -path './vendor/*' | xargs -I{} goimports -w {}
-    - |
-      if git diff --name-only --diff-filter=ACMRT | grep -E '(.*).go$'; then
-        echo "error: changes detected, run 'find . -type f -name '*.go' -not -path './vendor/*' | xargs -I{} goimports -w {}'"
-        exit 1
-      fi
+    - ./hack/verify-build-smoketest.sh
+
+spellcheck:
+  stage: codequality
+  image: $IMAGE_GOLANG_ALPINE
+  allow_failure: true
+  before_script:
+    - apk add --no-cache git
+  script:
+    - ./hack/verify-spellcheck.sh
+
+govet:
+  stage: codequality
+  image: $IMAGE_GOLANG_ALPINE
+  before_script:
+    - apk add --no-cache git
+  script:
+    - ./hack/verify-govet.sh
+
+gofmt:
+  stage: codequality
+  image: $IMAGE_GOLANG_ALPINE
+  before_script:
+    - apk add --no-cache git
+  script:
+    - ./hack/verify-gofmt.sh
+
+goimports:
+  stage: codequality
+  image: $IMAGE_GOLANG_ALPINE
+  before_script:
+    - apk add --no-cache git
+  script:
+    - ./hack/verify-goimports.sh
 
 golangci-lint:
-  stage: lint
+  stage: codequality
   image:
     name: $IMAGE_GOLANGCI_LINT
     entrypoint: [""]
   script:
-    - golangci-lint run
+    - ./hack/verify-golangci-lint.sh
 
 govulncheck:
-  stage: lint
+  stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   before_script:
-    - go install golang.org/x/vuln/cmd/govulncheck@latest
+    - apk add --no-cache git
   script:
-    - govulncheck ./...
+    - ./hack/verify-govulncheck.sh
 
-lint_frontend:
-  stage: lint
+lint-frontend:
+  stage: codequality
   image: $IMAGE_NODE_ALPINE
   allow_failure: true
   before_script:
@@ -363,22 +254,19 @@ lint_frontend:
   script:
     - npm run lint
 
-lint_backend:
-  stage: lint
+lint-backend:
+  stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   allow_failure: true
   before_script:
-    - apk add git gcc
-    - go install golang.org/x/lint/golint@latest
+    - apk add --no-cache git
   script:
-    - echo -e "GOLINT\n"
-    - golint -set_exit_status ./...
-    - echo -e "GOFMT\n"
-    - gofmt -d .
+    - ./hack/verify-lint-backend.sh
 
-lint_helm_chart:
-  stage: lint
-  image: $IMAGE_ALPINE
+lint-helm-chart:
+  stage: codequality
+  image: $IMAGE_GOLANG_ALPINE
+  # TODO use helm on alpine edge with community repo
   variables:
     HELM_LINK: https://get.helm.sh/helm-v3.4.0-linux-amd64.tar.gz
     HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
@@ -390,18 +278,18 @@ lint_helm_chart:
         if [ ! $(sha256sum helm.tar.gz) = $HELM_HASH ]; then
           exit 1
         fi
-    - cat helm.tar.gz | tar --directory /usr/local/bin --extract -xz --strip-components 1 linux-amd64/helm
+    - |
+      cat helm.tar.gz \
+        | tar --directory /usr/local/bin --extract \
+          -xz --strip-components 1 linux-amd64/helm
   script:
     - helm lint deployments/flattrack
 
 pages:
   image: $IMAGE_PYTHON
   stage: pages
-  before_script:
-    - pip install mkdocs-material material-plausible-plugin
   script:
-    - mkdocs build
-    - mv site public
+    ./hack/build-docs.sh
   artifacts:
     paths:
       - public
@@ -410,11 +298,9 @@ pages:
 
 pages-smoketest:
   image: $IMAGE_PYTHON
-  stage: lint
-  before_script:
-    - pip install mkdocs-material material-plausible-plugin
+  stage: codequality
   script:
-    - mkdocs build
+    ./hack/build-docs.sh
   except:
     - main
 

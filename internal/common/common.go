@@ -129,11 +129,10 @@ func GetSMTPPort() (output string) {
 // GetMigrationsPath ...
 // return the path of the database migrations to use
 func GetMigrationsPath() (output string) {
-	envSet := GetEnvOrDefault("APP_DB_MIGRATIONS_PATH", "")
-	if envSet != "" {
+	if envSet := GetEnvOrDefault("APP_DB_MIGRATIONS_PATH", ""); envSet != "" {
 		return envSet
 	}
-	if AppBuildMode == "production" {
+	if AppBuildMode == "production" || AppBuildMode == "staging" {
 		return AppDbMigrationsPath
 	}
 	pwd, _ := os.Getwd()
@@ -266,11 +265,10 @@ func SetFirstOrSecond(first string, second string) string {
 // GetAppDistFolder ...
 // return the path to the folder containing the frontend assets
 func GetAppDistFolder() string {
-	envSet := GetEnvOrDefault("APP_DIST_FOLDER", "")
-	if envSet != "" {
+	if envSet := GetEnvOrDefault("APP_DIST_FOLDER", ""); envSet != "" {
 		return envSet
 	}
-	if AppBuildMode == "production" {
+	if AppBuildMode == "production" || AppBuildMode == "staging" {
 		return AppAssetsFolder
 	}
 	pwd, _ := os.Getwd()
