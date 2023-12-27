@@ -93,7 +93,7 @@ func (m *Manager) GetAllGroups() (groups []types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where deletionTimestamp = 0`
 	rows, err := m.db.Query(sqlStatement)
 	if err != nil {
-		return groups, err
+		return []types.GroupSpec{}, err
 	}
 	if err != nil {
 		return []types.GroupSpec{}, err
@@ -120,7 +120,7 @@ func (m *Manager) GetGroupByName(name string) (group types.GroupSpec, err error)
 	sqlStatement := `select * from groups where name = $1`
 	rows, err := m.db.Query(sqlStatement, name)
 	if err != nil {
-		return group, err
+		return types.GroupSpec{}, err
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -141,7 +141,7 @@ func (m *Manager) GetGroupByID(id string) (group types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where id = $1`
 	rows, err := m.db.Query(sqlStatement, id)
 	if err != nil {
-		return group, err
+		return types.GroupSpec{}, err
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -221,7 +221,7 @@ func (m *Manager) GetDefaultGroups() (groups []types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where defaultGroup = true`
 	rows, err := m.db.Query(sqlStatement)
 	if err != nil {
-		return groups, err
+		return []types.GroupSpec{}, err
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -232,7 +232,7 @@ func (m *Manager) GetDefaultGroups() (groups []types.GroupSpec, err error) {
 		var group types.GroupSpec
 		group, err = groupObjectFromRows(rows)
 		if err != nil {
-			return groups, err
+			return []types.GroupSpec{}, err
 		}
 		groups = append(groups, group)
 	}
@@ -241,34 +241,32 @@ func (m *Manager) GetDefaultGroups() (groups []types.GroupSpec, err error) {
 
 // UpdateUserGroups ...
 // manages a user account's groups according to what's provided
-func (m *Manager) UpdateUserGroups(userID string, groups []string) (complete bool, err error) {
+func (m *Manager) UpdateUserGroups(userID string, groups []string) (err error) {
 	allGroups, err := m.GetAllGroups()
 	if err != nil {
-		return false, err
+		return err
 	}
 	for _, group := range allGroups {
 		inGroup, err := m.CheckUserInGroup(userID, group.Name)
 		if err != nil {
-			return false, err
+			return err
 		}
 		shouldBeInGroup := common.StringInStringSlice(group.Name, groups)
 		groupFull, err := m.GetGroupByName(group.Name)
 		if err != nil {
-			return false, err
+			return err
 		}
 		if inGroup && !shouldBeInGroup {
-			err = m.RemoveUserFromGroup(userID, groupFull.ID)
-			if err != nil {
-				return false, err
+			if err := m.RemoveUserFromGroup(userID, groupFull.ID); err != nil {
+				return err
 			}
 		} else if !inGroup && shouldBeInGroup {
-			err = m.AddUserToGroup(userID, groupFull.ID)
-			if err != nil {
-				return false, err
+			if err := m.AddUserToGroup(userID, groupFull.ID); err != nil {
+				return err
 			}
 		} else {
 			continue
 		}
 	}
-	return true, nil
+	return nil
 }

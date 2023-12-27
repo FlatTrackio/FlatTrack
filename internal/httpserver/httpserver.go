@@ -70,9 +70,8 @@ func NewHTTPServer(
 		PathPrefix("/api").
 		Headers("Accept", "application/json").
 		Subrouter()
+	apiRouter.NotFoundHandler = h.HTTP404()
 	h.registerAPIHandlers(apiRouter)
-
-	// TODO add better unknown endpoint wildcard
 
 	passthrough := &frontendOptions{
 		SetupMessage: common.GetAppSetupMessage(),

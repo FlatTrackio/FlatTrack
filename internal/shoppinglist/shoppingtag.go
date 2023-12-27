@@ -43,7 +43,7 @@ func (m *Manager) ShoppingTag() *ShoppingTagManager {
 // given a shopping tag, return it's validity
 func (m *ShoppingTagManager) ValidateShoppingTag(tag types.ShoppingTag) (valid bool, err error) {
 	if tag.Name != "" && len(tag.Name) == 0 || len(tag.Name) >= 30 {
-		return false, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
+		return false, ErrInvalidShoppingItemTag
 	}
 	// TODO check if one already exists with that name
 	return true, err
@@ -126,10 +126,16 @@ func (m *ShoppingTagManager) GetShoppingListTag(listID string, tag string) (tagI
 func (m *ShoppingTagManager) UpdateShoppingListTag(listID string, tag string, tagUpdate string) (tagNew string, err error) {
 	tagInDB, err := m.GetShoppingListTag(listID, tag)
 	if tagInDB == "" || err != nil {
-		return "", fmt.Errorf("Unable to find tag to update")
+		return "", ErrFailedToFindShoppingTagToUpdate
 	}
-	if tagUpdate != "" && len(tagUpdate) == 0 || len(tagUpdate) > 30 {
-		return "", fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")
+	valid, err := m.ValidateShoppingTag(types.ShoppingTag{
+		Name: tagUpdate,
+	})
+	if err != nil {
+		return "", err
+	}
+	if !valid {
+		return "", ErrInvalidShoppingItemTag
 	}
 	sqlStatement := `update shopping_item set tag = $3 where listId = $1 and tag = $2 returning tag`
 	rows, err := m.db.Query(sqlStatement, listID, tag, tagUpdate)
@@ -220,7 +226,14 @@ func (m *ShoppingTagManager) GetAllShoppingTags(options types.ShoppingTagOptions
 func (m *ShoppingTagManager) UpdateShoppingTag(id string, tag types.ShoppingTag) (tagUpdated types.ShoppingTag, err error) {
 	tagInDB, err := m.GetShoppingTag(id)
 	if tagInDB.ID == "" || err != nil {
-		return types.ShoppingTag{}, fmt.Errorf("Unable to find tag to update")
+		return types.ShoppingTag{}, ErrFailedToFindShoppingTagToUpdate
+	}
+	valid, err := m.ValidateShoppingTag(tag)
+	if err != nil {
+		return types.ShoppingTag{}, err
+	}
+	if !valid {
+		return types.ShoppingTag{}, ErrInvalidShoppingItemTag
 	}
 	if tag.Name != "" && len(tag.Name) == 0 || len(tag.Name) > 30 {
 		return types.ShoppingTag{}, fmt.Errorf("Unable to use the provided tag, as it is either empty or too long or too short")

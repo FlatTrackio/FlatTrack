@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -46,26 +47,33 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		},
 	}
 
+	var db *sql.DB
+	var usersManager *users.Manager
+	var migrationsManager *migrations.Manager
+	var settingsManager *settings.Manager
+	var systemManager *system.Manager
+	var registrationManager *registration.Manager
 	// _ = godotenv.Load(".env")
-	db, err := database.Open()
-	if err != nil {
-		log.Fatalln(err)
-		return
-	}
-
-	users := users.NewManager(db)
-	migrations := migrations.NewManager(db)
-	settings := settings.NewManager(db)
-	system := system.NewManager(db)
-	registration := registration.NewManager(users, system, settings)
 
 	ginkgo.BeforeSuite(func() {
-		err = migrations.Reset()
+		dbc, err := database.Open()
+		if err != nil {
+			log.Fatalln(err)
+			return
+		}
+		db = dbc
+
+		usersManager = users.NewManager(db)
+		migrationsManager = migrations.NewManager(db)
+		settingsManager = settings.NewManager(db)
+		systemManager = system.NewManager(db)
+		registrationManager = registration.NewManager(usersManager, systemManager, settingsManager)
+		err = migrationsManager.Reset()
 		gomega.Expect(err).To(gomega.BeNil(), "failed to reset migrations")
-		err = migrations.Migrate()
+		err = migrationsManager.Migrate()
 		gomega.Expect(err).To(gomega.BeNil(), "failed to migrate")
 
-		registered, jwt, err := registration.Register(regstrationForm)
+		registered, jwt, err := registrationManager.Register(regstrationForm)
 
 		gomega.Expect(err).To(gomega.BeNil(), "failed to register the instance")
 		gomega.Expect(jwt).ToNot(gomega.Equal(""), "failed to register the instance")
@@ -75,16 +83,16 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	})
 
 	ginkgo.AfterSuite(func() {
-		err = migrations.Reset()
+		err := migrationsManager.Reset()
 		gomega.Expect(err).To(gomega.BeNil(), "failed to reset migrations")
-		err = migrations.Migrate()
+		err = migrationsManager.Migrate()
 		gomega.Expect(err).To(gomega.BeNil(), "failed to migrate")
 	})
 
 	ginkgo.It("should reach root of API endpoint", func() {
 		ginkgo.By("fetching from API's root")
 		apiEndpoint := apiServerAPIprefix + ""
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Metadata.URL).To(gomega.Equal(fmt.Sprintf("/%v", apiEndpoint)))
@@ -93,7 +101,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	ginkgo.It("should be initialized", func() {
 		ginkgo.By("querying the API")
 		apiEndpoint := apiServerAPIprefix + "/system/initialized"
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)).To(gomega.Equal(true), "instance should be initialized")
@@ -102,7 +110,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	ginkgo.It("should have a flat name", func() {
 		ginkgo.By("querying the API")
 		apiEndpoint := apiServerAPIprefix + "/system/flatName"
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec.(string)).ToNot(gomega.Equal(""), "flatName should not be empty")
@@ -113,7 +121,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	ginkgo.It("should have at least one user account", func() {
 		ginkgo.By("querying the API")
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		response := httpserver.GetHTTPresponseBodyContents(resp)
@@ -123,7 +131,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	ginkgo.It("should return properties of a single user account", func() {
 		ginkgo.By("listing all user accounts")
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		allUserAccountsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -135,7 +143,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing all user accounts")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + firstUserAccount.ID
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -217,7 +225,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("creating a user account")
 			apiEndpoint := apiServerAPIprefix + "/admin/users"
-			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+			resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 			response := httpserver.GetHTTPresponseBodyContents(resp)
@@ -234,7 +242,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("deleting the account")
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-			resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		}
@@ -345,7 +353,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("creating a user account")
 			apiEndpoint := apiServerAPIprefix + "/admin/users"
-			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+			resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), apiServerAPIprefix+" should return error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api have return code of http.StatusBadRequest")
 			userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -399,7 +407,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("creating a user account")
 			apiEndpoint := apiServerAPIprefix + "/admin/users"
-			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+			resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 			userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -415,7 +423,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("creating fetching user accounts")
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 			userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -433,7 +441,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("deleting the account")
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-			resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		}
@@ -453,7 +461,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		for _, id := range ids {
 			ginkgo.By("creating fetching user accounts")
 			apiEndpoint := apiServerAPIprefix + "/admin/users/" + id
-			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
 		}
@@ -471,7 +479,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a user account")
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		response := httpserver.GetHTTPresponseBodyContents(resp)
@@ -518,13 +526,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
 			accountUpdateBytes, err := json.Marshal(accountUpdate)
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
-			resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountUpdateBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPut, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountUpdateBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 			ginkgo.By("creating fetching the user account")
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 			userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -543,7 +551,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -560,7 +568,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a user account")
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -576,7 +584,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("list user account confirms")
 		apiEndpoint = apiServerAPIprefix + "/admin/useraccountconfirms"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v?userID=%v", apiServer, apiEndpoint, userAccount.ID), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v?userID=%v", apiServer, apiEndpoint, userAccount.ID), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		confirmsListResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -588,7 +596,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("fetching the user account confirm")
 		apiEndpoint = apiServerAPIprefix + "/admin/useraccountconfirms/" + confirmsList[0].ID
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		confirmResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -603,7 +611,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("fetching the public route for user account confirm to check for it to be valid")
 		apiEndpoint = apiServerAPIprefix + "/user/confirm/" + confirmsList[0].ID
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		confirmValid := httpserver.GetHTTPresponseBodyContents(resp).Data
@@ -616,19 +624,19 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		}
 		confirmUserAccountJSON, err := json.Marshal(confirmUserAccount)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), confirmUserAccountJSON, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), confirmUserAccountJSON, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), fmt.Sprintf("api have return code of http.StatusOK; %v", httpserver.GetHTTPresponseBodyContents(resp).Metadata.Response))
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), fmt.Sprintf("api have return code of http.StatusOK; %v", httpserver.GetHTTPresponseBodyContents(resp).Metadata.Response))
 
 		ginkgo.By("fetching the user account confirm to check for it to be unavailable")
 		apiEndpoint = apiServerAPIprefix + "/admin/useraccountconfirms/" + confirmsList[0].ID
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api have return code of http.StatusOK")
 
 		ginkgo.By("fetching the user account to check if it's been registered")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -641,7 +649,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -660,7 +668,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a user account")
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -676,7 +684,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("logging in")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
@@ -684,7 +692,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("checking validation of the token")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginValid := httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
@@ -692,13 +700,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		ginkgo.By("checking validation of the token")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
 		userAccountLoginValid = httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
@@ -719,7 +727,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a user account")
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -735,7 +743,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("logging in")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
@@ -743,7 +751,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("checking validation of the token")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginValid := httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
@@ -756,7 +764,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		}
 		profilePatchData, err := json.Marshal(profilePatch)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
-		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, "")
+		resp, err = httpRequestWithHeader(http.MethodPatch, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		response := httpserver.GetHTTPresponseBodyContents(resp)
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
@@ -769,7 +777,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("checking validation of the token")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
 		userAccountLoginValid = httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
@@ -777,13 +785,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		ginkgo.By("checking validation of the token")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
 		userAccountLoginValid = httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
@@ -804,7 +812,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a user account")
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -820,7 +828,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("logging in")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
@@ -828,19 +836,19 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("resetting auth")
 		apiEndpoint = apiServerAPIprefix + "/user/auth/reset"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		ginkgo.By("checking validation of the token")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusUnauthorized), "api have return code of http.StatusUnauthorized")
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -858,7 +866,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("fetching the user account confirm to check for it to be unavailable")
 		for _, confirmID := range confirmsIDs {
 			apiEndpoint := apiServerAPIprefix + "/admin/useraccountconfirms/" + confirmID
-			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
 		}
@@ -877,7 +885,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("fetching the user account confirm to check for it to be unavailable")
 		for _, confirmID := range confirmsIDs {
 			apiEndpoint := apiServerAPIprefix + "/user/confirm/" + confirmID
-			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api should have return code of http.StatusNotFound")
 		}
@@ -893,14 +901,14 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		userAccountLoginData, err := json.Marshal(userAccountLogin)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), userAccountLoginData, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), userAccountLoginData, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
 		gomega.Expect(userAccountLoginResponseData).ToNot(gomega.Equal(""), "JWT in response must not be empty")
 
 		ginkgo.By("checking validation of the token")
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), userAccountLoginData, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), userAccountLoginData, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginValid := httpserver.GetHTTPresponseBodyContents(resp).Data
@@ -921,7 +929,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a user account")
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -938,7 +946,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("getting a JWT")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
@@ -946,7 +954,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("checking the profile")
 		apiEndpoint = apiServerAPIprefix + "/user/profile"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		profileResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -972,7 +980,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		}
 		profilePatchData, err := json.Marshal(profilePatch)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
-		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodPatch, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		profileResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -988,13 +996,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("getting a new JWT using new credentials")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -1002,7 +1010,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	ginkgo.It("should list all user accounts", func() {
 		ginkgo.By("listing user accounts and checking the count")
 		apiEndpoint := apiServerAPIprefix + "/users"
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -1027,7 +1035,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a user account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1043,7 +1051,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing user accounts and checking the count")
 		apiEndpoint = apiServerAPIprefix + "/users"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
@@ -1057,13 +1065,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		ginkgo.By("listing user accounts and checking the count")
 		apiEndpoint = apiServerAPIprefix + "/users"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
@@ -1090,7 +1098,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1104,7 +1112,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("fetch the user account by the account's id")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1123,7 +1131,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -1142,7 +1150,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1165,7 +1173,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint = apiServerAPIprefix + "/admin/users"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1179,7 +1187,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("logging in as the 2nd account")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
@@ -1192,7 +1200,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		}
 		profilePatchData, err := json.Marshal(profilePatch)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
-		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodPatch, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api have return code of http.StatusBadRequest")
 		profileResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1204,13 +1212,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the account1")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount1.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		ginkgo.By("deleting the account2")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount2.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -1218,7 +1226,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	ginkgo.It("should disallow own account from being deleted", func() {
 		ginkgo.By("fetching user profile")
 		apiEndpoint := apiServerAPIprefix + "/user/profile"
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1229,7 +1237,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusForbidden), "api have return code of http.StatusOK")
 	})
@@ -1248,7 +1256,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1262,7 +1270,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("logging in as the account")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
@@ -1275,7 +1283,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		}
 		profilePatchData, err := json.Marshal(profilePatch)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
-		resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodPatch, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		response := httpserver.GetHTTPresponseBodyContents(resp)
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
@@ -1288,7 +1296,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -1307,7 +1315,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		response := httpserver.GetHTTPresponseBodyContents(resp)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
@@ -1322,7 +1330,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("logging in as the account")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
@@ -1334,7 +1342,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		profilePatch.Groups = []string{"flatmember", "admin"}
 		profilePatchData, err := json.Marshal(profilePatch)
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
-		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodPut, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), profilePatchData, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		response = httpserver.GetHTTPresponseBodyContents(resp)
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
@@ -1347,7 +1355,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -1365,7 +1373,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("fetch the user account by the account's id")
 		for _, id := range ids {
 			apiEndpoint := apiServerAPIprefix + "/admin/users/" + id
-			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
 		}
@@ -1373,7 +1381,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 	ginkgo.It("should list groups and include the default groups", func() {
 		apiEndpoint := apiServerAPIprefix + "/groups"
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		groupsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -1386,7 +1394,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		for _, groupItem := range groups {
 			apiEndpoint := apiServerAPIprefix + "/groups/" + groupItem.ID
-			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 			groupResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1415,7 +1423,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		ginkgo.By("fetch the user account by the account's id")
 		for _, id := range ids {
 			apiEndpoint := apiServerAPIprefix + "/groups/" + id
-			resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api have return code of http.StatusNotFound")
 		}
@@ -1439,7 +1447,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("fetching all groups")
 		apiEndpoint := apiServerAPIprefix + "/groups"
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		groupsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -1454,7 +1462,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("creating a user account")
 			apiEndpoint := apiServerAPIprefix + "/admin/users"
-			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+			resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 			userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1468,7 +1476,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("creating fetching user accounts")
 			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 			userAccountResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1479,7 +1487,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("logging in as the new user account")
 			apiEndpoint = apiServerAPIprefix + "/user/auth"
-			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 			jwt := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
@@ -1488,7 +1496,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			defer func() {
 				ginkgo.By("deleting the account")
 				apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-				resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+				resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 				gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 				gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 			}()
@@ -1502,7 +1510,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 				}
 				ginkgo.By("ensuring user account is or is not in a group")
 				apiEndpoint := apiServerAPIprefix + "/user/can-i/group/" + groupItem.Name
-				resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, jwt)
+				resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, jwt)
 				gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 				gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 				canIgroupResponse := httpserver.GetHTTPresponseBodyContents(resp).Data.(bool)
@@ -1525,7 +1533,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1536,13 +1544,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating the account again")
 		apiEndpoint = apiServerAPIprefix + "/admin/users"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api have return code of http.StatusOK")
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -1556,7 +1564,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1570,7 +1578,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing all shopping lists")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -1583,7 +1591,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -1597,7 +1605,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1627,7 +1635,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("creating a shopping list")
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-			resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListPatchBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPatch, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListPatchBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			shoppingListPatchedResponse := httpserver.GetHTTPresponseBodyContents(resp)
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
@@ -1644,7 +1652,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -1658,7 +1666,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1690,7 +1698,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("creating a shopping list")
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-			resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListUpdateBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPut, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListUpdateBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			shoppingListUpdatedResponse := httpserver.GetHTTPresponseBodyContents(resp)
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
@@ -1708,7 +1716,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -1737,7 +1745,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 			ginkgo.By("creating a shopping list")
 			apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api have return code of http.StatusOK")
 			shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1759,7 +1767,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1773,7 +1781,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -1821,7 +1829,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
@@ -1834,7 +1842,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
@@ -1847,7 +1855,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -1890,7 +1898,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists/" + "xxxxxxxx" + "/items"
-			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusNotFound), "api have return code of http.StatusBadRequest")
 			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1911,7 +1919,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -1925,7 +1933,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -1974,14 +1982,14 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api must have return code of http.StatusBadRequest")
 		}
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
 		shoppingListItemsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
@@ -1994,7 +2002,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -2008,7 +2016,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2022,7 +2030,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2046,7 +2054,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
@@ -2081,7 +2089,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items/" + shoppingItem.ID
-			resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPut, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			shoppingItemResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemBytes, err := json.Marshal(shoppingItemResponse)
@@ -2101,13 +2109,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list item")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items/" + shoppingItem.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -2121,7 +2129,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2135,7 +2143,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2159,7 +2167,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
@@ -2192,7 +2200,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items/" + shoppingItem.ID
-			resp, err = httpRequestWithHeader("PATCH", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPatch, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			shoppingItemResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemBytes, err := json.Marshal(shoppingItemResponse)
@@ -2210,7 +2218,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -2224,7 +2232,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2238,7 +2246,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2290,7 +2298,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
@@ -2303,7 +2311,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("fetching the shopping list tags")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/tags"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListTags := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2316,7 +2324,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -2330,7 +2338,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating the first shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2344,7 +2352,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2396,7 +2404,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
@@ -2416,7 +2424,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse = httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2430,7 +2438,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2482,7 +2490,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.ID + "/items"
-			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
@@ -2495,7 +2503,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("fetching the shopping list tags")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/tags"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListTags := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2517,7 +2525,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("fetching the shopping list tags")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.ID + "/tags"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListTags = httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2540,13 +2548,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		ginkgo.By("deleting the 2nd shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingList2Created.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -2560,7 +2568,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2574,7 +2582,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2599,7 +2607,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListItemBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListItemBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
@@ -2617,13 +2625,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/tags/Fruits%20and%20veges"
-		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemTagBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPut, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingItemTagBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		ginkgo.By("fetching the shopping list tags")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/tags"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListTags := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2642,7 +2650,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -2666,7 +2674,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/tags"
-			resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingTagBytes, "")
+			resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingTagBytes, "")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			shoppingTagResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2678,7 +2686,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		}
 
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/tags"
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingTagsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2706,13 +2714,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags/" + tags[0].ID
-		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingTagUpdateBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPut, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingTagUpdateBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		// get tag
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/tags/" + tags[0].ID
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "http request shouldn't have error")
 		shoppingTagUpdateGetResponse := httpserver.GetHTTPresponseBodyContents(resp)
 		shoppingTagBytes, err = json.Marshal(shoppingTagUpdateGetResponse.Spec)
@@ -2725,7 +2733,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		for _, tag := range tags {
 			apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/tags/" + tag.ID
-			resp, err := httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err := httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		}
@@ -2741,7 +2749,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2755,7 +2763,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing shopping list items")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2807,7 +2815,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-			resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
@@ -2828,7 +2836,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a templated shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		templatedShoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2839,7 +2847,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing items of the templated shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListTemplatedCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse = httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2863,13 +2871,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
 
 		ginkgo.By("deleting the template shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListTemplatedCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
 	})
@@ -2883,7 +2891,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a shopping list")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2908,7 +2916,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListItemBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListItemBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
 		shoppingListItemsBytes, err := json.Marshal(shoppingItemResponse)
@@ -2928,7 +2936,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a templated shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		templatedShoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -2941,7 +2949,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("listing items of the templated shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListTemplatedCreated.ID + "/items"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
@@ -2956,20 +2964,20 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("deleting the shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
 
 		ginkgo.By("deleting the template shopping list")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListTemplatedCreated.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
 	})
 
 	ginkgo.It("should require authorization for protected routes", func() {
 		apiEndpoint := apiServer + "/" + apiServerAPIprefix + "/user/profile"
-		req, err := http.NewRequest("GET", apiEndpoint, nil)
+		req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
 		req.Header.Add("Accept", "application/json")
 		gomega.Expect(err).To(gomega.BeNil(), "http request should not have an error")
 		client := &http.Client{}
@@ -2994,7 +3002,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("creating a user account with no admin access")
 		apiEndpoint := apiServerAPIprefix + "/admin/users"
-		resp, err := httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
 		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
@@ -3010,7 +3018,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("logging in")
 		apiEndpoint = apiServerAPIprefix + "/user/auth"
-		resp, err = httpRequestWithHeader("POST", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		userAccountLoginResponseData := httpserver.GetHTTPresponseBodyContents(resp).Data.(string)
@@ -3018,13 +3026,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 
 		ginkgo.By("trying to use an admin route")
 		apiEndpoint = apiServerAPIprefix + "/admin/users"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, userAccountLoginResponseData)
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, userAccountLoginResponseData)
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusForbidden), "api have return code of http.StatusForbidden")
 
 		ginkgo.By("deleting the account")
 		apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
-		resp, err = httpRequestWithHeader("DELETE", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -3032,7 +3040,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 	ginkgo.It("should allow configuration of shopping list notes", func() {
 		ginkgo.By("fetching the notes")
 		apiEndpoint := apiServerAPIprefix + "/apps/shoppinglist/settings/notes"
-		resp, err := httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err := httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(""), "notes should be empty")
@@ -3045,13 +3053,13 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint = apiServerAPIprefix + "/admin/settings/shoppingListNotes"
-		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), notesUpdateBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPut, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), notesUpdateBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 
 		ginkgo.By("fetching the notes")
 		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/settings/notes"
-		resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 		gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(notesUpdate.Notes), "notes should be empty")
@@ -3064,7 +3072,7 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 		apiEndpoint = apiServerAPIprefix + "/admin/settings/shoppingListNotes"
-		resp, err = httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), notesUpdateBytes, "")
+		resp, err = httpRequestWithHeader(http.MethodPut, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), notesUpdateBytes, "")
 		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 	})
@@ -3082,14 +3090,14 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
 
 			apiEndpoint := apiServerAPIprefix + "/admin/settings/shoppingListNotes"
-			resp, err := httpRequestWithHeader("PUT", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), notesUpdateBytes, "")
+			resp, err := httpRequestWithHeader(http.MethodPut, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), notesUpdateBytes, "")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusBadRequest), "api have return code of http.StatusOK")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
-			gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(""), "notes should be empty")
+			gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec).To(gomega.BeNil(), "notes should be empty")
 
 			ginkgo.By("fetching the notes")
 			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/settings/notes"
-			resp, err = httpRequestWithHeader("GET", fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
 			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
 			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
 			gomega.Expect(httpserver.GetHTTPresponseBodyContents(resp).Spec.(string)).To(gomega.Equal(""), "notes should be empty")
