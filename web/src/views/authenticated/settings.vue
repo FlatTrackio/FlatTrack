@@ -57,13 +57,13 @@ export default {
   name: "profile",
   data() {
     return {
-      enableAnimations: common.GetEnableAnimations() === "true",
+      enableAnimations: common.GetEnableAnimations() !== "false",
     };
   },
   watch: {
     enableAnimations() {
       common.WriteEnableAnimations(this.enableAnimations);
-      if (this.enableAnimations === "true") {
+      if (this.enableAnimations !== "false") {
         common.Hooray();
       }
     },

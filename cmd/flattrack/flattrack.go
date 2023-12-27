@@ -33,84 +33,9 @@
 package flattrack
 
 import (
-	"log"
-
-	"github.com/joho/godotenv"
-
-	"gitlab.com/flattrack/flattrack/pkg/common"
-	"gitlab.com/flattrack/flattrack/pkg/database"
-	"gitlab.com/flattrack/flattrack/pkg/files"
-	"gitlab.com/flattrack/flattrack/pkg/metrics"
-	"gitlab.com/flattrack/flattrack/pkg/migrations"
-	"gitlab.com/flattrack/flattrack/pkg/routes"
-	"gitlab.com/flattrack/flattrack/pkg/system"
+	"gitlab.com/flattrack/flattrack/internal/flattrack"
 )
 
-// Start ...
-// initialise the app
-func Start() {
-	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
-
-	envFile := common.GetAppEnvFile()
-	_ = godotenv.Load(envFile)
-
-	log.Println(common.GetMigrationsPath(), common.GetAppDistFolder())
-
-	dbUsername := common.GetDBusername()
-	dbPassword := common.GetDBpassword()
-	dbHostname := common.GetDBhost()
-	dbPort := common.GetDBport()
-	dbDatabase := common.GetDBdatabase()
-	dbSSLmode := common.GetDBsslMode()
-	db, err := database.Open(dbUsername, dbPassword, dbHostname, dbPort, dbDatabase, dbSSLmode)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	err = migrations.Migrate(db)
-	if err != nil {
-		log.Println("migrations:", err)
-		return
-	}
-
-	minioHost := common.GetAppMinioHost()
-	minioAccessKey := common.GetAppMinioAccessKey()
-	minioSecretKey := common.GetAppMinioSecretKey()
-	minioUseSSL := common.GetAppMinioUseSSL()
-	minioBucket := common.GetAppMinioBucket()
-	fileAccess, err := files.Open(minioHost, minioAccessKey, minioSecretKey, minioBucket, minioUseSSL == "true")
-	if err != nil {
-		log.Println("Minio error:", err)
-		return
-	}
-
-	systemManager := &system.Manager{DB: db}
-	systemUUID, err := systemManager.GetInstanceUUID()
-	if err != nil {
-		log.Println("Error getting system UUID:", err)
-	}
-	fileAccess.Prefix = systemUUID
-
-	router := routes.Router{
-		DB:         db,
-		FileAccess: fileAccess,
-	}
-
-	go func() {
-		if router.FileAccess.Client == nil {
-			log.Println("Error: no Minio client available, will not serve files")
-			return
-		}
-		if router.FileAccess.BucketName == "" {
-			log.Println("Error: no Minio bucket name was provided")
-			return
-		}
-		err = router.FileAccess.Init()
-		if err != nil {
-			log.Println("Error initialising Minio bucket:", err)
-		}
-	}()
-	go metrics.Handle()
-	go routes.HealthHandler(db)
-	router.Handle()
+func Run() {
+	flattrack.NewManager().Init().Run()
 }

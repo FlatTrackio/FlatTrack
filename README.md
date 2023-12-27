@@ -1,16 +1,9 @@
 <a href="http://www.gnu.org/licenses/agpl-3.0.html"> <img src="https://img.shields.io/badge/License-AGPL--3.0-blue.svg" alt="License: AGPL-3.0" /> </a>
-
 <a href="https://gitlab.com/flattrack/flattrack/releases"> <img src="https://img.shields.io/badge/version-0.16.1-brightgreen.svg" alt="Version 0.16.1" /> </a>
-
 <a href='https://ind.ie/ethical-design'> <img style='margin-left: auto; margin-right: auto;' alt='We practice Ethical Design' src='https://img.shields.io/badge/Ethical_Design-_▲_❤_-blue.svg'> </a>
-
 <a href='https://goreportcard.com/report/github.com/flattrackio/flattrack'> <img style='margin-left: auto; margin-right: auto;' alt='Go Report' src='https://goreportcard.com/badge/github.com/flattrackio/flattrack'> </a>
-
 <a target=_blank href="https://artifacthub.io/packages/search?repo=flattrack"><img alt="ArtifactHub" src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/flattrack"></a>
-
 <a target=_blank href="https://liberapay.com/CalebWoodbine/donate"><img alt="Donate using Liberapay" src="https://liberapay.com/assets/widgets/donate.svg"></a>
-
-<br/>
 
 # FlatTrack
 
