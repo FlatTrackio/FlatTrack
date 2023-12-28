@@ -317,3 +317,9 @@ type JWTclaim struct {
 	AuthNonce string `json:"authNonce"`
 	jwt.StandardClaims
 }
+
+type PostgresEvent struct {
+	Table  string
+	Action string
+	Data   map[string]any
+}

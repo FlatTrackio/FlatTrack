@@ -427,9 +427,13 @@ func (m *Manager) ValidateJWTauthToken(r *http.Request) (valid bool, tokenClaims
 	if err != nil {
 		return false, &types.JWTclaim{}, ErrFailedToFindSystemAuthSecret
 	}
+	authTokenFromFormValue := r.FormValue("authToken")
 	tokenHeaderJWT, err := GetAuthTokenFromHeader(r)
-	if err != nil {
+	if err != nil && authTokenFromFormValue == "" {
 		return false, &types.JWTclaim{}, err
+	}
+	if authTokenFromFormValue != "" {
+		tokenHeaderJWT = authTokenFromFormValue
 	}
 	claims := &types.JWTclaim{}
 	token, err := jwt.ParseWithClaims(tokenHeaderJWT, claims, func(token *jwt.Token) (interface{}, error) {

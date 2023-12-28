@@ -12,6 +12,7 @@ import (
 
 	"github.com/NYTimes/gziphandler"
 	"github.com/gorilla/mux"
+	"github.com/lib/pq"
 	"github.com/rs/cors"
 
 	"gitlab.com/flattrack/flattrack/internal/common"
@@ -28,8 +29,9 @@ import (
 )
 
 type HTTPServer struct {
-	server *http.Server
-	db     *sql.DB
+	server   *http.Server
+	listener *pq.Listener
+	db       *sql.DB
 
 	users        *users.Manager
 	shoppinglist *shoppinglist.Manager
@@ -45,6 +47,7 @@ type HTTPServer struct {
 
 func NewHTTPServer(
 	db *sql.DB,
+	listener *pq.Listener,
 	users *users.Manager,
 	shoppinglist *shoppinglist.Manager,
 	emails *emails.Manager,
@@ -56,24 +59,25 @@ func NewHTTPServer(
 	system *system.Manager,
 	scheduling *scheduling.Manager,
 ) (h *HTTPServer) {
-	h = &HTTPServer{}
-	h.db = db
-	h.users = users
-	h.shoppinglist = shoppinglist
-	h.emails = emails
-	h.groups = groups
-	h.health = health
-	h.migrations = migrations
-	h.registration = registration
-	h.settings = settings
-	h.system = system
-	h.scheduling = scheduling
+	h = &HTTPServer{
+		db:           db,
+		listener:     listener,
+		users:        users,
+		shoppinglist: shoppinglist,
+		emails:       emails,
+		groups:       groups,
+		health:       health,
+		migrations:   migrations,
+		registration: registration,
+		settings:     settings,
+		system:       system,
+		scheduling:   scheduling,
+	}
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/_healthz", h.Healthz)
 	apiRouter := router.
 		PathPrefix("/api").
-		Headers("Accept", "application/json").
 		Subrouter()
 	apiRouter.NotFoundHandler = h.HTTP404()
 	h.registerAPIHandlers(apiRouter)

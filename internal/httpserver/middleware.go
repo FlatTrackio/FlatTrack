@@ -1,18 +1,41 @@
 package httpserver
 
 import (
+	"bufio"
+	"fmt"
 	"log"
+	"net"
 	"net/http"
 )
 
 type statusRecorder struct {
 	http.ResponseWriter
-	Status int
+	Status            int
+	statusCodeWritten bool
 }
 
 func (r *statusRecorder) WriteHeader(status int) {
 	r.Status = status
 	r.ResponseWriter.WriteHeader(status)
+	r.statusCodeWritten = true
+}
+
+func (w *statusRecorder) Write(b []byte) (int, error) {
+	if w.Header().Get("Content-Type") == "" {
+		w.Header().Set("Content-Type", http.DetectContentType(b))
+	}
+	if !w.statusCodeWritten {
+		w.WriteHeader(http.StatusOK)
+	}
+	n, err := w.ResponseWriter.Write(b)
+	return n, err
+}
+
+func (w *statusRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	if h, ok := w.ResponseWriter.(http.Hijacker); ok {
+		return h.Hijack()
+	}
+	return nil, nil, fmt.Errorf("hijack not supported")
 }
 
 // scrubHeaders to remove sensitive data logged

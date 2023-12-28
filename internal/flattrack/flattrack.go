@@ -1,9 +1,11 @@
 package flattrack
 
 import (
+	"database/sql"
 	"log"
 
 	"github.com/joho/godotenv"
+	"github.com/lib/pq"
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/database"
 	"gitlab.com/flattrack/flattrack/internal/emails"
@@ -21,6 +23,8 @@ import (
 )
 
 type manager struct {
+	db           *sql.DB
+	listener     *pq.Listener
 	httpserver   *httpserver.HTTPServer
 	metrics      *metrics.Manager
 	emails       *emails.Manager
@@ -39,8 +43,12 @@ func NewManager() *manager {
 	_ = godotenv.Load(envFile)
 	db, err := database.Open()
 	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
+		log.Fatalf("error connecting to database: %v", err)
 		return nil
+	}
+	listener := database.OpenListener()
+	if err := listener.Listen("events"); err != nil {
+		log.Fatalf("error listening to database events: %v\n", err)
 	}
 	users := users.NewManager(db)
 	shoppinglist := shoppinglist.NewManager(db)
@@ -53,8 +61,10 @@ func NewManager() *manager {
 	registration := registration.NewManager(users, system, settings)
 	metrics := metrics.NewManager()
 	scheduling := scheduling.NewManager(db)
-	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling)
+	httpserver := httpserver.NewHTTPServer(db, listener, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling)
 	return &manager{
+		db:           db,
+		listener:     listener,
 		httpserver:   httpserver,
 		metrics:      metrics,
 		emails:       emails,
@@ -69,6 +79,8 @@ func NewManager() *manager {
 }
 
 type managerInit struct {
+	db           *sql.DB
+	listener     *pq.Listener
 	httpserver   *httpserver.HTTPServer
 	metrics      *metrics.Manager
 	health       *health.Manager
@@ -81,6 +93,8 @@ func (m *manager) Init() *managerInit {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 	return &managerInit{
+		db:           m.db,
+		listener:     m.listener,
 		httpserver:   m.httpserver,
 		metrics:      m.metrics,
 		health:       m.health,
@@ -93,5 +107,17 @@ func (mi *managerInit) Run() {
 	go mi.metrics.Listen()
 	go mi.health.Listen()
 	go mi.scheduling.Run()
+	defer func() {
+		log.Println("closing database connection...")
+		if err := database.Close(mi.db); err != nil {
+			log.Fatalf("error closing database connection: %v", err)
+		}
+	}()
+	defer func() {
+		log.Println("closing pg listener connection...")
+		if err := mi.listener.Close(); err != nil {
+			log.Fatalf("error closing pg listener: %v", err)
+		}
+	}()
 	mi.httpserver.Listen()
 }

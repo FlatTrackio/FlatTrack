@@ -45,6 +45,7 @@ var (
 	ErrInvalidShoppingListNotes                  = fmt.Errorf("Unable to save shopping list notes, as they are too long")
 	ErrInvalidShoppingItemNotes                  = fmt.Errorf("Unable to save shopping item notes, as they are too long")
 	ErrShoppingListByIDNotFoundForTemplate       = fmt.Errorf("Unable to find list to use as template from provided id")
+	ErrFailedToGetShoppingList                   = fmt.Errorf("Failed to get shopping list")
 )
 
 type Manager struct {
@@ -176,10 +177,14 @@ func (m *ShoppingListManager) Get(listID string) (shoppingList types.ShoppingLis
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
-	rows.Next()
-	shoppingList, err = getListObjectFromRows(rows)
-	if err != nil {
-		return types.ShoppingListSpec{}, err
+	for rows.Next() {
+		shoppingList, err = getListObjectFromRows(rows)
+		if err != nil {
+			return types.ShoppingListSpec{}, err
+		}
+	}
+	if shoppingList.ID == "" {
+		return types.ShoppingListSpec{}, ErrFailedToGetShoppingList
 	}
 	shoppingList.Count, err = m.manager.ShoppingItem().GetListItemCount(shoppingList.ID)
 	if err != nil {

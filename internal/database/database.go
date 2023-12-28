@@ -22,8 +22,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	// include Pg
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"gitlab.com/flattrack/flattrack/internal/common"
 )
@@ -120,4 +122,15 @@ func Ping(db *sql.DB) (err error) {
 		return fmt.Errorf("wild, this error should never occur")
 	}
 	return nil
+}
+
+// OpenListener ...
+// given database credentials, return a database listener connection
+func OpenListener() *pq.Listener {
+	connectionString = GetConnectionString()
+	return pq.NewListener(connectionString, 2*time.Second, time.Minute, func(ev pq.ListenerEventType, err error) {
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	})
 }

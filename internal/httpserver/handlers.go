@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -11,8 +12,12 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
+
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
@@ -2847,6 +2852,119 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
+func (h *HTTPServer) wsShoppingItem(r *http.Request, id string) (types.JSONMessageResponse, error) {
+	options := types.ShoppingItemOptions{
+		SortBy: r.FormValue("sortBy"),
+		Selector: types.ShoppingItemSelector{
+			Obtained: r.FormValue("obtained"),
+		},
+	}
+	list, err := h.shoppinglist.ShoppingList().Get(id)
+	if err != nil {
+		return types.JSONMessageResponse{}, err
+	}
+	if list.ID == "" {
+		return types.JSONMessageResponse{}, fmt.Errorf("failed to get shopping list by id: %v", id)
+	}
+	shoppingListItems, err := h.shoppinglist.ShoppingItem().List(list.ID, options)
+	if err != nil {
+		return types.JSONMessageResponse{}, fmt.Errorf("failed to get shopping list items")
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched shopping list items",
+		},
+		List: shoppingListItems,
+	}
+	return JSONresp, nil
+}
+
+// GetWebSocketHandle ...
+// connect to websocket and subscribe to data
+func (h *HTTPServer) GetWebSocketHandle(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*10)
+	defer cancel()
+
+	var context string
+	vars := mux.Vars(r)
+	group := vars["group"]
+	id := vars["id"]
+
+	// var table string
+	// var idField string
+	var wsFunc func(*http.Request, string) (types.JSONMessageResponse, error)
+
+	switch group {
+	case "shoppingitem":
+		// table = "shopping_item"
+		// idField = "listid"
+		wsFunc = h.wsShoppingItem
+	default:
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "unknown websocket group",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
+	}
+
+	c, err := websocket.Accept(w, r, nil)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to connect to websocket",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	defer func() {
+		log.Println("closed websocket")
+		c.CloseNow()
+	}()
+	log.Println("SOCKET CLIENT CONNECTED", group, id)
+	for {
+		// log.Println("WAITING FOR EVENT")
+		// select {
+		// case n := <-h.listener.Notify:
+		// 	log.Println("POSTGRES NOTIFY EVENT")
+		// 	// Prepare notification payload for pretty print
+		// 	var event types.PostgresEvent
+		// 	if err := json.Unmarshal([]byte(n.Extra), &event); err != nil {
+		// 		log.Println("Error processing JSON: ", err)
+		// 		break
+		// 	}
+		// 	if event.Table != table || event.Data[idField] != id {
+		// 		log.Printf("Postgres event doesn't match table (%v) or listid (%v)", event.Table, event.Data[idField])
+		// 		continue
+		// 	}
+		// 	log.Println("POSTGRES EVENT:", event)
+		// case <-time.After(90 * time.Second):
+		// 	log.Println("Received no events for 90 seconds")
+		// 	go func() {
+		// 		if err := h.listener.Ping(); err != nil {
+		// 			log.Printf("erroring pinging listener: %v", err)
+		// 		}
+		// 	}()
+		// }
+		JSONresp, err := wsFunc(r, id)
+		if err != nil {
+			log.Printf("error for %v func: %v", group, err)
+			continue
+		}
+		log.Println("SENDING EVENT TO CLIENT:", JSONresp)
+		if err := wsjson.Write(ctx, c, JSONresp); err != nil {
+			log.Println("error writing to WebSocket:", err)
+			return
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
 // GetVersion ...
 // returns version information about the instance
 func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
@@ -3318,6 +3436,11 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 			EndpointPath: "/apps/shoppinglist/tags/{id}",
 			HandlerFunc:  httpUseMiddleware(h.DeleteShoppingTag, h.HTTPvalidateJWT()),
 			HTTPMethod:   http.MethodDelete,
+		},
+		{
+			EndpointPath: "/ws/{group}/{id}",
+			HandlerFunc:  httpUseMiddleware(h.GetWebSocketHandle, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodGet,
 		},
 		{
 			EndpointPath: "/flat/info",
