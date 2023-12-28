@@ -4,7 +4,9 @@ import (
 	"log/slog"
 	"os"
 
+	"database/sql"
 	"github.com/joho/godotenv"
+	"github.com/lib/pq"
 
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/database"
@@ -23,6 +25,8 @@ import (
 )
 
 type manager struct {
+	db           *sql.DB
+	listener     *pq.Listener
 	httpserver   *httpserver.HTTPServer
 	metrics      *metrics.Manager
 	emails       *emails.Manager
@@ -59,6 +63,10 @@ func NewManager() *manager {
 		slog.Error("failed to connect to database", "error", err)
 		return nil
 	}
+	listener := database.OpenListener()
+	if err := listener.Listen("events"); err != nil && !maintenanceMode {
+		slog.Error("failed to connect to database listener", "error", err)
+	}
 	users := users.NewManager(db)
 	settings := settings.NewManager(db)
 	shoppinglist := shoppinglist.NewManager(db, settings)
@@ -74,8 +82,10 @@ func NewManager() *manager {
 		RegisterFunc(shoppinglist.ShoppingList().UntemplateListsFromDeletedLists).
 		RegisterFunc(shoppinglist.ShoppingItem().UntemplateItemsFromDeletedLists).
 		RegisterFunc(users.RemoveUnreferencedDeletedUsers)
-	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling, maintenanceMode)
+	httpserver := httpserver.NewHTTPServer(db, listener, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling, maintenanceMode)
 	return &manager{
+		db:              db,
+		listener:        listener,
 		httpserver:      httpserver,
 		metrics:         metrics,
 		emails:          emails,
@@ -91,6 +101,8 @@ func NewManager() *manager {
 }
 
 type managerInit struct {
+	db           *sql.DB
+	listener     *pq.Listener
 	httpserver   *httpserver.HTTPServer
 	metrics      *metrics.Manager
 	health       *health.Manager
@@ -105,6 +117,8 @@ func (m *manager) Init() *managerInit {
 		slog.Error("failed to migrate database", "error", err)
 	}
 	return &managerInit{
+		db:              m.db,
+		listener:        m.listener,
 		httpserver:      m.httpserver,
 		metrics:         m.metrics,
 		health:          m.health,
@@ -122,5 +136,17 @@ func (mi *managerInit) Run() {
 	} else {
 		slog.Info("Instance in maintenance mode. Will only serve message stating as such.")
 	}
+	defer func() {
+		slog.Info("closing database connection...")
+		if err := database.Close(mi.db); err != nil {
+			slog.Error("failed to close database connection", "error", err)
+		}
+	}()
+	defer func() {
+		slog.Info("closing pg listener connection...")
+		if err := mi.listener.Close(); err != nil {
+			slog.Error("failed to close pg listener", "error", err)
+		}
+	}()
 	mi.httpserver.Listen()
 }

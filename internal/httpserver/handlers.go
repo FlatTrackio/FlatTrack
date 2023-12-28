@@ -11,8 +11,12 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
+	"nhooyr.io/websocket"
+	"nhooyr.io/websocket/wsjson"
+
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/database"
 	"gitlab.com/flattrack/flattrack/pkg/types"
@@ -2588,6 +2592,119 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
+func (h *HTTPServer) wsShoppingItem(r *http.Request, id string) (types.JSONMessageResponse, error) {
+	options := types.ShoppingItemOptions{
+		SortBy: r.FormValue("sortBy"),
+		Selector: types.ShoppingItemSelector{
+			Obtained: r.FormValue("obtained"),
+		},
+	}
+	list, err := h.shoppinglist.ShoppingList().Get(id)
+	if err != nil {
+		return types.JSONMessageResponse{}, err
+	}
+	if list.ID == "" {
+		return types.JSONMessageResponse{}, fmt.Errorf("failed to get shopping list by id: %v", id)
+	}
+	shoppingListItems, err := h.shoppinglist.ShoppingItem().List(list.ID, options)
+	if err != nil {
+		return types.JSONMessageResponse{}, fmt.Errorf("failed to get shopping list items")
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched shopping list items",
+		},
+		List: shoppingListItems,
+	}
+	return JSONresp, nil
+}
+
+// GetWebSocketHandle ...
+// connect to websocket and subscribe to data
+func (h *HTTPServer) GetWebSocketHandle(w http.ResponseWriter, r *http.Request) {
+	var contextMsg string
+	vars := mux.Vars(r)
+	group := vars["group"]
+	id := vars["id"]
+
+	// var table string
+	// var idField string
+	var wsFunc func(*http.Request, string) (types.JSONMessageResponse, error)
+
+	switch group {
+	case "shoppingitem":
+		// table = "shopping_item"
+		// idField = "listid"
+		wsFunc = h.wsShoppingItem
+	default:
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "unknown websocket group",
+			},
+		}
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", contextMsg)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
+	}
+
+	c, err := websocket.Accept(w, r, nil)
+	if err != nil {
+		contextMsg = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to connect to websocket",
+			},
+		}
+		slog.Error("request log", "response", JSONresp.Metadata.Response, "context", contextMsg)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	defer func() {
+		slog.Debug("closed websocket")
+		c.CloseNow()
+	}()
+	slog.Info("socket client connected", "group", group, "id", id)
+	for {
+		// slog.Debug("WAITING FOR EVENT")
+		// select {
+		// case n := <-h.listener.Notify:
+		// 	slog.Debug("POSTGRES NOTIFY EVENT")
+		// 	// Prepare notification payload for pretty print
+		// 	var event types.PostgresEvent
+		// 	if err := json.Unmarshal([]byte(n.Extra), &event); err != nil {
+		// 		slog.Error("failed to processing JSON", "error", err)
+		// 		break
+		// 	}
+		// 	if event.Table != table || event.Data[idField] != id {
+		// 		slog.Error("Postgres event doesn't match table or listid", "expectedTable", event.Table, "expectedListID", event.Data[idField])
+		// 		continue
+		// 	}
+		// 	slog.Debug("POSTGRES EVENT", "event", event)
+		// case <-time.After(90 * time.Second):
+		// 	slog.Debug("Received no events for 90 seconds")
+		// 	go func() {
+		// 		if err := h.listener.Ping(); err != nil {
+		// 			slog.Error("error from pinging listener", "error", err)
+		// 		}
+		// 	}()
+		// }
+		JSONresp, err := wsFunc(r, id)
+		if err != nil {
+			slog.Error("error occured with websocket function", "error", err, "group", group, "id", id)
+			continue
+		}
+		ctx, cancel := context.WithTimeout(r.Context(), time.Second*10)
+		defer cancel()
+
+		slog.Debug("sending websocket event to client", "response", JSONresp)
+		if err := wsjson.Write(ctx, c, JSONresp); err != nil {
+			slog.Error("failed to write to websocket", "error", err)
+			return
+		}
+		time.Sleep(1 * time.Second)
+	}
+}
+
 // GetVersion ...
 // returns version information about the instance
 func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
@@ -3220,6 +3337,12 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 			EndpointPath: "/apps/shoppinglist/tags/{id}",
 			HandlerFunc:  h.DeleteShoppingTag,
 			HTTPMethod:   http.MethodDelete,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/ws/{group}/{id}",
+			HandlerFunc:  h.GetWebSocketHandle,
+			HTTPMethod:   http.MethodGet,
 			RequireAuth:  true,
 		},
 		{

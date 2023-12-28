@@ -15,7 +15,7 @@ import (
 // form generic JSON responses
 func JSONResponse(r *http.Request, w http.ResponseWriter, code int, output types.JSONMessageResponse) {
 	// simpilify sending a JSON response
-	output.Metadata.URL = r.RequestURI
+	output.Metadata.URL = r.URL.Path
 	output.Metadata.Timestamp = time.Now().Unix()
 	output.Metadata.Version = common.GetAppBuildVersion()
 	response, _ := json.Marshal(output)

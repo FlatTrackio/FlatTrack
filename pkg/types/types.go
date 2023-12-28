@@ -376,3 +376,9 @@ type SchedulerLastRun struct {
 	Time  int64             `json:"time"`
 	State SchedulerRunState `json:"state"`
 }
+
+type PostgresEvent struct {
+	Table  string
+	Action string
+	Data   map[string]any
+}

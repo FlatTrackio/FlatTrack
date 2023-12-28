@@ -578,6 +578,7 @@
   import shoppingListTagNameEdit from "@/components/authenticated/shopping-list-tag-name-edit.vue";
   import infotooltip from "@/components/common/info-tooltip.vue";
   import breadcrumb from "@/components/common/breadcrumb.vue";
+  import websockets from "@/requests/authenticated/websockets";
 
   export default {
     name: "ShoppingList",
@@ -625,7 +626,6 @@
         creationTimestamp: 0,
         modificationTimestamp: 0,
         templateId: undefined,
-        list: shoppinglistCommon.GetShoppingListFromCache(this.id) || [],
         listFull: [],
         shoppingListSettingsOpen: false,
         totalTagExcludeList: [],
@@ -633,6 +633,8 @@
         tagsList: [],
         flatmates: [],
         manualSplit: 0,
+        websocket: null,
+        websocketReady: false,
         isEditListModalActive: false,
         isNewItemModalActive: false,
         isEditItemModalActive: false,
@@ -662,6 +664,20 @@
     computed: {
       ItemId() {
         return this.$route.query.itemId;
+      },
+    list() {
+      var obtained;
+      switch (this.itemDisplayState) {
+        case 1:
+          obtained = false;
+          break;
+        case 2:
+          obtained = true;
+          break;
+      }
+      return this.listFull.filter(
+        (item) => item.obtained === obtained || typeof obtained === "undefined"
+      );
       },
       listItemsFromTags() {
         return this.RestructureShoppingListToTags(
@@ -823,6 +839,11 @@
         }
         this.GetShoppingListItems();
       },
+    websocket() {
+      if (this.websocket === null) {
+        this.OpenWebSocket();
+      }
+    },
     },
     async beforeMount() {
       this.GetShoppingList();
@@ -842,6 +863,24 @@
       this.itemDisplayState = shoppinglistCommon.GetShoppingListObtainedFilter(
         this.id
       );
+    this.OpenWebSocket();
+    this.websocket.onopen = (evt) => {
+      this.websocketReady = true;
+      this.websocket.send("session opened.");
+      console.log("WS ready!");
+    };
+    this.websocket.onmessage = (evt) => {
+      console.log("msg", { evt });
+      this.GetShoppingListItemsFromWS(evt);
+    };
+    this.websocket.onclose = (evt) => {
+      console.log("WebSocket closed.");
+      this.websocket.send("session closed.");
+      setTimeout(this.OpenWebSocket, 100);
+    };
+    this.websocket.onerror = (evt) => {
+      console.log("err", { evt });
+    };
     },
     mounted() {
       if (typeof this.ItemId !== "undefined") {
@@ -1125,6 +1164,18 @@
           this.flatmates = resp.data.list;
         });
       },
+    OpenWebSocket() {
+      console.log("Opening WS conn...");
+      this.websocket = websockets.GetWebSocket(
+        "shoppingitem",
+        this.id,
+        { name: "sortBy", value: this.sortBy },
+        { name: "obtained", value: this.obtained }
+      );
+    },
+    SendWebSocketListUpdated() {
+      this.websocket.send("updated");
+    },
     },
   };
 </script>

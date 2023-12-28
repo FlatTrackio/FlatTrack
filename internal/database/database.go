@@ -22,8 +22,10 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"time"
 
 	// include Pg
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"gitlab.com/flattrack/flattrack/internal/common"
 )
@@ -143,4 +145,15 @@ func GetVersion(db *sql.DB) (version string, err error) {
 		return "", err
 	}
 	return version, nil
+}
+
+// OpenListener ...
+// given database credentials, return a database listener connection
+func OpenListener() *pq.Listener {
+	connectionString = GetConnectionString()
+	return pq.NewListener(connectionString, 2*time.Second, time.Minute, func(ev pq.ListenerEventType, err error) {
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	})
 }

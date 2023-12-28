@@ -11,6 +11,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/golang-migrate/migrate/v4 v4.19.0
 	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/websocket v1.5.1
 	github.com/imdario/mergo v1.0.2
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
@@ -22,6 +23,7 @@ require (
 	k8s.io/apimachinery v0.34.2
 	k8s.io/klog/v2 v2.130.1
 	k8s.io/utils v0.0.0-20251002143259-bc988d571ff4
+	nhooyr.io/websocket v1.8.10
 )
 
 require (
