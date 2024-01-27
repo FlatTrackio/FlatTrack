@@ -15,7 +15,19 @@ func (r *statusRecorder) WriteHeader(status int) {
 	r.ResponseWriter.WriteHeader(status)
 }
 
-// Logging ...
+// scrubHeaders to remove sensitive data logged
+func scrubHeaders(in http.Header) (o http.Header) {
+	o = http.Header{}
+	for k, v := range in {
+		o[k] = v
+	}
+	if az := o.Get("Authorization"); az != "" {
+		o.Set("Authorization", "bearer [REDACTED]")
+	}
+	return o
+}
+
+// logging ...
 // log the HTTP requests
 func logging(next http.Handler) http.Handler {
 	// log all requests
@@ -24,7 +36,8 @@ func logging(next http.Handler) http.Handler {
 		recorder := &statusRecorder{
 			ResponseWriter: w,
 		}
-		log.Printf("%v %v %v %v %v %v %#v", recorder.Status, r.Method, r.URL, r.Proto, requestIP, r.RemoteAddr, r.Header)
+		scrubbedHeaders := scrubHeaders(r.Header)
+		log.Printf("%v %v %v %v %v %v %#v", recorder.Status, r.Method, r.URL, r.Proto, requestIP, r.RemoteAddr, scrubbedHeaders)
 		next.ServeHTTP(recorder, r)
 	})
 }
