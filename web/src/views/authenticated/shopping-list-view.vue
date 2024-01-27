@@ -79,11 +79,7 @@
               size="is-medium"
               ref="name"
               placeholder="Enter a title for this list"
-              @keyup.enter.native="
-                UpdateShoppingList(name, notes, completed, totalTagExcludeList);
-                editing = false;
-                editingMeta = false;
-              "
+              @keyup.enter.native="UpdateShoppingList"
               @keyup.esc.native="
                 editing = false;
                 editingMeta = false;
@@ -130,17 +126,7 @@
                 type="text"
                 ref="notes"
                 placeholder="Enter extra information"
-                @keyup.enter.native="
-                  notesFromEmpty = false;
-                  editing = false;
-                  editingMeta = false;
-                  UpdateShoppingList(
-                    name,
-                    notes,
-                    completed,
-                    totalTagExcludeList
-                  );
-                "
+                @keyup.enter.native="UpdateShoppingList"
                 @keyup.esc.native="
                   editing = false;
                   editingMeta = false;
@@ -189,15 +175,7 @@
           >Add notes</b-button
         >
         <div v-if="editingMeta">
-          <b-button
-            type="is-info"
-            @click="
-              UpdateShoppingList(name, notes, completed);
-              editingMeta = false;
-              editing = false;
-            "
-            >Done</b-button
-          >
+          <b-button type="is-info" @click="UpdateShoppingList;">Done</b-button>
           <br />
         </div>
         <br />
@@ -648,16 +626,9 @@
               <div>
                 <b-checkbox
                   v-for="existingTag in tags"
-                  v-bind:key="existingTag"
+                  :key="existingTag"
                   v-model="totalTagExcludeList"
-                  v-click="
-                    UpdateShoppingList(
-                      name,
-                      notes,
-                      completed,
-                      totalTagExcludeList
-                    )
-                  "
+                  @input="UpdateShoppingList"
                   :native-value="existingTag"
                   size="is-medium"
                 >
@@ -670,16 +641,9 @@
               <div>
                 <b-checkbox
                   v-for="existingListTag in tagsList"
-                  v-bind:key="existingListTag"
+                  :key="existingListTag"
                   v-model="totalTagExcludeList"
-                  v-click="
-                    UpdateShoppingList(
-                      name,
-                      notes,
-                      completed,
-                      totalTagExcludeList
-                    )
-                  "
+                  @input="UpdateShoppingList"
                   :native-value="existingListTag"
                   size="is-medium"
                 >
@@ -876,30 +840,6 @@ export default {
           this.modificationTimestamp = resp.data.spec.modificationTimestamp
           this.templateId = resp.data.spec.templateId
           this.totalTagExcludeList = resp.data.spec.totalTagExclude || []
-          return flatmates.GetFlatmate(this.author)
-        })
-        .then((resp) => {
-          this.authorNames = resp.data.spec.names
-          return flatmates.GetFlatmate(this.authorLast)
-        })
-        .then((resp) => {
-          this.authorLastNames = resp.data.spec.names
-          if (
-            typeof this.templateId === 'undefined' ||
-            this.templateId === ''
-          ) {
-            return
-          }
-          return shoppinglist.GetShoppingList(this.templateId)
-        })
-        .then((resp) => {
-          if (
-            typeof this.templateId === 'undefined' ||
-            this.templateId === ''
-          ) {
-            return
-          }
-          this.templateListName = resp.data.spec.name
         })
         .catch((err) => {
           if (err.response.status === 404) {
@@ -929,12 +869,20 @@ export default {
         this.tagsList = resp.data.list || []
       })
     },
-    UpdateShoppingList (name, notes, completed, totalTagExcludeList) {
+    UpdateShoppingList () {
       this.notesFromEmpty = false
+      this.editingMeta = false
+      this.editing = false
 
       var id = this.id
       shoppinglist
-        .UpdateShoppingList(id, name, notes, completed, totalTagExcludeList)
+        .UpdateShoppingList(
+          id,
+          this.name,
+          this.notes,
+          this.completed,
+          this.totalTagExcludeList
+        )
         .catch((err) => {
           common.DisplayFailureToast(
             'Failed to update shopping list' +
@@ -1126,6 +1074,30 @@ export default {
       ) {
         common.Hooray()
       }
+    },
+    author () {
+      if (this.authorNames !== '') {
+        return
+      }
+      flatmates.GetFlatmate(this.author).then((resp) => {
+        this.authorNames = resp.data.spec.names
+      })
+    },
+    authorLast () {
+      if (this.authorLastNames !== '') {
+        return
+      }
+      flatmates.GetFlatmate(this.author).then((resp) => {
+        this.authorLastNames = resp.data.spec.names
+      })
+    },
+    templateId () {
+      if (typeof this.templateId === 'undefined' || this.templateId === '') {
+        return
+      }
+      shoppinglist.GetShoppingList(this.templateId).then((resp) => {
+        this.templateListName = resp.data.spec.name
+      })
     }
   },
   async beforeMount () {
@@ -1149,8 +1121,6 @@ export default {
   },
   mounted () {
     if (typeof this.ItemId !== 'undefined') {
-      console.log(this.$refs)
-      console.log(this.$refs[this.ItemId])
       var el = this.$refs[this.ItemId][0].$el
       window.scrollTo(0, el.offsetTop)
     }
