@@ -22,9 +22,7 @@
       <div class="level">
         <p class="subtitle is-5 mb-0" style="float: left">
           <b>{{ name }}</b>
-          ${{ currentPrice }}/${{ totalPrice }} ({{
-            Math.round((100 * currentPrice) / totalPrice)
-          }}%)
+          ${{ currentPrice }}/${{ totalPrice }} ({{ totalPercentage }}%)
           <span
             @click="PatchShoppingListCompleted(id, !completed)"
             class="display-is-editable pointer-cursor-on-hover"
@@ -82,7 +80,9 @@
               ref="name"
               placeholder="Enter a title for this list"
               @keyup.enter.native="
-                UpdateShoppingList(name, notes, completed, totalTagExcludeList)
+                UpdateShoppingList(name, notes, completed, totalTagExcludeList);
+                editing = false;
+                editingMeta = false;
               "
               @keyup.esc.native="
                 editing = false;
@@ -161,8 +161,8 @@
                 <p
                   class="display-is-editable subtitle is-4 pointer-cursor-on-hover notes-highlight"
                   @click="
-                    editing = true;
                     editingMeta = true;
+                    editing = true;
                     FocusNotes();
                   "
                 >
@@ -179,8 +179,8 @@
           @click="
             () => {
               notesFromEmpty = true;
-              editing = true;
               editingMeta = true;
+              editing = true;
               FocusNotes();
             }
           "
@@ -191,7 +191,11 @@
         <div v-if="editingMeta">
           <b-button
             type="is-info"
-            @click="UpdateShoppingList(name, notes, completed)"
+            @click="
+              UpdateShoppingList(name, notes, completed);
+              editingMeta = false;
+              editing = false;
+            "
             >Done</b-button
           >
           <br />
@@ -515,7 +519,7 @@
           <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
           <br />
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{
-            Math.round((100 * currentPrice) / totalPrice) || 0
+            totalPercentage
           }}%)
           <infotooltip
             :message="
@@ -644,7 +648,7 @@
               <div>
                 <b-checkbox
                   v-for="existingTag in tags"
-                  :key="existingTag"
+                  v-bind:key="existingTag"
                   v-model="totalTagExcludeList"
                   v-click="
                     UpdateShoppingList(
@@ -666,7 +670,7 @@
               <div>
                 <b-checkbox
                   v-for="existingListTag in tagsList"
-                  :key="existingListTag"
+                  v-bind:key="existingListTag"
                   v-model="totalTagExcludeList"
                   v-click="
                     UpdateShoppingList(
@@ -830,6 +834,9 @@ export default {
     },
     equalPricePerPerson () {
       return this.totalPrice / this.flatmates.length
+    },
+    totalPercentage () {
+      return Math.round((100 * this.currentPrice) / this.totalPrice) || 0
     }
   },
   methods: {
@@ -920,14 +927,10 @@ export default {
       })
       shoppinglist.GetShoppingListItemTags(this.id).then((resp) => {
         this.tagsList = resp.data.list || []
-        if (typeof this.templateId === 'undefined' || this.templateId === '') {
-        }
       })
     },
     UpdateShoppingList (name, notes, completed, totalTagExcludeList) {
       this.notesFromEmpty = false
-      this.editing = false
-      this.editingMeta = false
 
       var id = this.id
       shoppinglist
@@ -1065,14 +1068,19 @@ export default {
     ResetLoopTime () {
       this.loopCreated = new Date()
     },
+    FocusEl (name) {
+      this.$nextTick(() => {
+        this.$refs[name].focus()
+      })
+    },
     FocusName () {
-      this.$refs.name.focus()
+      this.FocusEl('name')
     },
     FocusNotes () {
-      this.$refs.notes.focus()
+      this.FocusEl('notes')
     },
     FocusSearch () {
-      this.$refs.search.focus()
+      this.FocusEl('search')
     },
     TagIsExcluded (tag) {
       return this.totalTagExcludeList.includes(tag)
