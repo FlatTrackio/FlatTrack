@@ -24,7 +24,7 @@ APP_BUILD_HASH="${APP_BUILD_HASH:-$(git rev-parse HEAD | cut -c -8)}"
 APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
 APP_BUILD_VERSION="${APP_BUILD_VERSION:-0.0.0}"
 APP_BUILD_MODE="${APP_BUILD_MODE:-staging}"
-IMAGE_DESTINATIONS="latest"
+IMAGE_DESTINATIONS="latest,${APP_BUILD_HASH}"
 if [[ -n "${CI_COMMIT_TAG:-}" ]]; then
   APP_BUILD_VERSION="${CI_COMMIT_TAG:-}"
   APP_BUILD_MODE=production
