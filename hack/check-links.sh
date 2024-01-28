@@ -1,3 +1,6 @@
 #!/bin/sh
 
-lychee ./docs/** --exclude-path '.DS_Store'
+lychee --exclude-path '.DS_Store' \
+    ./README.md \
+    ./mkdocs.yml \
+    ./docs/**
