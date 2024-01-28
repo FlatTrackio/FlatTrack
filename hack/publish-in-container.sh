@@ -14,6 +14,6 @@ podman run --rm --network=host \
 echo 'https://dl-cdn.alpinelinux.org/alpine/edge/testing' | tee -a /etc/apk/repositories ;
 apk add --no-cache curl cosign ko git;
 git config --global --add safe.directory $C_DIR ;
-export KO_DOCKER_REPO=${KO_DOCKER_REPO:-localhost:5001/ghs}
+export KO_DOCKER_REPO=${KO_DOCKER_REPO:-localhost:5001/ft}
 ./hack/publish.sh ${*:-}
 "
