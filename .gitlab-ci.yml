@@ -287,6 +287,17 @@ lint-helm-chart:
   script:
     - helm lint deployments/flattrack
 
+check-links:
+  only:
+    - main
+    - merge_requests
+  stage: codequality
+  image:
+    name: docker.io/lycheeverse/lychee:sha-a7c11c9-alpine
+    entrypoint: [""]
+  script:
+    - ./hack/check-links.sh
+
 pages:
   image: $IMAGE_PYTHON
   stage: pages
