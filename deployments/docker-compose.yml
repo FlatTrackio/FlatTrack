@@ -12,7 +12,7 @@ volumes:
 
 services:
   flattrack_db:
-    image: postgres:12.2-alpine
+    image: postgres:16.1-alpine3.19
     restart: unless-stopped
     volumes:
       - flattrack_db:/var/lib/postgres
@@ -25,11 +25,11 @@ services:
       - PGUSER=postgres
 
   flattrack:
-    image: registry.gitlab.com/flattrack/flattrack:0.16.1
-    # uncomment to build from local instead of using a pre-built image 
-    # build: ./
+    # TODO: replace with image release version
+    image: registry.gitlab.com/flattrack/flattrack:latest
     restart: unless-stopped
     environment:
+      - TZ=Pacific/Auckland
       - APP_DB_USERNAME=postgres
       - APP_DB_PASSWORD=postgres
       - APP_DB_HOST=flattrack_db
@@ -38,7 +38,5 @@ services:
       - flattrack_db
     read_only: true
     ports:
-      - '80:8080'
+      - '8080:8080'
     # if using a reverse proxy, you'll need to set expose instead of ports (so the reverse-proxy can bind to both 80 and 443)
-    # expose:
-    #   - '80'

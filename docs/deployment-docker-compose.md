@@ -8,7 +8,7 @@ Deploy the docker-compose stack:
 
 `Important notes`:
 
--   the docker-compose deployment doesn&rsquo;t include SSL/TLS in the stack, so if you wish to deploy it you will need to add a reverse-proxy to handle SSL/TLS - this isn&rsquo;t something that FlatTrack implements.
+-   the docker-compose deployment doesn't include SSL/TLS in the stack, so if you wish to deploy it you will need to add a reverse-proxy to handle SSL/TLS - this isn't something that FlatTrack implements.
 -   ensure that the credentials are updated
 
 # Extra notes
