@@ -104,30 +104,6 @@ copy-container-image-to-dockerhub:
         done
       done
 
-build-helm-chart:
-  stage: build
-  image: $IMAGE_GOLANG_ALPINE
-  variables:
-    HELM_LINK: https://get.helm.sh/helm-v3.4.0-linux-amd64.tar.gz
-    HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
-  allow_failure: true
-  before_script:
-    - apk add curl
-    - curl -L -o helm.tar.gz $HELM_LINK
-    - |
-        if [ ! $(sha256sum helm.tar.gz) = $HELM_HASH ]; then
-          exit 1
-        fi
-    - cat helm.tar.gz | tar --directory /usr/local/bin --extract -xz --strip-components 1 linux-amd64/helm
-  script:
-    - helm package deployments/flattrack --destination .helm-root/helm/
-    - helm repo index --url "https://${CI_PROJECT_NAMESPACE}.gitlab.io/${CI_PROJECT_NAME}" .helm-root/
-  artifacts:
-    paths:
-      - .helm-root
-  only:
-    - main
-
 build-frontend:
   stage: build
   retry: 2
@@ -171,7 +147,7 @@ test_backend_e2e:
     APP_MINIO_USE_SSL: "false"
     CGO_ENABLED: "0"
   services:
-    - name: postgres:15.3-alpine
+    - name: postgres:16.1-alpine3.19
       alias: postgres
     - name: minio/minio:RELEASE.2023-06-29T05-12-28Z
       alias: minio
@@ -264,28 +240,6 @@ lint-backend:
     - apk add --no-cache git
   script:
     - ./hack/verify-lint-backend.sh
-
-lint-helm-chart:
-  stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
-  # TODO use helm on alpine edge with community repo
-  variables:
-    HELM_LINK: https://get.helm.sh/helm-v3.4.0-linux-amd64.tar.gz
-    HELM_HASH: 270acb0f085b72ec28aee894c7443739271758010323d72ced0e92cd2c96ffdb
-  allow_failure: true
-  before_script:
-    - apk add curl
-    - curl -L -o helm.tar.gz $HELM_LINK
-    - |
-        if [ ! $(sha256sum helm.tar.gz) = $HELM_HASH ]; then
-          exit 1
-        fi
-    - |
-      cat helm.tar.gz \
-        | tar --directory /usr/local/bin --extract \
-          -xz --strip-components 1 linux-amd64/helm
-  script:
-    - helm lint deployments/flattrack
 
 pages:
   image: $IMAGE_PYTHON

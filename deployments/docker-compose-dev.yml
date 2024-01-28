@@ -3,13 +3,12 @@ version: '3'
 
 services:
   flattrack_db:
-    image: postgres:12.2-alpine
+    image: postgres:16.1-alpine3.19
     restart: unless-stopped
     user: postgres
     ports:
       - '5432:5432'
     environment:
-      - TZ=Pacific/Auckland
       - POSTGRES_DB=flattrack
       - POSTGRES_USER=flattrack
       - POSTGRES_PASSWORD=flattrack

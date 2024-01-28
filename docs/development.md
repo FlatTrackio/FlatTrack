@@ -6,7 +6,6 @@ Requirements:
 -   [nodejs](https://nodejs.org/en/download/)
 -   a [Postgres](https://www.postgresql.org/download/) database
 
-
 ## Set up Postgres
 
 Docker/Podman:
@@ -17,14 +16,7 @@ Docker/Podman:
            -e POSTGRES_DB=flattrack \
            -e POSTGRES_USER=flattrack \
            -e POSTGRES_PASSWORD=flattrack \
-           postgres:12.2-alpine
-
-Ubuntu/Debian:
-
-    sudo apt install postgresql
-    sudo -u postgres createuser --interactive
-    sudo -u postgres createdb flattrack
-    sudo adduser flattrack
+           postgres:16.1-alpine3.19
 
 Manually connecting to the Postgres database:
 
@@ -114,14 +106,13 @@ Images are located in [web/assets](https://gitlab.com/flattrack/flattrack/-/tree
 
 To run the docs in development, use:
 
-    firn serve
+    mkdocs serve
 
 
 ## Making a release checklist
 
 Things to do before making a release:
 
--   update helm chart version
 -   ensure docs represent the latest changes
 -   ensure linting passes
 
