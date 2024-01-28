@@ -1411,6 +1411,7 @@ func (h *HTTPServer) GetShoppingListItems(w http.ResponseWriter, r *http.Request
 		Selector: types.ShoppingItemSelector{
 			Obtained: r.FormValue("obtained"),
 		},
+		SearchName: r.FormValue("searchName"),
 	}
 
 	list, err := h.shoppinglist.ShoppingList().GetShoppingList(id)

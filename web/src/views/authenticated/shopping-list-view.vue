@@ -259,14 +259,14 @@
           </section>
         </div>
         <br />
-        <div v-if="listItemsFromTags.length > 0">
+        <div v-if="totalItems > 0">
           <b-loading
             :is-full-page="false"
             :active.sync="listIsLoading"
             :can-cancel="false"
           ></b-loading>
           <div v-if="sortBy === 'tags'">
-            <section v-for="itemTag in listItemsFromTags" v-bind:key="itemTag">
+            <section v-for="itemTag in items" v-bind:key="itemTag">
               <div v-if="editingTag === itemTag.tag">
                 <label class="label">Tag name</label>
                 <b-field>
@@ -401,11 +401,8 @@
               <br />
             </section>
           </div>
-          <div v-else-if="sortBy !== 'tag'">
-            <div
-              v-for="(item, index) in listItemsFromPlainList"
-              v-bind:key="item"
-            >
+          <div v-else-if="sortBy !== 'tags'">
+            <div v-for="(item, index) in list" v-bind:key="item">
               <a :id="item.id"></a>
               <itemCard
                 :list="list"
@@ -418,7 +415,7 @@
                 :itemDisplayState="itemDisplayState"
                 @list="
                   (l) => {
-                    listItemsFromPlainList = l;
+                    list = l;
                   }
                 "
                 @obtained="
@@ -430,7 +427,7 @@
             </div>
             <section>
               <br />
-              <p>{{ listItemsFromPlainList.length || 0 }} item(s)</p>
+              <p>{{ list.length || 0 }} item(s)</p>
             </section>
             <br />
           </div>
@@ -678,7 +675,6 @@ export default {
       itemSearch: shoppinglistCommon.GetShoppingListSearch(this.id) || '',
       authorNames: '',
       authorLastNames: '',
-      totalItems: 0,
       loopCreated: new Date(),
       sortBy: shoppinglistCommon.GetShoppingListSortBy() || 'tags',
       itemDisplayState:
@@ -703,8 +699,7 @@ export default {
       creationTimestamp: 0,
       modificationTimestamp: 0,
       templateId: undefined,
-      list: shoppinglistCommon.GetShoppingListFromCache(this.id) || [],
-      listFull: [],
+      list: [],
       shoppingListSettingsOpen: false,
       totalTagExcludeList: [],
       tags: [],
@@ -723,81 +718,77 @@ export default {
     ItemId () {
       return this.$route.query.itemId
     },
-    listItemsFromTags () {
-      return this.RestructureShoppingListToTags(
-        this.list.filter((item) => {
-          return this.ItemByNameInList(item)
-        })
-      )
-    },
-    listItemsFromPlainList () {
-      return this.list.filter((item) => {
-        return this.ItemByNameInList(item)
-      })
-    },
     obtainedCount () {
-      if (this.listFull.length === 0) {
+      if (this.list === null || this.list.length === 0) {
         return 0
       }
-      var obtained = 0
-      this.listFull.forEach((item) => {
-        obtained += item.obtained === true ? 1 : 0
-      })
-      return obtained
+      if (this.sortBy !== 'tags') {
+        return this.list.filter((e) => e.obtained === true).length
+      }
+      return this.list
+        .map((e) => e.items)
+        .flat()
+        .filter((e) => e.obtained === true).length
     },
     currentPrice () {
-      if (this.listFull.length === 0) {
+      if (this.list === null || this.list.length === 0) {
         return 0
       }
-      var currentPrice = 0
-      this.listFull.forEach((item) => {
-        if (
-          item.obtained !== true ||
-          this.totalTagExcludeList.includes(item.tag)
-        ) {
-          return
-        }
-        if (typeof item.price !== 'number') {
-          item.price = 0
-        }
-        currentPrice += (item.price || 0) * item.quantity
-      })
-      currentPrice = currentPrice.toFixed(2)
-      return currentPrice
+      let list = this.list
+      if (this.sortBy === 'tags') {
+        list = this.list.map((e) => e.items).flat()
+      }
+
+      console.log({ list })
+      return list
+        .filter(
+          (item) =>
+            !this.totalTagExcludeList.includes(item.tag) &&
+            item.obtained === true
+        )
+        .reduce((e, c) => e.price * e.quantity + c.price * c.quantity, 0)
     },
     totalPrice () {
-      if (this.listFull.length === 0) {
+      if (this.list === null || this.list.length === 0) {
         return 0
       }
-      var totalPrice = 0
-      this.listFull.forEach((item) => {
-        if (this.totalTagExcludeList.includes(item.tag)) {
-          return
-        }
-        if (typeof item.price !== 'number') {
-          item.price = 0
-        }
-        totalPrice += (item.price || 0) * item.quantity
-      })
-      totalPrice = totalPrice.toFixed(2)
-      return totalPrice
+      if (this.sortBy !== 'tags') {
+        return this.list
+          .filter((item) => !this.totalTagExcludeList.includes(item.tag))
+          .reduce((e, c) => e.price * e.quantity + c.price * c.quantity, 0)
+          .toFixed(2)
+      }
+      return this.list
+        .map((e) => e.items)
+        .flat()
+        .filter((item) => !this.totalTagExcludeList.includes(item.tag))
+        .reduce((e, c) => e.price * e.quantity + c.price * c.quantity, 0)
+        .toFixed(2)
     },
     totalAllInclusivePrice () {
-      if (this.listFull.length === 0) {
+      if (this.list === null || this.list.length === 0) {
         return 0
       }
-      var totalPrice = 0
-      this.listFull.forEach((item) => {
-        if (typeof item.price !== 'number') {
-          item.price = 0
-        }
-        totalPrice += (item.price || 0) * item.quantity
-      })
-      totalPrice = totalPrice.toFixed(2)
-      return totalPrice
+      if (this.sortBy !== 'tags') {
+        return this.list.reduce((e, c) => e.price + c.price, 0).toFixed(2)
+      }
+      return this.list
+        .map((e) => e.items)
+        .flat()
+        .reduce((e, c) => e.price + c.price, 0)
+        .toFixed(2)
+    },
+    totalItems () {
+      if (this.list === null || this.list.length === 0) {
+        return 0
+      }
+      if (this.sortBy !== 'tags') {
+        return this.list.length
+      }
+      return this.list.map((e) => e.items).flat().length
     },
     equalPricePerPerson () {
-      return this.totalPrice / this.flatmates.length
+      return this.totalPrice / this.flatmates.length || 0
     },
     totalPercentage () {
       return Math.round((100 * this.currentPrice) / this.totalPrice) || 0
@@ -820,9 +811,6 @@ export default {
     FocusSearchBox () {
       this.$refs.search.$el.focus()
     },
-    RestructureShoppingListToTags (list) {
-      return shoppinglistCommon.RestructureShoppingListToTags(list)
-    },
     GetShoppingList () {
       if (this.editing === true) {
         return
@@ -842,6 +830,7 @@ export default {
           this.totalTagExcludeList = resp.data.spec.totalTagExclude || []
         })
         .catch((err) => {
+          console.log({ err })
           if (err.response.status === 404) {
             common.DisplayFailureToast(
               'Error list not found' +
@@ -950,24 +939,12 @@ export default {
       }
 
       shoppinglist
-        .GetShoppingListItems(this.id, this.sortBy, undefined)
+        .GetShoppingListItems(this.id, this.sortBy, obtained)
         .then((resp) => {
-          var responseList = resp.data.list || []
-          this.totalItems = responseList === null ? 0 : responseList.length
-          if (this.list === null) {
-            this.list = []
-          }
-
-          if (responseList !== this.list) {
-            this.listFull = responseList
-            this.list = responseList.filter(
-              (item) =>
-                item.obtained === obtained || typeof obtained === 'undefined'
-            )
-            shoppinglistCommon.WriteShoppingListToCache(this.id, this.list)
-            this.listIsLoading = false
-            this.hasInitialLoaded = true
-          }
+          this.list = resp.data.list
+          console.log('list', resp.data.list)
+          this.listIsLoading = false
+          this.hasInitialLoaded = true
         })
     },
     UpdateShoppingListItemTag (tagName, tagNameNew) {

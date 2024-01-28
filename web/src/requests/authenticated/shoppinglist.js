@@ -117,13 +117,14 @@ function DeleteShoppingList (id) {
 
 // GetShoppingListItems
 // returns shopping list items by id
-function GetShoppingListItems (id, sortBy, obtained) {
+function GetShoppingListItems (id, sortBy, obtained, searchName) {
   return Request({
     url: `/api/apps/shoppinglist/lists/${id}/items`,
     method: 'GET',
     params: {
       sortBy,
-      obtained
+      obtained,
+      searchName
     }
   })
 }
