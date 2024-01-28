@@ -162,6 +162,13 @@ type ShoppingItemSpec struct {
 	DeletionTimestamp     int64   `json:"deletionTimestamp"`
 }
 
+// ShoppingItemsGroupByTag collects a list of items and groups them by tag
+type ShoppingItemsGroupByTag struct {
+	Tag   string             `json:"tag"`
+	Items []ShoppingItemSpec `json:"items"`
+	Price float64            `json:"price"`
+}
+
 // ShoppingItemSortType ...
 // ways of sorting shopping list items
 type ShoppingItemSortType string
@@ -169,7 +176,7 @@ type ShoppingItemSortType string
 // ShoppingItemSortTypes ...
 // ways of sorting shopping list items
 const (
-	ShoppingItemSortByTag                    = "tag"
+	ShoppingItemSortByTag                    = "tags"
 	ShoppingItemSortByHighestPrice           = "highestPrice"
 	ShoppingItemSortByHighestQuantity        = "highestQuantity"
 	ShoppingItemSortByLowestPrice            = "lowestPrice"
@@ -185,8 +192,9 @@ const (
 // ShoppingItemOptions ...
 // options for list items
 type ShoppingItemOptions struct {
-	Selector ShoppingItemSelector `json:"selector"`
-	SortBy   string               `json:"sortBy"`
+	Selector   ShoppingItemSelector `json:"selector"`
+	SortBy     string               `json:"sortBy"`
+	SearchName string               `json:"searchName"`
 }
 
 // ShoppingItemSelector ...

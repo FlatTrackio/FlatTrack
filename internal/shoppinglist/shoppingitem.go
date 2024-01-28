@@ -21,6 +21,7 @@ package shoppinglist
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 
 	"github.com/imdario/mergo"
@@ -66,7 +67,7 @@ func (m *ShoppingItemManager) Validate(item types.ShoppingItemSpec) (valid bool,
 
 // List ...
 // returns a list of items on a shopping list
-func (m *ShoppingItemManager) List(listID string, options types.ShoppingItemOptions) (items []types.ShoppingItemSpec, err error) {
+func (m *ShoppingItemManager) List(listID string, options types.ShoppingItemOptions) (any, error) {
 	// sort by tags
 	var obtained sql.NullString
 	if err := obtained.Scan(options.Selector.Obtained); err != nil {
@@ -77,7 +78,7 @@ func (m *ShoppingItemManager) List(listID string, options types.ShoppingItemOpti
 	sqlQueryValues := []interface{}{listID}
 	sqlStatement := `select * from shopping_item where listId = $1`
 	if options.Selector.Obtained != "" && options.Selector.TemplateListItemSelector != "" {
-		sqlStatement += ` and obtained = $2`
+		sqlStatement += fmt.Sprintf(` and obtained = $%v`, len(sqlQueryValues)+1)
 		sqlQueryValues = append(sqlQueryValues, obtained)
 	}
 	switch options.Selector.TemplateListItemSelector {
@@ -86,6 +87,10 @@ func (m *ShoppingItemManager) List(listID string, options types.ShoppingItemOpti
 	case "obtained":
 		sqlStatement += ` and obtained = true`
 	default:
+	}
+	if options.SearchName != "" {
+		sqlStatement += ` and name ilike '%' ||` + fmt.Sprintf("$%v", len(sqlQueryValues)+1) + `|| '%'`
+		sqlQueryValues = append(sqlQueryValues, options.SearchName)
 	}
 	if options.SortBy == types.ShoppingItemSortByHighestPrice {
 		sqlStatement += ` order by price desc, name asc`
@@ -110,6 +115,7 @@ func (m *ShoppingItemManager) List(listID string, options types.ShoppingItemOpti
 	} else {
 		sqlStatement += ` order by tag asc, name asc`
 	}
+
 	rows, err := m.db.Query(sqlStatement, sqlQueryValues...)
 	if err != nil {
 		log.Println(err)
@@ -120,6 +126,7 @@ func (m *ShoppingItemManager) List(listID string, options types.ShoppingItemOpti
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
+	items := []types.ShoppingItemSpec{}
 	for rows.Next() {
 		item, err := getItemObjectFromRows(rows)
 		if err != nil {
@@ -127,7 +134,35 @@ func (m *ShoppingItemManager) List(listID string, options types.ShoppingItemOpti
 		}
 		items = append(items, item)
 	}
+	if options.SortBy == types.ShoppingItemSortByTag {
+		return m.groupItemsByTag(items), nil
+	}
 	return items, nil
+}
+
+func (m *ShoppingItemManager) groupItemsByTag(items []types.ShoppingItemSpec) (lists []types.ShoppingItemsGroupByTag) {
+	// Group items by tag and calculate tag price
+	for _, item := range items {
+		foundTagInList := -1
+	lists:
+		for i, list := range lists {
+			if list.Tag == item.Tag {
+				foundTagInList = i
+				break lists
+			}
+		}
+		if foundTagInList == -1 {
+			lists = []types.ShoppingItemsGroupByTag{{
+				Tag:   item.Tag,
+				Items: []types.ShoppingItemSpec{item},
+				Price: item.Price,
+			}}
+		} else {
+			lists[foundTagInList].Items = append(lists[foundTagInList].Items, item)
+			lists[foundTagInList].Price += item.Price * float64(item.Quantity)
+		}
+	}
+	return lists
 }
 
 // Get ...

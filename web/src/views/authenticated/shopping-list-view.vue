@@ -281,14 +281,14 @@
           </section>
         </div>
         <br />
-        <div v-if="listItemsFromTags.length > 0">
+        <div v-if="totalItems > 0">
           <b-loading
             :is-full-page="false"
             :active.sync="listIsLoading"
             :can-cancel="false"
           ></b-loading>
           <div v-if="sortBy === 'tags'">
-            <section v-for="itemTag in listItemsFromTags" v-bind:key="itemTag">
+            <section v-for="itemTag in list" v-bind:key="itemTag">
               <div v-if="editingTag === itemTag.tag">
                 <label class="label">Tag name</label>
                 <b-field>
@@ -442,11 +442,8 @@
               <br />
             </section>
           </div>
-          <div v-else-if="sortBy !== 'tag'">
-            <div
-              v-for="(item, index) in listItemsFromPlainList"
-              v-bind:key="item"
-            >
+          <div v-else-if="sortBy !== 'tags'">
+            <div v-for="(item, index) in list" v-bind:key="item">
               <a :id="item.id"></a>
               <itemCard
                 :list="list"
@@ -459,7 +456,7 @@
                 :itemDisplayState="itemDisplayState"
                 @list="
                   (l) => {
-                    listItemsFromPlainList = l;
+                    list = l;
                   }
                 "
                 @obtained="
@@ -471,7 +468,7 @@
             </div>
             <section>
               <br />
-              <p>{{ listItemsFromPlainList.length || 0 }} item(s)</p>
+              <p>{{ list.length || 0 }} item(s)</p>
             </section>
             <br />
           </div>
@@ -491,7 +488,10 @@
                   <p
                     class="subtitle is-4"
                     v-if="
-                      itemSearch === '' && list.length === 0 && !pageLoading
+                      itemSearch === '' &&
+                      list !== null &&
+                      list.length === 0 &&
+                      !pageLoading
                     "
                   >
                     No items added yet.
@@ -722,50 +722,48 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import shoppinglistCommon from '@/common/shoppinglist'
-import shoppinglist from '@/requests/authenticated/shoppinglist'
-import flatmates from '@/requests/authenticated/flatmates'
-import { DialogProgrammatic as Dialog } from 'buefy'
+import common from "@/common/common";
+import shoppinglistCommon from "@/common/shoppinglist";
+import shoppinglist from "@/requests/authenticated/shoppinglist";
+import flatmates from "@/requests/authenticated/flatmates";
+import { DialogProgrammatic as Dialog } from "buefy";
 
 export default {
-  name: 'shopping-list',
-  data () {
+  name: "shopping-list",
+  data() {
     return {
       intervalLoop: null,
       editing: false,
       editingMeta: false,
       notesFromEmpty: false,
-      itemSearch: shoppinglistCommon.GetShoppingListSearch(this.id) || '',
-      authorNames: '',
-      authorLastNames: '',
-      totalItems: 0,
+      itemSearch: shoppinglistCommon.GetShoppingListSearch(this.id) || "",
+      authorNames: "",
+      authorLastNames: "",
       loopCreated: new Date(),
-      sortBy: shoppinglistCommon.GetShoppingListSortBy() || 'tags',
+      sortBy: shoppinglistCommon.GetShoppingListSortBy() || "tags",
       itemDisplayState:
         shoppinglistCommon.GetShoppingListObtainedFilter(this.id) || 0,
       deviceIsMobile: false,
       HeaderIsSticky: false,
-      TagTmp: '',
-      editingTag: '',
+      TagTmp: "",
+      editingTag: "",
       listIsLoading:
         shoppinglistCommon.GetShoppingListFromCache(this.id).length > 0,
       hasInitialLoaded: false,
       deleteLoading: false,
       ratherSmallerScreen: false,
-      templateListName: '',
+      templateListName: "",
       canAnimate: false,
       id: this.$route.params.id,
-      name: 'Unnamed list',
-      notes: '',
-      author: '',
-      authorLast: '',
+      name: "Unnamed list",
+      notes: "",
+      author: "",
+      authorLast: "",
       completed: false,
       creationTimestamp: 0,
       modificationTimestamp: 0,
       templateId: undefined,
-      list: shoppinglistCommon.GetShoppingListFromCache(this.id) || [],
-      listFull: [],
+      list: [],
       shoppingListSettingsOpen: false,
       totalTagExcludeList: [],
       tags: [],
@@ -775,201 +773,195 @@ export default {
       isNewItemModalActive: false,
       isEditItemModalActive: false,
       newItemProps: {
-        withName: '',
-        withTag: ''
+        withName: "",
+        withTag: "",
       },
       editItemProps: {
-        listId: '',
-        id: ''
-      }
-    }
+        listId: "",
+        id: "",
+      },
+    };
   },
   components: {
     itemCard: () =>
-      import('@/components/authenticated/shopping-list-item-card-view.vue'),
+      import("@/components/authenticated/shopping-list-item-card-view.vue"),
     floatingAddButton: () =>
-      import('@/components/common/floating-add-button.vue'),
+      import("@/components/common/floating-add-button.vue"),
     shoppinglistItemNew: () =>
-      import('@/components/authenticated/shopping-list-item-new.vue'),
+      import("@/components/authenticated/shopping-list-item-new.vue"),
     shoppinglistItemEdit: () =>
-      import('@/components/authenticated/shopping-list-item-edit.vue'),
-    infotooltip: () => import('@/components/common/info-tooltip.vue')
+      import("@/components/authenticated/shopping-list-item-edit.vue"),
+    infotooltip: () => import("@/components/common/info-tooltip.vue"),
   },
   computed: {
-    ItemId () {
-      return this.$route.query.itemId
+    ItemId() {
+      return this.$route.query.itemId;
     },
-    listItemsFromTags () {
-      return this.RestructureShoppingListToTags(
-        this.list.filter((item) => {
-          return this.ItemByNameInList(item)
-        })
-      )
-    },
-    listItemsFromPlainList () {
-      return this.list.filter((item) => {
-        return this.ItemByNameInList(item)
-      })
-    },
-    obtainedCount () {
-      if (this.listFull.length === 0) {
-        return 0
+    obtainedCount() {
+      if (this.list === null || this.list.length === 0) {
+        return 0;
       }
-      var obtained = 0
-      this.listFull.forEach((item) => {
-        obtained += item.obtained === true ? 1 : 0
-      })
-      return obtained
-    },
-    currentPrice () {
-      if (this.listFull.length === 0) {
-        return 0
+      if (this.sortBy !== "tags") {
+        return this.list.filter((e) => e.obtained === true).length;
       }
-      var currentPrice = 0
-      this.listFull.forEach((item) => {
-        if (
-          item.obtained !== true ||
-          this.totalTagExcludeList.includes(item.tag)
-        ) {
-          return
-        }
-        if (typeof item.price !== 'number') {
-          item.price = 0
-        }
-        currentPrice += (item.price || 0) * item.quantity
-      })
-      currentPrice = currentPrice.toFixed(2)
-      return currentPrice
+      return this.list
+        .map((e) => e.items)
+        .flat()
+        .filter((e) => e.obtained === true).length;
     },
-    totalPrice () {
-      if (this.listFull.length === 0) {
-        return 0
+    currentPrice() {
+      if (this.list === null || this.list.length === 0) {
+        return 0;
       }
-      var totalPrice = 0
-      this.listFull.forEach((item) => {
-        if (this.totalTagExcludeList.includes(item.tag)) {
-          return
-        }
-        if (typeof item.price !== 'number') {
-          item.price = 0
-        }
-        totalPrice += (item.price || 0) * item.quantity
-      })
-      totalPrice = totalPrice.toFixed(2)
-      return totalPrice
-    },
-    totalAllInclusivePrice () {
-      if (this.listFull.length === 0) {
-        return 0
+      let list = structuredClone(this.list);
+      if (this.sortBy === "tags") {
+        list = this.list.map((e) => e.items).flat();
       }
-      var totalPrice = 0
-      this.listFull.forEach((item) => {
-        if (typeof item.price !== 'number') {
-          item.price = 0
-        }
-        totalPrice += (item.price || 0) * item.quantity
-      })
-      totalPrice = totalPrice.toFixed(2)
-      return totalPrice
+
+      console.log({ list });
+      return list
+        .filter(
+          (item) =>
+            !this.totalTagExcludeList.includes(item.tag) &&
+            item.obtained === true
+        )
+        .reduce((e, c) => e.price * e.quantity + c.price * c.quantity, 0);
     },
-    participatingFlatmates () {
+    totalPrice() {
+      if (this.list === null || this.list.length === 0) {
+        return 0;
+      }
+      if (this.sortBy !== "tags") {
+        return this.list
+          .filter((item) => !this.totalTagExcludeList.includes(item.tag))
+          .reduce((e, c) => e.price * e.quantity + c.price * c.quantity, 0)
+          .toFixed(2);
+      }
+      return this.list
+        .map((e) => e.items)
+        .flat()
+        .filter((item) => !this.totalTagExcludeList.includes(item.tag))
+        .reduce((e, c) => e.price * e.quantity + c.price * c.quantity, 0)
+        .toFixed(2);
+    },
+    totalAllInclusivePrice() {
+      if (this.list === null || this.list.length === 0) {
+        return 0;
+      }
+      if (this.sortBy !== "tags") {
+        return this.list.reduce((e, c) => e.price + c.price, 0).toFixed(2);
+      }
+      return this.list
+        .map((e) => e.items)
+        .flat()
+        .reduce((e, c) => e.price + c.price, 0)
+        .toFixed(2);
+    },
+    totalItems() {
+      if (this.list === null || this.list.length === 0) {
+        return 0;
+      }
+      if (this.sortBy !== "tags") {
+        return this.list.length;
+      }
+      return this.list.map((e) => e.items).flat().length;
+    },
+    participatingFlatmates() {
       return this.flatmates.filter(
         (u) => u.disabled !== true && u.registered === true
-      )
+      );
     },
-    equalPricePerPerson () {
+    equalPricePerPerson() {
       if (this.manualSplit !== 0) {
-        return this.totalPrice / this.manualSplit
+        return this.totalPrice / this.manualSplit;
       }
-      return this.totalPrice / this.participatingFlatmates.length
+      return this.totalPrice / this.participatingFlatmates.length;
     },
-    totalPercentage () {
-      return Math.round((100 * this.currentPrice) / this.totalPrice) || 0
-    }
+    totalPercentage() {
+      return Math.round((100 * this.currentPrice) / this.totalPrice) || 0;
+    },
   },
   methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+    CopyHrefToClipboard() {
+      common.CopyHrefToClipboard();
     },
-    ActivateNewItemModal (tag) {
+    ActivateNewItemModal(tag) {
       this.newItemProps = {
         withName: this.itemSearch,
-        withTag: tag || ''
-      }
-      this.isNewItemModalActive = true
-      this.itemSearch = ''
+        withTag: tag || "",
+      };
+      this.isNewItemModalActive = true;
+      this.itemSearch = "";
     },
-    ActivateEditItemModal (itemId) {
+    ActivateEditItemModal(itemId) {
       this.editItemProps = {
         shoppingListId: this.id,
-        id: itemId
-      }
-      this.isEditItemModalActive = true
+        id: itemId,
+      };
+      this.isEditItemModalActive = true;
     },
-    ItemByNameInList (item) {
-      var vm = this
+    ItemByNameInList(item) {
+      var vm = this;
       return (
         item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
-      )
+      );
     },
-    FocusSearchBox () {
-      this.$refs.search.$el.focus()
+    FocusSearchBox() {
+      this.$refs.search.$el.focus();
     },
-    RestructureShoppingListToTags (list) {
-      return shoppinglistCommon.RestructureShoppingListToTags(list)
-    },
-    GetShoppingList () {
+    GetShoppingList() {
       if (this.editing === true) {
-        return
+        return;
       }
-      var id = this.id
+      var id = this.id;
       shoppinglist
         .GetShoppingList(id)
         .then((resp) => {
-          this.name = resp.data.spec.name
-          this.notes = resp.data.spec.notes || ''
-          this.author = resp.data.spec.author
-          this.authorLast = resp.data.spec.authorLast
-          this.completed = resp.data.spec.completed
-          this.creationTimestamp = resp.data.spec.creationTimestamp
-          this.modificationTimestamp = resp.data.spec.modificationTimestamp
-          this.templateId = resp.data.spec.templateId
-          this.totalTagExcludeList = resp.data.spec.totalTagExclude || []
+          this.name = resp.data.spec.name;
+          this.notes = resp.data.spec.notes || "";
+          this.author = resp.data.spec.author;
+          this.authorLast = resp.data.spec.authorLast;
+          this.completed = resp.data.spec.completed;
+          this.creationTimestamp = resp.data.spec.creationTimestamp;
+          this.modificationTimestamp = resp.data.spec.modificationTimestamp;
+          this.templateId = resp.data.spec.templateId;
+          this.totalTagExcludeList = resp.data.spec.totalTagExclude || [];
         })
         .catch((err) => {
+          console.log({ err });
           if (err.response.status === 404) {
             common.DisplayFailureToast(
-              'Error list not found' +
-                '<br/>' +
+              "Error list not found" +
+                "<br/>" +
                 err.response.data.metadata.response
-            )
-            this.$router.push({ name: 'Shopping list' })
-            return
+            );
+            this.$router.push({ name: "Shopping list" });
+            return;
           }
           common.DisplayFailureToast(
-            'Error loading the shopping list' +
-              '<br/>' +
+            "Error loading the shopping list" +
+              "<br/>" +
               err.response.data.metadata.response
-          )
-        })
+          );
+        });
 
       shoppinglist.GetAllShoppingListItemTags().then((resp) => {
-        this.itemIsLoading = false
+        this.itemIsLoading = false;
         if (resp.data.list === null) {
-          return
+          return;
         }
-        this.tags = resp.data.list.map((i) => i.name) || []
-      })
+        this.tags = resp.data.list.map((i) => i.name) || [];
+      });
       shoppinglist.GetShoppingListItemTags(this.id).then((resp) => {
-        this.tagsList = resp.data.list || []
-      })
+        this.tagsList = resp.data.list || [];
+      });
     },
-    UpdateShoppingList () {
-      this.notesFromEmpty = false
-      this.editingMeta = false
-      this.editing = false
+    UpdateShoppingList() {
+      this.notesFromEmpty = false;
+      this.editingMeta = false;
+      this.editing = false;
 
-      var id = this.id
+      var id = this.id;
       shoppinglist
         .UpdateShoppingList(
           id,
@@ -980,287 +972,275 @@ export default {
         )
         .catch((err) => {
           common.DisplayFailureToast(
-            'Failed to update shopping list' +
-              '<br/>' +
+            "Failed to update shopping list" +
+              "<br/>" +
               err.response.data.metadata.response
-          )
-        })
+          );
+        });
     },
-    PatchShoppingListCompleted (id, completed) {
+    PatchShoppingListCompleted(id, completed) {
       shoppinglist
         .PatchShoppingListCompleted(id, completed)
         .then((resp) => {
-          this.completed = resp.data.spec.completed
+          this.completed = resp.data.spec.completed;
         })
         .catch((err) => {
           common.DisplayFailureToast(
-            'Failed to set list as completed' +
-              '<br/>' +
+            "Failed to set list as completed" +
+              "<br/>" +
               err.response.data.metadata.response
-          )
-        })
+          );
+        });
     },
-    DeleteShoppingListTagItems (name) {
+    DeleteShoppingListTagItems(name) {
       Dialog.confirm({
-        title: 'Delete shopping list tag items',
+        title: "Delete shopping list tag items",
         message:
           `Are you sure that you wish to delete '${name}'?` +
-          '<br/>' +
-          'This action cannot be undone.',
-        confirmText: 'Delete tag items',
-        type: 'is-danger',
+          "<br/>" +
+          "This action cannot be undone.",
+        confirmText: "Delete tag items",
+        type: "is-danger",
         hasIcon: true,
         onConfirm: () => {
-          this.deleteLoading = true
+          this.deleteLoading = true;
           shoppinglist
             .DeleteShoppingListTagItems(this.id, name)
             .then((resp) => {
-              this.deleteLoading = false
-              common.DisplaySuccessToast('Deleted the shopping list tag')
-              this.GetShoppingListItems()
+              this.deleteLoading = false;
+              common.DisplaySuccessToast("Deleted the shopping list tag");
+              this.GetShoppingListItems();
             })
             .catch((err) => {
-              this.deleteLoading = false
+              this.deleteLoading = false;
               common.DisplayFailureToast(
-                'Failed to delete the shopping list' +
-                  '<br/>' +
+                "Failed to delete the shopping list" +
+                  "<br/>" +
                   err.response.data.metadata.response
-              )
-            })
-        }
-      })
+              );
+            });
+        },
+      });
     },
-    DeleteShoppingList (id) {
+    DeleteShoppingList(id) {
       Dialog.confirm({
-        title: 'Delete shopping list',
+        title: "Delete shopping list",
         message:
-          'Are you sure that you wish to delete this shopping list?' +
-          '<br/>' +
-          'This action cannot be undone.',
-        confirmText: 'Delete shopping list',
-        type: 'is-danger',
+          "Are you sure that you wish to delete this shopping list?" +
+          "<br/>" +
+          "This action cannot be undone.",
+        confirmText: "Delete shopping list",
+        type: "is-danger",
         hasIcon: true,
         onConfirm: () => {
-          this.deleteLoading = true
-          window.clearInterval(this.intervalLoop)
+          this.deleteLoading = true;
+          window.clearInterval(this.intervalLoop);
           shoppinglist
             .DeleteShoppingList(id)
             .then((resp) => {
-              common.DisplaySuccessToast('Deleted the shopping list')
-              shoppinglistCommon.DeleteShoppingListFromCache(id)
+              common.DisplaySuccessToast("Deleted the shopping list");
+              shoppinglistCommon.DeleteShoppingListFromCache(id);
               setTimeout(() => {
-                this.$router.push({ name: 'Shopping list' })
-              }, 1 * 1000)
+                this.$router.push({ name: "Shopping list" });
+              }, 1 * 1000);
             })
             .catch((err) => {
-              this.deleteLoading = false
+              this.deleteLoading = false;
               common.DisplayFailureToast(
-                'Failed to delete the shopping list' +
-                  '<br/>' +
+                "Failed to delete the shopping list" +
+                  "<br/>" +
                   err.response.data.metadata.response
-              )
-            })
-        }
-      })
+              );
+            });
+        },
+      });
     },
-    GetShoppingListItems () {
-      var obtained
+    GetShoppingListItems() {
+      var obtained;
       switch (this.itemDisplayState) {
         case 1:
-          obtained = false
-          break
+          obtained = false;
+          break;
         case 2:
-          obtained = true
-          break
+          obtained = true;
+          break;
       }
 
       shoppinglist
-        .GetShoppingListItems(this.id, this.sortBy, undefined)
+        .GetShoppingListItems(this.id, this.sortBy, obtained)
         .then((resp) => {
-          var responseList = resp.data.list || []
-          this.totalItems = responseList === null ? 0 : responseList.length
-          if (this.list === null) {
-            this.list = []
-          }
-
-          if (responseList !== this.list) {
-            this.listFull = responseList
-            this.list = responseList.filter(
-              (item) =>
-                item.obtained === obtained || typeof obtained === 'undefined'
-            )
-            shoppinglistCommon.WriteShoppingListToCache(this.id, this.list)
-            this.listIsLoading = false
-            this.hasInitialLoaded = true
-          }
-        })
+          this.list = resp.data.list;
+          console.log("list", resp.data.list);
+          this.listIsLoading = false;
+          this.hasInitialLoaded = true;
+        });
     },
-    UpdateShoppingListItemTag (tagName, tagNameNew) {
+    UpdateShoppingListItemTag(tagName, tagNameNew) {
       shoppinglist
         .UpdateShoppingListItemTag(this.id, tagName, tagNameNew)
         .catch((err) => {
           common.DisplayFailureToast(
-            'Failed to update the shopping list tag' +
-              '<br/>' +
+            "Failed to update the shopping list tag" +
+              "<br/>" +
               err.response.data.metadata.response
-          )
-        })
+          );
+        });
     },
-    TimestampToCalendar (timestamp) {
-      return common.TimestampToCalendar(timestamp)
+    TimestampToCalendar(timestamp) {
+      return common.TimestampToCalendar(timestamp);
     },
-    LoopStart () {
-      if (shoppinglistCommon.GetShoppingListAutoRefresh() === 'false') {
-        return
+    LoopStart() {
+      if (shoppinglistCommon.GetShoppingListAutoRefresh() === "false") {
+        return;
       }
       this.intervalLoop = window.setInterval(() => {
         if (this.editing === true) {
-          return
+          return;
         }
-        this.GetShoppingList()
-        this.GetShoppingListItems()
+        this.GetShoppingList();
+        this.GetShoppingListItems();
 
-        var now = new Date()
+        var now = new Date();
         var timePassed =
-          now.getTime() / 1000 - this.loopCreated.getTime() / 1000
+          now.getTime() / 1000 - this.loopCreated.getTime() / 1000;
         if (timePassed >= 3600 / 4) {
-          window.clearInterval(this.intervalLoop)
+          window.clearInterval(this.intervalLoop);
         }
-      }, 3 * 1000)
+      }, 3 * 1000);
     },
-    LoopStop () {
-      window.clearInterval(this.intervalLoop)
+    LoopStop() {
+      window.clearInterval(this.intervalLoop);
     },
-    CheckDeviceIsMobile () {
-      this.deviceIsMobile = common.DeviceIsMobile()
+    CheckDeviceIsMobile() {
+      this.deviceIsMobile = common.DeviceIsMobile();
     },
-    ManageStickyHeader () {
+    ManageStickyHeader() {
       this.HeaderIsSticky =
-        window.pageYOffset > document.getElementById('ListName').offsetTop + 30
+        window.pageYOffset > document.getElementById("ListName").offsetTop + 30;
     },
-    ResetLoopTime () {
-      this.loopCreated = new Date()
+    ResetLoopTime() {
+      this.loopCreated = new Date();
     },
-    FocusEl (name) {
+    FocusEl(name) {
       this.$nextTick(() => {
-        this.$refs[name].focus()
-      })
+        this.$refs[name].focus();
+      });
     },
-    FocusName () {
-      this.FocusEl('name')
+    FocusName() {
+      this.FocusEl("name");
     },
-    FocusNotes () {
-      this.FocusEl('notes')
+    FocusNotes() {
+      this.FocusEl("notes");
     },
-    FocusSearch () {
-      this.FocusEl('search')
+    FocusSearch() {
+      this.FocusEl("search");
     },
-    TagIsExcluded (tag) {
-      return this.totalTagExcludeList.includes(tag)
+    TagIsExcluded(tag) {
+      return this.totalTagExcludeList.includes(tag);
     },
-    GetFlatmates () {
+    GetFlatmates() {
       flatmates.GetAllFlatmates().then((resp) => {
         if (resp.data.list === null) {
-          this.flatmates = []
-          return
+          this.flatmates = [];
+          return;
         }
-        this.flatmates = resp.data.list
-      })
-    }
+        this.flatmates = resp.data.list;
+      });
+    },
   },
   watch: {
-    id () {
-      console.log('ID changed')
-      window.location.reload(false)
+    id() {
+      console.log("ID changed");
+      window.location.reload(false);
     },
-    sortBy () {
-      shoppinglistCommon.WriteShoppingListSortBy(this.sortBy)
-      this.listIsLoading = true
-      this.ResetLoopTime()
-      this.LoopStop()
-      this.LoopStart()
+    sortBy() {
+      shoppinglistCommon.WriteShoppingListSortBy(this.sortBy);
+      this.listIsLoading = true;
+      this.ResetLoopTime();
+      this.LoopStop();
+      this.LoopStart();
     },
-    itemDisplayState () {
-      this.listIsLoading = true
-      this.GetShoppingListItems()
+    itemDisplayState() {
+      this.listIsLoading = true;
+      this.GetShoppingListItems();
       shoppinglistCommon.WriteShoppingListObtainedFilter(
         this.id,
         this.itemDisplayState
-      )
+      );
     },
-    itemSearch () {
-      shoppinglistCommon.WriteShoppingListSearch(this.id, this.itemSearch)
+    itemSearch() {
+      shoppinglistCommon.WriteShoppingListSearch(this.id, this.itemSearch);
     },
-    hasInitialLoaded () {
-      this.canAnimate = true
+    hasInitialLoaded() {
+      this.canAnimate = true;
     },
-    completed () {
-      var enableAnimations = common.GetEnableAnimations()
+    completed() {
+      var enableAnimations = common.GetEnableAnimations();
       if (
         this.completed === true &&
-        enableAnimations !== 'false' &&
+        enableAnimations !== "false" &&
         this.canAnimate === true
       ) {
-        common.Hooray()
+        common.Hooray();
       }
     },
-    author () {
-      if (this.authorNames !== '') {
-        return
-      }
-      flatmates.GetFlatmate(this.author).then((resp) => {
-        this.authorNames = resp.data.spec.names
-      })
-    },
-    authorLast () {
-      if (this.authorLastNames !== '') {
-        return
+    author() {
+      if (this.authorNames !== "") {
+        return;
       }
       flatmates.GetFlatmate(this.author).then((resp) => {
-        this.authorLastNames = resp.data.spec.names
-      })
+        this.authorNames = resp.data.spec.names;
+      });
     },
-    templateId () {
-      if (typeof this.templateId === 'undefined' || this.templateId === '') {
-        return
+    authorLast() {
+      if (this.authorLastNames !== "") {
+        return;
+      }
+      flatmates.GetFlatmate(this.author).then((resp) => {
+        this.authorLastNames = resp.data.spec.names;
+      });
+    },
+    templateId() {
+      if (typeof this.templateId === "undefined" || this.templateId === "") {
+        return;
       }
       shoppinglist.GetShoppingList(this.templateId).then((resp) => {
-        this.templateListName = resp.data.spec.name
-      })
-    }
+        this.templateListName = resp.data.spec.name;
+      });
+    },
   },
-  async beforeMount () {
-    this.GetShoppingList()
-    this.GetShoppingListItems()
-    this.GetFlatmates()
+  async beforeMount() {
+    this.GetShoppingList();
+    this.GetShoppingListItems();
+    this.GetFlatmates();
     if (window.innerWidth <= 330) {
-      this.ratherSmallerScreen = true
+      this.ratherSmallerScreen = true;
     }
   },
-  async created () {
-    this.CheckDeviceIsMobile()
-    window.addEventListener('resize', this.CheckDeviceIsMobile, true)
-    window.addEventListener('scroll', this.ManageStickyHeader, true)
-    this.LoopStart()
-    window.addEventListener('focus', this.ResetLoopTime, true)
+  async created() {
+    this.CheckDeviceIsMobile();
+    window.addEventListener("resize", this.CheckDeviceIsMobile, true);
+    window.addEventListener("scroll", this.ManageStickyHeader, true);
+    this.LoopStart();
+    window.addEventListener("focus", this.ResetLoopTime, true);
     // TODO better way to do this? why does this not pull in through the data state function?
     this.itemDisplayState = shoppinglistCommon.GetShoppingListObtainedFilter(
       this.id
-    )
+    );
   },
-  mounted () {
-    if (typeof this.ItemId !== 'undefined') {
-      var el = this.$refs[this.ItemId][0].$el
-      window.scrollTo(0, el.offsetTop)
+  mounted() {
+    if (typeof this.ItemId !== "undefined") {
+      var el = this.$refs[this.ItemId][0].$el;
+      window.scrollTo(0, el.offsetTop);
     }
   },
-  beforeDestroy () {
-    this.LoopStop()
-    window.removeEventListener('resize', this.CheckDeviceIsMobile, true)
-    window.removeEventListener('scroll', this.ManageStickyHeader, true)
-    window.removeEventListener('focus', this.ResetLoopTime, true)
-  }
-}
+  beforeDestroy() {
+    this.LoopStop();
+    window.removeEventListener("resize", this.CheckDeviceIsMobile, true);
+    window.removeEventListener("scroll", this.ManageStickyHeader, true);
+    window.removeEventListener("focus", this.ResetLoopTime, true);
+  },
+};
 </script>
 
 <style scoped>

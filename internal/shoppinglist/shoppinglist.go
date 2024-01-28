@@ -241,7 +241,8 @@ func (m *ShoppingListManager) Create(shoppingList types.ShoppingListSpec, option
 		return types.ShoppingListSpec{}, ErrFailedToGetItemsFromShoppingList
 	}
 
-	for _, item := range shoppingListItems {
+	// TODO handle runtime asset failure when using sortBy=tag
+	for _, item := range shoppingListItems.([]types.ShoppingItemSpec) {
 		newItem := types.ShoppingItemSpec{
 			Name:       item.Name,
 			Notes:      item.Notes,
