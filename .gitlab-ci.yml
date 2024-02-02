@@ -89,6 +89,7 @@ copy-container-image-to-dockerhub:
   stage: post-build
   only:
     - main
+    - tags
   image: $IMAGE_GOLANG_ALPINE
   before_script:
     - apk add --no-cache git
