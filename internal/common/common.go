@@ -22,6 +22,7 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"math/rand"
 	"os"
 	"path"
 	"regexp"
@@ -336,4 +337,15 @@ func StringInStringSlice(input string, list []string) bool {
 		}
 	}
 	return false
+}
+
+// RandStringRunes generates a random string with length of n using runes
+// nolint:gosec
+func RandStringRunes(n int) string {
+	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letterRunes[rand.Intn(len(letterRunes))]
+	}
+	return string(b)
 }
