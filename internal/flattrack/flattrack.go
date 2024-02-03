@@ -13,6 +13,7 @@ import (
 	"gitlab.com/flattrack/flattrack/internal/metrics"
 	"gitlab.com/flattrack/flattrack/internal/migrations"
 	"gitlab.com/flattrack/flattrack/internal/registration"
+	"gitlab.com/flattrack/flattrack/internal/scheduling"
 	"gitlab.com/flattrack/flattrack/internal/settings"
 	"gitlab.com/flattrack/flattrack/internal/shoppinglist"
 	"gitlab.com/flattrack/flattrack/internal/system"
@@ -29,6 +30,7 @@ type Manager struct {
 	registration *registration.Manager
 	settings     *settings.Manager
 	system       *system.Manager
+	scheduling   *scheduling.Manager
 }
 
 func NewManager() *Manager {
@@ -49,6 +51,7 @@ func NewManager() *Manager {
 	system := system.NewManager(db)
 	registration := registration.NewManager(users, system, settings)
 	metrics := metrics.NewManager()
+	scheduling := scheduling.NewManager(db)
 	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system)
 	return &Manager{
 		httpserver:   httpserver,
@@ -60,6 +63,7 @@ func NewManager() *Manager {
 		registration: registration,
 		settings:     settings,
 		system:       system,
+		scheduling:   scheduling,
 	}
 }
 
@@ -80,5 +84,6 @@ func (mi *ManagerInit) Run() {
 	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
 	go mi.metrics.Listen()
 	go mi.health.Listen()
+	go mi.scheduling.Run()
 	mi.httpserver.Listen()
 }
