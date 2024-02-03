@@ -9,10 +9,10 @@ import (
 
 	_ "github.com/lib/pq"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/leaderelection"
-	"k8s.io/client-go/tools/leaderelection/resourcelock"
 
 	"gitlab.com/flattrack/flattrack/internal/common"
+	"gitlab.com/flattrack/flattrack/internal/forks/k8s.io/client-go/tools/leaderelection"
+	"gitlab.com/flattrack/flattrack/internal/forks/k8s.io/client-go/tools/leaderelection/resourcelock"
 )
 
 type Lock struct {
