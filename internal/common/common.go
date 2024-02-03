@@ -364,3 +364,9 @@ func RandStringRunes(n int) string {
 	}
 	return string(b)
 }
+
+// Pointer returns any type of variable as a pointer to it's value
+func Pointer[T any](i T) *T {
+	o := &i
+	return o
+}

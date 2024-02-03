@@ -1069,7 +1069,7 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetShoppingList ...
-// responds with list of shopping lists
+// responds with a shopping list
 func (h *HTTPServer) GetShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
 	vars := mux.Vars(r)
@@ -2544,6 +2544,336 @@ func (h *HTTPServer) PutSettingsShoppingList(w http.ResponseWriter, r *http.Requ
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
+// GetTask ...
+// responds with a task
+func (h *HTTPServer) GetTask(w http.ResponseWriter, r *http.Request) {
+	var context string
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	task, err := h.tasks.Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get task",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched shopping list",
+		},
+		Spec: task,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// GetTasks ...
+// responds with shopping list by id
+func (h *HTTPServer) GetTasks(w http.ResponseWriter, r *http.Request) {
+	var context string
+	modificationTimestampAfter, _ := strconv.Atoi(r.FormValue("modificationTimestampAfter"))
+	creationTimestampAfter, _ := strconv.Atoi(r.FormValue("creationTimestampAfter"))
+	limit, _ := strconv.Atoi(r.FormValue("limit"))
+
+	options := types.TaskListOptions{
+		SortBy: types.TaskSortType(r.FormValue("sortBy")),
+		Limit:  limit,
+		Selector: types.TaskListSelector{
+			Name:                       r.FormValue("name"),
+			ModificationTimestampAfter: modificationTimestampAfter,
+			CreationTimestampAfter:     creationTimestampAfter,
+		},
+	}
+	if c := r.FormValue("paused"); c != "" {
+		options.Selector.Paused = common.Pointer(c == "true")
+	}
+	if c := r.FormValue("completed"); c != "" {
+		options.Selector.Completed = common.Pointer(c == "true")
+	}
+
+	tasks, err := h.tasks.List(options)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get tasks",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched tasks",
+		},
+		List: tasks,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// PostTask ...
+// creates a new task
+func (h *HTTPServer) PostTask(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	var task types.Task
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+	if err := json.Unmarshal(body, &task); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	task.Author = id
+	newTask, err := h.tasks.Create(task)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to create shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "created shopping list",
+		},
+		Spec: newTask,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusCreated, JSONresp)
+}
+
+// PatchTask ...
+// patches an existing task
+func (h *HTTPServer) PatchTask(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	var task types.Task
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+	if err := json.Unmarshal(body, &task); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	_, err = h.tasks.Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
+	userID, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	task.AuthorLast = userID
+	taskPatched, err := h.tasks.Patch(id, task)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to patch shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "patched shopping list",
+		},
+		Spec: taskPatched,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// PutTask ...
+// updates an existing task
+func (h *HTTPServer) PutTask(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	var task types.Task
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+	if err := json.Unmarshal(body, &task); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	userID, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
+	_, err = h.tasks.Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
+	task.AuthorLast = userID
+	shoppingListUpdated, err := h.tasks.Update(id, task)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to update task",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "updated task",
+		},
+		Spec: shoppingListUpdated,
+	}
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// DeleteTask ...
+// deletes a new task by it's id
+func (h *HTTPServer) DeleteTask(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if _, err := h.tasks.Get(id); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get task",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
+	if err := h.tasks.Delete(id); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to delete task",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "deleted task",
+		},
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
 // GetSettingsFlatNotes ...
 // responds with the notes for flat
 func (h *HTTPServer) GetSettingsFlatNotes(w http.ResponseWriter, r *http.Request) {
@@ -3317,6 +3647,36 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		{
 			EndpointPath: "/apps/shoppinglist/tags/{id}",
 			HandlerFunc:  httpUseMiddleware(h.DeleteShoppingTag, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodDelete,
+		},
+		{
+			EndpointPath: "/apps/tasks/lists",
+			HandlerFunc:  httpUseMiddleware(h.GetTasks, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: "/apps/tasks/lists",
+			HandlerFunc:  httpUseMiddleware(h.PostTask, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodPost,
+		},
+		{
+			EndpointPath: "/apps/tasks/lists/{id}",
+			HandlerFunc:  httpUseMiddleware(h.GetTask, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: "/apps/tasks/lists/{id}",
+			HandlerFunc:  httpUseMiddleware(h.PatchTask, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodPatch,
+		},
+		{
+			EndpointPath: "/apps/tasks/lists/{id}",
+			HandlerFunc:  httpUseMiddleware(h.PutTask, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodPut,
+		},
+		{
+			EndpointPath: "/apps/tasks/lists/{id}",
+			HandlerFunc:  httpUseMiddleware(h.DeleteTask, h.HTTPvalidateJWT()),
 			HTTPMethod:   http.MethodDelete,
 		},
 		{

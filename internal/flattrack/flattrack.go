@@ -17,6 +17,7 @@ import (
 	"gitlab.com/flattrack/flattrack/internal/settings"
 	"gitlab.com/flattrack/flattrack/internal/shoppinglist"
 	"gitlab.com/flattrack/flattrack/internal/system"
+	"gitlab.com/flattrack/flattrack/internal/tasks"
 	"gitlab.com/flattrack/flattrack/internal/users"
 )
 
@@ -31,6 +32,7 @@ type manager struct {
 	settings     *settings.Manager
 	system       *system.Manager
 	scheduling   *scheduling.Manager
+	tasks        *tasks.Manager
 }
 
 func NewManager() *manager {
@@ -52,8 +54,10 @@ func NewManager() *manager {
 	system := system.NewManager(db)
 	registration := registration.NewManager(users, system, settings)
 	metrics := metrics.NewManager()
-	scheduling := scheduling.NewManager(db)
-	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling)
+	tasks := tasks.NewManager(db, users)
+	scheduling := scheduling.NewManager(db).
+		RegisterFunc(tasks.Reconcile)
+	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling, tasks)
 	return &manager{
 		httpserver:   httpserver,
 		metrics:      metrics,
@@ -65,6 +69,7 @@ func NewManager() *manager {
 		settings:     settings,
 		system:       system,
 		scheduling:   scheduling,
+		tasks:        tasks,
 	}
 }
 

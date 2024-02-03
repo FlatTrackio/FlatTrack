@@ -70,6 +70,12 @@ export default {
           description: 'View your flatmates and their contact details',
           icon: 'account-group',
           routeName: 'My Flatmates'
+        },
+        {
+          name: 'Tasks',
+          description: 'Schedule assigned tasks for needs within the flat',
+          icon: 'clipboard-list',
+          routeName: 'Tasks'
         }
       ]
     }

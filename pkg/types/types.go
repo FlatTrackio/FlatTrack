@@ -88,10 +88,11 @@ type UserList struct {
 // UserSelector ...
 // fields for filtering user account lists
 type UserSelector struct {
-	ID      string `json:"id,omitempty"`
-	Group   string `json:"group,omitempty"`
-	NotID   string `json:"notId,omitempty"`
-	NotSelf string `json:"notSelf,omitempty"`
+	ID       string `json:"id,omitempty"`
+	Disabled *bool  `json:"disabled,omitempty"`
+	Group    string `json:"group,omitempty"`
+	NotID    string `json:"notId,omitempty"`
+	NotSelf  string `json:"notSelf,omitempty"`
 }
 
 // ShoppingListSpec ...
@@ -254,6 +255,82 @@ type UserCreationSecretSpec struct {
 type UserCreationSecretSelector struct {
 	UserID string `json:"userId"`
 }
+
+// TaskFrequency to configure occurrence of task
+type TaskFrequency string
+
+var (
+	TaskFrequencyOnce        TaskFrequency = "once"
+	TaskFrequencyDaily       TaskFrequency = "daily"
+	TaskFrequencyWeekly      TaskFrequency = "weekly"
+	TaskFrequencyFortnightly TaskFrequency = "fortnightly"
+	TaskFrequencyMonthly     TaskFrequency = "monthly"
+)
+
+// TaskAssigneeType to configure who should be assigned next
+type TaskAssigneeType string
+
+var (
+	TaskAssigneeNext   TaskAssigneeType = "next"
+	TaskAssigneeRandom TaskAssigneeType = "random"
+	TaskAssigneeSelf   TaskAssigneeType = "self"
+)
+
+// Task ...
+// a task to complete within the flat
+type Task struct {
+	ID                    string           `json:"id"`
+	Name                  string           `json:"name"`
+	Notes                 string           `json:"notes"`
+	Assignee              string           `json:"assignee"`
+	AssigneeType          TaskAssigneeType `json:"assigneeType"`
+	TargetStartTimestamp  int64            `json:"targetStartTimestamp"`
+	Frequency             TaskFrequency    `json:"taskFrequency"`
+	TemplateID            *string          `json:"templateID,omitempty"`
+	LatestInstanceId      *string          `json:"latestInstanceID,omitempty"`
+	Paused                *bool            `json:"paused"`
+	Completed             *bool            `json:"completed"`
+	Author                string           `json:"author"`
+	AuthorLast            string           `json:"authorLast"`
+	CreationTimestamp     int64            `json:"creationTimestamp"`
+	ModificationTimestamp int64            `json:"modificationTimestamp"`
+	DeletionTimestamp     int64            `json:"deletionTimestamp"`
+}
+
+// TaskListSelector ...
+// options for creating and selecting lists
+type TaskListSelector struct {
+	Name                       string  `json:"name"`
+	Paused                     *bool   `json:"paused"`
+	Completed                  *bool   `json:"completed"`
+	TemplateID                 *string `json:"templateID"`
+	ModificationTimestampAfter int     `json:"modificationTimestampAfter"`
+	CreationTimestampAfter     int     `json:"creationTimestampAfter"`
+}
+
+// TaskListOptions ...
+// options for lists
+type TaskListOptions struct {
+	SortBy   TaskSortType     `json:"sortBy"`
+	Limit    int              `json:"limit"`
+	Selector TaskListSelector `json:"selector"`
+}
+
+// TaskSortType ...
+// ways of sorting tasks
+type TaskSortType string
+
+// TaskSortTypes ...
+// ways of sorting tasks
+const (
+	TaskSortByRecentlyAdded          = "recentlyAdded"
+	TaskSortByRecentlyUpdated        = "recentlyUpdated"
+	TaskSortByLastAdded              = "lastAdded"
+	TaskSortByLastUpdated            = "lastUpdated"
+	TaskSortByAlphabeticalDescending = "alphabeticalDescending"
+	TaskSortByAlphabeticalAscending  = "alphabeticalAscending"
+	TaskSortByTemplated              = "templated"
+)
 
 // FlatName ...
 // the name of the flat

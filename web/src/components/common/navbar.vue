@@ -73,6 +73,12 @@
                   :to="{ name: 'My Flatmates' }"
                 ></b-menu-item>
                 <b-menu-item
+                  icon="clipboard-list"
+                  label="Tasks"
+                  tag="router-link"
+                  :to="{ name: 'Tasks' }"
+                ></b-menu-item>
+                <b-menu-item
                   icon="apps"
                   label="Apps"
                   tag="router-link"
