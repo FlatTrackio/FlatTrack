@@ -45,12 +45,12 @@ func (l *Lock) Get(ctx context.Context) (ler *resourcelock.LeaderElectionRecord,
 	}()
 	for rows.Next() {
 		ler = &resourcelock.LeaderElectionRecord{}
-		var acquireTime, renewTime int
+		var acquireTime, renewTime int64
 		if err = rows.Scan(&ler.HolderIdentity, &ler.LeaseDurationSeconds, &acquireTime, &renewTime, &ler.LeaderTransitions); err != nil {
 			return nil, nil, err
 		}
-		ler.AcquireTime = metav1.NewTime(time.Unix(int64(acquireTime), 0))
-		ler.RenewTime = metav1.NewTime(time.Unix(int64(renewTime), 0))
+		ler.AcquireTime = metav1.NewTime(time.Unix(acquireTime, 0))
+		ler.RenewTime = metav1.NewTime(time.Unix(renewTime, 0))
 	}
 	if ler == nil {
 		l.lease = nil
@@ -67,7 +67,7 @@ func (l *Lock) Get(ctx context.Context) (ler *resourcelock.LeaderElectionRecord,
 func (l *Lock) Create(ctx context.Context, ler resourcelock.LeaderElectionRecord) error {
 	sqlStatement := `insert into leader_election (name, holderIdentity, leaseDurationSeconds, acquireTime, renewTime, leaderTransitions)
                      values ($1, $2, $3, $4, $5, $6)
-                     returning name, holderIdentity, leaseDurationSeconds, acquireTime, renewTime, leaderTransitions`
+                     returning holderIdentity, leaseDurationSeconds, acquireTime, renewTime, leaderTransitions`
 	rows, err := l.db.Query(sqlStatement, l.name, ler.HolderIdentity, ler.LeaseDurationSeconds, ler.AcquireTime.Unix(), ler.RenewTime.Unix(), ler.LeaderTransitions)
 	if err != nil {
 		return err
@@ -81,9 +81,12 @@ func (l *Lock) Create(ctx context.Context, ler resourcelock.LeaderElectionRecord
 		if l.lease == nil {
 			l.lease = &resourcelock.LeaderElectionRecord{}
 		}
-		if err = rows.Scan(&l.lease.HolderIdentity, &l.lease.LeaseDurationSeconds, &l.lease.AcquireTime, &l.lease.RenewTime, &l.lease.LeaderTransitions); err != nil {
+		var acquireTime, renewTime int64
+		if err = rows.Scan(&l.lease.HolderIdentity, &l.lease.LeaseDurationSeconds, &acquireTime, &renewTime, &l.lease.LeaderTransitions); err != nil {
 			return err
 		}
+		l.lease.AcquireTime = metav1.NewTime(time.Unix(acquireTime, 0))
+		l.lease.RenewTime = metav1.NewTime(time.Unix(renewTime, 0))
 	}
 	return nil
 }
@@ -124,17 +127,7 @@ func (l *Lock) Run(fn func() error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	go func() {
-		for {
-			if l.lease != nil && l.lease.HolderIdentity == l.id {
-				if err := fn(); err != nil {
-					log.Println(err)
-				}
-			}
-			time.Sleep(10 * time.Second)
-		}
-	}()
-	leaderelection.RunOrDie(ctx, leaderelection.LeaderElectionConfig{
+	leaderelector, err := leaderelection.NewLeaderElector(leaderelection.LeaderElectionConfig{
 		Lock:            l,
 		ReleaseOnCancel: true,
 		LeaseDuration:   15 * time.Second,
@@ -153,4 +146,19 @@ func (l *Lock) Run(fn func() error) {
 			},
 		},
 	})
+	if err != nil {
+		log.Fatalf("leader election error: %+v\n", err)
+	}
+
+	go func() {
+		for {
+			if leaderelector.IsLeader() {
+				if err := fn(); err != nil {
+					log.Println(err)
+				}
+			}
+			time.Sleep(10 * time.Second)
+		}
+	}()
+	leaderelector.Run(ctx)
 }
