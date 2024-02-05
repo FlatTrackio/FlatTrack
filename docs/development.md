@@ -44,7 +44,7 @@ Navigate to the root of the repo.
 
 Build the backend
 
-    go build -o bin/flattrack ./main.go
+    ./hack/verify-build-smoketest.sh
 
 
 ## Write an environment file
@@ -59,10 +59,7 @@ Write the credientials for the database into `.env`
 
 ### Start the backend
 
-    ./flattrack
-
-
-## Additional
+    go run .
 
 
 ### Remove migrations

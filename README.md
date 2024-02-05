@@ -43,9 +43,8 @@
 Various options are available for running a FlatTrack instance:
 
 -   [FlatTrack.io hosting](https://flattrack.io) (coming soon)
--   [Self-hosted Kubernetes](./docs/deployment-kubernetes.md) (recommended)
+-   [Self-hosted Kubernetes](./docs/deployment-kubernetes.md)
 -   [Self-hosted Docker-Compose](./docs/deployment-docker-compose.md)
--   [Self-hosted plain Ubuntu server](./docs/deployment-plain.md)
 
 ## Documentation
 
