@@ -104,6 +104,11 @@ func Ping(db *sql.DB) (err error) {
 		log.Println("Error querying database", err.Error())
 		return err
 	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
 	rows.Next()
 	if err := rows.Scan(&zero); err != nil {
 		return err
