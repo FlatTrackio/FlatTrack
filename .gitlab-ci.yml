@@ -242,6 +242,15 @@ lint-backend:
   script:
     - ./hack/verify-lint-backend.sh
 
+verify-documented-env-vars:
+  stage: codequality
+  image: $IMAGE_GOLANG_ALPINE
+  allow_failure: true
+  before_script:
+    - apk add --no-cache git
+  script:
+    - ./hack/verify-documented-env-vars.sh
+
 check-links:
   only:
     - main
