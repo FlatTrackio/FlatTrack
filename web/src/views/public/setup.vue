@@ -161,8 +161,8 @@
               placeholder="Enter a password"
               icon="textbox-password"
               size="is-medium"
-              pattern="^([a-z]*)([A-Z]*).{10,}$"
-              validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              pattern="^([a-zA-Z]*).{10,}$"
+              validation-message="password is invalid. Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"
               icon-right="close-circle"
               icon-right-clickable
               @icon-right-click="password = ''"
@@ -181,8 +181,8 @@
               @keyup.enter.native="Register"
               size="is-medium"
               maxlength="70"
-              pattern="^([a-z]*)([A-Z]*).{10,}$"
-              validation-message="Password is invalid. Passwords must include: one number, one lowercase letter, one uppercase letter, and be eight or more characters."
+              pattern="^([a-zA-Z]*).{10,}$"
+              validation-message="password is invalid. Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"
               icon-right="close-circle"
               icon-right-clickable
               @icon-right-click="passwordConfirm = ''"
