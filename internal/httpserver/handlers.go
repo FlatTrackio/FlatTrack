@@ -2922,16 +2922,6 @@ func (h *HTTPServer) Root(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
-// UnknownEndpoint ...
-// response for hitting an unknown endpoint
-func (h *HTTPServer) UnknownEndpoint(w http.ResponseWriter, r *http.Request) {
-	JSONResponse(r, w, http.StatusNotFound, types.JSONMessageResponse{
-		Metadata: types.JSONResponseMetadata{
-			Response: "This endpoint doesn't seem to exist.",
-		},
-	})
-}
-
 // Healthz ...
 // HTTP handler for health checks
 func (h *HTTPServer) Healthz(w http.ResponseWriter, r *http.Request) {

@@ -271,11 +271,11 @@ func SetFirstOrSecond(first string, second string) string {
 // GetAppDistFolder ...
 // return the path to the folder containing the frontend assets
 func GetAppDistFolder() string {
-	if envSet := GetEnvOrDefault("APP_DIST_FOLDER", ""); envSet != "" {
-		return envSet
-	}
 	if AppBuildMode == "production" || AppBuildMode == "staging" {
 		return AppAssetsFolder
+	}
+	if envSet := GetEnvOrDefault("APP_DIST_FOLDER", ""); envSet != "" {
+		return envSet
 	}
 	pwd, _ := os.Getwd()
 	return path.Join(pwd, "web", "dist")
