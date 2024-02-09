@@ -28,7 +28,12 @@ function Request (request, redirect = true, publicRoute = false) {
   return new Promise((resolve, reject) => {
     var authToken = common.GetAuthToken()
     // if there is no token, and the request is a public route
-    if ((typeof authToken === 'undefined' || authToken === null || authToken === '') && publicRoute !== true) {
+    if (
+      (typeof authToken === 'undefined' ||
+        authToken === null ||
+        authToken === '') &&
+      redirect !== true
+    ) {
       redirectToLogin(redirect)
     }
     request.headers = {
@@ -41,9 +46,9 @@ function Request (request, redirect = true, publicRoute = false) {
       request.baseURL = 'http://localhost:8080'
     }
     axios(request)
-      .then(resp => resolve(resp))
-      .catch(err => {
-        if (err.response.status === 401) {
+      .then((resp) => resolve(resp))
+      .catch((err) => {
+        if (err.response.status === 401 && redirect !== true) {
           redirectToLogin(redirect)
         }
         reject(err)

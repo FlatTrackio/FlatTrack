@@ -286,7 +286,9 @@ export default {
         }
       }
       registration
-        .PostAdminRegister(form)
+        .PostAdminRegister(form, {
+          instanceIDConfirm: this.$route.query.instanceIDConfirm
+        })
         .then((resp) => {
           if (resp.data.data !== '' || typeof resp.data.data !== 'undefined') {
             localStorage.setItem('authToken', resp.data.data)

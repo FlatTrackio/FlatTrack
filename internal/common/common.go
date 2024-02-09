@@ -230,6 +230,11 @@ func GetAppMinioUseSSL() (output string) {
 	return GetEnvOrDefault("APP_MINIO_USE_SSL", "")
 }
 
+// GetRequireInstanceIDWithSetup requires the instance ID to be passed to the setup for registration
+func GetRequireInstanceIDConfirmWithSetup() bool {
+	return GetEnvOrDefault("APP_REQUIRE_INSTANCE_ID_CONFIRM_WITH_SETUP", "false") == "true"
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {

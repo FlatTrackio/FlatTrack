@@ -19,6 +19,9 @@
 package registration
 
 import (
+	"fmt"
+
+	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/groups"
 	"gitlab.com/flattrack/flattrack/internal/settings"
 	"gitlab.com/flattrack/flattrack/internal/system"
@@ -32,49 +35,60 @@ var (
 )
 
 type Manager struct {
-	user     *users.Manager
-	system   *system.Manager
-	settings *settings.Manager
+	user                     *users.Manager
+	system                   *system.Manager
+	settings                 *settings.Manager
+	requireInstanceIDConfirm bool
 }
 
 func NewManager(users *users.Manager, system *system.Manager, settings *settings.Manager) *Manager {
 	return &Manager{
-		user:     users,
-		system:   system,
-		settings: settings,
+		user:                     users,
+		system:                   system,
+		settings:                 settings,
+		requireInstanceIDConfirm: common.GetRequireInstanceIDConfirmWithSetup(),
 	}
 }
 
 // Register ...
 // perform initial FlatTrack instance setup
 func (m *Manager) Register(registration types.Registration) (successful bool, jwt string, err error) {
+	if m.requireInstanceIDConfirm {
+		id, err := m.system.GetInstanceUUID()
+		if err != nil {
+			return false, "", err
+		}
+		if registration.InstanceIDConfirm != id {
+			return false, "", fmt.Errorf("a matching instance ID must be passed to registration")
+		}
+	}
 	// TODO add timezone validation
 	err = m.settings.SetTimezone(registration.Timezone)
 	if err != nil {
-		return successful, jwt, err
+		return false, "", err
 	}
 	// TODO add language validation
 	err = m.settings.SetTimezone(registration.Language)
 	if err != nil {
-		return successful, jwt, err
+		return false, "", err
 	}
 	err = m.settings.SetFlatName(registration.FlatName)
 	if err != nil {
-		return successful, jwt, err
+		return false, "", err
 	}
 	registration.User.Groups = defaultInitalizationGroups
 	registration.User.Registered = true
 	user, err := m.user.CreateUser(registration.User, false)
 	if err != nil || user.ID == "" {
-		return successful, jwt, err
+		return false, "", err
 	}
 	jwt, err = m.user.GenerateJWTauthToken(user.ID, user.AuthNonce, 0)
 	if err != nil {
-		return successful, "", err
+		return false, "", err
 	}
 	err = m.system.SetHasInitialized()
 	if err != nil {
-		return successful, "", err
+		return false, "", err
 	}
 	return true, jwt, err
 }

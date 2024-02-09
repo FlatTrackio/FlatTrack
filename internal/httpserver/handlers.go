@@ -673,19 +673,13 @@ func (h *HTTPServer) GetSystemInitialized(w http.ResponseWriter, r *http.Request
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
-	if !initialised {
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "not initialised",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
+	response := "not initialised"
+	if initialised {
+		response = "initialised"
 	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
-			Response: "initialised",
+			Response: response,
 		},
 		Data: initialised,
 	}
@@ -1044,6 +1038,7 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
+	registrationForm.InstanceIDConfirm = r.FormValue("instanceIDConfirm")
 
 	registered, jwt, err := h.registration.Register(registrationForm)
 	if err != nil {
