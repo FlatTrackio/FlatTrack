@@ -258,6 +258,9 @@ export default [
     path: '/setup',
     name: 'Set up',
     component: () => import('@/views/public/setup.vue'),
+    meta: {
+      requiresNoAuth: true
+    },
     beforeEnter: (to, from, next) => {
       healthz.GetHealthz().then(resp => {
         return registration.GetInstanceRegistered()
