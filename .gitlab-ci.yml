@@ -7,9 +7,6 @@ stages:
   - post-build
   - pages
 
-include:
-  template: Dependency-Scanning.gitlab-ci.yml
-
 variables:
   APP_BUILD_VERSION: 0.0.0
   APP_BUILD_MODE: development
@@ -58,8 +55,9 @@ variables:
 
 build-container:
   only:
-    - main
-    - tags
+    refs:
+      - main
+      - tags
   stage: build
   image:
     name: $IMAGE_GOLANG_ALPINE
@@ -86,10 +84,11 @@ build-container:
     - build-frontend
 
 copy-container-image-to-dockerhub:
-  stage: post-build
   only:
-    - main
-    - tags
+    refs:
+      - main
+      - tags
+  stage: post-build
   image: $IMAGE_GOLANG_ALPINE
   before_script:
     - apk add --no-cache git cosign
@@ -106,6 +105,10 @@ copy-container-image-to-dockerhub:
       done
 
 build-frontend:
+  only:
+    refs:
+      - main
+      - tags
   stage: build
   retry: 2
   image: $IMAGE_NODE_ALPINE
@@ -129,8 +132,12 @@ build-frontend:
       - web/dist
       - flattrack*/
 
-test_backend_e2e:
-  stage: test
+test-backend-e2e:
+  only:
+    refs:
+      - main
+      - merge_requests
+  stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   variables:
     POSTGRES_DB: flattrack
@@ -166,6 +173,9 @@ test_backend_e2e:
     - pkill flattrack || true
 
 build-backend-smoketest:
+  only:
+    refs:
+      - merge_requests
   stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   before_script:
@@ -174,6 +184,9 @@ build-backend-smoketest:
     - ./hack/verify-build-smoketest.sh
 
 spellcheck:
+  only:
+    refs:
+      - merge_requests
   stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   allow_failure: true
@@ -183,6 +196,9 @@ spellcheck:
     - ./hack/verify-spellcheck.sh
 
 govet:
+  only:
+    refs:
+      - merge_requests
   stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   before_script:
@@ -191,6 +207,9 @@ govet:
     - ./hack/verify-govet.sh
 
 gofmt:
+  only:
+    refs:
+      - merge_requests
   stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   before_script:
@@ -199,6 +218,9 @@ gofmt:
     - ./hack/verify-gofmt.sh
 
 goimports:
+  only:
+    refs:
+      - merge_requests
   stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   before_script:
@@ -207,6 +229,9 @@ goimports:
     - ./hack/verify-goimports.sh
 
 golangci-lint:
+  only:
+    refs:
+      - merge_requests
   stage: codequality
   image:
     name: $IMAGE_GOLANGCI_LINT
@@ -215,6 +240,9 @@ golangci-lint:
     - ./hack/verify-golangci-lint.sh
 
 govulncheck:
+  only:
+    refs:
+      - merge_requests
   stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   before_script:
@@ -223,6 +251,9 @@ govulncheck:
     - ./hack/verify-govulncheck.sh
 
 lint-frontend:
+  only:
+    refs:
+      - merge_requests
   stage: codequality
   image: $IMAGE_NODE_ALPINE
   allow_failure: true
@@ -234,6 +265,9 @@ lint-frontend:
     - npm run lint
 
 lint-backend:
+  only:
+    refs:
+      - merge_requests
   stage: codequality
   image: $IMAGE_GOLANG_ALPINE
   allow_failure: true
@@ -243,9 +277,11 @@ lint-backend:
     - ./hack/verify-lint-backend.sh
 
 verify-documented-env-vars:
+  only:
+    refs:
+      - merge_requests
   stage: codequality
   image: $IMAGE_GOLANG_ALPINE
-  allow_failure: true
   before_script:
     - apk add --no-cache git
   script:
@@ -253,8 +289,8 @@ verify-documented-env-vars:
 
 check-links:
   only:
-    - main
-    - merge_requests
+    refs:
+      - merge_requests
   stage: codequality
   image:
     name: docker.io/lycheeverse/lychee:sha-a7c11c9-alpine
@@ -274,17 +310,19 @@ pages:
     - main
 
 pages-smoketest:
+  only:
+    refs:
+      - merge_requests
   image: $IMAGE_PYTHON
   stage: codequality
   script:
     ./hack/build-docs.sh
-  except:
-    - main
 
 conform:
   stage: conform
   only:
-    - merge_requests
+    refs:
+      - merge_requests
   image:
     name: docker.io/library/alpine:3.18
     entrypoint: [""]
