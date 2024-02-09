@@ -66,6 +66,7 @@ func NewHTTPServer(
 	h.system = system
 
 	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/_healthz", h.Healthz)
 	apiRouter := router.
 		PathPrefix("/api").
 		Headers("Accept", "application/json").
@@ -78,16 +79,18 @@ func NewHTTPServer(
 		LoginMessage: common.GetAppLoginMessage(),
 	}
 	router.PathPrefix("/").Handler(frontendHandler(common.GetAppDistFolder(), passthrough)).Methods(http.MethodGet)
-	router.Use(logging)
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization", "User-Agent", "Accept-Encoding"},
 		AllowedMethods:   []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodPatch, http.MethodDelete},
 		AllowCredentials: true,
 	})
-	handler := gziphandler.GzipHandler(c.Handler(router))
+	router.Use(logging)
+	router.Use(c.Handler)
+	router.Use(gziphandler.GzipHandler)
+
 	h.server = &http.Server{
-		Handler:      handler,
+		Handler:      router,
 		Addr:         common.GetAppPort(),
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
