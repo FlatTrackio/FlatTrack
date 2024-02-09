@@ -48,7 +48,7 @@ function Request (request, redirect = true, publicRoute = false) {
     axios(request)
       .then((resp) => resolve(resp))
       .catch((err) => {
-        if (err.response.status === 401 && redirect !== true) {
+        if (err.response.status === 401) {
           redirectToLogin(redirect)
         }
         reject(err)
