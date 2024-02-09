@@ -303,7 +303,7 @@ func RegexMatchEmail(email string) bool {
 // - at least one lowercase character
 // - at least one uppercase character
 func RegexMatchPassword(password string) bool {
-	matches, _ := regexp.MatchString(`^([a-z]*)([A-Z]*).{10,}$`, password)
+	matches, _ := regexp.MatchString(`^([a-zA-Z]*).{10,}$`, password)
 	return matches && len(password) <= 70
 }
 

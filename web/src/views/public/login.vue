@@ -49,7 +49,7 @@
             placeholder="Enter your password"
             size="is-medium"
             icon="textbox-password"
-            pattern="^([a-z]*)([A-Z]*).{10,}$"
+            pattern="^([a-zA-Z]*).{10,}$"
             icon-right="close-circle"
             icon-right-clickable
             @icon-right-click="password = ''"
