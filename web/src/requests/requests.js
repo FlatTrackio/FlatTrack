@@ -49,6 +49,7 @@ function Request (request, redirect = true, publicRoute = false) {
       .then((resp) => resolve(resp))
       .catch((err) => {
         if (err.response.status === 401) {
+          common.DeleteAuthToken()
           redirectToLogin(redirect)
         }
         reject(err)
