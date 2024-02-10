@@ -52,7 +52,7 @@ func NewManager() *Manager {
 	registration := registration.NewManager(users, system, settings)
 	metrics := metrics.NewManager()
 	scheduling := scheduling.NewManager(db)
-	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system)
+	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling)
 	return &Manager{
 		httpserver:   httpserver,
 		metrics:      metrics,

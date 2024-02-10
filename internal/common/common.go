@@ -235,6 +235,16 @@ func GetRequireInstanceIDConfirmWithSetup() bool {
 	return GetEnvOrDefault("APP_REQUIRE_INSTANCE_ID_CONFIRM_WITH_SETUP", "false") == "true"
 }
 
+// GetSchedulerDisableUseEndpoint return whether to disable the scheduler and to use and endpoint instead
+func GetSchedulerDisableUseEndpoint() bool {
+	return GetEnvOrDefault("APP_SCHEDULER_DISABLE_USE_ENDPOINT", "false") == "true"
+}
+
+// GetSchedulerEndpointSecret the shared secret to require for posting to scheduler endpoint
+func GetSchedulerEndpointSecret() string {
+	return GetEnvOrDefault("APP_SCHEDULER_ENDPOINT_SECRET", "")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {

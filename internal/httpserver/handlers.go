@@ -2873,6 +2873,39 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
+func (h *HTTPServer) PostSchedulerRun(w http.ResponseWriter, r *http.Request) {
+	if !h.scheduling.GetDisabled() {
+		w.WriteHeader(http.StatusNotFound)
+		if _, err := w.Write([]byte(`Not found`)); err != nil {
+			log.Printf("failed to write response: %v\n", err)
+		}
+		return
+	}
+	secret, expectedSecret := r.Header.Get("X-FlatTrack-Scheduler-Secret"), h.scheduling.GetEndpointSecret()
+	if secret != expectedSecret {
+		JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "unexpected secret",
+			},
+		})
+		return
+	}
+	// NOTE make this async?
+	if err := h.scheduling.PerformWork(); err != nil {
+		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to run work",
+			},
+		})
+		return
+	}
+	JSONResponse(r, w, http.StatusOK, types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "completed work",
+		},
+	})
+}
+
 // GetServeFilestoreObjects ...
 // serves files or 404
 // func (router Router) GetServeFilestoreObjects(prefix string) http.HandlerFunc {
@@ -3030,6 +3063,11 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 			EndpointPath: "/system/flatName",
 			HandlerFunc:  httpUseMiddleware(h.GetSettingsFlatName, h.HTTPvalidateJWT()),
 			HTTPMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: "/system/schedule",
+			HandlerFunc:  httpUseMiddleware(h.PostSchedulerRun),
+			HTTPMethod:   http.MethodPost,
 		},
 		{
 			EndpointPath: "/admin/settings/flatName",
