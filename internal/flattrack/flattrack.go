@@ -20,7 +20,7 @@ import (
 	"gitlab.com/flattrack/flattrack/internal/users"
 )
 
-type Manager struct {
+type manager struct {
 	httpserver   *httpserver.HTTPServer
 	metrics      *metrics.Manager
 	emails       *emails.Manager
@@ -33,7 +33,7 @@ type Manager struct {
 	scheduling   *scheduling.Manager
 }
 
-func NewManager() *Manager {
+func NewManager() *manager {
 	envFile := common.GetAppEnvFile()
 	_ = godotenv.Load(envFile)
 	db, err := database.Open()
@@ -53,7 +53,7 @@ func NewManager() *Manager {
 	metrics := metrics.NewManager()
 	scheduling := scheduling.NewManager(db)
 	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling)
-	return &Manager{
+	return &manager{
 		httpserver:   httpserver,
 		metrics:      metrics,
 		emails:       emails,
@@ -67,20 +67,28 @@ func NewManager() *Manager {
 	}
 }
 
-type ManagerInit struct {
-	*Manager
+type managerInit struct {
+	httpserver   *httpserver.HTTPServer
+	metrics      *metrics.Manager
+	health       *health.Manager
+	registration *registration.Manager
+	scheduling   *scheduling.Manager
 }
 
-func (m *Manager) Init() *ManagerInit {
+func (m *manager) Init() *managerInit {
 	if err := m.migrations.Migrate(); err != nil {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
-	return &ManagerInit{
-		Manager: m,
+	return &managerInit{
+		httpserver:   m.httpserver,
+		metrics:      m.metrics,
+		health:       m.health,
+		registration: m.registration,
+		scheduling:   m.scheduling,
 	}
 }
 
-func (mi *ManagerInit) Run() {
+func (mi *managerInit) Run() {
 	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
 	go mi.metrics.Listen()
 	go mi.health.Listen()
