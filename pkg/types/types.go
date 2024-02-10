@@ -38,9 +38,9 @@ type GroupSpec struct {
 	Name                  string `json:"name"`
 	DefaultGroup          bool   `json:"defaultGroup"`
 	Description           string `json:"description"`
-	CreationTimestamp     int    `json:"creationTimestamp"`
-	ModificationTimestamp int    `json:"modificationTimestamp"`
-	DeletionTimestamp     int    `json:"deletionTimestamp"`
+	CreationTimestamp     int64  `json:"creationTimestamp"`
+	ModificationTimestamp int64  `json:"modificationTimestamp"`
+	DeletionTimestamp     int64  `json:"deletionTimestamp"`
 }
 
 // GroupList ...
@@ -73,9 +73,9 @@ type UserSpec struct {
 	Registered            bool     `json:"registered"`
 	LastLogin             int      `json:"lastLogin,omitempty"`
 	AuthNonce             string   `json:"-"`
-	CreationTimestamp     int      `json:"creationTimestamp"`
-	ModificationTimestamp int      `json:"modificationTimestamp"`
-	DeletionTimestamp     int      `json:"deletionTimestamp"`
+	CreationTimestamp     int64    `json:"creationTimestamp"`
+	ModificationTimestamp int64    `json:"modificationTimestamp"`
+	DeletionTimestamp     int64    `json:"deletionTimestamp"`
 }
 
 // UserList ...
@@ -106,9 +106,9 @@ type ShoppingListSpec struct {
 	Author                string   `json:"author"`
 	AuthorLast            string   `json:"authorLast"`
 	TotalTagExclude       []string `json:"totalTagExclude,omitempty"`
-	CreationTimestamp     int      `json:"creationTimestamp"`
-	ModificationTimestamp int      `json:"modificationTimestamp"`
-	DeletionTimestamp     int      `json:"deletionTimestamp"`
+	CreationTimestamp     int64    `json:"creationTimestamp"`
+	ModificationTimestamp int64    `json:"modificationTimestamp"`
+	DeletionTimestamp     int64    `json:"deletionTimestamp"`
 }
 
 // ShoppingListSortType ...
@@ -157,9 +157,9 @@ type ShoppingItemSpec struct {
 	Author                string  `json:"author"`
 	AuthorLast            string  `json:"authorLast"`
 	TemplateID            string  `json:"templateId,omitempty"`
-	CreationTimestamp     int     `json:"creationTimestamp"`
-	ModificationTimestamp int     `json:"modificationTimestamp"`
-	DeletionTimestamp     int     `json:"deletionTimestamp"`
+	CreationTimestamp     int64   `json:"creationTimestamp"`
+	ModificationTimestamp int64   `json:"modificationTimestamp"`
+	DeletionTimestamp     int64   `json:"deletionTimestamp"`
 }
 
 // ShoppingItemSortType ...
@@ -203,9 +203,9 @@ type ShoppingTag struct {
 	Name                  string `json:"name"`
 	Author                string `json:"author"`
 	AuthorLast            string `json:"authorLast"`
-	CreationTimestamp     int    `json:"creationTimestamp"`
-	ModificationTimestamp int    `json:"modificationTimestamp"`
-	DeletionTimestamp     int    `json:"deletionTimestamp"`
+	CreationTimestamp     int64  `json:"creationTimestamp"`
+	ModificationTimestamp int64  `json:"modificationTimestamp"`
+	DeletionTimestamp     int64  `json:"deletionTimestamp"`
 }
 
 // ShoppingTagOptions ...
@@ -244,9 +244,9 @@ type UserCreationSecretSpec struct {
 	UserID                string `json:"userId"`
 	Secret                string `json:"secret"`
 	Valid                 bool   `json:"valid"`
-	CreationTimestamp     int    `json:"creationTimestamp"`
-	ModificationTimestamp int    `json:"modificationTimestamp"`
-	DeletionTimestamp     int    `json:"deletionTimestamp"`
+	CreationTimestamp     int64  `json:"creationTimestamp"`
+	ModificationTimestamp int64  `json:"modificationTimestamp"`
+	DeletionTimestamp     int64  `json:"deletionTimestamp"`
 }
 
 // UserCreationSecretSelector ...
