@@ -20,6 +20,7 @@ import (
 	"gitlab.com/flattrack/flattrack/internal/health"
 	"gitlab.com/flattrack/flattrack/internal/migrations"
 	"gitlab.com/flattrack/flattrack/internal/registration"
+	"gitlab.com/flattrack/flattrack/internal/scheduling"
 	"gitlab.com/flattrack/flattrack/internal/settings"
 	"gitlab.com/flattrack/flattrack/internal/shoppinglist"
 	"gitlab.com/flattrack/flattrack/internal/system"
@@ -39,6 +40,7 @@ type HTTPServer struct {
 	registration *registration.Manager
 	settings     *settings.Manager
 	system       *system.Manager
+	scheduling   *scheduling.Manager
 }
 
 func NewHTTPServer(
@@ -52,6 +54,7 @@ func NewHTTPServer(
 	registration *registration.Manager,
 	settings *settings.Manager,
 	system *system.Manager,
+	scheduling *scheduling.Manager,
 ) (h *HTTPServer) {
 	h = &HTTPServer{}
 	h.db = db
@@ -64,6 +67,7 @@ func NewHTTPServer(
 	h.registration = registration
 	h.settings = settings
 	h.system = system
+	h.scheduling = scheduling
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/_healthz", h.Healthz)
