@@ -47,11 +47,14 @@ func (m *Manager) RegisterFunc(fns ...func() error) *Manager {
 func (m *Manager) PerformWork() error {
 	var eg []error
 	var wg sync.WaitGroup
+	var mu sync.Mutex
 	for _, fn := range m.fns {
 		wg.Add(1)
 		go func(fn func() error) {
 			if err := fn(); err != nil {
+				mu.Lock()
 				eg = append(eg, err)
+				mu.Unlock()
 			}
 			wg.Done()
 		}(fn)
