@@ -14,8 +14,11 @@
 import { register } from 'register-service-worker'
 import { ToastProgrammatic as Toast } from 'buefy'
 
-if (import.meta.env.NODE_ENV === 'production') {
-  register(`${import.meta.env.BASE_URL}service-worker.js`, {
+if (
+  'serviceWorker' in navigator &&
+  localStorage.getItem('ft-no-sw') !== 'true'
+) {
+  register(`${import.meta.env.BASE_URL}sw.js`, {
     ready () {},
     registered () {},
     cached () {},
@@ -23,10 +26,10 @@ if (import.meta.env.NODE_ENV === 'production') {
       window.location.reload(true)
     },
     updated () {
-      console.log('Updated')
       Toast.open({
         message: 'FlatTrack was updated',
-        type: 'is-success'
+        type: 'is-info',
+        position: 'is-bottom'
       })
     },
     offline () {},
