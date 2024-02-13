@@ -506,12 +506,12 @@
             "
           />
           <br />
-          <span v-if="flatmates.length > 1">
+          <span v-if="participatingFlatmates.length > 1">
             <b>Split price</b>: ${{ equalPricePerPerson.toFixed(2) }}
             <infotooltip
               :message="
                 'Split is the divided price between ' +
-                flatmates.length +
+                participatingFlatmates.length +
                 ' flatmates'
               "
             />
@@ -796,8 +796,13 @@ export default {
       totalPrice = totalPrice.toFixed(2)
       return totalPrice
     },
+    participatingFlatmates () {
+      return this.flatmates.filter(
+        (u) => u.disabled !== true && u.registered === true
+      )
+    },
     equalPricePerPerson () {
-      return this.totalPrice / this.flatmates.length
+      return this.totalPrice / this.participatingFlatmates.length
     },
     totalPercentage () {
       return Math.round((100 * this.currentPrice) / this.totalPrice) || 0
