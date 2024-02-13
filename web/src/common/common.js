@@ -96,7 +96,14 @@ function SignoutDialog () {
 // converts a unix timestamp to a human readable string
 function TimestampToCalendar (timestamp) {
   return dayjs(timestamp * 1000)
-    .calendar(null, {})
+    .calendar(null, {
+      sameDay: '[Today] h:mm A',
+      nextDay: '[Tomorrow] h:mm A',
+      nextWeek: 'dddd [at] h:mm A',
+      lastDay: '[Yesterday] h:mm A',
+      lastWeek: 'dddd [at] h:mm A',
+      sameElse: 'DD/MM/YYYY'
+    })
     .toLowerCase()
 }
 
