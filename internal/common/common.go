@@ -357,7 +357,7 @@ func StringInStringSlice(input string, list []string) bool {
 // RandStringRunes generates a random string with length of n using runes
 // nolint:gosec
 func RandStringRunes(n int) string {
-	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	letterRunes := []rune("bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ012358")
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
