@@ -11,28 +11,28 @@ import (
 )
 
 type Manager struct {
-	db             *sql.DB
-	leaderelection *leaderelection.Lock
-	fns            []func() error
-	disabled       bool
-	secret         string
+	db              *sql.DB
+	leaderelection  *leaderelection.Lock
+	fns             []func() error
+	endpointEnabled bool
+	secret          string
 }
 
 func NewManager(db *sql.DB) *Manager {
 	m := &Manager{
-		db:             db,
-		leaderelection: leaderelection.NewLock(db),
-		disabled:       common.GetSchedulerDisableUseEndpoint(),
-		secret:         common.GetSchedulerEndpointSecret(),
+		db:              db,
+		leaderelection:  leaderelection.NewLock(db),
+		endpointEnabled: common.GetSchedulerDisableUseEndpoint(),
+		secret:          common.GetSchedulerEndpointSecret(),
 	}
-	if m.disabled && m.secret == "" {
+	if m.endpointEnabled && m.secret == "" {
 		log.Panicln("warning: APP_SCHEDULER_ENDPOINT_SECRET must be set when scheduler is disabled to ensure that only expected authorities call the scheduler endpoint")
 	}
 	return m
 }
 
-func (m *Manager) GetDisabled() bool {
-	return m.disabled
+func (m *Manager) GetEndpointEnabled() bool {
+	return m.endpointEnabled
 }
 
 func (m *Manager) GetEndpointSecret() string {
@@ -69,7 +69,7 @@ func (m *Manager) PerformWork() error {
 }
 
 func (m *Manager) Run() {
-	if m.disabled {
+	if m.endpointEnabled {
 		return
 	}
 	m.leaderelection.Run(m.PerformWork)
