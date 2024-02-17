@@ -36,9 +36,9 @@ FlatTrack is solely configured to run with environment variables (or a `.env` fi
 | `APP_SETUP_MESSAGE`                          | Display a message on the setup page                                                                                           | `""`                  |
 | `APP_LOGIN_MESSAGE`                          | Display a message on the login page                                                                                           | `""`                  |
 | `APP_EMBEDDED_HTML`                          | Add custom HTML to the head of index.html                                                                                     | `""`                  |
-| `APP_REQUIRE_INSTANCE_ID_CONFIRM_WITH_SETUP` | Require instanceID to be passed during setup                                                                                  | `false`               |
+| `APP_REQUIRE_INSTANCE_ID_CONFIRM_WITH_SETUP` | Require instanceID to be passed during setup as the parameter `instanceIDConfirm`                                             | `false`               |
 | `APP_SCHEDULER_DISABLE_USE_ENDPOINT`         | Disable scheduler and instead use endpoint `/api/system/scheduler`                                                            | `false`               |
-| `APP_SCHEDULER_ENDPOINT_SECRET`              | Set a secret for scheduler endpoint which must match header `X-FlatTrack-Scheduler-Secret` (required when scheduler disabled) |                      |
+| `APP_SCHEDULER_ENDPOINT_SECRET`              | Set a secret for scheduler endpoint which must match header `X-FlatTrack-Scheduler-Secret` (required when scheduler disabled) |                       |
 
 \*this port runs on all available interfaces - this may be better configured on a single host as `127.0.0.1:...` for security
 
