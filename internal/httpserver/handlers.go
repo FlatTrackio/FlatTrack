@@ -3086,17 +3086,17 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		},
 		{
 			EndpointPath: "/admin/settings/flatNotes",
-			HandlerFunc:  httpUseMiddleware(h.GetSettingsFlatNotes, h.HTTPvalidateJWT()),
+			HandlerFunc:  httpUseMiddleware(h.GetSettingsFlatNotes, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
 			HTTPMethod:   http.MethodGet,
 		},
 		{
 			EndpointPath: "/admin/settings/flatNotes",
-			HandlerFunc:  httpUseMiddleware(h.PutSettingsFlatNotes, h.HTTPvalidateJWT()),
+			HandlerFunc:  httpUseMiddleware(h.PutSettingsFlatNotes, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
 			HTTPMethod:   http.MethodPut,
 		},
 		{
 			EndpointPath: "/admin/register",
-			HandlerFunc:  httpUseMiddleware(h.PostAdminRegister),
+			HandlerFunc:  h.PostAdminRegister,
 			HTTPMethod:   http.MethodPost,
 		},
 		{
@@ -3156,7 +3156,7 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		},
 		{
 			EndpointPath: "/user/auth/reset",
-			HandlerFunc:  h.UserAuthReset,
+			HandlerFunc:  httpUseMiddleware(h.UserAuthReset, h.HTTPvalidateJWT()),
 			HTTPMethod:   http.MethodPost,
 		},
 		{
