@@ -72,7 +72,7 @@ func (m *Manager) Register(registration types.Registration) (successful bool, jw
 	}
 	registration.User.Groups = defaultInitalizationGroups
 	registration.User.Registered = true
-	user, err := m.user.CreateUser(registration.User, false)
+	user, err := m.user.Create(registration.User, false)
 	if err != nil || user.ID == "" {
 		return false, "", err
 	}

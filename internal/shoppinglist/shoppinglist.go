@@ -69,9 +69,9 @@ func (m *Manager) ShoppingList() *ShoppingListManager {
 	}
 }
 
-// ValidateShoppingList ...
+// Validate ...
 // given a shopping list, return it's validity
-func (m *ShoppingListManager) ValidateShoppingList(shoppingList types.ShoppingListSpec) (valid bool, err error) {
+func (m *ShoppingListManager) Validate(shoppingList types.ShoppingListSpec) (valid bool, err error) {
 	if len(shoppingList.Name) == 0 || len(shoppingList.Name) >= 30 || shoppingList.Name == "" {
 		return false, ErrInvalidShoppingItemName
 	}
@@ -79,7 +79,7 @@ func (m *ShoppingListManager) ValidateShoppingList(shoppingList types.ShoppingLi
 		return false, ErrInvalidShoppingListNotes
 	}
 	if shoppingList.TemplateID != "" {
-		list, err := m.GetShoppingList(shoppingList.TemplateID)
+		list, err := m.Get(shoppingList.TemplateID)
 		if err != nil || list.ID == "" {
 			return false, ErrShoppingListByIDNotFoundForTemplate
 		}
@@ -87,9 +87,9 @@ func (m *ShoppingListManager) ValidateShoppingList(shoppingList types.ShoppingLi
 	return true, nil
 }
 
-// GetShoppingLists ...
+// List ...
 // returns a list of all shopping lists (name, notes, author, etc...)
-func (m *ShoppingListManager) GetShoppingLists(options types.ShoppingListOptions) (shoppingLists []types.ShoppingListSpec, err error) {
+func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingLists []types.ShoppingListSpec, err error) {
 	sqlStatement := `select * from shopping_list where deletionTimestamp = 0 `
 	fields := []interface{}{}
 
@@ -163,9 +163,9 @@ func (m *ShoppingListManager) GetShoppingLists(options types.ShoppingListOptions
 	return shoppingLists, nil
 }
 
-// GetShoppingList ...
+// Get ...
 // returns a given shopping list, by it's ID
-func (m *ShoppingListManager) GetShoppingList(listID string) (shoppingList types.ShoppingListSpec, err error) {
+func (m *ShoppingListManager) Get(listID string) (shoppingList types.ShoppingListSpec, err error) {
 	sqlStatement := `select * from shopping_list where id = $1 and deletionTimestamp = 0`
 	rows, err := m.db.Query(sqlStatement, listID)
 	if err != nil {
@@ -188,16 +188,16 @@ func (m *ShoppingListManager) GetShoppingList(listID string) (shoppingList types
 	return shoppingList, nil
 }
 
-// CreateShoppingList ...
+// Create ...
 // creates a shopping list for adding items to
-func (m *ShoppingListManager) CreateShoppingList(shoppingList types.ShoppingListSpec, options types.ShoppingItemOptions) (shoppingListInserted types.ShoppingListSpec, err error) {
-	valid, err := m.ValidateShoppingList(shoppingList)
+func (m *ShoppingListManager) Create(shoppingList types.ShoppingListSpec, options types.ShoppingItemOptions) (shoppingListInserted types.ShoppingListSpec, err error) {
+	valid, err := m.Validate(shoppingList)
 	if !valid || err != nil {
 		return types.ShoppingListSpec{}, err
 	}
 
 	if shoppingList.TemplateID != "" {
-		templateList, err := m.GetShoppingList(shoppingList.TemplateID)
+		templateList, err := m.Get(shoppingList.TemplateID)
 		if err != nil {
 			return types.ShoppingListSpec{}, err
 		}
@@ -233,9 +233,9 @@ func (m *ShoppingListManager) CreateShoppingList(shoppingList types.ShoppingList
 	}
 
 	// if using other list as a template
-	shoppingListItems, err := m.manager.ShoppingItem().GetShoppingListItems(shoppingList.TemplateID, options)
+	shoppingListItems, err := m.manager.ShoppingItem().List(shoppingList.TemplateID, options)
 	if err != nil {
-		if err := m.DeleteShoppingList(shoppingListInserted.ID); err != nil {
+		if err := m.Delete(shoppingListInserted.ID); err != nil {
 			return types.ShoppingListSpec{}, err
 		}
 		return types.ShoppingListSpec{}, ErrFailedToGetItemsFromShoppingList
@@ -255,7 +255,7 @@ func (m *ShoppingListManager) CreateShoppingList(shoppingList types.ShoppingList
 		_, err := m.manager.ShoppingItem().AddItemToList(shoppingListInserted.ID, newItem)
 		if err != nil {
 			log.Printf("error adding item to list: %v\n", err)
-			if err := m.DeleteShoppingList(shoppingListInserted.ID); err != nil {
+			if err := m.Delete(shoppingListInserted.ID); err != nil {
 				return types.ShoppingListSpec{}, err
 			}
 			return types.ShoppingListSpec{}, ErrFailedToAddItemToShoppingListFromTemplate
@@ -264,10 +264,10 @@ func (m *ShoppingListManager) CreateShoppingList(shoppingList types.ShoppingList
 	return shoppingListInserted, nil
 }
 
-// PatchShoppingList ...
+// Patch ...
 // patches a shopping list
-func (m *ShoppingListManager) PatchShoppingList(listID string, shoppingList types.ShoppingListSpec) (shoppingListPatched types.ShoppingListSpec, err error) {
-	existingList, err := m.GetShoppingList(listID)
+func (m *ShoppingListManager) Patch(listID string, shoppingList types.ShoppingListSpec) (shoppingListPatched types.ShoppingListSpec, err error) {
+	existingList, err := m.Get(listID)
 	if err != nil || existingList.ID == "" {
 		return types.ShoppingListSpec{}, ErrFailedToGetExistingShoppingList
 	}
@@ -275,7 +275,7 @@ func (m *ShoppingListManager) PatchShoppingList(listID string, shoppingList type
 	if err != nil {
 		return types.ShoppingListSpec{}, ErrFailedToUpdateShoppingItemFields
 	}
-	valid, err := m.ValidateShoppingList(existingList)
+	valid, err := m.Validate(existingList)
 	if !valid || err != nil {
 		return types.ShoppingListSpec{}, err
 	}
@@ -302,8 +302,8 @@ func (m *ShoppingListManager) PatchShoppingList(listID string, shoppingList type
 
 // UpdateShoppingList ...
 // updates a shopping list
-func (m *ShoppingListManager) UpdateShoppingList(listID string, shoppingList types.ShoppingListSpec) (shoppingListUpdated types.ShoppingListSpec, err error) {
-	valid, err := m.ValidateShoppingList(shoppingList)
+func (m *ShoppingListManager) Update(listID string, shoppingList types.ShoppingListSpec) (shoppingListUpdated types.ShoppingListSpec, err error) {
+	valid, err := m.Validate(shoppingList)
 	if !valid || err != nil {
 		return types.ShoppingListSpec{}, err
 	}
@@ -366,8 +366,8 @@ func getListObjectFromRows(rows *sql.Rows) (list types.ShoppingListSpec, err err
 
 // DeleteShoppingList ...
 // deletes a shopping list, given a shopping list Id
-func (m *ShoppingListManager) DeleteShoppingList(listID string) (err error) {
-	err = m.manager.ShoppingItem().RemoveAllItemsFromList(listID)
+func (m *ShoppingListManager) Delete(listID string) (err error) {
+	err = m.manager.ShoppingItem().DeleteAll(listID)
 	if err != nil {
 		return ErrFailedToRemoveAllItemsFromList
 	}

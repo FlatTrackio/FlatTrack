@@ -87,9 +87,9 @@ func groupObjectFromRows(rows *sql.Rows) (group types.GroupSpec, err error) {
 	return group, nil
 }
 
-// GetAllGroups ...
+// List ...
 // returns a list of all groups
-func (m *Manager) GetAllGroups() (groups []types.GroupSpec, err error) {
+func (m *Manager) List() (groups []types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where deletionTimestamp = 0`
 	rows, err := m.db.Query(sqlStatement)
 	if err != nil {
@@ -114,9 +114,9 @@ func (m *Manager) GetAllGroups() (groups []types.GroupSpec, err error) {
 	return groups, nil
 }
 
-// GetGroupByName ...
+// GetByName ...
 // given a group name, return the group
-func (m *Manager) GetGroupByName(name string) (group types.GroupSpec, err error) {
+func (m *Manager) GetByName(name string) (group types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where name = $1`
 	rows, err := m.db.Query(sqlStatement, name)
 	if err != nil {
@@ -135,9 +135,9 @@ func (m *Manager) GetGroupByName(name string) (group types.GroupSpec, err error)
 	return group, nil
 }
 
-// GetGroupByID ...
+// GetByID ...
 // given a group id, return the group
-func (m *Manager) GetGroupByID(id string) (group types.GroupSpec, err error) {
+func (m *Manager) GetByID(id string) (group types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where id = $1`
 	rows, err := m.db.Query(sqlStatement, id)
 	if err != nil {
@@ -178,7 +178,7 @@ func (m *Manager) GetGroupsOfUserByID(userID string) (groups []types.GroupSpec, 
 		groupIDs = append(groupIDs, groupID)
 	}
 	for _, groupID := range groupIDs {
-		group, err := m.GetGroupByID(groupID)
+		group, err := m.GetByID(groupID)
 		if err != nil {
 			return []types.GroupSpec{}, err
 		}
@@ -215,9 +215,9 @@ func (m *Manager) CheckUserInGroup(userID string, group string) (found bool, err
 	return false, nil
 }
 
-// GetDefaultGroups ...
+// GetDefault ...
 // return a list of default groups
-func (m *Manager) GetDefaultGroups() (groups []types.GroupSpec, err error) {
+func (m *Manager) GetDefault() (groups []types.GroupSpec, err error) {
 	sqlStatement := `select * from groups where defaultGroup = true`
 	rows, err := m.db.Query(sqlStatement)
 	if err != nil {
@@ -242,7 +242,7 @@ func (m *Manager) GetDefaultGroups() (groups []types.GroupSpec, err error) {
 // UpdateUserGroups ...
 // manages a user account's groups according to what's provided
 func (m *Manager) UpdateUserGroups(userID string, groups []string) (err error) {
-	allGroups, err := m.GetAllGroups()
+	allGroups, err := m.List()
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func (m *Manager) UpdateUserGroups(userID string, groups []string) (err error) {
 			return err
 		}
 		shouldBeInGroup := common.StringInStringSlice(group.Name, groups)
-		groupFull, err := m.GetGroupByName(group.Name)
+		groupFull, err := m.GetByName(group.Name)
 		if err != nil {
 			return err
 		}

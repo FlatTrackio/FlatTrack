@@ -99,7 +99,7 @@ func (h *HTTPServer) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		selectors.NotID = id
 	}
 
-	users, err := h.users.GetAllUsers(false, selectors)
+	users, err := h.users.List(false, selectors)
 	if err != nil {
 		log.Printf("error getting all users: %v\n", err)
 		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
@@ -125,7 +125,7 @@ func (h *HTTPServer) GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	user, err := h.users.GetUserByID(id, false)
+	user, err := h.users.GetByID(id, false)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -185,7 +185,7 @@ func (h *HTTPServer) PostUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userAccount, err := h.users.CreateUser(user, user.Password == "")
+	userAccount, err := h.users.Create(user, user.Password == "")
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -237,7 +237,7 @@ func (h *HTTPServer) PutUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	_, err = h.users.GetUserByID(userID, false)
+	_, err = h.users.GetByID(userID, false)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -251,7 +251,7 @@ func (h *HTTPServer) PutUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO disallow admins to remove their own admin group access
-	userAccountUpdated, err := h.users.UpdateProfileAdmin(userID, userAccount)
+	userAccountUpdated, err := h.users.UpdateAsAdmin(userID, userAccount)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -302,7 +302,7 @@ func (h *HTTPServer) PatchUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	_, err = h.users.GetUserByID(userID, false)
+	_, err = h.users.GetByID(userID, false)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -316,7 +316,7 @@ func (h *HTTPServer) PatchUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO disallow admins to remove their own admin group access
-	userAccountPatched, err := h.users.PatchProfileAdmin(userID, userAccount)
+	userAccountPatched, err := h.users.PatchAsAdmin(userID, userAccount)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -367,7 +367,7 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	_, err = h.users.GetUserByID(userID, false)
+	_, err = h.users.GetByID(userID, false)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -417,7 +417,7 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userAccountPatched, err := h.users.PatchUserDisabledAdmin(userID, userAccount.Disabled)
+	userAccountPatched, err := h.users.PatchDisabledAsAdmin(userID, userAccount.Disabled)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -447,7 +447,7 @@ func (h *HTTPServer) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	userInDB, err := h.users.GetUserByID(userID, false)
+	userInDB, err := h.users.GetByID(userID, false)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -484,7 +484,7 @@ func (h *HTTPServer) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.users.DeleteUserByID(userInDB.ID); err != nil {
+	if err := h.users.DeleteByID(userInDB.ID); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -580,7 +580,7 @@ func (h *HTTPServer) PutProfile(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
-	userAccountUpdated, err := h.users.UpdateProfile(id, userAccount)
+	userAccountUpdated, err := h.users.Update(id, userAccount)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -640,7 +640,7 @@ func (h *HTTPServer) PatchProfile(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
-	userAccountPatched, err := h.users.PatchProfile(id, userAccount)
+	userAccountPatched, err := h.users.Patch(id, userAccount)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -716,7 +716,7 @@ func (h *HTTPServer) UserAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userInDB, err := h.users.GetUserByEmail(user.Email, false)
+	userInDB, err := h.users.GetByEmail(user.Email, false)
 	if err != nil {
 		JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -876,7 +876,7 @@ func (h *HTTPServer) UserCanIgroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := h.groups.GetGroupByName(groupName)
+	group, err := h.groups.GetByName(groupName)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1075,7 +1075,7 @@ func (h *HTTPServer) GetShoppingList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	shoppingList, err := h.shoppinglist.ShoppingList().GetShoppingList(id)
+	shoppingList, err := h.shoppinglist.ShoppingList().Get(id)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1115,7 +1115,7 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	shoppingLists, err := h.shoppinglist.ShoppingList().GetShoppingLists(options)
+	shoppingLists, err := h.shoppinglist.ShoppingList().List(options)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1182,7 +1182,7 @@ func (h *HTTPServer) PostShoppingList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	shoppingList.Author = id
-	shoppingListInserted, err := h.shoppinglist.ShoppingList().CreateShoppingList(shoppingList, options)
+	shoppingListInserted, err := h.shoppinglist.ShoppingList().Create(shoppingList, options)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1233,7 +1233,7 @@ func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	listID := vars["id"]
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1259,7 +1259,7 @@ func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	shoppingList.AuthorLast = id
-	shoppingListPatched, err := h.shoppinglist.ShoppingList().PatchShoppingList(list.ID, shoppingList)
+	shoppingListPatched, err := h.shoppinglist.ShoppingList().Patch(list.ID, shoppingList)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1323,7 +1323,7 @@ func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1337,7 +1337,7 @@ func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	shoppingList.AuthorLast = id
-	shoppingListUpdated, err := h.shoppinglist.ShoppingList().UpdateShoppingList(list.ID, shoppingList)
+	shoppingListUpdated, err := h.shoppinglist.ShoppingList().Update(list.ID, shoppingList)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1366,7 +1366,7 @@ func (h *HTTPServer) DeleteShoppingList(w http.ResponseWriter, r *http.Request) 
 	vars := mux.Vars(r)
 	listID := vars["id"]
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1379,7 +1379,7 @@ func (h *HTTPServer) DeleteShoppingList(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := h.shoppinglist.ShoppingList().DeleteShoppingList(list.ID); err != nil {
+	if err := h.shoppinglist.ShoppingList().Delete(list.ID); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1413,7 +1413,7 @@ func (h *HTTPServer) GetShoppingListItems(w http.ResponseWriter, r *http.Request
 		},
 	}
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(id)
+	list, err := h.shoppinglist.ShoppingList().Get(id)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1427,7 +1427,7 @@ func (h *HTTPServer) GetShoppingListItems(w http.ResponseWriter, r *http.Request
 	}
 
 	// TODO add item selectors for this endpoint
-	shoppingListItems, err := h.shoppinglist.ShoppingItem().GetShoppingListItems(list.ID, options)
+	shoppingListItems, err := h.shoppinglist.ShoppingItem().List(list.ID, options)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1456,7 +1456,7 @@ func (h *HTTPServer) GetShoppingListItem(w http.ResponseWriter, r *http.Request)
 	itemID := vars["itemId"]
 	listID := vars["listId"]
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1469,7 +1469,7 @@ func (h *HTTPServer) GetShoppingListItem(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	shoppingListItem, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(list.ID, itemID)
+	shoppingListItem, err := h.shoppinglist.ShoppingItem().Get(list.ID, itemID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1543,7 +1543,7 @@ func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1621,7 +1621,7 @@ func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1699,7 +1699,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1722,7 +1722,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(list.ID, itemID)
+	item, err := h.shoppinglist.ShoppingItem().Get(list.ID, itemID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1746,7 +1746,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 	}
 
 	shoppingItem.AuthorLast = id
-	patchedItem, err := h.shoppinglist.ShoppingItem().PatchItem(listID, item.ID, shoppingItem)
+	patchedItem, err := h.shoppinglist.ShoppingItem().Patch(listID, item.ID, shoppingItem)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1811,7 +1811,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1834,7 +1834,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(list.ID, itemID)
+	item, err := h.shoppinglist.ShoppingItem().Get(list.ID, itemID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1858,7 +1858,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 	}
 
 	shoppingItem.AuthorLast = id
-	updatedItem, err := h.shoppinglist.ShoppingItem().UpdateItem(listID, item.ID, shoppingItem)
+	updatedItem, err := h.shoppinglist.ShoppingItem().Update(listID, item.ID, shoppingItem)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1923,7 +1923,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 		return
 	}
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1946,7 +1946,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 		return
 	}
 
-	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(list.ID, itemID)
+	item, err := h.shoppinglist.ShoppingItem().Get(list.ID, itemID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2000,7 +2000,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 	itemID := vars["itemId"]
 	listID := vars["listId"]
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2023,7 +2023,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	item, err := h.shoppinglist.ShoppingItem().GetShoppingListItem(list.ID, itemID)
+	item, err := h.shoppinglist.ShoppingItem().Get(list.ID, itemID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2046,7 +2046,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.shoppinglist.ShoppingItem().RemoveItemFromList(item.ID, list.ID); err != nil {
+	if err := h.shoppinglist.ShoppingItem().Delete(item.ID, list.ID); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2073,7 +2073,7 @@ func (h *HTTPServer) GetShoppingListItemTags(w http.ResponseWriter, r *http.Requ
 	vars := mux.Vars(r)
 	listID := vars["listId"]
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2095,7 +2095,7 @@ func (h *HTTPServer) GetShoppingListItemTags(w http.ResponseWriter, r *http.Requ
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
-	tags, err := h.shoppinglist.ShoppingTag().GetShoppingListTags(list.ID)
+	tags, err := h.shoppinglist.ShoppingTag().ListTagsInList(list.ID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2125,7 +2125,7 @@ func (h *HTTPServer) UpdateShoppingListItemTag(w http.ResponseWriter, r *http.Re
 	listID := vars["listId"]
 	tag := vars["tagName"]
 
-	list, err := h.shoppinglist.ShoppingList().GetShoppingList(listID)
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2169,7 +2169,7 @@ func (h *HTTPServer) UpdateShoppingListItemTag(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	tagUpdated, err := h.shoppinglist.ShoppingTag().UpdateShoppingListTag(list.ID, tag, tagUpdate.Name)
+	tagUpdated, err := h.shoppinglist.ShoppingTag().UpdateInList(list.ID, tag, tagUpdate.Name)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2199,7 +2199,7 @@ func (h *HTTPServer) GetAllShoppingTags(w http.ResponseWriter, r *http.Request) 
 		SortBy: r.FormValue("sortBy"),
 	}
 
-	tags, err := h.shoppinglist.ShoppingTag().GetAllShoppingTags(options)
+	tags, err := h.shoppinglist.ShoppingTag().List(options)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2260,7 +2260,7 @@ func (h *HTTPServer) PostShoppingTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tag.Author = id
-	tagCreated, err := h.shoppinglist.ShoppingTag().CreateShoppingTag(tag)
+	tagCreated, err := h.shoppinglist.ShoppingTag().Create(tag)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2289,7 +2289,7 @@ func (h *HTTPServer) GetShoppingTag(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	tag, err := h.shoppinglist.ShoppingTag().GetShoppingTag(id)
+	tag, err := h.shoppinglist.ShoppingTag().Get(id)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2351,7 +2351,7 @@ func (h *HTTPServer) UpdateShoppingTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tag, err := h.shoppinglist.ShoppingTag().GetShoppingTag(id)
+	tag, err := h.shoppinglist.ShoppingTag().Get(id)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2395,7 +2395,7 @@ func (h *HTTPServer) UpdateShoppingTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tagUpdate.AuthorLast = userID
-	tagUpdated, err := h.shoppinglist.ShoppingTag().UpdateShoppingTag(tag.ID, tagUpdate)
+	tagUpdated, err := h.shoppinglist.ShoppingTag().Update(tag.ID, tagUpdate)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2424,7 +2424,7 @@ func (h *HTTPServer) DeleteShoppingTag(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	tag, err := h.shoppinglist.ShoppingTag().GetShoppingTag(id)
+	tag, err := h.shoppinglist.ShoppingTag().Get(id)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2447,7 +2447,7 @@ func (h *HTTPServer) DeleteShoppingTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.shoppinglist.ShoppingTag().DeleteShoppingTag(tag.ID); err != nil {
+	if err := h.shoppinglist.ShoppingTag().Delete(tag.ID); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2623,7 +2623,7 @@ func (h *HTTPServer) PutSettingsFlatNotes(w http.ResponseWriter, r *http.Request
 // returns a list of all groups
 func (h *HTTPServer) GetAllGroups(w http.ResponseWriter, r *http.Request) {
 	var context string
-	groups, err := h.groups.GetAllGroups()
+	groups, err := h.groups.List()
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2652,7 +2652,7 @@ func (h *HTTPServer) GetGroup(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	group, err := h.groups.GetGroupByID(id)
+	group, err := h.groups.GetByID(id)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2692,7 +2692,7 @@ func (h *HTTPServer) GetUserConfirms(w http.ResponseWriter, r *http.Request) {
 		UserID: userIDSelector,
 	}
 
-	creationSecrets, err := h.users.GetAllUserCreationSecrets(userCreationSecretSelector)
+	creationSecrets, err := h.users.UserCreationSecrets().List(userCreationSecretSelector)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2722,7 +2722,7 @@ func (h *HTTPServer) GetUserConfirm(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	creationSecret, err := h.users.GetUserCreationSecret(id)
+	creationSecret, err := h.users.UserCreationSecrets().Get(id)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -2763,7 +2763,7 @@ func (h *HTTPServer) GetUserConfirmValid(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	id := vars["id"]
 
-	creationSecret, err := h.users.GetUserCreationSecret(id)
+	creationSecret, err := h.users.UserCreationSecrets().Get(id)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
