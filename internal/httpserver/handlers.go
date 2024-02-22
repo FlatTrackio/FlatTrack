@@ -1043,7 +1043,7 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	registrationForm.InstanceIDConfirm = r.FormValue("instanceIDConfirm")
+	registrationForm.Secret = r.FormValue("secret")
 
 	registered, jwt, err := h.registration.Register(registrationForm)
 	if err != nil {

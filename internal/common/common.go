@@ -230,11 +230,6 @@ func GetAppMinioUseSSL() (output string) {
 	return GetEnvOrDefault("APP_MINIO_USE_SSL", "")
 }
 
-// GetRequireInstanceIDWithSetup requires the instance ID to be passed to the setup for registration
-func GetRequireInstanceIDConfirmWithSetup() bool {
-	return GetEnvOrDefault("APP_REQUIRE_INSTANCE_ID_CONFIRM_WITH_SETUP", "false") == "true"
-}
-
 // GetSchedulerDisableUseEndpoint return whether to disable the scheduler and to use and endpoint instead
 func GetSchedulerDisableUseEndpoint() bool {
 	return GetEnvOrDefault("APP_SCHEDULER_DISABLE_USE_ENDPOINT", "false") == "true"
@@ -243,6 +238,11 @@ func GetSchedulerDisableUseEndpoint() bool {
 // GetSchedulerEndpointSecret the shared secret to require for posting to scheduler endpoint
 func GetSchedulerEndpointSecret() string {
 	return GetEnvOrDefault("APP_SCHEDULER_ENDPOINT_SECRET", "")
+}
+
+// GetRegistrationSecret the shared secret to require for setting up an instance
+func GetRegistrationSecret() string {
+	return GetEnvOrDefault("APP_REGISTRATION_SECRET", "")
 }
 
 // GetAppBuildVersion ...

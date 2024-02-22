@@ -34,6 +34,7 @@ type manager struct {
 }
 
 func NewManager() *manager {
+	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
 	envFile := common.GetAppEnvFile()
 	_ = godotenv.Load(envFile)
 	db, err := database.Open()
@@ -89,7 +90,6 @@ func (m *manager) Init() *managerInit {
 }
 
 func (mi *managerInit) Run() {
-	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
 	go mi.metrics.Listen()
 	go mi.health.Listen()
 	go mi.scheduling.Run()

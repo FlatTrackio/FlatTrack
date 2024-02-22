@@ -264,11 +264,11 @@ type FlatName struct {
 // Registration ...
 // fields to initialize the instance of FlatTrack
 type Registration struct {
-	User              UserSpec `json:"user"`
-	Timezone          string   `json:"timezone"`
-	Language          string   `json:"language"`
-	FlatName          string   `json:"flatName"`
-	InstanceIDConfirm string   `json:"instanceIDConfirm"`
+	User     UserSpec `json:"user"`
+	Timezone string   `json:"timezone"`
+	Language string   `json:"language"`
+	FlatName string   `json:"flatName"`
+	Secret   string   `json:"secret"`
 }
 
 // SystemVersion ...
