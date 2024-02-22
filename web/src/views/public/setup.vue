@@ -287,7 +287,7 @@ export default {
       }
       registration
         .PostAdminRegister(form, {
-          instanceIDConfirm: this.$route.query.instanceIDConfirm
+          secret: this.$route.query.secret
         })
         .then((resp) => {
           if (resp.data.data !== '' || typeof resp.data.data !== 'undefined') {

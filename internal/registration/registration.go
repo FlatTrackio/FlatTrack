@@ -35,32 +35,26 @@ var (
 )
 
 type Manager struct {
-	user                     *users.Manager
-	system                   *system.Manager
-	settings                 *settings.Manager
-	requireInstanceIDConfirm bool
+	user     *users.Manager
+	system   *system.Manager
+	settings *settings.Manager
+	secret   string
 }
 
 func NewManager(users *users.Manager, system *system.Manager, settings *settings.Manager) *Manager {
 	return &Manager{
-		user:                     users,
-		system:                   system,
-		settings:                 settings,
-		requireInstanceIDConfirm: common.GetRequireInstanceIDConfirmWithSetup(),
+		user:     users,
+		system:   system,
+		settings: settings,
+		secret:   common.GetRegistrationSecret(),
 	}
 }
 
 // Register ...
 // perform initial FlatTrack instance setup
 func (m *Manager) Register(registration types.Registration) (successful bool, jwt string, err error) {
-	if m.requireInstanceIDConfirm {
-		id, err := m.system.GetInstanceUUID()
-		if err != nil {
-			return false, "", err
-		}
-		if registration.InstanceIDConfirm != id {
-			return false, "", fmt.Errorf("a matching instance ID must be passed to registration")
-		}
+	if m.secret != "" && registration.Secret != m.secret {
+		return false, "", fmt.Errorf("a matching setup secret must be passed to registration")
 	}
 	// TODO add timezone validation
 	err = m.settings.SetTimezone(registration.Timezone)
