@@ -17,7 +17,7 @@ variables:
   IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.18@sha256:32427bc0620132b2d9e79e405a1b27944d992501a20417a7f407427cc4c2b672
   IMAGE_GOLANG_ALPINE: docker.io/golang:1.22.0-alpine3.19@sha256:8e96e6cff6a388c2f70f5f662b64120941fcd7d4b89d62fec87520323a316bd9
   IMAGE_PYTHON: docker.io/python:3.8-buster@sha256:04c3f641c2254c229fd2f704c5199ff4bea57d26c1c29008ae3a4afddde98709
-  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.53.3@sha256:1e0e2867b387bf68762427db499a963e43582b06819992db205fc31daa75ceea
+  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.56.2-alpine@sha256:6324441960be114e0496d04c52395abe973b66db54ce51a5a9e64aaf08ac6299
   COSIGN_YES: "true"
 
 .container-registry-login-dockerhub: &container-registry-login-dockerhub |
