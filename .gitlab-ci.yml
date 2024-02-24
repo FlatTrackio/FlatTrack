@@ -1,6 +1,5 @@
 ---
 stages:
-  - conform
   - codequality
   - test
   - build
@@ -318,7 +317,7 @@ pages-smoketest:
     ./hack/build-docs.sh
 
 conform:
-  stage: conform
+  stage: codequality
   only:
     refs:
       - merge_requests
