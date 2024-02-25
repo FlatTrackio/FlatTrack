@@ -92,7 +92,7 @@ func NewManager(db *sql.DB) *Manager {
 
 // ValidateUser ...
 // given a UserSpec, return if it's valid
-func (m *Manager) ValidateUser(user types.UserSpec, allowEmptyPassword bool) (valid bool, err error) {
+func (m *Manager) Validate(user types.UserSpec, allowEmptyPassword bool) (valid bool, err error) {
 	if len(user.Names) == 0 || len(user.Names) > 60 || user.Names == "" {
 		return false, ErrUserAccountInvalidName
 	}
@@ -108,7 +108,7 @@ func (m *Manager) ValidateUser(user types.UserSpec, allowEmptyPassword bool) (va
 		if groupItem == "flatmember" {
 			groupsIncludeFlatmember = true
 		}
-		group, err := m.groups.GetGroupByName(groupItem)
+		group, err := m.groups.GetByName(groupItem)
 		if err != nil || group.ID == "" {
 			return false, ErrUserAccountInvalidGroup
 		}
@@ -131,16 +131,16 @@ func (m *Manager) ValidateUser(user types.UserSpec, allowEmptyPassword bool) (va
 	return true, nil
 }
 
-// CreateUser ...
+// Create ...
 // given a UserSpec, create a user
-func (m *Manager) CreateUser(user types.UserSpec, allowEmptyPassword bool) (userInserted types.UserSpec, err error) {
+func (m *Manager) Create(user types.UserSpec, allowEmptyPassword bool) (userInserted types.UserSpec, err error) {
 	var userCreationSecretInserted types.UserCreationSecretSpec
 
-	validUser, err := m.ValidateUser(user, allowEmptyPassword)
+	validUser, err := m.Validate(user, allowEmptyPassword)
 	if !validUser || err != nil {
 		return types.UserSpec{}, err
 	}
-	localUser, err := m.GetUserByEmail(user.Email, false)
+	localUser, err := m.GetByEmail(user.Email, false)
 	if err == nil || localUser.Email == user.Email || localUser.ID != "" {
 		return types.UserSpec{}, ErrEmailAddressAlreadyUsed
 	}
@@ -175,7 +175,7 @@ func (m *Manager) CreateUser(user types.UserSpec, allowEmptyPassword bool) (user
 	userInserted.Groups = user.Groups
 	userInserted.Password = ""
 	if allowEmptyPassword {
-		if userCreationSecretInserted, err = m.CreateUserCreationSecret(userInserted.ID); err != nil {
+		if userCreationSecretInserted, err = m.UserCreationSecrets().Create(userInserted.ID); err != nil {
 			return types.UserSpec{}, err
 		}
 		if userCreationSecretInserted.ID == "" {
@@ -186,9 +186,9 @@ func (m *Manager) CreateUser(user types.UserSpec, allowEmptyPassword bool) (user
 	return userInserted, nil
 }
 
-// GetAllUsers ...
+// List ...
 // return all users in the database
-func (m *Manager) GetAllUsers(includePassword bool, selectors types.UserSelector) (users []types.UserSpec, err error) {
+func (m *Manager) List(includePassword bool, selectors types.UserSelector) (users []types.UserSpec, err error) {
 	sqlStatement := `select * from users where deletionTimestamp = 0 order by names`
 	rows, err := m.db.Query(sqlStatement)
 	if err != nil {
@@ -231,17 +231,17 @@ func (m *Manager) GetAllUsers(includePassword bool, selectors types.UserSelector
 	return users, nil
 }
 
-// GetUser ...
+// Get ...
 // given a UserSpec and an ID or Email, return a user from the database
-func (m *Manager) GetUser(userSelect types.UserSpec, includePassword bool) (user types.UserSpec, err error) {
+func (m *Manager) Get(userSelect types.UserSpec, includePassword bool) (user types.UserSpec, err error) {
 	if userSelect.ID != "" {
-		return m.GetUserByID(userSelect.ID, includePassword)
+		return m.GetByID(userSelect.ID, includePassword)
 	}
 	if userSelect.Email != "" {
 		if common.RegexMatchEmail(userSelect.Email) {
 			return types.UserSpec{}, ErrInvalidEmailAddress
 		}
-		return m.GetUserByEmail(userSelect.Email, includePassword)
+		return m.GetByEmail(userSelect.Email, includePassword)
 	}
 	if !includePassword {
 		user.Password = ""
@@ -273,9 +273,9 @@ func userObjectFromRows(rows *sql.Rows) (user types.UserSpec, err error) {
 	return user, nil
 }
 
-// GetUserByID ...
+// GetByID ...
 // given an id, return a UserSpec
-func (m *Manager) GetUserByID(id string, includePassword bool) (user types.UserSpec, err error) {
+func (m *Manager) GetByID(id string, includePassword bool) (user types.UserSpec, err error) {
 	sqlStatement := `select * from users where id = $1`
 	rows, err := m.db.Query(sqlStatement, id)
 	if err != nil {
@@ -306,9 +306,9 @@ func (m *Manager) GetUserByID(id string, includePassword bool) (user types.UserS
 	return user, nil
 }
 
-// GetUserByEmail ...
+// GetByEmail ...
 // given a email, return a UserSpec
-func (m *Manager) GetUserByEmail(email string, includePassword bool) (user types.UserSpec, err error) {
+func (m *Manager) GetByEmail(email string, includePassword bool) (user types.UserSpec, err error) {
 	sqlStatement := `select * from users where email = $1`
 	rows, err := m.db.Query(sqlStatement, email)
 	if err != nil {
@@ -339,9 +339,9 @@ func (m *Manager) GetUserByEmail(email string, includePassword bool) (user types
 	return user, nil
 }
 
-// DeleteUserByID ...
+// DeleteByID ...
 // given an id, remove the user account from all the groups and then delete a user account
-func (m *Manager) DeleteUserByID(id string) (err error) {
+func (m *Manager) DeleteByID(id string) (err error) {
 	userGroups, err := m.groups.GetGroupsOfUserByID(id)
 	if err != nil {
 		return err
@@ -352,7 +352,7 @@ func (m *Manager) DeleteUserByID(id string) (err error) {
 			return err
 		}
 	}
-	err = m.DeleteUserCreationSecretByUserID(id)
+	err = m.UserCreationSecrets().DeleteByUserID(id)
 	if err != nil {
 		return err
 	}
@@ -372,7 +372,7 @@ func (m *Manager) DeleteUserByID(id string) (err error) {
 // CheckUserPassword ...
 // given an email and password, find the user account with the email, return if the password matches
 func (m *Manager) CheckUserPassword(email string, password string) (matches bool, err error) {
-	user, err := m.GetUserByEmail(email, true)
+	user, err := m.GetByEmail(email, true)
 	if err != nil {
 		return false, err
 	}
@@ -453,7 +453,7 @@ func (m *Manager) ValidateJWTauthToken(r *http.Request) (valid bool, tokenClaims
 	if !ok {
 		return false, &types.JWTclaim{}, ErrFailedToReadJWTClaims
 	}
-	user, err := m.GetUserByID(reqClaims.ID, true)
+	user, err := m.GetByID(reqClaims.ID, true)
 	if err != nil || user.ID == "" || user.DeletionTimestamp != 0 {
 		return false, &types.JWTclaim{}, ErrFailedToFindAuthTokenAccountID
 	}
@@ -511,7 +511,7 @@ func (m *Manager) GetIDFromJWT(r *http.Request) (id string, err error) {
 	}
 
 	reqClaims := token.Claims.(*types.JWTclaim)
-	user, err := m.GetUserByID(reqClaims.ID, true)
+	user, err := m.GetByID(reqClaims.ID, true)
 	if err != nil || user.ID == "" {
 		log.Printf("error getting user by ID; %v\n", err)
 		return "", ErrFailedToFindAuthTokenAccountID
@@ -527,22 +527,22 @@ func (m *Manager) GetProfile(r *http.Request) (user types.UserSpec, err error) {
 	if err != nil {
 		return types.UserSpec{}, err
 	}
-	user, err = m.GetUserByID(id, false)
+	user, err = m.GetByID(id, false)
 	if err != nil {
 		return types.UserSpec{}, err
 	}
 	return user, nil
 }
 
-// PatchProfile ...
+// Patch ...
 // patches the profile of a user account
-func (m *Manager) PatchProfile(id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
-	existingUserAccount, err := m.GetUserByID(id, true)
+func (m *Manager) Patch(id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
+	existingUserAccount, err := m.GetByID(id, true)
 	if err != nil || existingUserAccount.ID == "" {
 		return types.UserSpec{}, ErrFailedToFindAccount
 	}
 	if userAccount.Email != "" && userAccount.Email != existingUserAccount.Email {
-		localUser, err := m.GetUserByEmail(userAccount.Email, false)
+		localUser, err := m.GetByEmail(userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
 			return types.UserSpec{}, ErrEmailAddressAlreadyUsed
 		}
@@ -552,7 +552,7 @@ func (m *Manager) PatchProfile(id string, userAccount types.UserSpec) (userAccou
 		return types.UserSpec{}, ErrFailedToPatchProfile
 	}
 	noUpdatePassword := userAccount.Password == existingUserAccount.Password
-	valid, err := m.ValidateUser(userAccount, noUpdatePassword)
+	valid, err := m.Validate(userAccount, noUpdatePassword)
 	if !valid || err != nil {
 		return types.UserSpec{}, err
 	}
@@ -589,15 +589,15 @@ func (m *Manager) PatchProfile(id string, userAccount types.UserSpec) (userAccou
 	return userAccountPatched, nil
 }
 
-// PatchProfileAdmin ...
+// PatchAsAdmin ...
 // patches a profile with all fields
-func (m *Manager) PatchProfileAdmin(id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
-	existingUserAccount, err := m.GetUserByID(id, true)
+func (m *Manager) PatchAsAdmin(id string, userAccount types.UserSpec) (userAccountPatched types.UserSpec, err error) {
+	existingUserAccount, err := m.GetByID(id, true)
 	if err != nil || existingUserAccount.ID == "" {
 		return types.UserSpec{}, ErrFailedToFindUserAccount
 	}
 	if userAccount.Email != "" && userAccount.Email != existingUserAccount.Email {
-		localUser, err := m.GetUserByEmail(userAccount.Email, false)
+		localUser, err := m.GetByEmail(userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
 			return types.UserSpec{}, ErrEmailAddressAlreadyUsed
 		}
@@ -607,7 +607,7 @@ func (m *Manager) PatchProfileAdmin(id string, userAccount types.UserSpec) (user
 		return types.UserSpec{}, ErrFailedToPatchProfile
 	}
 	noUpdatePassword := userAccount.Password == existingUserAccount.Password
-	valid, err := m.ValidateUser(userAccount, noUpdatePassword)
+	valid, err := m.Validate(userAccount, noUpdatePassword)
 	if !valid || err != nil {
 		return types.UserSpec{}, err
 	}
@@ -648,19 +648,19 @@ func (m *Manager) PatchProfileAdmin(id string, userAccount types.UserSpec) (user
 	return userAccountPatched, nil
 }
 
-// UpdateProfile ...
+// Update ...
 // updates the profile of a user account
-func (m *Manager) UpdateProfile(id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
-	valid, err := m.ValidateUser(userAccount, false)
+func (m *Manager) Update(id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
+	valid, err := m.Validate(userAccount, false)
 	if !valid || err != nil {
 		return types.UserSpec{}, err
 	}
-	existingUserAccount, err := m.GetUserByID(id, true)
+	existingUserAccount, err := m.GetByID(id, true)
 	if err != nil || existingUserAccount.ID == "" {
 		return types.UserSpec{}, ErrFailedToFindAccount
 	}
 	if userAccount.Email != existingUserAccount.Email {
-		localUser, err := m.GetUserByEmail(userAccount.Email, false)
+		localUser, err := m.GetByEmail(userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
 			return types.UserSpec{}, ErrEmailAddressAlreadyUsed
 		}
@@ -693,19 +693,19 @@ func (m *Manager) UpdateProfile(id string, userAccount types.UserSpec) (userAcco
 	return userAccountUpdated, nil
 }
 
-// UpdateProfileAdmin ...
+// UpdateAsAdmin ...
 // updates all fields of a profile
-func (m *Manager) UpdateProfileAdmin(id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
-	valid, err := m.ValidateUser(userAccount, false)
+func (m *Manager) UpdateAsAdmin(id string, userAccount types.UserSpec) (userAccountUpdated types.UserSpec, err error) {
+	valid, err := m.Validate(userAccount, false)
 	if !valid || err != nil {
 		return types.UserSpec{}, err
 	}
-	existingUserAccount, err := m.GetUserByID(id, true)
+	existingUserAccount, err := m.GetByID(id, true)
 	if err != nil || existingUserAccount.ID == "" {
 		return types.UserSpec{}, ErrFailedToFindAccount
 	}
 	if userAccount.Email != existingUserAccount.Email {
-		localUser, err := m.GetUserByEmail(userAccount.Email, false)
+		localUser, err := m.GetByEmail(userAccount.Email, false)
 		if err == nil || localUser.ID != "" {
 			return types.UserSpec{}, ErrEmailAddressAlreadyUsed
 		}
@@ -756,9 +756,21 @@ func userCreationSecretsFromRows(rows *sql.Rows) (creationSecret types.UserCreat
 	return creationSecret, nil
 }
 
-// GetAllUserCreationSecrets ...
+type userCreationSecretManager struct {
+	db *sql.DB
+	m  *Manager
+}
+
+func (m *Manager) UserCreationSecrets() *userCreationSecretManager {
+	return &userCreationSecretManager{
+		db: m.db,
+		m:  m,
+	}
+}
+
+// List ...
 // returns all UserCreationSecrets from the database
-func (m *Manager) GetAllUserCreationSecrets(secretsSelector types.UserCreationSecretSelector) (creationSecrets []types.UserCreationSecretSpec, err error) {
+func (m *userCreationSecretManager) List(secretsSelector types.UserCreationSecretSelector) (creationSecrets []types.UserCreationSecretSpec, err error) {
 	sqlStatement := `select * from user_creation_secret`
 	rows, err := m.db.Query(sqlStatement)
 	if err != nil {
@@ -775,7 +787,7 @@ func (m *Manager) GetAllUserCreationSecrets(secretsSelector types.UserCreationSe
 			return []types.UserCreationSecretSpec{}, ErrFailedToListUserCreationSecrets
 		}
 		if secretsSelector.UserID != "" {
-			userExists, err := m.UserAccountExists(secretsSelector.UserID)
+			userExists, err := m.m.UserAccountExists(secretsSelector.UserID)
 			if err != nil {
 				return []types.UserCreationSecretSpec{}, err
 			}
@@ -791,9 +803,9 @@ func (m *Manager) GetAllUserCreationSecrets(secretsSelector types.UserCreationSe
 	return creationSecrets, nil
 }
 
-// GetUserCreationSecret ...
+// Get ...
 // returns a UserCreationSecret by it's id from the database
-func (m *Manager) GetUserCreationSecret(id string) (creationSecret types.UserCreationSecretSpec, err error) {
+func (m *userCreationSecretManager) Get(id string) (creationSecret types.UserCreationSecretSpec, err error) {
 	sqlStatement := `select * from user_creation_secret where id = $1`
 	rows, err := m.db.Query(sqlStatement, id)
 	if err != nil {
@@ -816,9 +828,9 @@ func (m *Manager) GetUserCreationSecret(id string) (creationSecret types.UserCre
 	return creationSecret, nil
 }
 
-// CreateUserCreationSecret ...
+// Create ...
 // creates a user creation secret for account confirming
-func (m *Manager) CreateUserCreationSecret(userID string) (userCreationSecretInserted types.UserCreationSecretSpec, err error) {
+func (m *userCreationSecretManager) Create(userID string) (userCreationSecretInserted types.UserCreationSecretSpec, err error) {
 	sqlStatement := `insert into user_creation_secret (userId)
                          values ($1)
                          returning *`
@@ -840,9 +852,9 @@ func (m *Manager) CreateUserCreationSecret(userID string) (userCreationSecretIns
 	return userCreationSecretInserted, nil
 }
 
-// DeleteUserCreationSecret ...
+// Delete ...
 // deletes the acccount creation secret, after it's been used
-func (m *Manager) DeleteUserCreationSecret(id string) (err error) {
+func (m *userCreationSecretManager) Delete(id string) (err error) {
 	sqlStatement := `delete from user_creation_secret where id = $1`
 	rows, err := m.db.Query(sqlStatement, id)
 	if err != nil {
@@ -856,9 +868,9 @@ func (m *Manager) DeleteUserCreationSecret(id string) (err error) {
 	return nil
 }
 
-// DeleteUserCreationSecretByUserID ...
+// DeleteByUserID ...
 // deletes the acccount creation secret by userid, after it's been used
-func (m *Manager) DeleteUserCreationSecretByUserID(userID string) (err error) {
+func (m *userCreationSecretManager) DeleteByUserID(userID string) (err error) {
 	sqlStatement := `delete from user_creation_secret where userId = $1`
 	rows, err := m.db.Query(sqlStatement, userID)
 	if err != nil {
@@ -878,7 +890,7 @@ func (m *Manager) ConfirmUserAccount(id string, secret string, user types.UserSp
 	if user.Password == "" {
 		return "", ErrUserAccountConfirmPasswordRequiredForRegistration
 	}
-	userCreationSecret, err := m.GetUserCreationSecret(id)
+	userCreationSecret, err := m.UserCreationSecrets().Get(id)
 	if err != nil {
 		return "", err
 	}
@@ -888,7 +900,7 @@ func (m *Manager) ConfirmUserAccount(id string, secret string, user types.UserSp
 	if secret != userCreationSecret.Secret {
 		return "", ErrUserAccountConfirmSecretDoesNotMatch
 	}
-	userInDB, err := m.GetUserByID(userCreationSecret.UserID, false)
+	userInDB, err := m.GetByID(userCreationSecret.UserID, false)
 	if err != nil {
 		return "", err
 	}
@@ -901,14 +913,14 @@ func (m *Manager) ConfirmUserAccount(id string, secret string, user types.UserSp
 		PhoneNumber: user.PhoneNumber,
 		Registered:  true,
 	}
-	userConfirmed, err := m.PatchProfileAdmin(userCreationSecret.UserID, userAccountPatch)
+	userConfirmed, err := m.PatchAsAdmin(userCreationSecret.UserID, userAccountPatch)
 	if err != nil {
 		return "", err
 	}
 	if userConfirmed.ID == "" || !userConfirmed.Registered {
 		return "", ErrFailedToPatchProfile
 	}
-	err = m.DeleteUserCreationSecret(id)
+	err = m.UserCreationSecrets().Delete(id)
 	if err != nil {
 		return "", err
 	}
@@ -968,9 +980,9 @@ func (m *Manager) GenerateNewAuthNonce(id string) (err error) {
 	return nil
 }
 
-// PatchUserDisabledAdmin ...
+// PatchDisabledAsAdmin ...
 // patches is user account to be disabled
-func (m *Manager) PatchUserDisabledAdmin(id string, disabled bool) (userAccount types.UserSpec, err error) {
+func (m *Manager) PatchDisabledAsAdmin(id string, disabled bool) (userAccount types.UserSpec, err error) {
 	sqlStatement := `update users set disabled = $2 where id = $1
                          returning *`
 	rows, err := m.db.Query(sqlStatement, id, disabled)

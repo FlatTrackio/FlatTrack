@@ -39,9 +39,9 @@ func (m *Manager) ShoppingTag() *ShoppingTagManager {
 	}
 }
 
-// ValidateShoppingTag ...
+// Validate ...
 // given a shopping tag, return it's validity
-func (m *ShoppingTagManager) ValidateShoppingTag(tag types.ShoppingTag) (valid bool, err error) {
+func (m *ShoppingTagManager) Validate(tag types.ShoppingTag) (valid bool, err error) {
 	if tag.Name != "" && len(tag.Name) == 0 || len(tag.Name) >= 30 {
 		return false, ErrInvalidShoppingItemTag
 	}
@@ -49,10 +49,10 @@ func (m *ShoppingTagManager) ValidateShoppingTag(tag types.ShoppingTag) (valid b
 	return true, err
 }
 
-// CreateShoppingTag ...
+// Create ...
 // adds a new tag to be used in lists
-func (m *ShoppingTagManager) CreateShoppingTag(newTag types.ShoppingTag) (tag types.ShoppingTag, err error) {
-	valid, err := m.ValidateShoppingTag(newTag)
+func (m *ShoppingTagManager) Create(newTag types.ShoppingTag) (tag types.ShoppingTag, err error) {
+	valid, err := m.Validate(newTag)
 	if !valid || err != nil {
 		return types.ShoppingTag{}, err
 	}
@@ -78,9 +78,9 @@ func (m *ShoppingTagManager) CreateShoppingTag(newTag types.ShoppingTag) (tag ty
 	return tag, nil
 }
 
-// GetShoppingListTags ...
+// ListTagsInList ...
 // returns a list of tags used in items in a list
-func (m *ShoppingTagManager) GetShoppingListTags(listID string) (tags []string, err error) {
+func (m *ShoppingTagManager) ListTagsInList(listID string) (tags []string, err error) {
 	sqlStatement := `select distinct tag from shopping_item where listId = $1 order by tag`
 	rows, err := m.db.Query(sqlStatement, listID)
 	if err != nil {
@@ -101,9 +101,9 @@ func (m *ShoppingTagManager) GetShoppingListTags(listID string) (tags []string, 
 	return tags, nil
 }
 
-// GetShoppingListTag ...
-// returns a list of tags used in items in a list
-func (m *ShoppingTagManager) GetShoppingListTag(listID string, tag string) (tagInDB string, err error) {
+// GetInList ...
+// returns a tags used in items in a list
+func (m *ShoppingTagManager) GetInList(listID string, tag string) (tagInDB string, err error) {
 	sqlStatement := `select tag from shopping_item where listId = $1 and tag = $2`
 	rows, err := m.db.Query(sqlStatement, listID, tag)
 	if err != nil {
@@ -121,14 +121,14 @@ func (m *ShoppingTagManager) GetShoppingListTag(listID string, tag string) (tagI
 	return tagInDB, nil
 }
 
-// UpdateShoppingListTag ...
+// UpdateInList ...
 // updates a tag's name in a list
-func (m *ShoppingTagManager) UpdateShoppingListTag(listID string, tag string, tagUpdate string) (tagNew string, err error) {
-	tagInDB, err := m.GetShoppingListTag(listID, tag)
+func (m *ShoppingTagManager) UpdateInList(listID string, tag string, tagUpdate string) (tagNew string, err error) {
+	tagInDB, err := m.GetInList(listID, tag)
 	if tagInDB == "" || err != nil {
 		return "", ErrFailedToFindShoppingTagToUpdate
 	}
-	valid, err := m.ValidateShoppingTag(types.ShoppingTag{
+	valid, err := m.manager.ShoppingTag().Validate(types.ShoppingTag{
 		Name: tagUpdate,
 	})
 	if err != nil {
@@ -154,9 +154,9 @@ func (m *ShoppingTagManager) UpdateShoppingListTag(listID string, tag string, ta
 	return tagNew, nil
 }
 
-// GetShoppingTag ...
+// Get ...
 // returns a tag, given an id
-func (m *ShoppingTagManager) GetShoppingTag(id string) (tag types.ShoppingTag, err error) {
+func (m *ShoppingTagManager) Get(id string) (tag types.ShoppingTag, err error) {
 	sqlStatement := `select * from shopping_list_tag where id = $1`
 	rows, err := m.db.Query(sqlStatement, id)
 	if err != nil {
@@ -175,9 +175,9 @@ func (m *ShoppingTagManager) GetShoppingTag(id string) (tag types.ShoppingTag, e
 	return tag, nil
 }
 
-// GetAllShoppingTags ...
+// List ...
 // returns a list of all tags used in items across lists
-func (m *ShoppingTagManager) GetAllShoppingTags(options types.ShoppingTagOptions) (tags []types.ShoppingTag, err error) {
+func (m *ShoppingTagManager) List(options types.ShoppingTagOptions) (tags []types.ShoppingTag, err error) {
 	sqlStatement := `select * from shopping_list_tag
                          where deletionTimestamp = 0
 	                 order by name asc`
@@ -223,12 +223,12 @@ func (m *ShoppingTagManager) GetAllShoppingTags(options types.ShoppingTagOptions
 
 // UpdateShoppingTag ...
 // updates a tag's name
-func (m *ShoppingTagManager) UpdateShoppingTag(id string, tag types.ShoppingTag) (tagUpdated types.ShoppingTag, err error) {
-	tagInDB, err := m.GetShoppingTag(id)
+func (m *ShoppingTagManager) Update(id string, tag types.ShoppingTag) (tagUpdated types.ShoppingTag, err error) {
+	tagInDB, err := m.Get(id)
 	if tagInDB.ID == "" || err != nil {
 		return types.ShoppingTag{}, ErrFailedToFindShoppingTagToUpdate
 	}
-	valid, err := m.ValidateShoppingTag(tag)
+	valid, err := m.Validate(tag)
 	if err != nil {
 		return types.ShoppingTag{}, err
 	}
@@ -256,9 +256,9 @@ func (m *ShoppingTagManager) UpdateShoppingTag(id string, tag types.ShoppingTag)
 	return tagUpdated, nil
 }
 
-// DeleteShoppingTag ...
+// Delete ...
 // deletes a shopping tag
-func (m *ShoppingTagManager) DeleteShoppingTag(id string) (err error) {
+func (m *ShoppingTagManager) Delete(id string) (err error) {
 	sqlStatement := `delete from shopping_list_tag where id = $1`
 	rows, err := m.db.Query(sqlStatement, id)
 	if err != nil {
