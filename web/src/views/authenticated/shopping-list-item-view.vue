@@ -184,6 +184,12 @@
               Obtained
             </b-checkbox>
           </b-field>
+          <p
+            v-if="typeof price !== 'undefined' && price !== 0 && quantity > 1"
+            class="pb-2"
+          >
+            Total price with quantity: ${{ itemCurrentPrice.toFixed(2) }}
+          </p>
           <b-field>
             <b-button
               type="is-success"
@@ -357,6 +363,11 @@ export default {
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
+    }
+  },
+  computed: {
+    itemCurrentPrice () {
+      return this.price * this.quantity
     }
   },
   async beforeMount () {
