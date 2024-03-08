@@ -180,6 +180,12 @@
               Obtained
             </b-checkbox>
           </b-field>
+          <p
+            v-if="typeof price !== 'undefined' && price !== 0 && quantity > 1"
+            class="m-1"
+          >
+            Total price with quantity: ${{ itemCurrentPrice.toFixed(2) }}
+          </p>
           <b-button
             type="is-success"
             size="is-medium"
@@ -262,6 +268,11 @@ export default {
             `Failed to add shopping list item - ${err.response.data.metadata.response}`
           )
         })
+    }
+  },
+  computed: {
+    itemCurrentPrice () {
+      return this.price * this.quantity
     }
   },
   async beforeMount () {
