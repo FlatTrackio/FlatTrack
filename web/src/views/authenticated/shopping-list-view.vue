@@ -175,7 +175,7 @@
           >Add notes</b-button
         >
         <div v-if="editingMeta">
-          <b-button type="is-info" @click="UpdateShoppingList;">Done</b-button>
+          <b-button type="is-info" @click="UpdateShoppingList()">Done</b-button>
           <br />
         </div>
         <br />
