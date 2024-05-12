@@ -2000,6 +2000,19 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 	itemID := vars["itemId"]
 	listID := vars["listId"]
 
+	userID, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
 	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
@@ -2046,7 +2059,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.shoppinglist.ShoppingItem().Delete(item.ID, list.ID); err != nil {
+	if err := h.shoppinglist.ShoppingItem().Delete(item.ID, list.ID, userID); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
