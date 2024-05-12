@@ -316,9 +316,9 @@ func getItemObjectFromRows(rows *sql.Rows) (item types.ShoppingItemSpec, err err
 
 // Delete ...
 // given an item id, remove it
-func (m *ShoppingItemManager) Delete(itemID string, listID string) (err error) {
+func (m *ShoppingItemManager) Delete(id string, listID string, authorLast string) (err error) {
 	sqlStatement := `delete from shopping_item where id = $1 and listId = $2`
-	rows, err := m.db.Query(sqlStatement, itemID, listID)
+	rows, err := m.db.Query(sqlStatement, id, listID)
 	if err != nil {
 		return err
 	}
@@ -327,11 +327,20 @@ func (m *ShoppingItemManager) Delete(itemID string, listID string) (err error) {
 			log.Printf("error: failed to close rows: %v\n", err)
 		}
 	}()
+
+	shoppingListPatch := types.ShoppingListSpec{
+		AuthorLast: authorLast,
+	}
+	_, err = m.manager.ShoppingList().Patch(listID, shoppingListPatch)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 // DeleteAll ...
 // given an item id, remove all items
+// only intended to be called when deleting list
 func (m *ShoppingItemManager) DeleteAll(listID string) (err error) {
 	sqlStatement := `delete from shopping_item where listId = $1`
 	rows, err := m.db.Query(sqlStatement, listID)
