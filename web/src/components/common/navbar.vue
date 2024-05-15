@@ -67,6 +67,12 @@
                   :to="{ name: 'Shopping list' }"
                 ></b-menu-item>
                 <b-menu-item
+                  icon="view-dashboard-outline"
+                  label="Board"
+                  tag="router-link"
+                  :to="{ name: 'Board' }"
+                ></b-menu-item>
+                <b-menu-item
                   icon="account-group"
                   label="Flatmates"
                   tag="router-link"
@@ -137,12 +143,12 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import cani from '@/requests/authenticated/can-i'
+import common from "@/common/common";
+import cani from "@/requests/authenticated/can-i";
 
 export default {
-  name: 'nav-bar',
-  data () {
+  name: "nav-bar",
+  data() {
     return {
       isActive: true,
       open: true,
@@ -150,22 +156,22 @@ export default {
       fullheight: true,
       fullwidth: false,
       pageLoading: true,
-      flatName: 'My flat',
-      canUserAccountAdmin: false
-    }
+      flatName: "My flat",
+      canUserAccountAdmin: false,
+    };
   },
   methods: {
-    signOut () {
-      common.SignoutDialog()
-    }
+    signOut() {
+      common.SignoutDialog();
+    },
   },
-  async beforeMount () {
-    cani.GetCanIgroup('admin').then((resp) => {
-      this.canUserAccountAdmin = resp.data.data
-      this.pageLoading = false
-    })
-  }
-}
+  async beforeMount() {
+    cani.GetCanIgroup("admin").then((resp) => {
+      this.canUserAccountAdmin = resp.data.data;
+      this.pageLoading = false;
+    });
+  },
+};
 </script>
 
 <style>

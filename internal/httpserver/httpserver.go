@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 
+	"gitlab.com/flattrack/flattrack/internal/board"
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/emails"
 	"gitlab.com/flattrack/flattrack/internal/groups"
@@ -41,6 +42,7 @@ type HTTPServer struct {
 	settings     *settings.Manager
 	system       *system.Manager
 	scheduling   *scheduling.Manager
+	board        *board.Manager
 }
 
 func NewHTTPServer(
@@ -55,6 +57,7 @@ func NewHTTPServer(
 	settings *settings.Manager,
 	system *system.Manager,
 	scheduling *scheduling.Manager,
+	board *board.Manager,
 ) (h *HTTPServer) {
 	h = &HTTPServer{}
 	h.db = db
@@ -68,6 +71,7 @@ func NewHTTPServer(
 	h.settings = settings
 	h.system = system
 	h.scheduling = scheduling
+	h.board = board
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/_healthz", h.Healthz)

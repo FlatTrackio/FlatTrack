@@ -2557,6 +2557,302 @@ func (h *HTTPServer) PutSettingsShoppingList(w http.ResponseWriter, r *http.Requ
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
+// GetTask ...
+// responds with a task
+func (h *HTTPServer) GetBoardItem(w http.ResponseWriter, r *http.Request) {
+	var context string
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	task, err := h.board.Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get board item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched board item",
+		},
+		Spec: task,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// GetBoardItems ...
+// responds with a list of board items
+func (h *HTTPServer) GetBoardItems(w http.ResponseWriter, r *http.Request) {
+	var context string
+	modificationTimestampAfter, _ := strconv.Atoi(r.FormValue("modificationTimestampAfter"))
+	creationTimestampAfter, _ := strconv.Atoi(r.FormValue("creationTimestampAfter"))
+	limit, _ := strconv.Atoi(r.FormValue("limit"))
+
+	options := types.BoardListOptions{
+		Limit: limit,
+		Selector: types.BoardListSelector{
+			Name:                       r.FormValue("name"),
+			ModificationTimestampAfter: modificationTimestampAfter,
+			CreationTimestampAfter:     creationTimestampAfter,
+		},
+	}
+
+	items, err := h.board.List(options)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get board items",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched board items",
+		},
+		List: items,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// PostBoardItem ...
+// creates a new boardItem
+func (h *HTTPServer) PostBoardItem(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	var item types.BoardItem
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+	if err := json.Unmarshal(body, &item); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	id, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	item.Author = id
+	newItem, err := h.board.Create(item)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to board item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "created board item",
+		},
+		Spec: newItem,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusCreated, JSONresp)
+}
+
+// PatchBoardItem ...
+// patches an existing boardItem
+func (h *HTTPServer) PatchBoardItem(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	var item types.BoardItem
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+	if err := json.Unmarshal(body, &item); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	_, err = h.board.Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get board item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
+	itemPatched, err := h.board.Patch(id, item)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to patch board item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "patched board item",
+		},
+		Spec: itemPatched,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// PutBoardItem ...
+// updates an existing boardItem
+func (h *HTTPServer) PutBoardItem(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	var item types.BoardItem
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+	if err := json.Unmarshal(body, &item); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	_, err = h.board.Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get board item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
+	shoppingListUpdated, err := h.board.Update(id, item)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to update board item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "updated board item",
+		},
+		Spec: shoppingListUpdated,
+	}
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// DeleteBoardItem ...
+// deletes a new boardItem by it's id
+func (h *HTTPServer) DeleteBoardItem(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if _, err := h.board.Get(id); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get board item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
+	if err := h.board.Delete(id); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to delete board item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "deleted board item",
+		},
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
 // GetSettingsFlatNotes ...
 // responds with the notes for flat
 func (h *HTTPServer) GetSettingsFlatNotes(w http.ResponseWriter, r *http.Request) {
@@ -3330,6 +3626,36 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		{
 			EndpointPath: "/apps/shoppinglist/tags/{id}",
 			HandlerFunc:  httpUseMiddleware(h.DeleteShoppingTag, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodDelete,
+		},
+		{
+			EndpointPath: "/apps/board/items",
+			HandlerFunc:  httpUseMiddleware(h.GetBoardItems, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: "/apps/board/items",
+			HandlerFunc:  httpUseMiddleware(h.PostBoardItem, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodPost,
+		},
+		{
+			EndpointPath: "/apps/board/items/{id}",
+			HandlerFunc:  httpUseMiddleware(h.GetBoardItem, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodGet,
+		},
+		{
+			EndpointPath: "/apps/board/items/{id}",
+			HandlerFunc:  httpUseMiddleware(h.PatchBoardItem, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodPatch,
+		},
+		{
+			EndpointPath: "/apps/board/items/{id}",
+			HandlerFunc:  httpUseMiddleware(h.PutBoardItem, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodPut,
+		},
+		{
+			EndpointPath: "/apps/board/items/{id}",
+			HandlerFunc:  httpUseMiddleware(h.DeleteBoardItem, h.HTTPvalidateJWT()),
 			HTTPMethod:   http.MethodDelete,
 		},
 		{

@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/joho/godotenv"
+	"gitlab.com/flattrack/flattrack/internal/board"
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/database"
 	"gitlab.com/flattrack/flattrack/internal/emails"
@@ -31,6 +32,7 @@ type manager struct {
 	settings     *settings.Manager
 	system       *system.Manager
 	scheduling   *scheduling.Manager
+	board        *board.Manager
 }
 
 func NewManager() *manager {
@@ -53,7 +55,8 @@ func NewManager() *manager {
 	registration := registration.NewManager(users, system, settings)
 	metrics := metrics.NewManager()
 	scheduling := scheduling.NewManager(db)
-	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling)
+	board := board.NewManager(db, users)
+	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling, board)
 	return &manager{
 		httpserver:   httpserver,
 		metrics:      metrics,
