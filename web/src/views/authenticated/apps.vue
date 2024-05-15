@@ -55,26 +55,32 @@
 
 <script>
 export default {
-  name: 'app-home',
-  data () {
+  name: "app-home",
+  data() {
     return {
       apps: [
         {
-          name: 'Shopping list',
-          description: 'Create and manage lists to use for your next shop',
-          icon: 'format-list-checks',
-          routeName: 'Shopping list'
+          name: "Shopping list",
+          description: "Create and manage lists to use for your next shop",
+          icon: "format-list-checks",
+          routeName: "Shopping list",
         },
         {
-          name: 'Flatmates',
-          description: 'View your flatmates and their contact details',
-          icon: 'account-group',
-          routeName: 'My Flatmates'
-        }
-      ]
-    }
-  }
-}
+          name: "Board",
+          description: "Share ideas and updates",
+          icon: "view-dashboard-outline",
+          routeName: "Board",
+        },
+        {
+          name: "Flatmates",
+          description: "View your flatmates and their contact details",
+          icon: "account-group",
+          routeName: "My Flatmates",
+        },
+      ],
+    };
+  },
+};
 </script>
 
 <style scoped></style>

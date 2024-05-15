@@ -255,6 +255,29 @@ type UserCreationSecretSelector struct {
 	UserID string `json:"userId"`
 }
 
+type BoardItem struct {
+	ID                    string `json:"id"`
+	Title                 string `json:"title"`
+	Body                  string `json:"body"`
+	Author                string `json:"author"`
+	CreationTimestamp     int64  `json:"creationTimestamp"`
+	ModificationTimestamp int64  `json:"modificationTimestamp"`
+	DeletionTimestamp     int64  `json:"deletionTimestamp"`
+}
+
+// BoardListSelector ...
+// options for creating and selecting board items
+type BoardListSelector struct {
+	Name                       string `json:"name"`
+	ModificationTimestampAfter int    `json:"modificationTimestampAfter"`
+	CreationTimestampAfter     int    `json:"creationTimestampAfter"`
+}
+
+type BoardListOptions struct {
+	Limit    int `json:"limit"`
+	Selector BoardListSelector
+}
+
 // FlatName ...
 // the name of the flat
 type FlatName struct {
