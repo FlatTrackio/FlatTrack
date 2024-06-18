@@ -392,9 +392,15 @@
                     "
                   >
                     - ${{ itemTag.price.toFixed(2) }}
-                    <b-tag v-if="TagIsExcluded(itemTag.tag)" type="is-primary"
-                      >price excluded</b-tag
-                    >
+                    <span v-if="TagIsExcluded(itemTag.tag)">
+                      <b-tag type="is-primary">price excluded</b-tag>
+                      <infotooltip
+                        :message="
+                          'Split price plus tag price is $' +
+                          (equalPricePerPerson + itemTag.price).toFixed(2)
+                        "
+                      />
+                    </span>
                   </span>
                 </p>
               </section>
@@ -500,6 +506,7 @@
             totalPercentage
           }}%)
           <infotooltip
+            :position="deviceIsMobile ? 'is-left' : 'is-top'"
             :message="
               'Total price including excluded item prices is $' +
               totalAllInclusivePrice

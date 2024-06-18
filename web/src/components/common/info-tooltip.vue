@@ -17,12 +17,14 @@
   <b-tooltip
     :label="message"
     type="is-white"
-    position="is-top"
-    multilined>
+    :position="position ? position : 'is-top'"
+    multilined
+  >
     <b-icon
       icon="information-outline"
       type="is-lightyellow"
-      custom-size="mdi-24px">
+      custom-size="mdi-24px"
+    >
     </b-icon>
   </b-tooltip>
 </template>
@@ -31,7 +33,8 @@
 export default {
   name: 'password-tooltip-icon',
   props: {
-    message: String
+    message: String,
+    position: String
   }
 }
 </script>
