@@ -69,8 +69,9 @@ First, create a Postgres database.
 
 Create the Service:
 
-    kn -n flattrack-myflat service create flattrack \
+    kn service create flattrack \
       --env APP_DB_USER=postgres \
       --env APP_DB_PASSWORD=postgres \
       --env APP_DB_DATABASE=postgres \
       --env APP_DB_HOST=postgres \
+      --image registry.gitlab.com/flattrack/flattrack:latest
