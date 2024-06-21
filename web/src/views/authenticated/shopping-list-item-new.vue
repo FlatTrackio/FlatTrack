@@ -41,6 +41,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <div>
           <h1 class="title is-1">New shopping item</h1>
@@ -229,6 +234,9 @@ export default {
     }
   },
   methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
+    },
     PostShoppingListItem () {
       this.submitLoading = true
       if (this.notes === '') {

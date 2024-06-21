@@ -31,6 +31,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 class="title is-1">Settings</h1>
         <p class="subtitle is-3">Manage settings for this device</p>
@@ -58,6 +63,11 @@ export default {
   data () {
     return {
       enableAnimations: common.GetEnableAnimations() !== 'false'
+    }
+  },
+  methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
     }
   },
   watch: {

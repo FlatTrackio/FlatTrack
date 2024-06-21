@@ -29,6 +29,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 class="title is-1">Shopping list</h1>
         <p class="subtitle is-3">Manage your weekly shop</p>
@@ -259,6 +264,9 @@ export default {
     }
   },
   methods: {
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
+    },
     GetShoppingLists () {
       shoppinglist
         .GetShoppingLists(undefined, this.sortBy)

@@ -31,6 +31,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 class="title is-1">Accounts</h1>
         <p class="subtitle is-4">Manage the account of your flatmates</p>
@@ -214,6 +219,9 @@ export default {
       import('@/components/common/floating-add-button.vue')
   },
   methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
+    },
     FetchAllFlatmates () {
       if (typeof this.groupQuery !== 'undefined') {
         var group = this.groupQuery

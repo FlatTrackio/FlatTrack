@@ -29,6 +29,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 class="title is-1">Flatmates</h1>
         <p class="subtitle is-3">
@@ -212,6 +217,9 @@ export default {
     }
   },
   methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
+    },
     FetchAllFlatmates () {
       if (typeof this.GroupQuery !== 'undefined') {
         var group = this.GroupQuery

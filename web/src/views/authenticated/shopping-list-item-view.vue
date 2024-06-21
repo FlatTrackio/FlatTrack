@@ -41,6 +41,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <div>
           <b-loading
@@ -284,6 +289,9 @@ export default {
     }
   },
   methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
+    },
     UpdateShoppingListItem () {
       this.submitLoading = true
       if (this.notes === '') {

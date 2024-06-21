@@ -70,6 +70,11 @@
               :animated="true"
             ></b-skeleton>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <div v-if="editingMeta">
           <b-field label="Name">
@@ -816,6 +821,9 @@ export default {
     }
   },
   methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
+    },
     GoToNewItemPage () {
       var itemSearch = this.itemSearch
       this.$router.push({
