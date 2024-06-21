@@ -52,7 +52,7 @@ func GetEnvOrDefault(envName string, defaultValue string) (output string) {
 }
 
 func GetDBConnectionString() (output string) {
-	return GetEnvOrDefault("APP_DB_CONNECTION_STRING", "")
+	return os.ExpandEnv(GetEnvOrDefault("APP_DB_CONNECTION_STRING", ""))
 }
 
 // GetDBdatabase ...
