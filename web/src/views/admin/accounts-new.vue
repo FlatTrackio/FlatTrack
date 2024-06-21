@@ -33,6 +33,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 class="title is-1">New account</h1>
         <p class="subtitle is-4">Add a new flatmate</p>
@@ -249,6 +254,9 @@ export default {
   methods: {
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
+    },
+    ClipboardCopy () {
+      common.ClipboardCopy()
     },
     GetAvailableGroups () {
       groups

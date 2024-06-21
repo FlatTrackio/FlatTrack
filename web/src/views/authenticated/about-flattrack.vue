@@ -29,6 +29,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 class="title is-1">About FlatTrack</h1>
         <p class="subtitle is-3">What is FlatTrack?</p>
@@ -121,6 +126,7 @@
 </template>
 
 <script>
+import common from '@/common/common'
 import system from '@/requests/authenticated/system'
 import constants from '@/constants/constants'
 import vue from 'vue'
@@ -145,6 +151,9 @@ export default {
     }
   },
   methods: {
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
+    },
     GetVersion () {
       system.GetVersion().then((resp) => {
         this.hasInitialLoaded = true

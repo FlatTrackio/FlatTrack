@@ -34,6 +34,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 class="title is-1">Edit account</h1>
         <p class="subtitle is-4">Edit an existing user account</p>
@@ -348,6 +353,9 @@ export default {
     infotooltip: () => import('@/components/common/info-tooltip.vue')
   },
   methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
+    },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
     },

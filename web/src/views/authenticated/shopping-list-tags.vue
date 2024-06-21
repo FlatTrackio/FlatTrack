@@ -33,6 +33,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 class="title is-1">Shopping tags</h1>
         <p class="subtitle is-3">Manage tags used in your lists</p>
@@ -189,6 +194,9 @@ export default {
     }
   },
   methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
+    },
     GetShoppingTags () {
       shoppinglist
         .GetShoppingTags(this.sortBy)

@@ -31,6 +31,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 class="title is-1">Settings</h1>
         <p class="subtitle is-4">General FlatTrack settings</p>
@@ -128,6 +133,9 @@ export default {
       })
   },
   methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
+    },
     PostFlatName () {
       if (this.flatName === '') {
         common.DisplayFailureToast('Error: Flat name must not be empty')

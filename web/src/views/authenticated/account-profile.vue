@@ -31,6 +31,11 @@
               >
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 class="title is-1">Profile</h1>
         <p class="subtitle is-3">Manage your account</p>
@@ -181,6 +186,9 @@ export default {
     }
   },
   methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
+    },
     GetProfile () {
       profile.GetProfile().then((resp) => {
         this.names = resp.data.spec.names

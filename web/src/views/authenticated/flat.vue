@@ -27,6 +27,11 @@
               <router-link :to="{ name: 'My Flat' }">My flat</router-link>
             </li>
           </ul>
+          <b-button
+            @click="CopyHrefToClipboard()"
+            icon-left="content-copy"
+            size="is-small"
+          ></b-button>
         </nav>
         <h1 v-if="hasInitialLoaded || name !== ''" class="title is-1">
           {{ name }}
@@ -83,6 +88,11 @@ export default {
       canUserAccountAdmin: false
     }
   },
+  methods: {
+    ClipboardCopy () {
+      common.ClipboardCopy()
+    }
+  },
   async beforeMount () {
     this.name = common.GetFlatnameFromCache() || this.name
     flatInfo
@@ -105,3 +115,5 @@ export default {
   }
 }
 </script>
+
+<style src="../../assets/style.css"></style>

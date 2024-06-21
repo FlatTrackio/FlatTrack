@@ -196,6 +196,9 @@ function GetLoginMessage () {
     document.head.querySelector('[name~=loginmessage][content]').content || ''
   )
 }
+function CopyHrefToClipboard () {
+  navigator.clipboard.writeText(window.location.href)
+}
 
 export default {
   GetAuthToken,
@@ -215,5 +218,6 @@ export default {
   Hooray,
   GetUserIDFromJWT,
   GetSetupMessage,
-  GetLoginMessage
+  GetLoginMessage,
+  CopyHrefToClipboard
 }

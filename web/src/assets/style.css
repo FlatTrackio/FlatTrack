@@ -1,0 +1,7 @@
+nav.breadcrumb {
+    display: flex;
+}
+
+nav.breadcrumb ul {
+    align-items: center;
+}
