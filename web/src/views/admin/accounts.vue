@@ -219,8 +219,8 @@ export default {
       import('@/components/common/floating-add-button.vue')
   },
   methods: {
-    ClipboardCopy () {
-      common.ClipboardCopy()
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
     },
     FetchAllFlatmates () {
       if (typeof this.groupQuery !== 'undefined') {

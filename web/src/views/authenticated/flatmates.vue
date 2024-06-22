@@ -217,8 +217,8 @@ export default {
     }
   },
   methods: {
-    ClipboardCopy () {
-      common.ClipboardCopy()
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
     },
     FetchAllFlatmates () {
       if (typeof this.GroupQuery !== 'undefined') {

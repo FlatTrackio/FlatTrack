@@ -353,8 +353,8 @@ export default {
     infotooltip: () => import('@/components/common/info-tooltip.vue')
   },
   methods: {
-    ClipboardCopy () {
-      common.ClipboardCopy()
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
     },
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
