@@ -821,8 +821,8 @@ export default {
     }
   },
   methods: {
-    ClipboardCopy () {
-      common.ClipboardCopy()
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
     },
     GoToNewItemPage () {
       var itemSearch = this.itemSearch

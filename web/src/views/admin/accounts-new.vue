@@ -255,8 +255,8 @@ export default {
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
     },
-    ClipboardCopy () {
-      common.ClipboardCopy()
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
     },
     GetAvailableGroups () {
       groups

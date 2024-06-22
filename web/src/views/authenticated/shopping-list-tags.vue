@@ -194,8 +194,8 @@ export default {
     }
   },
   methods: {
-    ClipboardCopy () {
-      common.ClipboardCopy()
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
     },
     GetShoppingTags () {
       shoppinglist

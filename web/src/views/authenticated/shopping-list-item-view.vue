@@ -289,8 +289,8 @@ export default {
     }
   },
   methods: {
-    ClipboardCopy () {
-      common.ClipboardCopy()
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
     },
     UpdateShoppingListItem () {
       this.submitLoading = true

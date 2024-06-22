@@ -166,8 +166,8 @@ export default {
     }
   },
   methods: {
-    ClipboardCopy () {
-      common.ClipboardCopy()
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
     },
     PostNewShoppingList () {
       if (this.notes === '') {

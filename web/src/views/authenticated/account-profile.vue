@@ -186,8 +186,8 @@ export default {
     }
   },
   methods: {
-    ClipboardCopy () {
-      common.ClipboardCopy()
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
     },
     GetProfile () {
       profile.GetProfile().then((resp) => {

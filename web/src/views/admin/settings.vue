@@ -133,8 +133,8 @@ export default {
       })
   },
   methods: {
-    ClipboardCopy () {
-      common.ClipboardCopy()
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
     },
     PostFlatName () {
       if (this.flatName === '') {
