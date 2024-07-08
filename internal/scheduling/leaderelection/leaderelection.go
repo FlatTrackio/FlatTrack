@@ -98,16 +98,10 @@ func (l *Lock) Update(ctx context.Context, ler resourcelock.LeaderElectionRecord
 	sqlStatement := `update leader_election
                      set holderIdentity = $2, leaseDurationSeconds = $3, acquireTime = $4, renewTime = $5, leaderTransitions = $6
                      where name = $1`
-	rows, err := l.db.Query(sqlStatement,
-		l.name, ler.HolderIdentity, ler.LeaseDurationSeconds, ler.AcquireTime.Unix(), ler.RenewTime.Unix(), ler.LeaderTransitions)
-	if err != nil {
+	if _, err := l.db.Exec(sqlStatement,
+		l.name, ler.HolderIdentity, ler.LeaseDurationSeconds, ler.AcquireTime.Unix(), ler.RenewTime.Unix(), ler.LeaderTransitions); err != nil {
 		return err
 	}
-	defer func() {
-		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
-		}
-	}()
 	return nil
 }
 
