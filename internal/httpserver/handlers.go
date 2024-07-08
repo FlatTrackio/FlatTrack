@@ -2933,6 +2933,40 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
+// GetCostsView ...
+// returns costs view
+func (h *HTTPServer) GetCostsView(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	costView, err := h.costs.GetView()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get cost view",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched cost view",
+		},
+		Data: costView,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// TODO add costs resource management
+//      - create
+//      - update
+//      - patch
+//      - list
+//      - delete
+
 // GetVersion ...
 // returns version information about the instance
 func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
@@ -3465,6 +3499,12 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 			EndpointPath: "/apps/shoppinglist/tags/{id}",
 			HandlerFunc:  h.DeleteShoppingTag,
 			HTTPMethod:   http.MethodDelete,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/costs/view",
+			HandlerFunc:  h.GetCostsView,
+			HTTPMethod:   http.MethodGet,
 			RequireAuth:  true,
 		},
 		{

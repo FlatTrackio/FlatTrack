@@ -249,6 +249,44 @@ type UserCreationSecretSpec struct {
 	DeletionTimestamp     int64  `json:"deletionTimestamp"`
 }
 
+// Costs ...
+// data for the dashboard
+type Costs struct {
+	TotalDailyCostAverage    float64    `json:"totalDailyCostAverage"`
+	TotalWeeklyCostAverage   float64    `json:"totalWeeklyCostAverage"`
+	TotalThreeMonthAverage   float64    `json:"totalThreeMonthAverage"`
+	TotalYearCumulativeSpend float64    `json:"totalYearCumulativeSpend"`
+	ProjectedMonthAnnualized float64    `json:"projectedMonthAnnualized"`
+	ThisMonthCumulative      float64    `json:"thisMonthCumulative"`
+	OneMonthAgoCumulative    float64    `json:"oneMonthAgoCumulative"`
+	TwoMonthsAgoCumulative   float64    `json:"twoMonthsAgoCumulative"`
+	ThreeMonthsAgoCumulative float64    `json:"threeMonthsAgoCumulative"`
+	Items                    []CostItem `json:"items"`
+	LastCostInvoiceDate      int64      `json:"lastCostInvoiceDate"`
+}
+
+// CostItem ...
+// values for a costs entry
+type CostItem struct {
+	ID                    string  `json:"id"`
+	Title                 string  `json:"title"`
+	PaymentType           string  `json:"paymentType"`
+	Notes                 string  `json:"notes"`
+	Amount                float64 `json:"amount"`
+	InvoiceDate           int64   `json:"invoiceDate"`
+	InvoiceLink           string  `json:"invoiceLink"`
+	InvoicedBy            string  `json:"invoicedBy"`
+	Author                string  `json:"author"`
+	AuthorLast            string  `json:"authorLast"`
+	CreationTimestamp     int64   `json:"creationTimestamp"`
+	ModificationTimestamp int64   `json:"modificationTimestamp"`
+	DeletionTimestamp     int64   `json:"deletionTimestamp"`
+}
+
+type CostListOptions struct {
+	Limit int
+}
+
 // UserCreationSecretSelector ...
 // filters the userCreationSecrets
 type UserCreationSecretSelector struct {

@@ -107,6 +107,10 @@ function TimestampToCalendar (timestamp) {
     .toLowerCase()
 }
 
+function FormatFloatAsMoney (input) {
+  return `$${input.toFixed()}`
+}
+
 // DeviceIsMobile
 // returns bool if the device is mobile (from screen size)
 function DeviceIsMobile () {
@@ -208,6 +212,7 @@ export default {
   DisplayFailureToast,
   SignoutDialog,
   TimestampToCalendar,
+  FormatFloatAsMoney,
   DeviceIsMobile,
   GetFlatnameFromCache,
   WriteFlatnameToCache,
