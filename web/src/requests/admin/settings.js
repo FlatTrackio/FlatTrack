@@ -42,7 +42,31 @@ function PutFlatNotes (notes) {
   })
 }
 
+// GetCostsWriteRequireGroupAdmin
+// changes the setting for CostsWriteRequireGroupAdmin
+function GetCostsWriteRequireGroupAdmin () {
+  return Request({
+    url: `/api/admin/settings/costsWriteRequireGroupAdmin`,
+    method: 'GET'
+  })
+}
+
+// PutCostsWriteRequireGroupAdmin
+// changes the setting for CostsWriteRequireGroupAdmin
+function PutCostsWriteRequireGroupAdmin (requireAdmin) {
+  return Request({
+    url: `/api/admin/settings/costsWriteRequireGroupAdmin`,
+    method: 'PUT',
+    data: {
+      requireAdmin
+    }
+  })
+}
+
 export default {
   PostFlatName,
-  PutFlatNotes
+  PutFlatNotes,
+
+  GetCostsWriteRequireGroupAdmin,
+  PutCostsWriteRequireGroupAdmin
 }

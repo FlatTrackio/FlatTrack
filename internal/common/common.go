@@ -376,3 +376,7 @@ func RandStringRunes(n int) string {
 	}
 	return string(b)
 }
+
+func ToPointer[V any](i V) *V {
+	return &i
+}

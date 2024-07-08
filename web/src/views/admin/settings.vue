@@ -39,13 +39,14 @@
         </nav>
         <h1 class="title is-1">Settings</h1>
         <p class="subtitle is-4">General FlatTrack settings</p>
+        <h1 class="subtitle is-5">Flat</h1>
         <b-loading
           :is-full-page="false"
           :active.sync="pageLoading"
           :can-cancel="false"
         ></b-loading>
         <div>
-          <label class="label">Flat name</label>
+          <label class="label">Name</label>
           <b-field>
             <b-input
               type="text"
@@ -74,7 +75,7 @@
           </b-field>
         </div>
         <div>
-          <label class="label">Flat notes</label>
+          <label class="label">Notes</label>
           <b-field>
             <b-input
               type="textarea"
@@ -100,6 +101,28 @@
             </p>
           </b-field>
         </div>
+        <h1 class="subtitle is-5">Costs</h1>
+        <div>
+          <label class="label"></label>
+          <b-field>
+            <b-checkbox
+              type="is-primary"
+              size="is-medium"
+              v-model="costsWriteRequireGroupAdmin"
+            >
+              Require admin to manage items
+            </b-checkbox>
+            <p class="control">
+              <b-button
+                type="is-primary"
+                size="is-medium"
+                icon-left="check"
+                @click="PutCostsWriteRequireGroupAdmin"
+              >
+              </b-button>
+            </p>
+          </b-field>
+        </div>
         <br />
       </section>
     </div>
@@ -117,7 +140,8 @@ export default {
     return {
       pageLoading: true,
       flatName: '',
-      flatNotes: ''
+      flatNotes: '',
+      costsWriteRequireGroupAdmin: false
     }
   },
   async beforeMount () {
@@ -129,6 +153,10 @@ export default {
       })
       .then((resp) => {
         this.flatNotes = resp.data.spec.notes
+        return settings.GetCostsWriteRequireGroupAdmin()
+      })
+      .then((resp) => {
+        this.costsWriteRequireGroupAdmin = resp.data.spec
         this.pageLoading = false
       })
   },
@@ -149,8 +177,8 @@ export default {
         .catch((err) => {
           common.DisplayFailureToast(
             'Failed set the flat name' +
-              '<br/>' +
-              (err.response.data.metadata.response || err)
+                '<br/>' +
+                (err.response.data.metadata.response || err)
           )
         })
     },
@@ -167,6 +195,18 @@ export default {
         .catch((err) => {
           common.DisplayFailureToast(
             'Failed set the flat notes' + '<br/>' + err
+          )
+        })
+    },
+    PutCostsWriteRequireGroupAdmin () {
+      settings
+        .PutCostsWriteRequireGroupAdmin(this.costsWriteRequireGroupAdmin)
+        .then((resp) => {
+          common.DisplaySuccessToast('Set costs setting')
+        })
+        .catch((err) => {
+          common.DisplayFailureToast(
+            'Failed set the costs setting' + '<br/>' + err
           )
         })
     },

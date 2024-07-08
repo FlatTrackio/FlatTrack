@@ -15,6 +15,7 @@ import (
 	"github.com/rs/cors"
 
 	"gitlab.com/flattrack/flattrack/internal/common"
+	"gitlab.com/flattrack/flattrack/internal/costs"
 	"gitlab.com/flattrack/flattrack/internal/emails"
 	"gitlab.com/flattrack/flattrack/internal/groups"
 	"gitlab.com/flattrack/flattrack/internal/health"
@@ -34,6 +35,7 @@ type HTTPServer struct {
 	users        *users.Manager
 	shoppinglist *shoppinglist.Manager
 	emails       *emails.Manager
+	costs        *costs.Manager
 	groups       *groups.Manager
 	health       *health.Manager
 	migrations   *migrations.Manager
@@ -55,12 +57,14 @@ func NewHTTPServer(
 	settings *settings.Manager,
 	system *system.Manager,
 	scheduling *scheduling.Manager,
+	costs *costs.Manager,
 ) (h *HTTPServer) {
 	h = &HTTPServer{}
 	h.db = db
 	h.users = users
 	h.shoppinglist = shoppinglist
 	h.emails = emails
+	h.costs = costs
 	h.groups = groups
 	h.health = health
 	h.migrations = migrations

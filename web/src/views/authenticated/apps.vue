@@ -66,6 +66,12 @@ export default {
           routeName: 'Shopping list'
         },
         {
+          name: 'Costs',
+          description: 'Manage and view bills and expenses',
+          icon: 'piggy-bank',
+          routeName: 'Costs'
+        },
+        {
           name: 'Flatmates',
           description: 'View your flatmates and their contact details',
           icon: 'account-group',
