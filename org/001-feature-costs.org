@@ -1,0 +1,1132 @@
+#+title: 001 Feature Costs
+#+PROPERTY: header-args:sql-mode+ :product postgres :wrap "example"
+
+* Goal
+
+to figure out data structure and needs for costs feature.
+
+* Exploration
+
+unmigrate database
+
+#+begin_src sh :prologue "(\n" :epilogue "\n) 2>&1 ; :"
+migrate \
+    -database postgresql://flattrack:flattrack@localhost/flattrack?sslmode=disable \
+    -path ../kodata/migrations \
+    down -all
+#+end_src
+
+#+RESULTS:
+#+begin_example
+20240707204403/d costs_view (10.158292ms)
+20240707203608/d costs (22.2205ms)
+20240203045838/d leader_election (29.826875ms)
+20231014210141/d shopping_list_tag_exclude (36.263ms)
+20201113195819/d flat_notes (43.175375ms)
+20201014183014/d shopping_list_refs (49.783292ms)
+20200725082623/d shopping_list_notes (55.648042ms)
+20200705091755/d shopping_list_tag (63.494542ms)
+20200408173049/d user_creation_secret (70.636541ms)
+20200328133823/d create_system_table (75.848667ms)
+20200328132811/d create_settings_table (81.577958ms)
+20200319202354/d user_to_groups (77.407333ms)
+20200316202236/d shopping_item (72.263292ms)
+20200315202655/d shopping_list (73.024375ms)
+20200315181257/d groups (76.42825ms)
+20200315101517/d create_users_table (77.790875ms)
+#+end_example
+
+migrate database
+
+#+begin_src sh :prologue "(\n" :epilogue "\n) 2>&1 ; :"
+migrate \
+    -database postgresql://flattrack:flattrack@localhost/flattrack?sslmode=disable \
+    -path ../kodata/migrations \
+    up
+#+end_src
+
+#+RESULTS:
+#+begin_example
+20200315101517/u create_users_table (13.372084ms)
+20200315181257/u groups (24.354875ms)
+20200315202655/u shopping_list (35.228667ms)
+20200316202236/u shopping_item (43.543917ms)
+20200319202354/u user_to_groups (51.737958ms)
+20200328132811/u create_settings_table (58.637042ms)
+20200328133823/u create_system_table (65.520208ms)
+20200408173049/u user_creation_secret (72.08825ms)
+20200705091755/u shopping_list_tag (78.657875ms)
+20200725082623/u shopping_list_notes (82.71625ms)
+20201014183014/u shopping_list_refs (88.684833ms)
+20201113195819/u flat_notes (80.366708ms)
+20231014210141/u shopping_list_tag_exclude (74.089833ms)
+20240203045838/u leader_election (69.768916ms)
+20240707203608/u costs (70.285667ms)
+20240707204403/u costs_view (67.530375ms)
+#+end_example
+
+drop the table
+
+#+begin_src sql-mode
+drop table if exists costs;
+#+end_src
+
+create the table
+
+#+begin_src sql-mode
+begin;
+
+create table if not exists costs (
+  id text default md5(random()::text || clock_timestamp()::text)::uuid not null,
+  title text not null,
+  amount float8 not null,
+  frequency text not null,
+  notes text,
+  invoiceDate int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  invoicedBy text not null,
+  author text not null,
+  authorLast text not null,
+  creationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  modificationTimestamp int not null default date_part('epoch',CURRENT_TIMESTAMP)::int,
+  deletionTimestamp int not null default 0,
+
+  primary key (id),
+  foreign key (invoicedBy) references users(id),
+  foreign key (author) references users(id),
+  foreign key (authorLast) references users(id)
+);
+
+comment on table costs is 'The costs table is used for storing costs that flats want to keep track of';
+
+commit;
+#+end_src
+
+no data yet
+
+#+begin_src sql-mode
+select * from costs;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+ id | title | frequency | notes | amount | invoicelink | invoicedate | invoicedby | author | authorlast | creationtimestamp | modificationtimestamp | deletiontimestamp
+----+-------+-------------+-------+--------+-------------+-------------+------------+--------+------------+-------------------+-----------------------+-------------------
+(0 rows)
+
+#+end_example
+
+#+begin_src sql-mode
+\d+ costs
+#+end_src
+
+#+RESULTS:
+#+begin_example
+                                                                             Table "public.costs"
+        Column         |       Type       | Collation | Nullable |                       Default                        | Storage  | Compression | Stats target | Description
+-----------------------+------------------+-----------+----------+------------------------------------------------------+----------+-------------+--------------+-------------
+ id                    | text             |           | not null | md5(random()::text || clock_timestamp()::text)::uuid | extended |             |              |
+ title                 | text             |           | not null |                                                      | extended |             |              |
+ frequency           | text             |           | not null |                                                      | extended |             |              |
+ notes                 | text             |           |          |                                                      | extended |             |              |
+ amount                | double precision |           | not null |                                                      | plain    |             |              |
+ invoicelink           | text             |           |          |                                                      | extended |             |              |
+ invoicedate           | integer          |           | not null | date_part('epoch'::text, CURRENT_TIMESTAMP)::integer | plain    |             |              |
+ invoicedby            | text             |           | not null |                                                      | extended |             |              |
+ author                | text             |           | not null |                                                      | extended |             |              |
+ authorlast            | text             |           | not null |                                                      | extended |             |              |
+ creationtimestamp     | integer          |           | not null | date_part('epoch'::text, CURRENT_TIMESTAMP)::integer | plain    |             |              |
+ modificationtimestamp | integer          |           | not null | date_part('epoch'::text, CURRENT_TIMESTAMP)::integer | plain    |             |              |
+ deletiontimestamp     | integer          |           | not null | 0                                                    | plain    |             |              |
+Indexes:
+    "costs_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "costs_author_fkey" FOREIGN KEY (author) REFERENCES users(id)
+    "costs_authorlast_fkey" FOREIGN KEY (authorlast) REFERENCES users(id)
+    "costs_invoicedby_fkey" FOREIGN KEY (invoicedby) REFERENCES users(id)
+Access method: heap
+
+#+end_example
+
+create a test user
+
+#+begin_src sql-mode
+insert into users (names, email) values ('Test User', 'test@example.com') returning id;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+                  id
+--------------------------------------
+ 8b038074-5c5f-2df0-d095-712827c13126
+(1 row)
+
+INSERT 0 1
+#+end_example
+
+remove all cost records
+
+#+begin_src sql-mode
+delete from costs;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+DELETE 48
+#+end_example
+
+create test costs
+
+#+begin_src sql-mode
+begin;
+
+insert into
+  costs (title, amount, frequency, invoiceDate, notes, invoicedBy, author, authorLast)
+  values
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '16 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '15 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '14 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '13 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('electricity', 180.20, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '3 months - 4 minutes'::interval))::int, 'varied cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('internet', 80, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '3 months - 1 minute'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '12 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '11 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '10 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '9 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('electricity', 170.25, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '2 months - 5 minutes'::interval))::int, 'varied cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('internet', 80, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '2 months - 3 minutes'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '8 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '7 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '6 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('electricity', 150.68, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '1 months - 1 minute'::interval))::int, 'varied cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('internet', 80, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '1 months - 2 minutes'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '4 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '3 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '2 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('rent', 800, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '1 weeks'::interval))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('electricity', 175.11, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '1 minute'::interval))::int, 'varied cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1)),
+    ('internet', 80, 'reoccuring', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int, 'consistent cost', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1));
+
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# INSERT 0 24
+flattrack=*# flattrack=*# COMMIT
+#+end_example
+
+no data yet
+
+#+begin_src sql-mode
+begin;
+select count(*) from costs;
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*#  count
+-------
+    24
+(1 row)
+
+flattrack=*# COMMIT
+#+end_example
+
+cost rows as items
+
+#+begin_src sql-mode
+begin;
+
+select array_agg(row_to_json(costs)) from costs;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*#                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           array_agg
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"{\"id\":\"1b6f8a09-1972-6509-ce30-d75162158f94\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1712534400,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"db56337b-9bb8-22d5-ab35-8b07c75b40fa\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1713139200,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"0a5d3b14-eb92-bb85-9b25-f62be07b29eb\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1713744000,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"6564e3bc-f0a2-aa1b-7006-dc0c41bf7a68\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1714348800,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"b15b46b4-bfeb-e531-ea76-ef2d8b7245ba\",\"title\":\"electricity\",\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"amount\":180.2,\"invoicelink\":null,\"invoicedate\":1714349040,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"d0694845-e6bc-c039-a6b9-f518d3f5ffd3\",\"title\":\"internet\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":80,\"invoicelink\":null,\"invoicedate\":1714348860,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"70fb7b9a-619e-a284-8ba0-f771b1045ad8\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1714953600,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"9c8c3d5a-466c-a45c-6bfd-b5bab910de7c\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1715558400,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"dbcc32af-8ae5-635e-23ab-a377907c5102\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1716163200,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"49d5f4c2-1539-a134-3cf1-7dfa14d261af\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1716768000,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"1b1f2e9c-f24f-0088-0e27-70f6c47f080c\",\"title\":\"electricity\",\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"amount\":170.25,\"invoicelink\":null,\"invoicedate\":1716941100,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"4b20424f-4849-8ab4-a240-67ffe6252ca8\",\"title\":\"internet\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":80,\"invoicelink\":null,\"invoicedate\":1716940980,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"fed1df18-ccc6-6f48-8f56-0eaf928e06b3\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1717372800,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"77bf4e2d-7ca9-51c8-a337-00f4bb366399\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1717977600,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"64c6f0a7-e3ff-14cc-6ec6-6e2719244ed6\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1718582400,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"3f57f599-1841-932f-fb4a-3aee7c3552e7\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1719187200,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"c34c24a6-ce3f-9e71-4f1f-d81587fd79ee\",\"title\":\"electricity\",\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"amount\":150.68,\"invoicelink\":null,\"invoicedate\":1719619260,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"835a8cb2-5a98-47cd-31db-8569f35309cb\",\"title\":\"internet\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":80,\"invoicelink\":null,\"invoicedate\":1719619320,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"06eaa59f-2930-57f5-d0cb-82066f7200f2\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1719792000,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"a06bfe50-643b-98b2-a58e-2e61a897e47e\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1720396800,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"e33f40b5-0b7f-38da-41d1-428e70f2d346\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1721001600,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"79cea027-e9db-1686-43e0-77e2ed8f3734\",\"title\":\"rent\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":800,\"invoicelink\":null,\"invoicedate\":1721606400,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"7d9100c4-e1f8-b373-5cc2-85d758d71676\",\"title\":\"electricity\",\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"amount\":175.11,\"invoicelink\":null,\"invoicedate\":1722211140,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}","{\"id\":\"fc9745d9-346a-7218-8a8a-d8a2564d3601\",\"title\":\"internet\",\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"amount\":80,\"invoicelink\":null,\"invoicedate\":1722211200,\"invoicedby\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"author\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"authorlast\":\"cbe02361-3c42-27c6-1344-cebb036f7e39\",\"creationtimestamp\":1722223323,\"modificationtimestamp\":1722223323,\"deletiontimestamp\":0}"}
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+invoice date within month
+
+#+begin_src sql-mode
+begin;
+
+select sum(amount::float8)
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '30 days'::interval);
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*#  sum
+------
+ 3200
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+invoice date within week
+
+#+begin_src sql-mode
+begin;
+
+select sum(amount::float8)
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '7 days'::interval);
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*#  sum
+-----
+
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+weekly calculated costs from last month
+
+#+begin_src sql-mode
+begin;
+
+select (sum(amount::float8) / 7)::float8 "weeklyCosts"
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval);
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*#     weeklyCosts
+--------------------
+ 493.58714285714285
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+weekly calculated costs from last three months
+
+#+begin_src sql-mode
+begin;
+
+select (sum(amount::float8) / 3 / 7)::float8 "weeklyCosts"
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '91 days'::interval);
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*#     weeklyCosts
+--------------------
+ 480.27571428571434
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+monthly calculated costs from last three months
+
+#+begin_src sql-mode
+begin;
+
+select (sum(amount::float8) / 3)::float8 "weeklyCosts"
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '91 days'::interval);
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*#     weeklyCosts
+--------------------
+ 3361.9300000000003
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+all costs
+
+#+begin_src sql-mode
+begin;
+
+select sum(amount::float8) from costs;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*#    sum
+----------
+ 10336.04
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+assemble the data with a view
+
+#+begin_src sql-mode
+begin;
+
+create materialized view costs_view as
+  select
+        (
+            select array_agg(row_to_json(costs))
+            from costs
+            where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval)
+        ),
+        (
+            select (sum(amount::float8) / 3)::float8
+            from costs
+            where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '91 days'::interval)
+        ) as "monthlyCalculatedCosts"
+  from costs;
+
+select * from costs_view;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack-*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack-*# SELECT 18
+flattrack=*# flattrack=*#                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  array_agg                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | monthlyCalculatedCosts
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+------------------------
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+ {"{\"id\":\"aa4f70a7-74e3-41fb-fc98-b15494970e3a\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717977600,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"87bf9554-a06a-3487-843c-d85b5a43c272\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1718582400,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"5f44675d-4a2d-0e82-1251-b3e64d7f5809\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719187200,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"d28121db-0bd2-b875-4e38-97f9b6931c5d\",\"title\":\"rent\",\"amount\":800,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1719792000,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"88a244aa-1aa8-2483-755b-dbd67dd831e2\",\"title\":\"electricity\",\"amount\":175.11,\"frequency\":\"reoccuring\",\"notes\":\"varied cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}","{\"id\":\"a0e4137e-87f1-c95f-026e-d0a37cd1d612\",\"title\":\"internet\",\"amount\":80,\"frequency\":\"reoccuring\",\"notes\":\"consistent cost\",\"invoicedate\":1717804800,\"invoicedby\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"author\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"authorlast\":\"cbb9b906-0e00-4b94-17d4-8d3c10678df1\",\"creationtimestamp\":1720415256,\"modificationtimestamp\":1720415256,\"deletiontimestamp\":0}"} |     3361.9300000000003
+(18 rows)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+#+begin_src sql-mode
+begin;
+
+create or replace function generate_costs_view()
+returns json as $$
+begin
+return (
+       select jsonb_pretty(row_to_json(items)::jsonb) from (
+            select
+                (select array_agg(row_to_json(costs)) from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '30 days'::interval)) as "items",
+                (select (sum(amount::float8) / 3)::float8 from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '90 days'::interval)) as "monthlyCalculatedCosts"
+            from costs)
+)
+end;
+$$ language plpgsql;
+
+select * from generate_costs_view();
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# ERROR:  syntax error at end of input
+LINE 13: $$ language plpgsql;
+         ^
+flattrack=!# flattrack=!# ERROR:  current transaction is aborted, commands ignored until end of transaction block
+flattrack=!# ROLLBACK
+#+end_example
+
+#+begin_src sql-mode
+begin;
+
+create or replace function generate_costs_view()
+begin
+return(
+select jsonb_pretty(row_to_json(costs)::jsonb) from (
+    select
+        (select (sum(amount::float8) / 3)::float8 from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '90 days'::interval)) as monthlyCalculatedCosts
+    from costs) c);
+end;
+
+select * from generate_costs_view();
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+flattrack$!# flattrack$!# flattrack$!# flattrack-!# flattrack-!# flattrack(!# flattrack(!# flattrack(!# flattrack(!# ERROR:  syntax error at or near "$$ language plpgsql;
+
+select * from generate_costs_view();
+rollback;
+begin;
+
+create or replace function generate_costs_view()
+returns json as $$"
+LINE 1: $$ language plpgsql;
+        ^
+flattrack=!# ROLLBACK
+#+end_example
+
+#+begin_src sql-mode
+select jsonb_build_object(
+  'monthlyCalculatedCosts', (select (sum(amount::float8) / 3)::float8 from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '90 days'::interval)),
+  'yearlyCalculatedCosts', (select (sum(amount::float8) / 12)::float8 from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '1 year'::interval)),
+  'items', (select array_agg(row_to_json(costs)) from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval))
+) from costs limit 1;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               jsonb_build_object
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"items": [{"id": "aa4f70a7-74e3-41fb-fc98-b15494970e3a", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "authorlast": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedby": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedate": 1717977600, "frequency": "reoccuring", "creationtimestamp": 1720415256, "deletiontimestamp": 0, "modificationtimestamp": 1720415256}, {"id": "87bf9554-a06a-3487-843c-d85b5a43c272", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "authorlast": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedby": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedate": 1718582400, "frequency": "reoccuring", "creationtimestamp": 1720415256, "deletiontimestamp": 0, "modificationtimestamp": 1720415256}, {"id": "5f44675d-4a2d-0e82-1251-b3e64d7f5809", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "authorlast": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedby": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedate": 1719187200, "frequency": "reoccuring", "creationtimestamp": 1720415256, "deletiontimestamp": 0, "modificationtimestamp": 1720415256}, {"id": "d28121db-0bd2-b875-4e38-97f9b6931c5d", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "authorlast": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedby": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedate": 1719792000, "frequency": "reoccuring", "creationtimestamp": 1720415256, "deletiontimestamp": 0, "modificationtimestamp": 1720415256}, {"id": "88a244aa-1aa8-2483-755b-dbd67dd831e2", "notes": "varied cost", "title": "electricity", "amount": 175.11, "author": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "authorlast": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedby": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedate": 1717804800, "frequency": "reoccuring", "creationtimestamp": 1720415256, "deletiontimestamp": 0, "modificationtimestamp": 1720415256}, {"id": "a0e4137e-87f1-c95f-026e-d0a37cd1d612", "notes": "consistent cost", "title": "internet", "amount": 80, "author": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "authorlast": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedby": "cbb9b906-0e00-4b94-17d4-8d3c10678df1", "invoicedate": 1717804800, "frequency": "reoccuring", "creationtimestamp": 1720415256, "deletiontimestamp": 0, "modificationtimestamp": 1720415256}], "yearlyCalculatedCosts": 861.3366666666667, "monthlyCalculatedCosts": 3361.9300000000003}
+(1 row)
+
+#+end_example
+
+weekly cost
+
+#+begin_src sql-mode
+begin;
+select (sum(amount::float8) / 4)::float8 as "weeklyCostAverage"
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval);
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*#  weeklyCostAverage
+-------------------
+          863.7775
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+daily cost
+
+#+begin_src sql-mode
+begin;
+select (sum(amount::float8) / 4 / 7)::float8 as "dailyCostAverage"
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval);
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*#   dailyCostAverage
+--------------------
+ 123.39678571428571
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+this month annualised
+
+#+begin_src sql-mode
+begin;
+select (sum(amount::float8) * 12)::float8 as "monthProjectedAnnualized"
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval);
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*#  monthProjectedAnnualized
+--------------------------
+                 41461.32
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+three months averaged monthly
+
+#+begin_src sql-mode
+begin;
+select (sum(amount::float8) / 3)::float8 as "trimonthlyAverage"
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '91 days'::interval);
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*#  trimonthlyAverage
+--------------------
+ 3361.9300000000003
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+cumulative yearly spend
+
+#+begin_src sql-mode
+begin;
+select (sum(amount::float8))::float8 as "cumulativeYearlySpend"
+from costs
+where date_part('year', to_timestamp(invoiceDate)::date) = date_part('year', CURRENT_DATE);
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*#  cumulativeYearlySpend
+-----------------------
+              10336.04
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+#+begin_src sql-mode
+begin;
+
+select invoiceDate
+from costs
+order by invoiceDate desc
+limit 1;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack-*#  invoicedate
+-------------
+  1719792000
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+#+begin_src sql-mode
+begin;
+
+create materialized view costs_view as
+  select jsonb_build_object(
+  'totalDailyCostAverage', (select (sum(amount::float8) / 4 / 7)::float8 as "weeklyCostAverage" from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval)),
+  'totalWeeklyCostAverage', (select (sum(amount::float8) / 4)::float8 as "weeklyCostAverage" from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval)),
+  'totalThreeMonthAverage', (select (sum(amount::float8) / 3)::float8 as "monthProjectedAnnualized" from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '91 days'::interval)),
+  'totalYearCumulativeSpend', (select (sum(amount::float8))::float8 as "cumulativeYearlySpend" from costs where date_part('year', to_timestamp(invoiceDate)::date) = date_part('year', CURRENT_DATE)),
+  'projectedMonthAnnualized', (select (sum(amount::float8) * 12)::float8 as "monthProjectedAnnualized" from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval)),
+  'lastCostInvoiceDate', (select invoiceDate from costs order by invoiceDate desc limit 1),
+  'items', (select array_agg(row_to_json(costs)) from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '1 month'::interval))) as "costs_view"
+  from costs limit 1;
+
+select * from costs_view;
+
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack-*# SELECT 1
+flattrack=*# flattrack=*#                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      costs_view
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"items": [{"id": "06eaa59f-2930-57f5-d0cb-82066f7200f2", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "cbe02361-3c42-27c6-1344-cebb036f7e39", "authorlast": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedby": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedate": 1719792000, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1722223323, "deletiontimestamp": 0, "modificationtimestamp": 1722223323}, {"id": "a06bfe50-643b-98b2-a58e-2e61a897e47e", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "cbe02361-3c42-27c6-1344-cebb036f7e39", "authorlast": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedby": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedate": 1720396800, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1722223323, "deletiontimestamp": 0, "modificationtimestamp": 1722223323}, {"id": "e33f40b5-0b7f-38da-41d1-428e70f2d346", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "cbe02361-3c42-27c6-1344-cebb036f7e39", "authorlast": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedby": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedate": 1721001600, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1722223323, "deletiontimestamp": 0, "modificationtimestamp": 1722223323}, {"id": "79cea027-e9db-1686-43e0-77e2ed8f3734", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "cbe02361-3c42-27c6-1344-cebb036f7e39", "authorlast": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedby": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedate": 1721606400, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1722223323, "deletiontimestamp": 0, "modificationtimestamp": 1722223323}, {"id": "7d9100c4-e1f8-b373-5cc2-85d758d71676", "notes": "varied cost", "title": "electricity", "amount": 175.11, "author": "cbe02361-3c42-27c6-1344-cebb036f7e39", "authorlast": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedby": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedate": 1722211140, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1722223323, "deletiontimestamp": 0, "modificationtimestamp": 1722223323}, {"id": "fc9745d9-346a-7218-8a8a-d8a2564d3601", "notes": "consistent cost", "title": "internet", "amount": 80, "author": "cbe02361-3c42-27c6-1344-cebb036f7e39", "authorlast": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedby": "cbe02361-3c42-27c6-1344-cebb036f7e39", "invoicedate": 1722211200, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1722223323, "deletiontimestamp": 0, "modificationtimestamp": 1722223323}], "lastCostInvoiceDate": 1722211200, "totalDailyCostAverage": 131.63535714285715, "totalThreeMonthAverage": 3445.346666666667, "totalWeeklyCostAverage": 921.4475000000001, "projectedMonthAnnualized": 44229.48, "totalYearCumulativeSpend": 13796.240000000002}
+(1 row)
+
+flattrack=*# flattrack=*# COMMIT
+#+end_example
+
+add function and trigger to refresh view
+
+#+begin_src sql-mode
+begin;
+create or replace function tg_refresh_costs_view()
+returns trigger language plpgsql as $$
+begin
+    refresh materialized view concurrently costs_view;
+    return null;
+end;
+$$;
+
+create trigger tg_refresh_costs_view after insert or update or delete
+on costs
+for each statement execute procedure tg_refresh_costs_view();
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack-*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# CREATE FUNCTION
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# ERROR:  trigger "tg_refresh_costs_view" for relation "costs" already exists
+flattrack=!# ROLLBACK
+#+end_example
+
+filter totalYearCumulativeSpend
+
+#+begin_src sql-mode
+begin;
+select ((costs_view::json)->'totalYearCumulativeSpend')::text::float8 from costs_view;
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*#   float8
+----------
+ 10336.04
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+add new costs
+
+#+begin_src sql-mode
+begin;
+insert into costs (title, amount, frequency, invoiceDate, notes, invoicedBy, author, authorLast) values ('misc', 300, 'one-off', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '12 weeks'::interval))::int, 'something that was needed', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1));
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# ERROR:  index row size 2760 exceeds btree version 4 maximum 2704 for index "costs_view_costs_view_idx"
+DETAIL:  Index row references tuple (0,76) in relation "costs_view".
+HINT:  Values larger than 1/3 of a buffer page cannot be indexed.
+Consider a function index of an MD5 hash of the value, or use full text indexing.
+CONTEXT:  SQL statement "INSERT INTO public.costs_view SELECT (diff.newdata).* FROM pg_temp_4.pg_temp_16637_2 diff WHERE tid IS NULL"
+SQL statement "refresh materialized view concurrently costs_view"
+PL/pgSQL function tg_refresh_costs_view() line 3 at SQL statement
+flattrack=!# ROLLBACK
+#+end_example
+
+create a unique index
+
+#+begin_src sql-mode
+create unique index on costs_view (costs_view);
+#+end_src
+
+#+RESULTS:
+#+begin_example
+CREATE INDEX
+#+end_example
+
+try add new costs again
+
+#+begin_src sql-mode
+begin;
+select ((costs_view::json)->'totalYearCumulativeSpend')::text::float8 from costs_view;
+insert into costs (title, amount, frequency, invoiceDate, notes, invoicedBy, author, authorLast) values ('misc', 300, 'one-off', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '12 weeks'::interval))::int, 'something that was needed', (select id from users limit 1), (select id from users limit 1), (select id from users limit 1));
+select ((costs_view::json)->'totalYearCumulativeSpend')::text::float8 from costs_view;
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*#   float8
+----------
+ 10336.04
+(1 row)
+
+flattrack=*# INSERT 0 1
+flattrack=*#   float8
+----------
+ 10636.04
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+yay it works as expected!
+
+try build json object with row sorting
+
+#+begin_src sql-mode
+begin;
+select jsonb_build_object(
+  'items', (select array_agg(row_to_json(costs)) from costs group by invoiceDate order by invoiceDate)) as "costs_view"
+from costs limit 1;
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack(*# flattrack-*# ERROR:  more than one row returned by a subquery used as an expression
+flattrack=!# ROLLBACK
+#+end_example
+
+build json object with row sorting
+
+#+begin_src sql-mode
+begin;
+
+select invoiceDate from costs group by invoiceDate order by invoiceDate limit 3;
+
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*#  invoicedate
+-------------
+  1712534400
+  1713139200
+  1713744000
+(3 rows)
+
+flattrack=*# flattrack=*# COMMIT
+#+end_example
+
+try build json object with row sorting
+
+#+begin_src sql-mode
+begin;
+select (select jsonb_build_object(
+  'items', (select array_agg(row_to_json(costs) order by invoiceDate, amount) from costs)) as "costs_view"
+from costs limit 1)::jsonb -> 'items';
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack(*# flattrack(*#                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           ?column?
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ [{"id": "8a65a50a-2305-3a07-689a-81070084b660", "notes": "consistent cost", "title": "internet", "amount": 80, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1712534400, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "bd6311a6-9229-fb46-c904-698d6eda602c", "notes": "varied cost", "title": "electricity", "amount": 170.25, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1712534400, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "b195d1ae-9f26-f19d-3ada-85f97518e5a6", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1713139200, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "062d625d-2c5d-4f13-daf5-cc0e5bb6e660", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1713744000, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "b08ba076-1bff-bd76-6afa-b883e61f8341", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1714348800, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "169439f6-4302-b63c-2e25-215b67e74eec", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1714953600, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "e12934cd-32ea-4117-582f-6919f45f1cc9", "notes": "consistent cost", "title": "internet", "amount": 80, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1715126400, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "536a1b90-8bd8-92af-2fb6-cd296bcdaf30", "notes": "varied cost", "title": "electricity", "amount": 150.68, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1715126400, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "f5df0199-9898-93ec-e7dc-66f63ddf70ad", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1715558400, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "6995781e-e978-9115-0c02-4359723b6f04", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1716163200, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "494e33f4-289a-8a3b-14b1-e5b9cdf1f83a", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1716768000, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "f1ca7f7e-9b0e-e041-84f4-041d0f55a607", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1717372800, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "f4567451-7395-c3bf-af95-07127ca78582", "notes": "consistent cost", "title": "internet", "amount": 80, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1717804800, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "d9114669-f031-6b1e-14d0-1559f33ebd50", "notes": "varied cost", "title": "electricity", "amount": 175.11, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1717804800, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "d0304622-16be-abf7-e910-fbafd1546357", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1717977600, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "4acfe914-f4fd-727f-847c-a65192ef3681", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1718582400, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "e2c6b95d-b8a9-5e33-b173-8c534dfd33af", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1719187200, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}, {"id": "6fa20fcb-a496-abba-0ef7-7880f0ebba12", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "e79aa125-212e-13e8-2b10-92e48972d6f1", "authorlast": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedby": "e79aa125-212e-13e8-2b10-92e48972d6f1", "invoicedate": 1719792000, "frequency": "reoccuring", "creationtimestamp": 1720428972, "deletiontimestamp": 0, "modificationtimestamp": 1720428972}]
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+group item costs by months
+
+#+begin_src sql-mode
+begin;
+select (select jsonb_build_object(
+  'thisMonthCumulative',
+    (select round((sum(amount::float8))::float8::numeric, 2)::float8
+            from costs
+            where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '4 weeks + 1 hour'::interval)),
+  'oneMonthAgoCumulative',
+    (select round((sum(amount::float8))::float8::numeric, 2)::float8
+            from costs
+            where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '8 weeks + 1 hour'::interval)
+            and to_timestamp(invoiceDate)::date < (to_timestamp(extract(epoch from now()))::date - '4 weeks'::interval)),
+  'twoMonthsAgoCumulative',
+    (select round((sum(amount::float8))::float8::numeric, 2)::float8
+            from costs
+            where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '12 weeks + 1 hour'::interval)
+            and to_timestamp(invoiceDate)::date < (to_timestamp(extract(epoch from now()))::date - '8 weeks'::interval)),
+  'threeMonthsAgoCumulative',
+    (select round((sum(amount::float8))::float8::numeric, 2)::float8
+            from costs
+            where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '16 weeks + 1 hour'::interval)
+            and to_timestamp(invoiceDate)::date < (to_timestamp(extract(epoch from now()))::date - '12 weeks'::interval))
+)) from costs limit 1;
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*#                                                             jsonb_build_object
+-------------------------------------------------------------------------------------------------------------------------------------------
+ {"thisMonthCumulative": 3455.11, "oneMonthAgoCumulative": 3430.68, "twoMonthsAgoCumulative": 3450.25, "threeMonthsAgoCumulative": 3460.2}
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+format date string
+
+#+begin_src sql-mode
+begin;
+select
+        title,
+        amount,
+        to_char(to_timestamp(invoiceDate)::date, 'YYYY-MM-DD'),
+        to_char(to_timestamp(extract(epoch from now()))::date - '1 month'::interval, 'YYYY-MM-DD')
+from costs
+where to_timestamp(invoiceDate)::date < (to_timestamp(extract(epoch from now()))::date)
+order by invoiceDate desc limit 1;
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#  title | amount |  to_char   |  to_char
+-------+--------+------------+------------
+ rent  |    800 | 2024-07-03 | 2024-06-10
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+find costs with in range
+
+#+begin_src sql-mode
+begin;
+select title, amount, invoiceDate
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '17 weeks'::interval)
+and to_timestamp(invoiceDate)::date < (to_timestamp(extract(epoch from now()))::date - '12 weeks'::interval);
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*# flattrack-*#     title    | amount | invoicedate
+-------------+--------+-------------
+ rent        |    800 |  1712534400
+ rent        |    800 |  1713139200
+ rent        |    800 |  1713744000
+ rent        |    800 |  1714348800
+ electricity |  180.2 |  1714349040
+ internet    |     80 |  1714348860
+(6 rows)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+#+begin_src sql-mode
+begin;
+select title, amount, invoiceDate
+from costs
+where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '4 weeks + 1 second'::interval);
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*#     title    | amount | invoicedate
+-------------+--------+-------------
+ rent        |    800 |  1719792000
+ rent        |    800 |  1720396800
+ rent        |    800 |  1721001600
+ rent        |    800 |  1721606400
+ electricity | 175.11 |  1722211140
+ internet    |     80 |  1722211200
+(6 rows)
+
+flattrack=*# COMMIT
+#+end_example
+
+*VALIDATE* group item costs by months
+
+#+begin_src sql-mode
+begin;
+select (select jsonb_build_object(
+  'thisMonthCumulative',
+    (select round((sum(amount::float8))::float8::numeric, 2)::float8
+            from costs
+            where to_timestamp(invoiceDate)::date >= (to_timestamp(extract(epoch from now()))::date - '4 weeks'::interval)) = 3455.11,
+  'oneMonthAgoCumulative',
+    (select round((sum(amount::float8))::float8::numeric, 2)::float8
+            from costs
+            where to_timestamp(invoiceDate)::date >= (to_timestamp(extract(epoch from now()))::date - '8 weeks'::interval)
+            and to_timestamp(invoiceDate)::date < (to_timestamp(extract(epoch from now()))::date - '4 weeks'::interval)) = 3430.68,
+  'twoMonthsAgoCumulative',
+    (select round((sum(amount::float8))::float8::numeric, 2)::float8
+            from costs
+            where to_timestamp(invoiceDate)::date >= (to_timestamp(extract(epoch from now()))::date - '12 weeks'::interval)
+            and to_timestamp(invoiceDate)::date < (to_timestamp(extract(epoch from now()))::date - '8 weeks'::interval)) = 3450.25,
+  'threeMonthsAgoCumulative',
+    (select round((sum(amount::float8))::float8::numeric, 2)::float8
+            from costs
+            where to_timestamp(invoiceDate)::date >= (to_timestamp(extract(epoch from now()))::date - '16 weeks'::interval)
+            and to_timestamp(invoiceDate)::date < (to_timestamp(extract(epoch from now()))::date - '12 weeks'::interval)) = 3460.20
+)) from costs limit 1;
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*#                                                        jsonb_build_object
+--------------------------------------------------------------------------------------------------------------------------------
+ {"thisMonthCumulative": true, "oneMonthAgoCumulative": true, "twoMonthsAgoCumulative": true, "threeMonthsAgoCumulative": true}
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_example
+
+use function instead for less overhead
+
+#+begin_src sql-mode
+begin;
+
+create or replace function costs_view1()
+  returns table (costs_view1 jsonb)
+as $$
+begin
+  return query
+    select jsonb_build_object(
+      'threeMonthsAgoCumulative',
+      (select round((sum(amount::float8))::float8::numeric, 2)::float8
+            from costs
+            where to_timestamp(invoiceDate)::date >= (to_timestamp(extract(epoch from now()))::date - '16 weeks'::interval)
+            and to_timestamp(invoiceDate)::date < (to_timestamp(extract(epoch from now()))::date - '12 weeks'::interval))) as "costs_view1"
+  from costs limit 1;
+end;
+$$ language plpgsql;
+
+select (costs_view1 -> 'threeMonthsAgoCumulative')::text::float8 = 3460.2 from costs_view1();
+-- select * from costs_view1();
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# CREATE FUNCTION
+flattrack=*# flattrack=*#  ?column?
+----------
+ t
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+group costs by month and year
+
+#+begin_src sql-mode
+begin;
+
+select array_agg(row_to_json(monthlyPrice))
+from (
+  select round(sum(amount)::float8::numeric, 2), to_char(to_timestamp(invoiceDate)::date, 'YYYY-MM') yearMonth
+  from costs
+  group by yearMonth
+) monthlyPrice;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack(*# flattrack(*# flattrack(*# flattrack(*#                                                                                                                      array_agg
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"{\"round\":1600.00,\"yearmonth\":\"2024-04\"}","{\"round\":3430.68,\"yearmonth\":\"2024-07\"}","{\"round\":3460.20,\"yearmonth\":\"2024-05\"}","{\"round\":4250.25,\"yearmonth\":\"2024-06\"}","{\"round\":1055.11,\"yearmonth\":\"2024-08\"}"}
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+view with new data
+
+#+begin_src sql-mode
+begin;
+
+create or replace function costs_view()
+  returns table (costs_view jsonb)
+as $$
+begin
+  return query
+  select jsonb_build_object(
+  'totalDailyCostAverage', (select round((sum(amount::float8) / 4 / 7)::float8::numeric, 2)::float8 as "weeklyCostAverage" from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval)),
+  'totalWeeklyCostAverage', (select round((sum(amount::float8) / 4)::float8::numeric, 2)::float8 as "weeklyCostAverage" from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval)),
+  'totalThreeMonthAverage', (select round((sum(amount::float8) / 3)::float8::numeric, 2)::float8 as "monthProjectedAnnualized" from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '91 days'::interval)),
+  'totalYearCumulativeSpend', (select round((sum(amount::float8))::float8::numeric, 2)::float8 as "cumulativeYearlySpend" from costs where date_part('year', to_timestamp(invoiceDate)::date) = date_part('year', CURRENT_DATE)),
+  'projectedMonthAnnualized', (select round((sum(amount::float8) * 12)::float8::numeric, 2)::float8 as "monthProjectedAnnualized" from costs where to_timestamp(invoiceDate)::date > (to_timestamp(extract(epoch from now()))::date - '31 days'::interval)),
+  'lastCostInvoiceDate', (select invoiceDate from costs order by invoiceDate desc limit 1),
+  'totalPriceMonthlyCumulative', (
+
+    select array_agg(row_to_json(monthlyPrice))
+    from (
+      select round(sum(amount)::float8::numeric, 2) as "total", to_char(to_timestamp(invoiceDate)::date, 'YYYY-MM') yearMonth
+      from costs
+      group by yearMonth
+    ) monthlyPrice
+
+  ),
+  'items', (select array_agg(row_to_json(costs) order by invoiceDate desc) from costs)) as "costs_view"
+  from costs limit 1;
+end;
+$$ language plpgsql;
+
+select * from costs_view();
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# CREATE FUNCTION
+flattrack=*# flattrack=*#                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        costs_view
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"items": [{"id": "4a2d0751-e5fa-76c8-6c98-7a52bdced05c", "notes": "consistent cost", "title": "internet", "amount": 80, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1723248000, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "b66483d8-6663-3a7a-2e26-ab5f21e37c31", "notes": "varied cost", "title": "electricity", "amount": 175.11, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1723247940, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "0351a42a-bcc7-c32e-4639-6ed69c590e48", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1722643200, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "3db1c57e-6920-834f-3213-137461766339", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1722038400, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "da67cc3b-5043-f7e9-94e5-ee391c6a77b7", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1721433600, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "f6b70d79-28ab-14d1-f18d-e19bc89b98d9", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1720828800, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "11d3ce02-67cb-4352-881a-7ccca8f6044b", "notes": "consistent cost", "title": "internet", "amount": 80, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1720569720, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "0caf81c6-dd02-6776-aeec-53e05ddd0d2e", "notes": "varied cost", "title": "electricity", "amount": 150.68, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1720569660, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "f79feca3-0540-2ebf-c2d9-be1784f657d6", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1720224000, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "70d52e6c-ae52-3220-df63-c8d753bf77a4", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1719619200, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "f1b812fc-c724-10e2-f325-c87794c1dcff", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1719014400, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "59b671a2-0508-60ee-d303-20669698bfa9", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1718409600, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "4107fc4a-900c-56c3-673f-a0038a740834", "notes": "varied cost", "title": "electricity", "amount": 170.25, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1717977900, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "1dd1029a-2efd-04e8-3558-1911d35df2a0", "notes": "consistent cost", "title": "internet", "amount": 80, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1717977780, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "0e2afa37-3973-2fff-db56-721de008ea47", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1717804800, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "d9030235-e27a-f61c-6c95-43fcd40baefe", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1717200000, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "3f05bc1c-e49d-4aca-897f-77a4035ff400", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1716595200, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "fc641fdf-c882-5bce-13d7-4286100ac053", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1715990400, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "e9a9150f-69b6-094f-c6b6-49f03af938be", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1715385600, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "64399847-75a9-925b-5d9a-aaa883300d21", "notes": "varied cost", "title": "electricity", "amount": 180.2, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1715299440, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "2818f196-0ed0-26e7-0204-592207adfd0c", "notes": "consistent cost", "title": "internet", "amount": 80, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1715299260, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "cd8c1860-60e2-21b7-872a-35285e052569", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1714780800, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "6185e392-e84a-4778-ff16-3138126d182e", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1714176000, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}, {"id": "0cb31559-3462-40f3-41a9-82abd312c7e0", "notes": "consistent cost", "title": "rent", "amount": 800, "author": "8b038074-5c5f-2df0-d095-712827c13126", "authorlast": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedby": "8b038074-5c5f-2df0-d095-712827c13126", "invoicedate": 1713571200, "invoicelink": null, "frequency": "reoccuring", "creationtimestamp": 1723268475, "deletiontimestamp": 0, "modificationtimestamp": 1723268475}], "lastCostInvoiceDate": 1723248000, "totalDailyCostAverage": 123.4, "totalThreeMonthAverage": 3445.35, "totalWeeklyCostAverage": 863.78, "projectedMonthAnnualized": 41461.32, "totalYearCumulativeSpend": 13796.24, "totalPriceMonthlyCumulative": [{"total": 1600.00, "yearmonth": "2024-04"}, {"total": 3430.68, "yearmonth": "2024-07"}, {"total": 3460.20, "yearmonth": "2024-05"}, {"total": 4250.25, "yearmonth": "2024-06"}, {"total": 1055.11, "yearmonth": "2024-08"}]}
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_example
+
+* Scheduler
+
+Behaviours
+
+- costs can be scheduled if there's a frequency from the invoice day
+  - daily
+  - weekly
+  - fortnightly
+  - monthly
+- if no frequency is specified, it will not be scheduled
+-

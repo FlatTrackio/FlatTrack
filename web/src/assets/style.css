@@ -9,3 +9,6 @@ nav.breadcrumb ul {
 div.item-page section.modal-card-body {
     padding-bottom: 5rem;
 }
+#cost-view-chart-frame {
+    margin: 2rem 0;
+}

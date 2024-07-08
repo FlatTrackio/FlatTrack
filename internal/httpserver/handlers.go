@@ -2151,7 +2151,7 @@ func (h *HTTPServer) PutSettingsShoppingList(w http.ResponseWriter, r *http.Requ
 	if err := h.settings.SetShoppingListNotes(notes.Notes); err != nil {
 		context = err.Error()
 		code := http.StatusInternalServerError
-		if err.Error() == "Unable to set shopping list notes as it is either invalid, too short, or too long" {
+		if err.Error() == "Unable to set shopping list notes as it is either invalid: too short or too long" {
 			code = http.StatusBadRequest
 		}
 		JSONresp := types.JSONMessageResponse{
@@ -2456,6 +2456,676 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
+// GetCostsView ...
+// returns costs view
+func (h *HTTPServer) GetCostsView(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	costView, err := h.costs.GetView()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get cost view",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched cost view",
+		},
+		Data: costView,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// TODO add costs resource management
+//      - update
+//      - patch
+
+// GetCostItem ...
+// delete a shopping list item by it's id
+func (h *HTTPServer) GetCostItem(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	item, err := h.costs.Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if item.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched cost item",
+		},
+		Spec: item,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// ListCostItems ...
+// lists all cost items
+func (h *HTTPServer) ListCostItems(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	list, err := h.costs.List(types.CostListOptions{})
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to list cost items",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "list cost items",
+		},
+		List: list,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// PostCostItem ...
+// creates a cost item
+func (h *HTTPServer) PostCostItem(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
+	var context string
+
+	requireAdmin, err := h.settings.GetCostsWriteRequireGroupAdmin()
+	if err != nil {
+		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "Failed to get costs settings",
+			},
+		})
+		return
+	}
+	if requireAdmin {
+		found, err := h.groups.CheckUserInGroup(jwtUserID, "admin")
+		if err != nil {
+			JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Failed to check for user in group",
+				},
+			})
+			return
+		}
+		if !found {
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Forbidden",
+				},
+			})
+			return
+		}
+	}
+
+	var costItem types.CostItem
+	if err := json.NewDecoder(r.Body).Decode(&costItem); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	costItem.Author = jwtUserID
+
+	costItemCreated, err := h.costs.Create(costItem)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to create a cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "created cost item",
+		},
+		Spec: costItemCreated,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// PutCostItem ...
+// updates a cost item
+func (h *HTTPServer) PutCostItem(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
+
+	requireAdmin, err := h.settings.GetCostsWriteRequireGroupAdmin()
+	if err != nil {
+		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "Failed to get costs settings",
+			},
+		})
+		return
+	}
+	if requireAdmin {
+		found, err := h.groups.CheckUserInGroup(jwtUserID, "admin")
+		if err != nil {
+			JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Failed to check for user in group",
+				},
+			})
+			return
+		}
+		if !found {
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Forbidden",
+				},
+			})
+			return
+		}
+	}
+
+	var context string
+	var item types.CostItem
+	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+	existingItem, err := h.costs.Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if existingItem.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+	item.AuthorLast = jwtUserID
+	updatedItem, err := h.costs.Update(id, item)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to update cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "updated cost item",
+		},
+		Spec: updatedItem,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// PatchCostItem ...
+// patches a cost item
+func (h *HTTPServer) PatchCostItem(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
+
+	requireAdmin, err := h.settings.GetCostsWriteRequireGroupAdmin()
+	if err != nil {
+		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "Failed to get costs settings",
+			},
+		})
+		return
+	}
+	if requireAdmin {
+		found, err := h.groups.CheckUserInGroup(jwtUserID, "admin")
+		if err != nil {
+			JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Failed to check for user in group",
+				},
+			})
+			return
+		}
+		if !found {
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Forbidden",
+				},
+			})
+			return
+		}
+	}
+
+	var context string
+	var item types.CostItem
+	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+	existingItem, err := h.costs.Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if existingItem.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+	item.AuthorLast = jwtUserID
+	updatedItem, err := h.costs.Patch(id, item)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to update cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "updated cost item",
+		},
+		Spec: updatedItem,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// DeleteCostItem ...
+// delete a shopping list item by it's id
+func (h *HTTPServer) DeleteCostItem(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
+	requireAdmin, err := h.settings.GetCostsWriteRequireGroupAdmin()
+	if err != nil {
+		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "Failed to get costs settings",
+			},
+		})
+		return
+	}
+	if requireAdmin {
+		found, err := h.groups.CheckUserInGroup(jwtUserID, "admin")
+		if err != nil {
+			JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Failed to check for user in group",
+				},
+			})
+			return
+		}
+		if !found {
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Forbidden",
+				},
+			})
+			return
+		}
+	}
+
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	item, err := h.costs.Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if item.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+
+	if err := h.costs.Delete(id); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to remove cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "removed cost item",
+		},
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// DeleteBatchCostItem ...
+// delete a shopping list item by it's id
+func (h *HTTPServer) DeleteBatchCostItem(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
+	requireAdmin, err := h.settings.GetCostsWriteRequireGroupAdmin()
+	if err != nil {
+		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "Failed to get costs settings",
+			},
+		})
+		return
+	}
+	if requireAdmin {
+		found, err := h.groups.CheckUserInGroup(jwtUserID, "admin")
+		if err != nil {
+			JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Failed to check for user in group",
+				},
+			})
+			return
+		}
+		if !found {
+			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Forbidden",
+				},
+			})
+			return
+		}
+	}
+
+	var itemsBatch types.CostItemBatch
+	if err := json.NewDecoder(r.Body).Decode(&itemsBatch); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	count, err := h.costs.GetExistsBatch(itemsBatch.IDs)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get count of cost items",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
+	if count != len(itemsBatch.IDs) {
+		context = fmt.Sprintf("count: %v; ids count: %v", count, len(itemsBatch.IDs))
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get all cost items by ids",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+
+	if err := h.costs.DeleteBatch(itemsBatch.IDs); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to remove cost item",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "removed cost item",
+		},
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// GetSettingsCostsNotes ...
+// responds with the notes for the costs app
+func (h *HTTPServer) GetSettingsCostsNotes(w http.ResponseWriter, r *http.Request) {
+	var context string
+	notes, err := h.settings.GetCostNotes()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get costs notes",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched costs notes",
+		},
+		Spec: types.FlatNotes{
+			Notes: notes,
+		},
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// PutSettingsCostsNotes ...
+// update the notes for the costs apps
+func (h *HTTPServer) PutSettingsCostsNotes(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	var notes types.CostsNotes
+	if err := json.NewDecoder(r.Body).Decode(&notes); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	if err := h.settings.SetCostNotes(notes.Notes); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get costs notes",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "set costs notes",
+		},
+		Spec: notes.Notes,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// GetSettingsCostsWriteRequireGroupAdmin ...
+// responds with whether admin is required to write new costs
+func (h *HTTPServer) GetSettingsCostsWriteRequireGroupAdmin(w http.ResponseWriter, r *http.Request) {
+	var context string
+	value, err := h.settings.GetCostsWriteRequireGroupAdmin()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get setting for costs write admin group requirement",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched setting for costs write admin group requirement",
+		},
+		Spec: value,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// PutSettingsCostsWriteRequireGroupAdmin ...
+// update the setting to require admin group for writing cost items
+func (h *HTTPServer) PutSettingsCostsWriteRequireGroupAdmin(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	var body struct {
+		RequireAdmin *bool `json:"requireAdmin"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	if body.RequireAdmin == nil {
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to find value",
+			},
+		})
+		return
+	}
+
+	if err := h.settings.SetCostsWriteRequireGroupAdmin(*body.RequireAdmin); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get costs write require admin setting",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "set costs write require admin setting",
+		},
+		Spec: *body.RequireAdmin,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
 // GetVersion ...
 // returns version information about the instance
 func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
@@ -2756,6 +3426,27 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 			RequireAllGroups: []string{"admin"},
 		},
 		{
+			EndpointPath:     "/admin/settings/costsNotes",
+			HandlerFunc:      h.PutSettingsCostsNotes,
+			HTTPMethod:       http.MethodPut,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
+		},
+		{
+			EndpointPath:     "/admin/settings/costsWriteRequireGroupAdmin",
+			HandlerFunc:      h.GetSettingsCostsWriteRequireGroupAdmin,
+			HTTPMethod:       http.MethodGet,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
+		},
+		{
+			EndpointPath:     "/admin/settings/costsWriteRequireGroupAdmin",
+			HandlerFunc:      h.PutSettingsCostsWriteRequireGroupAdmin,
+			HTTPMethod:       http.MethodPut,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
+		},
+		{
 			EndpointPath: "/admin/register",
 			HandlerFunc:  h.PostAdminRegister,
 			HTTPMethod:   http.MethodPost,
@@ -3028,6 +3719,67 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 			EndpointPath: "/apps/shoppinglist/tags/{id}",
 			HandlerFunc:  h.DeleteShoppingTag,
 			HTTPMethod:   http.MethodDelete,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/costs/view",
+			HandlerFunc:  h.GetCostsView,
+			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/costs/writeRequireGroupAdmin",
+			HandlerFunc:  h.GetSettingsCostsWriteRequireGroupAdmin,
+			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/costs/items/{id}",
+			HandlerFunc:  h.GetCostItem,
+			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
+		},
+		// TODO add put and patch cost item
+		{
+			EndpointPath: "/apps/costs/items",
+			HandlerFunc:  h.ListCostItems,
+			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/costs/items",
+			HandlerFunc:  h.PostCostItem,
+			HTTPMethod:   http.MethodPost,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/costs/items/{id}",
+			HandlerFunc:  h.DeleteCostItem,
+			HTTPMethod:   http.MethodDelete,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/costs/items",
+			HandlerFunc:  h.DeleteBatchCostItem,
+			HTTPMethod:   http.MethodDelete,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/costs/items/{id}",
+			HandlerFunc:  h.PutCostItem,
+			HTTPMethod:   http.MethodPut,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/costs/items/{id}",
+			HandlerFunc:  h.PatchCostItem,
+			HTTPMethod:   http.MethodPatch,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/costs/settings/notes",
+			HandlerFunc:  h.GetSettingsCostsNotes,
+			HTTPMethod:   http.MethodGet,
 			RequireAuth:  true,
 		},
 		{

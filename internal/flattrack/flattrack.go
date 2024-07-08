@@ -5,6 +5,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"gitlab.com/flattrack/flattrack/internal/common"
+	"gitlab.com/flattrack/flattrack/internal/costs"
 	"gitlab.com/flattrack/flattrack/internal/database"
 	"gitlab.com/flattrack/flattrack/internal/emails"
 	"gitlab.com/flattrack/flattrack/internal/groups"
@@ -47,6 +48,7 @@ func NewManager() *manager {
 	}
 	users := users.NewManager(db)
 	shoppinglist := shoppinglist.NewManager(db)
+	costs := costs.NewManager(db, users)
 	emails := emails.NewManager()
 	groups := groups.NewManager(db)
 	health := health.NewManager(db)
@@ -55,8 +57,10 @@ func NewManager() *manager {
 	system := system.NewManager(db)
 	registration := registration.NewManager(users, system, settings)
 	metrics := metrics.NewManager()
-	scheduling := scheduling.NewManager(db)
-	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling, maintenanceMode)
+	scheduling := scheduling.NewManager(db).RegisterFunc(
+		costs.ScheduleNextCosts,
+	)
+	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling, costs, maintenanceMode)
 	return &manager{
 		httpserver:      httpserver,
 		metrics:         metrics,

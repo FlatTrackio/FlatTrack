@@ -243,6 +243,12 @@ type FlatNotes struct {
 	Notes string `json:"notes"`
 }
 
+// CostsNotes ...
+// notes for costs
+type CostsNotes struct {
+	Notes string `json:"notes"`
+}
+
 // UserCreationSecretSpec ...
 // values for a user to confirm their account with
 type UserCreationSecretSpec struct {
@@ -253,6 +259,65 @@ type UserCreationSecretSpec struct {
 	CreationTimestamp     int64  `json:"creationTimestamp"`
 	ModificationTimestamp int64  `json:"modificationTimestamp"`
 	DeletionTimestamp     int64  `json:"deletionTimestamp"`
+}
+
+type TotalPriceMonth struct {
+	Total     float64 `json:"total"`
+	YearMonth string  `json:"yearMonth"`
+}
+
+// Costs ...
+// data for the dashboard
+type Costs struct {
+	TotalDailyCostAverage       float64           `json:"totalDailyCostAverage"`
+	TotalWeeklyCostAverage      float64           `json:"totalWeeklyCostAverage"`
+	TotalThreeMonthAverage      float64           `json:"totalThreeMonthAverage"`
+	TotalYearCumulativeSpend    float64           `json:"totalYearCumulativeSpend"`
+	ProjectedMonthAnnualized    float64           `json:"projectedMonthAnnualized"`
+	LastCostInvoiceDate         int64             `json:"lastCostInvoiceDate"`
+	TotalPriceMonthlyCumulative []TotalPriceMonth `json:"totalPriceMonthlyCumulative"`
+	Items                       []CostItem        `json:"items"`
+}
+
+type Frequency string
+
+const (
+	FrequencyNever      Frequency = ""
+	FrequencyDaily      Frequency = "daily"
+	FrequencyWeekly     Frequency = "weekly"
+	FrequencyFornightly Frequency = "fornightly"
+	FrequencyMonthly    Frequency = "monthly"
+)
+
+// CostItem ...
+// values for a costs entry
+type CostItem struct {
+	ID                    string    `json:"id"`
+	Title                 string    `json:"title"`
+	Frequency             Frequency `json:"frequency"`
+	ReoccurUntil          int64     `json:"reoccurUntil"`
+	Notes                 string    `json:"notes"`
+	Amount                float64   `json:"amount"`
+	InvoiceDate           int64     `json:"invoiceDate"`
+	InvoiceLink           string    `json:"invoiceLink"`
+	InvoicedBy            string    `json:"invoicedBy"`
+	FromID                string    `json:"fromID"`
+	ToID                  string    `json:"-"`
+	Author                string    `json:"author"`
+	AuthorLast            string    `json:"authorLast"`
+	CreationTimestamp     int64     `json:"creationTimestamp"`
+	ModificationTimestamp int64     `json:"modificationTimestamp"`
+	DeletionTimestamp     int64     `json:"deletionTimestamp"`
+}
+
+type CostListOptions struct {
+	Limit                 int
+	UnfulfilledReoccuring *bool
+	IDs                   []string
+}
+
+type CostItemBatch struct {
+	IDs []string `json:"ids"`
 }
 
 // UserCreationSecretSelector ...

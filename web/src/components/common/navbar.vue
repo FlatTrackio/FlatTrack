@@ -67,6 +67,12 @@
                   :to="{ name: 'Shopping list' }"
                 ></b-menu-item>
                 <b-menu-item
+                  icon="piggy-bank"
+                  label="Costs"
+                  tag="router-link"
+                  :to="{ name: 'Costs' }"
+                ></b-menu-item>
+                <b-menu-item
                   icon="account-group"
                   label="Flatmates"
                   tag="router-link"

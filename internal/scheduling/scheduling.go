@@ -61,7 +61,6 @@ func (m *Manager) PerformWork() error {
 	}
 	wg.Wait()
 	if len(eg) > 0 {
-		log.Printf("%+v\n", eg)
 		return fmt.Errorf("scheduling errors: %v", eg)
 	}
 	return nil

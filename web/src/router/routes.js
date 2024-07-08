@@ -126,6 +126,14 @@ export default [
     }
   },
   {
+    path: '/apps/costs',
+    name: 'Costs',
+    component: () => import('@/views/authenticated/costs.vue'),
+    meta: {
+      requiresAuth: true
+    }
+  },
+  {
     path: '/admin',
     name: 'Admin home',
     component: () => import('@/views/admin/home.vue'),

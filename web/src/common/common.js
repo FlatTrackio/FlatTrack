@@ -118,6 +118,25 @@ function TimestampToCalendar (timestamp) {
     .toLowerCase()
 }
 
+// TimestampToCalendarDate
+// converts a unix timestamp to a human readable string only including the day
+function TimestampToCalendarDate (timestamp) {
+  return dayjs(timestamp * 1000)
+    .calendar(null, {
+      sameDay: '[Today]',
+      nextDay: '[Tomorrow]',
+      nextWeek: 'dddd',
+      lastDay: '[Yesterday]',
+      lastWeek: 'dddd',
+      sameElse: 'DD/MM/YYYY'
+    })
+    .toLowerCase()
+}
+
+function FormatFloatAsMoney (input) {
+  return `$${input.toFixed()}`
+}
+
 // DeviceIsMobile
 // returns bool if the device is mobile (from screen size)
 function DeviceIsMobile () {
@@ -220,6 +239,8 @@ export default {
   DisplayFailureToast,
   SignoutDialog,
   TimestampToCalendar,
+  TimestampToCalendarDate,
+  FormatFloatAsMoney,
   DeviceIsMobile,
   GetFlatnameFromCache,
   WriteFlatnameToCache,

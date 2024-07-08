@@ -148,8 +148,57 @@ func (m *Manager) GetShoppingListNotes() (output string, err error) {
 func (m *Manager) SetShoppingListNotes(value string) (err error) {
 	if err := m.set("shoppingListNotes", value, func() error {
 		if len(value) > 250 {
-			return fmt.Errorf("Unable to set shopping list notes as it is either invalid, too short, or too long")
+			return fmt.Errorf("Unable to set shopping list notes as it is either invalid: too short or too long")
 		}
+		return nil
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetCostNotes ...
+// returns the cost notes
+func (m *Manager) GetCostNotes() (output string, err error) {
+	output, err = m.get("costsNotes")
+	if err != nil {
+		return "", err
+	}
+	return output, nil
+}
+
+// SetCostNotes ...
+// sets shoppingListNotes
+func (m *Manager) SetCostNotes(value string) (err error) {
+	if err := m.set("costsNotes", value, func() error {
+		if len(value) > 250 {
+			return fmt.Errorf("Unable to set cost notes as it is either invalid: too short or too long")
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetCostNotes ...
+// returns the cost notes
+func (m *Manager) GetCostsWriteRequireGroupAdmin() (output bool, err error) {
+	val, err := m.get("costsWriteRequireGroupAdmin")
+	if err != nil {
+		return false, err
+	}
+	return val == "true", nil
+}
+
+// SetCostNotes ...
+// sets shoppingListNotes
+func (m *Manager) SetCostsWriteRequireGroupAdmin(input bool) (err error) {
+	value := "false"
+	if input {
+		value = "true"
+	}
+	if err := m.set("costsWriteRequireGroupAdmin", value, func() error {
 		return nil
 	}); err != nil {
 		return err

@@ -10,8 +10,7 @@ layout {
   }
   pane_template name="postgres" {
     command "podman"
-    cwd "./deployments"
-    args "compose" "--file" "./docker-compose-dev.yml" "up"
+    args "compose" "--file" "./deployments/docker-compose-dev.yml" "up" "--force-recreate"
   }
   pane_template name="backend" {
     command "gow"
