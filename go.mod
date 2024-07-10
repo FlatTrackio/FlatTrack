@@ -1,6 +1,6 @@
 module gitlab.com/flattrack/flattrack
 
-go 1.22.4
+go 1.22.5
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1
@@ -14,7 +14,7 @@ require (
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.30.0
 	github.com/prometheus/client_golang v1.17.0
-	github.com/rs/cors v1.10.1
+	github.com/rs/cors v1.11.0
 	k8s.io/apimachinery v0.29.1
 	k8s.io/klog/v2 v2.110.1
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
