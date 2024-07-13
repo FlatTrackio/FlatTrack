@@ -407,7 +407,7 @@ func (m *Manager) GenerateJWTauthToken(id string, authNonce string, expiresIn ti
 }
 
 // GetAuthTokenFromHeader ...
-// given a request, retreive the authoriation value
+// given a request, retrieve the authoriation value
 func GetAuthTokenFromHeader(r *http.Request) (string, error) {
 	tokenHeader := r.Header.Get("Authorization")
 	if tokenHeader == "" {

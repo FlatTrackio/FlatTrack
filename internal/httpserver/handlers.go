@@ -3051,7 +3051,7 @@ func (h *HTTPServer) HTTP404() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		if _, err := w.Write([]byte(`404 not found`)); err != nil {
-			log.Printf("error: failed to write repsonse; %v\n", err)
+			log.Printf("error: failed to write response; %v\n", err)
 		}
 	}
 }

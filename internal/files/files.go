@@ -90,7 +90,7 @@ func (f FileAccess) Put(name string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Sucessful uploaded '%v' into bucket\n", info.Key)
+	log.Printf("Successfully uploaded '%v' into bucket\n", info.Key)
 	return nil
 }
 
@@ -102,6 +102,6 @@ func (f FileAccess) Delete(name string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Sucessful deleted '%v' from bucket\n", fileName)
+	log.Printf("Successfully deleted '%v' from bucket\n", fileName)
 	return nil
 }
