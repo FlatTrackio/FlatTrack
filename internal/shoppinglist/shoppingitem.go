@@ -338,6 +338,30 @@ func (m *ShoppingItemManager) Delete(id string, listID string, authorLast string
 	return nil
 }
 
+// Delete ...
+// given an item id, remove it
+func (m *ShoppingItemManager) DeleteTagItems(listID string, tagName string, authorLast string) (err error) {
+	sqlStatement := `delete from shopping_item where listId = $1 and tag = $2`
+	rows, err := m.db.Query(sqlStatement, listID, tagName)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+
+	shoppingListPatch := types.ShoppingListSpec{
+		AuthorLast: authorLast,
+	}
+	_, err = m.manager.ShoppingList().Patch(listID, shoppingListPatch)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // DeleteAll ...
 // given an item id, remove all items
 // only intended to be called when deleting list
