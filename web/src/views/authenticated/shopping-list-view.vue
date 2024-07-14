@@ -510,14 +510,11 @@
           <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{
             totalPercentage
           }}%)
-          <infotooltip
-            :position="deviceIsMobile ? 'is-left' : 'is-top'"
-            :message="
-              'Total price including excluded item prices is $' +
-              totalAllInclusivePrice
-            "
-          />
           <br />
+          <span v-if="totalTagExcludeList.length > 0">
+            <b>All inclusive price</b>: ${{ totalAllInclusivePrice }}
+            <br />
+          </span>
           <span v-if="participatingFlatmates.length > 1">
             <b>Split price</b>: ${{ equalPricePerPerson.toFixed(2) }}
             <infotooltip
