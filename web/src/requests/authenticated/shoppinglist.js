@@ -225,6 +225,18 @@ function DeleteShoppingListItem (listId, itemId) {
   })
 }
 
+// DeleteShoppingListTagItems
+// adds to the shopping list
+function DeleteShoppingListTagItems (listId, tagName) {
+  return Request({
+    url: `/api/apps/shoppinglist/lists/${listId}/tag`,
+    method: 'DELETE',
+    data: {
+      tag: tagName
+    }
+  })
+}
+
 // GetShoppingListItemTags
 // fetches all tags used in a list
 function GetShoppingListItemTags (listId) {
@@ -346,6 +358,7 @@ export default {
   UpdateShoppingListItem,
   PatchShoppingListItemObtained,
   DeleteShoppingListItem,
+  DeleteShoppingListTagItems,
 
   GetAllShoppingListItemTags,
   GetShoppingListItemTags,

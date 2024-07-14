@@ -2079,6 +2079,91 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
+// DeleteShoppingListTagItems ...
+// delete a shopping list items by matching a tag
+func (h *HTTPServer) DeleteShoppingListTagItems(w http.ResponseWriter, r *http.Request) {
+	var context string
+	var item types.ShoppingItemSpec
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+	if err := json.Unmarshal(body, &item); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	vars := mux.Vars(r)
+	listID := vars["listId"]
+
+	userID, err := h.users.GetIDFromJWT(r)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get user account id from token",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
+	list, err := h.shoppinglist.ShoppingList().Get(listID)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	if list.ID == "" {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusNotFound, JSONresp)
+		return
+	}
+
+	if err := h.shoppinglist.ShoppingItem().DeleteTagItems(list.ID, item.Tag, userID); err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to remove items from shopping list by tag name",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "removed items from shopping list by tag name",
+		},
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
 // GetShoppingListItemTags ...
 // responds with tags used in shopping list items from a list
 func (h *HTTPServer) GetShoppingListItemTags(w http.ResponseWriter, r *http.Request) {
@@ -3295,6 +3380,11 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{listId}/items/{itemId}",
 			HandlerFunc:  httpUseMiddleware(h.DeleteShoppingListItem, h.HTTPvalidateJWT()),
+			HTTPMethod:   http.MethodDelete,
+		},
+		{
+			EndpointPath: "/apps/shoppinglist/lists/{listId}/tag",
+			HandlerFunc:  httpUseMiddleware(h.DeleteShoppingListTagItems, h.HTTPvalidateJWT()),
 			HTTPMethod:   http.MethodDelete,
 		},
 		{
