@@ -6,6 +6,10 @@ services:
     image: postgres:16.1-alpine3.19
     restart: unless-stopped
     user: postgres
+    command:
+      - postgres
+      - -c
+      - shared_preload_libraries=pg_stat_statements
     ports:
       - '5432:5432'
     environment:
