@@ -1,0 +1,1536 @@
+#+title: 002 Shopping List Structuring Function
+
+* Goal
+
+create a function to return a shopping list with items and users populated.
+
+* Exploration
+
+bring down databasea
+
+#+begin_src sh
+podman compose --file ../deployments/docker-compose-dev.yml down
+#+end_src
+
+#+RESULTS:
+#+begin_example
+deployments_flattrack_db_1
+deployments_flattrack_db_1
+d51caa768cb92dde6080bdd9fc134124756c913e662d296835234249748b6912
+#+end_example
+
+bring up database
+
+#+begin_src sh
+podman compose --file ../deployments/docker-compose-dev.yml up -d
+#+end_src
+
+#+RESULTS:
+#+begin_example
+9d57b05e8c2c33b0e168ead124caf056b9b0b9e3a30b24e32972642c560b34d7
+3df2183f430d4e91450b2d05cafe0676bf052b2c1842599fe5db8345b2d56d53
+#+end_example
+
+unmigrate database
+
+#+begin_src sh :prologue "(\n" :epilogue "\n) 2>&1 ; :"
+migrate \
+    -database postgresql://flattrack:flattrack@localhost/flattrack?sslmode=disable \
+    -path ../kodata/migrations \
+    down -all
+#+end_src
+
+#+RESULTS:
+#+begin_example
+error: no migration found for version 20240707204403: read down for version 20240707204403 .: file does not existerror: no migration found for version 20240707204403: read down for version 20240707204403 .: file does not exist
+#+end_example
+
+migrate database
+
+#+begin_src sh :prologue "(\n" :epilogue "\n) 2>&1 ; :"
+migrate \
+    -database postgresql://flattrack:flattrack@localhost/flattrack?sslmode=disable \
+    -path ../kodata/migrations \
+    up
+#+end_src
+
+#+RESULTS:
+#+begin_example
+20200315101517/u create_users_table (12.604667ms)
+20200315181257/u groups (23.460791ms)
+20200315202655/u shopping_list (33.098792ms)
+20200316202236/u shopping_item (42.385917ms)
+20200319202354/u user_to_groups (50.515166ms)
+20200328132811/u create_settings_table (58.228792ms)
+20200328133823/u create_system_table (66.02475ms)
+20200408173049/u user_creation_secret (73.717667ms)
+20200705091755/u shopping_list_tag (81.24575ms)
+20200725082623/u shopping_list_notes (87.034625ms)
+20201014183014/u shopping_list_refs (93.444792ms)
+20201113195819/u flat_notes (85.749208ms)
+20231014210141/u shopping_list_tag_exclude (80.506583ms)
+20240203045838/u leader_election (78.122708ms)
+#+end_example
+
+#+begin_src sh :results silent
+../hack/setup-and-print-token.sh
+#+end_src
+
+#+begin_src sql-mode
+begin;
+\x
+select * from users;
+\x off
+rollback;
+#+end_src
+
+#+begin_src sql-mode
+begin;
+
+insert into users (names, email, registered) values ('Flatter 2', 'flatter2@example.com', true);
+
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# INSERT 0 1
+flattrack=*# flattrack=*# COMMIT
+#+end_SRC
+
+create extension for performance validating
+
+#+begin_src sql-mode
+create extension if not exists pg_stat_statements;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+CREATE EXTENSION
+#+end_SRC
+
+delete lists and items
+
+#+begin_src sql-mode
+begin;
+delete from shopping_item;
+delete from shopping_list_tag;
+delete from shopping_list cascade;
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# DELETE 22
+flattrack=*# DELETE 0
+flattrack=*# DELETE 3
+flattrack=*# COMMIT
+#+end_SRC
+
+no lists
+
+#+begin_src sql-mode
+select * from shopping_list;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+ id | name | notes | author | authorlast | completed | creationtimestamp | modificationtimestamp | deletiontimestamp | templateid | totalTagExclude
+----+------+-------+--------+------------+-----------+-------------------+-----------------------+-------------------+------------+-------------------
+(0 rows)
+
+#+end_SRC
+
+schema
+
+#+begin_src sql-mode
+\d shopping_list;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+                                         Table "public.shopping_list"
+        Column         |  Type   | Collation | Nullable |                       Default
+-----------------------+---------+-----------+----------+------------------------------------------------------
+ id                    | text    |           | not null | md5(random()::text || clock_timestamp()::text)::uuid
+ name                  | text    |           | not null |
+ notes                 | text    |           |          |
+ author                | text    |           | not null |
+ authorlast            | text    |           | not null |
+ completed             | boolean |           | not null | false
+ creationtimestamp     | integer |           | not null | date_part('epoch'::text, CURRENT_TIMESTAMP)::integer
+ modificationtimestamp | integer |           | not null | date_part('epoch'::text, CURRENT_TIMESTAMP)::integer
+ deletiontimestamp     | integer |           | not null | 0
+ templateid            | text    |           |          |
+ totalTagExclude     | text[]  |           |          |
+Indexes:
+    "shopping_list_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "shopping_list_author_fkey" FOREIGN KEY (author) REFERENCES users(id)
+    "shopping_list_authorlast_fkey" FOREIGN KEY (authorlast) REFERENCES users(id)
+Referenced by:
+    TABLE "shopping_item" CONSTRAINT "shopping_item_listid_fkey" FOREIGN KEY (listid) REFERENCES shopping_list(id)
+
+#+end_SRC
+
+create a shopping list
+
+#+begin_src sql-mode
+begin;
+insert into
+  shopping_list (name, notes, templateid, totalTagExclude, author, authorlast, creationTimestamp)
+    values
+      ('a month ago', '', '', '{"a", "b"}', (select id from users limit 1), (select id from users limit 1), date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ('today', '', '', '{"a", "b"}', (select id from users limit 1), (select id from users limit 1), date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ('tomorrow', '', '', '{"a", "b", "c"}', (select id from users limit 1), (select id from users limit 1), date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int)
+      ;
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# INSERT 0 3
+flattrack=*# COMMIT
+#+end_SRC
+
+#+begin_src sql-mode
+\d shopping_item;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+                                              Table "public.shopping_item"
+        Column         |       Type       | Collation | Nullable |                       Default
+-----------------------+------------------+-----------+----------+------------------------------------------------------
+ id                    | text             |           | not null | md5(random()::text || clock_timestamp()::text)::uuid
+ listid                | text             |           | not null |
+ name                  | text             |           | not null |
+ price                 | double precision |           | not null | 0
+ quantity              | integer          |           | not null | 1
+ notes                 | text             |           |          |
+ obtained              | boolean          |           | not null | false
+ tag                   | text             |           |          |
+ author                | text             |           | not null |
+ authorlast            | text             |           | not null |
+ creationtimestamp     | integer          |           | not null | date_part('epoch'::text, CURRENT_TIMESTAMP)::integer
+ modificationtimestamp | integer          |           | not null | date_part('epoch'::text, CURRENT_TIMESTAMP)::integer
+ deletiontimestamp     | integer          |           | not null | 0
+ templateid            | text             |           |          |
+Indexes:
+    "shopping_item_pkey" PRIMARY KEY, btree (id)
+Foreign-key constraints:
+    "shopping_item_author_fkey" FOREIGN KEY (author) REFERENCES users(id)
+    "shopping_item_authorlast_fkey" FOREIGN KEY (authorlast) REFERENCES users(id)
+    "shopping_item_listid_fkey" FOREIGN KEY (listid) REFERENCES shopping_list(id)
+
+#+end_SRC
+
+delete items in list
+
+#+begin_src sql-mode
+begin;
+delete from shopping_item ;
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# DELETE 32
+flattrack=*# COMMIT
+#+end_SRC
+
+create items
+
+#+begin_src sql-mode
+begin;
+insert into
+  shopping_item (listid, name, price, quantity, notes, tag, author, authorlast, templateid, creationTimestamp)
+    values
+      ((select id from shopping_list where name = 'a month ago'), 'eggs', 7.9, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ((select id from shopping_list where name = 'a month ago'), 'bread', 6.5, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ((select id from shopping_list where name = 'a month ago'), 'onions', 0.4, 4, '', 'fruits and veges', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ((select id from shopping_list where name = 'a month ago'), 'kiwifruit', 4, 1, 'KG', 'fruits and veges', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ((select id from shopping_list where name = 'a month ago'), 'dried basil', 1.29, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ((select id from shopping_list where name = 'a month ago'), 'beef rump steak', 11, 1, '', 'meat', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ((select id from shopping_list where name = 'a month ago'), 'orange', 4, 1, '', 'fruits and veges', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ((select id from shopping_list where name = 'a month ago'), 'butter', 8, 1, '', 'dairy', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ((select id from shopping_list where name = 'a month ago'), 'cheese', 9, 1, '', 'dairy', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ((select id from shopping_list where name = 'a month ago'), 'olive oil', 18, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+      ((select id from shopping_list where name = 'a month ago'), 'garlic paste', 6, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date - '5 weeks'::interval))::int),
+
+      ((select id from shopping_list where name = 'today'), 'eggs', 8.5, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'today'), 'bread', 6.6, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'today'), 'carrots', 0.45, 3, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'today'), 'sausages', 11, 1, '', 'meat', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'today'), 'onions', 2.8, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'today'), 'tomato cans', 0.75, 4, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'today'), 'chocolate', 9, 1, '', 'a', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'today'), 'yoghurt', 6, 1, '', 'a', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'today'), 'bananas', 4.3, 1, '', 'b', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'today'), 'chocolate', 8.9, 2, '', 'b', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+
+      ((select id from shopping_list where name = 'tomorrow'), 'eggs', 8.5, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'tomorrow'), 'bread', 6.6, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'tomorrow'), 'carrots', 0.45, 3, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'tomorrow'), 'sausages', 11, 1, '', 'meat', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'tomorrow'), 'onions', 2.8, 1, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'tomorrow'), 'tomato cans', 0.75, 4, '', 'general', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'tomorrow'), 'chocolate', 9, 1, '', 'a', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'tomorrow'), 'yoghurt', 6, 1, '', 'a', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'tomorrow'), 'bananas', 4.3, 1, '', 'b', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'tomorrow'), 'chocolate', 8.9, 2, '', 'b', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int),
+      ((select id from shopping_list where name = 'tomorrow'), 'cake', 12, 2, 'party', 'c', (select id from users limit 1), (select id from users limit 1), '', date_part('epoch',(to_timestamp(extract(epoch from now()))::date))::int)
+               ;
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# INSERT 0 32
+flattrack=*# COMMIT
+#+end_SRC
+
+tag schema
+
+#+begin_src sql-mode
+\d shopping_list_tag
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+                                       Table "public.shopping_list_tag"
+        Column         |  Type   | Collation | Nullable |                       Default
+-----------------------+---------+-----------+----------+------------------------------------------------------
+ id                    | text    |           | not null | md5(random()::text || clock_timestamp()::text)::uuid
+ name                  | text    |           | not null |
+ author                | text    |           | not null |
+ authorlast            | text    |           | not null |
+ creationtimestamp     | integer |           | not null | date_part('epoch'::text, CURRENT_TIMESTAMP)::integer
+ modificationtimestamp | integer |           | not null | date_part('epoch'::text, CURRENT_TIMESTAMP)::integer
+ deletiontimestamp     | integer |           | not null | 0
+Indexes:
+    "shopping_list_tag_pkey" PRIMARY KEY, btree (id)
+
+#+end_SRC
+
+create tags
+
+#+begin_src sql-mode
+begin;
+delete from shopping_list_tag;
+insert into shopping_list_tag (name, author, authorlast) values
+       ('General', (select id from users limit 1), (select id from users limit 1)),
+       ('Fruits and veges', (select id from users limit 1), (select id from users limit 1)) ;
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# DELETE 0
+flattrack=*# flattrack-*# flattrack-*# INSERT 0 2
+flattrack=*# COMMIT
+#+end_SRC
+
+get tags from list
+
+#+begin_src sql-mode
+select distinct(tag) from shopping_item where listid = (select id from shopping_list limit 1) order by tag desc;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+   tag
+---------
+ general
+ b
+ a
+(3 rows)
+
+#+end_SRC
+
+get tags from list as json - take 1
+
+#+begin_src sql-mode
+begin;
+with tags as (
+     select distinct(tag), listid from shopping_item i where i.listid = listid
+)
+select row_to_json(tags)
+from shopping_item i
+join tags using(listid)
+where i.listid = (select id from shopping_list limit 1)
+group by listid, tags;
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack(*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#                             row_to_json
+-------------------------------------------------------------------
+ {"tag":"a","listid":"ce64a2bf-c80a-e068-1bae-0172ad979339"}
+ {"tag":"b","listid":"ce64a2bf-c80a-e068-1bae-0172ad979339"}
+ {"tag":"general","listid":"ce64a2bf-c80a-e068-1bae-0172ad979339"}
+(3 rows)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+get tags from list as json - take 2
+
+#+begin_src sql-mode
+begin;
+select array_agg(row_to_json(tags))
+from (
+  select distinct(tag)
+  from shopping_item
+  where listid = (select id from shopping_list limit 1)
+) tags;
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack-*# flattrack(*# flattrack(*# flattrack(*# flattrack(*#                            array_agg
+---------------------------------------------------------------
+ {"{\"tag\":\"b\"}","{\"tag\":\"general\"}","{\"tag\":\"a\"}"}
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+get exclude items
+
+#+begin_src sql-mode
+begin;
+select totalTagExclude from shopping_list;
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*#  totalTagExclude
+-------------------
+ {a,b}
+ {a,b,c}
+(2 rows)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+exclude items by tag
+
+#+begin_src sql-mode
+begin;
+select i.id, i.name, i.tag, s.totalTagExclude
+from shopping_item i
+inner join shopping_list s on s.id = i.listid
+where listid = (select id from shopping_list limit 1)
+      and not (tag = ANY(s.totalTagExclude));
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#                   id                  |    name     |   tag   | totalTagExclude
+--------------------------------------+-------------+---------+-------------------
+ 0d1e25e8-a1a8-4626-0d74-39923c068d6d | eggs        | general | {a,b}
+ a0187936-2c60-4442-b1c0-695cf61ba07d | bread       | general | {a,b}
+ c220f185-0750-7c86-fbf7-49c77f95312d | carrots     | general | {a,b}
+ 1b7eb92d-bcd0-2e1c-1fcb-1b28584688be | sausages    | general | {a,b}
+ 56c661a6-d92e-13fb-3b35-4e425a5b5b24 | onions      | general | {a,b}
+ adcdd10c-c5b5-08f4-a187-f350ed7678b9 | tomato cans | general | {a,b}
+(6 rows)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+total items obtained
+
+#+begin_src sql-mode
+begin;
+
+update shopping_item set obtained = false where listid = (select id from shopping_list limit 1);
+
+update shopping_item
+set obtained = true
+where listid = (select id from shopping_list limit 1)
+and id in (select id from shopping_item where listid = (select id from shopping_list limit 1) limit 4);
+
+select count(*)
+from shopping_item
+where listid = (select id from shopping_list limit 1)
+and obtained = true;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# UPDATE 10
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack-*# UPDATE 4
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack-*#  count
+-------
+     4
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+percentage of items obtained - take 1
+
+#+begin_src sql-mode
+begin;
+
+-- reset obtained
+update shopping_item set obtained = false where listid = (select id from shopping_list limit 1);
+-- set obtained to true for first four
+update shopping_item
+set obtained = true
+where listid = (select id from shopping_list limit 1)
+and id in (select id from shopping_item where listid = (select id from shopping_list limit 1) limit 4);
+
+with totalItems as (
+    select listid, obtained from shopping_item s where s.listid = listid),
+totalItemsObtained as (
+    select listid, obtained from shopping_item s where s.listid = listid and obtained = true)
+select (count(totalItemsObtained) * 100) / count(totalItems) as "percentage", count(totalItemsObtained), count(totalItems)
+from shopping_item i
+join totalItemsObtained using(listid)
+inner join totalItems using(listid)
+where i.listid = (select id from shopping_list limit 1);
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack=*# UPDATE 10
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack-*# UPDATE 4
+flattrack=*# flattrack=*# flattrack(*# flattrack-*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#  percentage | count | count
+------------+-------+-------
+        100 |   400 |   400
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+percentage of items obtained - take 2
+
+#+begin_src sql-mode
+begin;
+
+select (count(totalItemsObtained) * 100) / greatest(count(totalItems),1) as "percentage", count(totalItems), count(totalItemsObtained)
+from (select obtained from shopping_item s where s.listid = (select id from shopping_list limit 1)) totalItems,
+  (select obtained from shopping_item s where s.listid = (select id from shopping_list limit 1) and obtained = true) totalItemsObtained;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*#  percentage | count | count
+------------+-------+-------
+          0 |     0 |     0
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+percentage of items obtained - take 3 - this works well!
+
+#+begin_src sql-mode
+begin;
+
+with itemsObtained as (
+  select id, listid, obtained from shopping_item i where i.listid = listid and obtained = true
+),
+items as (
+  select id, listid, obtained from shopping_item i where i.listid = listid
+)
+select (count(distinct(itemsObtained.id)) * 100) / count(distinct(items.id)) as "percentage",
+       count(distinct(itemsObtained.id)) as "itemsObtained",
+       count(distinct(items.id)) as "items"
+from shopping_item
+inner join items using(listid)
+full outer join itemsObtained using(listid)
+where listid = (select id from shopping_list where name = 'today' limit 1);
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack(*# flattrack(*# flattrack-*# flattrack(*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#  percentage | itemsObtained | items
+------------+---------------+-------
+        100 |            10 |    10
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+percentage of items obtained by price
+
+#+begin_src sql-mode
+begin;
+
+with itemsPriceObtained as (
+select listid, sum(i.price * i.quantity) as "total"
+from shopping_item i
+inner join shopping_list s on s.id = i.listid
+where i.listid = listid
+      and not (tag = ANY(s.totalTagExclude))
+          and obtained = true
+          group by listid
+),
+items as (
+select listid, sum(i.price * i.quantity) as "total"
+from shopping_item i
+inner join shopping_list s on s.id = i.listid
+where i.listid = listid
+      and not (tag = ANY(s.totalTagExclude))
+          group by listid
+)
+select distinct(round(((itemsPriceObtained.total * 100) / items.total)::float8::numeric, 0)) as "percentage"
+from shopping_item
+inner join items using(listid)
+full outer join itemsPriceObtained using(listid)
+where listid = (select id from shopping_list where name = 'today' limit 1);
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack-*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#  percentage
+------------
+         58
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+sum of excluded items by tag, timesing price by quantity
+
+#+begin_src sql-mode
+begin;
+select sum(i.price * i.quantity)
+from shopping_item i
+inner join shopping_list s on s.id = i.listid
+where listid = (select id from shopping_list limit 1)
+      and not (tag = ANY(s.totalTagExclude));
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#   sum
+-------
+ 33.25
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+total list item price without quantity
+
+#+begin_src sql-mode
+select sum(price)
+from shopping_item
+where listid = (select id from shopping_list limit 1);
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+        sum
+-------------------
+ 58.29999999999999
+(1 row)
+
+#+end_SRC
+
+times price by quantity
+
+#+begin_src sql-mode
+begin;
+select name, price, quantity, price * quantity as pricesTimesQuantity
+from shopping_item
+where listid = (select id from shopping_list limit 1);
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*#     name     | price | quantity | pricestimesquantity
+-------------+-------+----------+---------------------
+ sausages    |    11 |        1 |                  11
+ onions      |   2.8 |        1 |                 2.8
+ tomato cans |  0.75 |        4 |                   3
+ chocolate   |     9 |        1 |                   9
+ yoghurt     |     6 |        1 |                   6
+ bananas     |   4.3 |        1 |                 4.3
+ chocolate   |   8.9 |        2 |                17.8
+ eggs        |   8.5 |        1 |                 8.5
+ bread       |   6.6 |        1 |                 6.6
+ carrots     |  0.45 |        3 |                1.35
+(10 rows)
+
+flattrack=*# COMMIT
+#+end_SRC
+
+total list item price without quantity
+
+#+begin_src sql-mode
+begin;
+with priceTimesQuantity as (
+    select listid, (price::float8 * quantity::int) / 10 as priceTimesQuantity from shopping_item s where listid = s.listid)
+select sum(priceTimesQuantity)
+from shopping_item
+join priceTimesQuantity using(listid)
+where listid = (select id from shopping_list limit 1);
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#   sum
+-------
+ 70.35
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+need to figure out why dividing by 10 was needed.
+
+calculate for all lists
+
+#+begin_src sql-mode
+begin;
+with priceTimesQuantity as (
+        select listid, (price::float8 * quantity::int) / 10 as priceTimesQuantity
+        from shopping_item s
+        inner join shopping_list l on l.id = listid
+        where listid = s.listid and not (tag = ANY(l.totalTagExclude)))
+select sum(priceTimesQuantity)
+from shopping_item i
+join priceTimesQuantity using(listid)
+where i.listid = (select id from shopping_list where name = 'today' limit 1);
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#         sum
+-------------------
+ 33.24999999999999
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+generate shopping list view - take 1
+
+fields:
+- [x] list
+- [x] totalPrice
+- [x] totalPriceWithoutExcludedTags
+- [x] totalItemsObtained
+
+#+begin_src sql-mode
+begin;
+
+create or replace function shopping_list_view(list_id text)
+  returns table (shopping_list_view jsonb)
+as $$
+begin
+  return query
+    select jsonb_build_object(
+      'list', (select row_to_json(shopping_list) from shopping_list where id = list_id),
+      'totalPrice', (
+
+with priceTimesQuantity as (
+        select listid, (price::float8 * quantity) / 10 as priceTimesQuantity from shopping_item s where listid = list_id)
+select round(sum(priceTimesQuantity)::float8::numeric, 2)
+from shopping_item i
+join priceTimesQuantity using(listid)
+where i.listid = list_id
+group by listid
+
+        ),
+        'totalPriceWithoutExcludedTags', (
+
+with priceTimesQuantity as (
+        select listid, (price::float8 * quantity::int) / 10 as priceTimesQuantity
+        from shopping_item s
+        inner join shopping_list l on l.id = listid
+        where listid = s.listid and not (tag = ANY(l.totalTagExclude)))
+select round(sum(priceTimesQuantity)::float8::numeric, 2)
+from shopping_item i
+join priceTimesQuantity using(listid)
+where i.listid = list_id
+
+      ),
+      'totalItemsObtained', (
+      select count(*) from shopping_item s where s.listid = list_id and obtained = true
+    ),
+      'listTags', (
+
+select array_agg(row_to_json(tags))
+from (
+  select distinct(tag)
+  from shopping_item
+  where listid = (select id from shopping_list limit 1)
+) tags
+
+    ),
+      'items', (select array_agg(row_to_json(shopping_item)) from shopping_item where listid = list_id)) as "shopping_list_view"
+
+  from shopping_list s limit 1;
+end;
+$$ language plpgsql;
+
+select * from shopping_list_view((select id from shopping_list where name = 'today' limit 1));
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# CREATE FUNCTION
+flattrack=*# flattrack=*#                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             shopping_list_view
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ {"list": {"id": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "name": "today", "notes": "", "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "completed": false, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967260, "deletiontimestamp": 0, "totalTagExclude": ["a", "b"], "modificationtimestamp": 1721970300}, "items": [{"id": "b6175813-e02f-202c-bfd3-c94e6c7bb86e", "tag": "general", "name": "tomato cans", "notes": "", "price": 0.75, "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "listid": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "obtained": false, "quantity": 4, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967266, "deletiontimestamp": 0, "modificationtimestamp": 1721967266}, {"id": "b2a66b6e-1a51-c187-cd98-eddd4396c0ab", "tag": "a", "name": "chocolate", "notes": "", "price": 9, "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "listid": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "obtained": true, "quantity": 1, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967266, "deletiontimestamp": 0, "modificationtimestamp": 1721967266}, {"id": "5c89e732-58e7-5a10-ef05-431a11b9407e", "tag": "a", "name": "yoghurt", "notes": "", "price": 6, "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "listid": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "obtained": true, "quantity": 1, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967266, "deletiontimestamp": 0, "modificationtimestamp": 1721967266}, {"id": "59cfebee-9229-7949-a985-24fe023c3b13", "tag": "general", "name": "eggs", "notes": "", "price": 8.5, "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "listid": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "obtained": true, "quantity": 1, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967266, "deletiontimestamp": 0, "modificationtimestamp": 1721967266}, {"id": "0c698620-14cf-d70e-1547-4d738c06e423", "tag": "general", "name": "bread", "notes": "", "price": 6.6, "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "listid": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "obtained": true, "quantity": 1, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967266, "deletiontimestamp": 0, "modificationtimestamp": 1721967266}, {"id": "91794c23-ac83-fe88-fd36-2041858936cd", "tag": "b", "name": "bananas", "notes": "", "price": 4.3, "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "listid": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "obtained": true, "quantity": 1, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967266, "deletiontimestamp": 0, "modificationtimestamp": 1721967266}, {"id": "11a8df09-4e73-9dca-6883-174ccfe7cb37", "tag": "b", "name": "chocolate", "notes": "", "price": 8.9, "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "listid": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "obtained": true, "quantity": 2, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967266, "deletiontimestamp": 0, "modificationtimestamp": 1721967266}, {"id": "df0dab92-ebea-1c2d-2297-ad2fb707ad73", "tag": "general", "name": "carrots", "notes": "", "price": 0.45, "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "listid": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "obtained": true, "quantity": 3, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967266, "deletiontimestamp": 0, "modificationtimestamp": 1721967266}, {"id": "1c382944-33a5-02e8-4eca-4268eef532f8", "tag": "general", "name": "onions", "notes": "", "price": 2.8, "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "listid": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "obtained": false, "quantity": 1, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967266, "deletiontimestamp": 0, "modificationtimestamp": 1721967266}, {"id": "10984881-1c8f-9a1a-3437-8599d1837655", "tag": "general", "name": "sausages", "notes": "", "price": 11, "author": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "listid": "5f226c54-6a56-4a5f-acf1-ee8068521fc7", "obtained": false, "quantity": 1, "authorlast": "14e5b19f-6298-bc0b-7b15-e33563d88ce8", "templateid": "", "creationtimestamp": 1721967266, "deletiontimestamp": 0, "modificationtimestamp": 1721967266}], "listTags": [{"tag": "c"}, {"tag": "b"}, {"tag": "general"}, {"tag": "a"}], "totalPrice": 70.35, "totalItemsObtained": 7, "totalPriceWithoutExcludedTags": 33.25}
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+group items by tag
+
+#+begin_src sql-mode
+begin;
+
+select distinct on(tag) tag from shopping_item;
+
+with fromTag as (
+        select listid, tag from shopping_item s where listid = s.id)
+select fromTag.*
+from shopping_item
+join fromTag using(listid)
+group by listid, fromTag.listid, fromTag.tag;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*#    tag
+---------
+ a
+ b
+ c
+ general
+(4 rows)
+
+flattrack=*# flattrack=*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#  listid | tag
+--------+-----
+(0 rows)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+list tag prices
+
+#+begin_src sql-mode
+begin;
+select tag, sum(price * quantity)
+from shopping_item
+where listid = (select id from shopping_list where name = 'today' limit 1)
+group by tag;
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack-*# flattrack-*# flattrack-*#    tag   |  sum
+---------+-------
+ b       |  22.1
+ general | 33.25
+ a       |    15
+(3 rows)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+list tag prices as json
+
+#+begin_src sql-mode
+begin;
+select array_agg(row_to_json(tagsPrices)) from (
+  select tag, sum(price * quantity)
+  from shopping_item
+  where listid = (select id from shopping_list where name = 'today' limit 1)
+  group by tag
+) as tagsPrices;
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*#                                               array_agg
+-----------------------------------------------------------------------------------------------------
+ {"{\"tag\":\"b\",\"sum\":22.1}","{\"tag\":\"general\",\"sum\":33.25}","{\"tag\":\"a\",\"sum\":15}"}
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+current price
+
+#+begin_src sql-mode
+begin;
+select total from (
+  select listid, sum(i.price * i.quantity) as "total"
+  from shopping_item i
+  inner join shopping_list s on s.id = i.listid
+  where i.listid = (select id from shopping_list where name = 'today' limit 1)
+  and not (tag = ANY(s.totalTagExclude))
+  and obtained = true
+  group by listid
+);
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*#  total
+-------
+ 16.45
+(1 row)
+
+flattrack=*# ROLLBACK
+#+end_SRC
+
+items grouped into tags
+
+#+begin_src sql-mode
+begin;
+select id, name, tag, price
+from shopping_item
+where listid = (select id from shopping_list where name = 'today')
+order by tag, name;
+
+with tags as (
+select distinct(tag)
+from shopping_item
+where listid = (select id from shopping_list where name = 'today')
+) select * from tags;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+WARNING:  there is already a transaction in progress
+BEGIN
+flattrack=*# flattrack-*# flattrack-*# flattrack-*#                   id                  |    name     |   tag   | price
+--------------------------------------+-------------+---------+-------
+ dc158bf0-8968-ce29-78af-43367b04c1d3 | chocolate   | a       |     9
+ e54a0d2b-659a-42b7-9547-1a8e9cfc12a4 | yoghurt     | a       |     6
+ 873c11de-395f-9cae-9fcf-6a96629c0917 | bananas     | b       |   4.3
+ a8bca46d-6bfa-a058-d1e4-048045601b20 | chocolate   | b       |   8.9
+ cdd88e1f-d3c6-22cb-5539-90da8aeb24cc | bread       | general |   6.6
+ b8ef7aa1-2ff8-1140-df8e-bf879b764463 | carrots     | general |  0.45
+ f3aad9d4-84f2-990f-71b1-f08dfb645c2e | eggs        | general |   8.5
+ 1f1d7166-2022-c1a2-db20-70d248a448c3 | onions      | general |   2.8
+ 228b31f4-da5c-a4d8-294d-3163753830dc | sausages    | general |    11
+ 5abe2e68-8f33-1952-ff45-03a8638ac47f | tomato cans | general |  0.75
+(10 rows)
+
+flattrack=*# flattrack=*# flattrack(*# flattrack(*# flattrack(*# flattrack(*#    tag
+---------
+ a
+ b
+ general
+(3 rows)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+generate shopping list view - take 2
+
+fields:
+- [x] list
+- [x] totalPrice
+- [x] totalPriceWithoutExcludedTags
+- [x] currentObtainedCount
+- [x] totalItemsObtained
+- [x] totalItems
+- [x] pricePercentage
+- [x] listTags
+- [x] items
+- [x] listTagPrice
+- [ ] users
+- [x] sort by
+- [x] group by
+
+#+begin_src sql-mode
+begin;
+
+create or replace function shopping_list_view(list_id text, obtainedFilter text, orderBy text)
+  returns table (shopping_list_view jsonb)
+as $$
+begin
+  return query
+    select jsonb_build_object(
+      'list', (
+          select row_to_json(list)
+          from shopping_list list
+          where id = list_id
+      ),
+      'templateList', (
+          select row_to_json(list)
+          from shopping_list list
+          where id = (select templateid from shopping_list where id = list_id limit 1)
+      ),
+      'totalPrice', (
+
+        with priceTimesQuantity as (
+                select listid, (price::float8 * quantity) / 10 as priceTimesQuantity from shopping_item s where listid = list_id)
+        select round(sum(priceTimesQuantity)::float8::numeric, 2)
+        from shopping_item i
+        join priceTimesQuantity using(listid)
+        where i.listid = list_id
+        group by listid
+
+      ),
+      'totalPriceWithoutExcludedTags', (
+
+          with priceTimesQuantity as (
+            select listid, (price::float8 * quantity::int) / 10 as priceTimesQuantity
+            from shopping_item s
+            inner join shopping_list l on l.id = listid
+            where listid = s.listid and not (tag = ANY(l.totalTagExclude)))
+          select round(sum(priceTimesQuantity)::float8::numeric, 2)
+          from shopping_item i
+          join priceTimesQuantity using(listid)
+          where i.listid = list_id
+
+      ),
+      'currentPrice', (
+
+        select total from (
+          select listid, coalesce(sum(i.price * i.quantity), 0) as "total"
+          from shopping_item i
+          inner join shopping_list s on s.id = i.listid
+          where i.listid = list_id
+          and not (tag = ANY(s.totalTagExclude))
+          and obtained = true
+          group by listid
+        )
+
+      ),
+      'totalItemsObtained', (
+        select count(*) from shopping_item s where s.listid = list_id and obtained = true
+      ),
+      'totalItems', (
+        select count(*) from shopping_item s where s.listid = list_id
+      ),
+      'pricePercentage', (
+        with itemsPriceObtained as (
+        select listid, sum(i.price * i.quantity) as "total"
+        from shopping_item i
+        inner join shopping_list s on s.id = i.listid
+        where i.listid = listid
+              and not (tag = ANY(s.totalTagExclude))
+                  and obtained = true
+                  group by listid
+        ),
+        items as (
+        select listid, sum(i.price * i.quantity) as "total"
+        from shopping_item i
+        inner join shopping_list s on s.id = i.listid
+        where i.listid = listid
+              and not (tag = ANY(s.totalTagExclude))
+                  group by listid
+        )
+        select distinct(coalesce(round(((itemsPriceObtained.total * 100) / items.total)::float8::numeric, 0), 0)) as "percentage"
+        from shopping_item
+        inner join items using(listid)
+        full outer join itemsPriceObtained using(listid)
+        where listid = list_id
+      ),
+      'listTags', (
+
+        select array_agg(row_to_json(tags))
+        from (
+          select distinct(tag) as "name", round(sum(price * quantity)::float8::numeric, 2) as "price" -- NOTE this is used for current price calc for each tag
+          from shopping_item
+          where listid = list_id
+          group by tag
+          order by tag
+        ) tags
+
+      ),
+      'splitPrice', (
+
+        with priceTimesQuantity as (
+          select listid, (price::float8 * quantity::int) / 10 as priceTimesQuantity
+          from shopping_item s
+          inner join shopping_list l on l.id = listid
+          where listid = s.listid and not (tag = ANY(l.totalTagExclude)))
+        select round(sum(priceTimesQuantity)::float8::numeric / (select count(*) from users where registered = true and disabled = false), 2)
+        from shopping_item i
+        join priceTimesQuantity using(listid)
+        where listid = list_id
+
+      ),
+      'tags', (select array_agg(row_to_json(shopping_list_tag)) from shopping_list_tag group by name order by name),
+      'items', (
+        select array_agg(row_to_json(items)) from (
+          select *
+          from shopping_item i
+          where i.listid = list_id
+          and
+              case
+                  when (select obtainedFilter = 'true') then i.obtained = true
+                  when (select obtainedFilter = 'false') then i.obtained = false
+                  when (select obtainedFilter = '') then true
+              end
+          order by
+                (case when orderBy = 'highestPrice' then price end) desc,
+                (case when orderBy = 'highestPrice' then name end) asc,
+                (case when orderBy = 'highestQuantity' then quantity end) desc,
+                (case when orderBy = 'highestQuantity' then name end) asc,
+                (case when orderBy = 'lowestPrice' then price end) asc,
+                (case when orderBy = 'lowestPrice' then name end) asc,
+                (case when orderBy = 'lowestQuantity' then quantity end) asc,
+                (case when orderBy = 'lowestQuantity' then name end) asc,
+                (case when orderBy = 'recentlyAdded' then creationTimestamp end) desc,
+                (case when orderBy = 'recentlyAdded' then name end) asc,
+                (case when orderBy = 'recentlyUpdated' then modificationTimestamp end) desc,
+                (case when orderBy = 'recentlyUpdated' then name end) asc,
+                (case when orderBy = 'lastAdded' then creationTimestamp end) asc,
+                (case when orderBy = 'lastAdded' then name end) asc,
+                (case when orderBy = 'lastUpdated' then modificationTimestamp end) asc,
+                (case when orderBy = 'lastUpdated' then name end) asc,
+                (case when orderBy = 'alphabeticalDescending' then name end) asc,
+                (case when orderBy = 'alphabeticalAscending' then name end) desc,
+                (case when orderBy = 'tags' then tag end) asc,
+                (case when orderBy = 'tags' then name end) asc
+        ) items
+      )) as "shopping_list_view"
+
+  from shopping_list s limit 1;
+end;
+$$ language plpgsql;
+
+select shopping_list_view(id, '', 'tag') from shopping_list where name = 'today' limit 1; -- view from all lists
+-- select shopping_list_view(id) from shopping_list; -- view from all lists
+commit;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# ERROR:  mismatched parentheses at or near ")"
+LINE 82:       ),
+               ^
+flattrack=!# flattrack=!# ERROR:  current transaction is aborted, commands ignored until end of transaction block
+flattrack=!# flattrack=!# ROLLBACK
+#+end_SRC
+
+find the query result
+
+#+begin_src sql-mode
+\d pg_stat_statements
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+                      View "public.pg_stat_statements"
+         Column         |       Type       | Collation | Nullable | Default
+------------------------+------------------+-----------+----------+---------
+ userid                 | oid              |           |          |
+ dbid                   | oid              |           |          |
+ toplevel               | boolean          |           |          |
+ queryid                | bigint           |           |          |
+ query                  | text             |           |          |
+ plans                  | bigint           |           |          |
+ total_plan_time        | double precision |           |          |
+ min_plan_time          | double precision |           |          |
+ max_plan_time          | double precision |           |          |
+ mean_plan_time         | double precision |           |          |
+ stddev_plan_time       | double precision |           |          |
+ calls                  | bigint           |           |          |
+ total_exec_time        | double precision |           |          |
+ min_exec_time          | double precision |           |          |
+ max_exec_time          | double precision |           |          |
+ mean_exec_time         | double precision |           |          |
+ stddev_exec_time       | double precision |           |          |
+ rows                   | bigint           |           |          |
+ shared_blks_hit        | bigint           |           |          |
+ shared_blks_read       | bigint           |           |          |
+ shared_blks_dirtied    | bigint           |           |          |
+ shared_blks_written    | bigint           |           |          |
+ local_blks_hit         | bigint           |           |          |
+ local_blks_read        | bigint           |           |          |
+ local_blks_dirtied     | bigint           |           |          |
+ local_blks_written     | bigint           |           |          |
+ temp_blks_read         | bigint           |           |          |
+ temp_blks_written      | bigint           |           |          |
+ blk_read_time          | double precision |           |          |
+ blk_write_time         | double precision |           |          |
+ temp_blk_read_time     | double precision |           |          |
+ temp_blk_write_time    | double precision |           |          |
+ wal_records            | bigint           |           |          |
+ wal_fpi                | bigint           |           |          |
+ wal_bytes              | numeric          |           |          |
+ jit_functions          | bigint           |           |          |
+ jit_generation_time    | double precision |           |          |
+ jit_inlining_count     | bigint           |           |          |
+ jit_inlining_time      | double precision |           |          |
+ jit_optimization_count | bigint           |           |          |
+ jit_optimization_time  | double precision |           |          |
+ jit_emission_count     | bigint           |           |          |
+ jit_emission_time      | double precision |           |          |
+
+#+end_SRC
+
+#+begin_src sql-mode
+begin;
+\x
+select
+  substring(query, 1, 50) as short_query,
+  round (total_exec_time :: numeric, 2) as total_time,
+  calls,
+  round(mean_exec_time :: numeric, 2) as mean,
+  round (
+    (
+      100 * total_exec_time / sum (total_exec_time :: numeric) over ()
+    ) :: numeric,
+    2
+  ) as percentage_overall
+from
+  pg_stat_statements
+where
+    query ilike 'select * from shopping_list_view%'
+order by
+  total_time desc
+limit
+  20;
+\x off
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# Expanded display is on.
+flattrack=*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# -[ RECORD 1 ]------+---------------------------------------------------
+short_query        | select * from shopping_list_view((select id from s
+total_time         | 13.88
+calls              | 1
+mean               | 13.88
+percentage_overall | 100.00
+
+flattrack=*# Expanded display is off.
+flattrack=*# ROLLBACK
+#+end_SRC
+
+Go type for this view
+
+#+begin_src go
+type ShoppingListView struct {
+	List                          ShoppingList       `json:"list"`
+	TotalPrice                    float64            `json:"totalPrice"`
+	TotalPriceWithoutExcludedTags float64            `json:"totalPriceWithoutExcludedTags"`
+	currentPrice                  float64            `json:"currentPrice"`
+	splitPrice                    float64            `json:"splitPrice"`
+	totalItemsObtained            int                `json:"totalItemsObtained"`
+	totalItems                    int                `json:"totalItems"`
+	pricePercentage               int                `json:"pricePercentage"`
+	listTags                      []TagSpec          `json:"listTags"`
+	Tags                          []TagSpec          `json:"tags"`  // rename this type
+	Items                         []ShoppingItemSpec `json:"items"` // rename this type
+}
+#+end_src
+
+get monthly total costs for shopping lists - take 1
+
+#+begin_src sql-mode
+begin;
+
+with priceAndDate as (
+  select
+      jsonb_path_query(shopping_list_view(id)::jsonb, 'strict $.totalPrice')::float8 totalPrice,
+      to_char(to_timestamp(creationTimestamp)::date, 'YYYY-MM') yearMonth
+  from shopping_list
+) select sum(totalPrice), yearmonth from priceanddate group by priceanddate.yearmonth;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack(*#   sum   | yearmonth
+--------+-----------
+ 174.14 | 2024-08
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+get monthly total costs for shopping lists - take 2 WIP
+
+#+begin_src sql-mode
+begin;
+
+create or replace function shopping_list_view_monthly_total_price(list_id text)
+  returns table (shopping_list_view_monthly_total_price jsonb)
+as $$
+begin
+  return query
+    select jsonb_build_object(
+      'items', (
+        with totalPrice as (
+          with priceTimesQuantity as (
+                  select listid, (price::float8 * quantity) / 10 as priceTimesQuantity from shopping_item s where listid = list_id)
+          select round(sum(priceTimesQuantity)::float8::numeric, 2)
+          from shopping_item i
+          join priceTimesQuantity using(listid)
+          where i.listid = list_id
+          group by listid
+        ), priceAndDate as (
+          select
+              jsonb_path_query(shopping_list_view_total_price(id)::jsonb, 'strict $.totalPrice')::float8 totalPrice,
+              to_char(to_timestamp(creationTimestamp)::date, 'YYYY-MM') yearMonth
+          from shopping_list
+        ), groupedTotal as (
+          select sum(totalPrice), yearmonth from priceanddate group by priceanddate.yearmonth
+        ) select array_agg(row_to_json(groupedTotal)) from shopping_item
+       )) as "shopping_list_view_total_price"
+  from shopping_list s limit 1;
+end;
+$$ language plpgsql;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# CREATE FUNCTION
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+get monthly total costs for shopping lists - take 3 - with all items
+
+#+begin_src sql-mode
+begin;
+
+with priceTimesQuantity as (
+        select listid, (price::float8 * quantity) / 10 as priceTimesQuantity from shopping_item s)
+select round(sum(priceTimesQuantity)::float8::numeric, 2), to_char(to_timestamp(creationTimestamp)::date, 'YYYY-MM') yearMonth
+from shopping_item i
+join priceTimesQuantity using(listid)
+group by yearMonth;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#  round  | yearmonth
+--------+-----------
+ 174.14 | 2024-08
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+get monthly total costs for shopping lists - take 4 - starting with items and intersecting on excluded tags
+
+#+begin_src sql-mode
+begin;
+
+with priceTimesQuantity as (
+  select listid, (price::float8 * quantity::int) / 10 as priceTimesQuantity
+  from shopping_item s
+  inner join shopping_list l on l.id = listid
+  where listid = s.listid and not (tag = ANY(l.totalTagExclude)))
+select round(sum(priceTimesQuantity)::float8::numeric, 2), to_char(to_timestamp(creationTimestamp)::date, 'YYYY-MM') yearMonth
+from shopping_item i
+join priceTimesQuantity using(listid)
+group by yearMonth;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#  round | yearmonth
+-------+-----------
+ 85.02 | 2024-07
+ 69.83 | 2024-08
+(2 rows)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+get monthly total costs for shopping lists - take 4
+
+#+begin_src sql-mode
+begin;
+
+create or replace function shopping_list_view_monthly_total_price()
+  returns table (shopping_list_view_monthly_total_price jsonb)
+as $$
+begin
+  return query
+    select jsonb_build_object(
+      'items', (
+
+        select array_agg(row_to_json(totalPrice))
+        from (
+                with priceTimesQuantity as (
+                  select listid, (price::float8 * quantity::int) / 10 as priceTimesQuantity
+                  from shopping_item s
+                  inner join shopping_list l on l.id = listid
+                  where listid = s.listid and not (tag = ANY(l.totalTagExclude)))
+                select round(sum(priceTimesQuantity)::float8::numeric, 2), to_char(to_timestamp(creationTimestamp)::date, 'YYYY-MM') yearMonth
+                from shopping_item i
+                join priceTimesQuantity using(listid)
+                group by yearMonth
+        ) totalPrice
+
+      )) as "shopping_list_view_total_price" ;
+end;
+$$ language plpgsql;
+
+select * from shopping_list_view_monthly_total_price();
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# flattrack$*# CREATE FUNCTION
+flattrack=*# flattrack=*#                              shopping_list_view_monthly_total_price
+-------------------------------------------------------------------------------------------------
+ {"items": [{"round": 85.02, "yearmonth": "2024-07"}, {"round": 69.83, "yearmonth": "2024-08"}]}
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+this will be data that the costs feature uses, including on the per-month graph
+
+get active users
+
+#+begin_src sql-mode
+begin;
+
+select count(*) from users where registered = true and disabled = false;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*#  count
+-------
+     2
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+split price
+
+#+begin_src sql-mode
+begin;
+
+with priceTimesQuantity as (
+  select listid, (price::float8 * quantity::int) / 10 as priceTimesQuantity
+  from shopping_item s
+  inner join shopping_list l on l.id = listid
+  where listid = s.listid and not (tag = ANY(l.totalTagExclude)))
+select round(sum(priceTimesQuantity)::float8::numeric / (select count(*) from users where registered = true and disabled = false), 2)
+from shopping_item i
+join priceTimesQuantity using(listid)
+where listid = (select id from shopping_list limit 1)
+    ;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack(*# flattrack(*# flattrack(*# flattrack(*# flattrack-*# flattrack-*# flattrack-*# flattrack-*# flattrack-*#  round
+-------
+ 42.51
+(1 row)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC
+
+#+begin_src sql-mode
+begin;
+
+select id, name, price
+from shopping_item
+where listid = (select id from shopping_list limit 1) and case when (select true) then obtained = false end;
+
+rollback;
+#+end_src
+
+#+RESULTS:
+#+begin_SRC example
+BEGIN
+flattrack=*# flattrack=*# flattrack-*# flattrack-*#                   id                  |      name       | price
+--------------------------------------+-----------------+-------
+ f6f1dd49-4d78-e0f1-2422-25fe893b2625 | eggs            |   7.9
+ 7d7bb53f-2aaa-2b98-e35d-e085ed90f655 | bread           |   6.5
+ de6cde84-36e2-487f-13f8-0cc3701369be | onions          |   0.4
+ 6fc8f51c-4ac2-4cd9-822d-d7f211240f3d | kiwifruit       |     4
+ 56585969-679d-2522-04f9-85b4f5c57990 | dried basil     |  1.29
+ 267bf739-f9b8-8004-0a40-e82198e51bdb | beef rump steak |    11
+ 494a357e-117f-e36c-bd62-297be9ed3458 | orange          |     4
+ 55352e46-c2bc-bab2-2718-ae2c194054a6 | butter          |     8
+ d68a9400-edae-c082-d37d-6fa6a6bfeb9b | cheese          |     9
+ a0968bad-fceb-b4e8-eff3-57ca0ae085a9 | olive oil       |    18
+ c626738d-c16f-3299-8fde-875370bfceed | garlic paste    |     6
+(11 rows)
+
+flattrack=*# flattrack=*# ROLLBACK
+#+end_SRC

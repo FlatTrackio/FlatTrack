@@ -1085,6 +1085,53 @@ func (h *HTTPServer) GetShoppingList(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
+// GetShoppingListView ...
+// responds with list of shopping list view
+func (h *HTTPServer) GetShoppingListView(w http.ResponseWriter, r *http.Request) {
+	var context string
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	list, err := h.shoppinglist.ShoppingList().Get(id)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+
+	view, err := h.shoppinglist.ShoppingList().GetView(list.ID, types.ShoppingListViewOptions{
+		SortBy: r.FormValue("sortBy"),
+		Selector: types.ShoppingItemSelector{
+			Obtained: r.FormValue("obtained"),
+		},
+	})
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping list view",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched shopping list view",
+		},
+		Data: view,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
 // GetShoppingLists ...
 // responds with shopping list by id
 func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
@@ -3358,7 +3405,18 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 			HTTPMethod:   http.MethodPatch,
 			RequireAuth:  true,
 		},
-		{EndpointPath: "/apps/shoppinglist/lists/{id}", HandlerFunc: h.PutShoppingList, HTTPMethod: http.MethodPut, RequireAuth: true},
+		{
+			EndpointPath: "/apps/shoppinglist/lists/{id}/view",
+			HandlerFunc:  h.GetShoppingListView,
+			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/apps/shoppinglist/lists/{id}",
+			HandlerFunc:  h.PutShoppingList,
+			HTTPMethod:   http.MethodPut,
+			RequireAuth:  true,
+		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{id}/completed",
 			HandlerFunc:  h.PatchShoppingListCompleted,

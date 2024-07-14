@@ -49,6 +49,19 @@ function GetShoppingList (id) {
   })
 }
 
+// GetShoppingListView
+// returns a shopping list view
+function GetShoppingListView (id, sortBy, obtained) {
+  return Request({
+    url: `/api/apps/shoppinglist/lists/${id}/view`,
+    method: 'GET',
+    params: {
+      sortBy,
+      obtained
+    }
+  })
+}
+
 // PostShoppingList
 // given a name and optional notes, create a shopping list
 function PostShoppingList (name, notes, templateId, templateListItemSelector) {
@@ -345,6 +358,7 @@ function PutShoppingListNotes (notes) {
 export default {
   GetShoppingLists,
   GetShoppingList,
+  GetShoppingListView,
   PostShoppingList,
   PatchShoppingList,
   UpdateShoppingList,

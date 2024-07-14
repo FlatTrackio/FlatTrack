@@ -105,10 +105,17 @@ type ShoppingListSpec struct {
 	Count                 int      `json:"count,omitempty"`
 	Author                string   `json:"author"`
 	AuthorLast            string   `json:"authorLast"`
-	TotalTagExclude       []string `json:"totalTagExclude,omitempty"`
+	TotalTagExclude       []string `json:"totalTagExclude"`
 	CreationTimestamp     int64    `json:"creationTimestamp"`
 	ModificationTimestamp int64    `json:"modificationTimestamp"`
 	DeletionTimestamp     int64    `json:"deletionTimestamp"`
+}
+
+// ShoppingListViewOptions ...
+// options for list items
+type ShoppingListViewOptions struct {
+	Selector ShoppingItemSelector `json:"selector"`
+	SortBy   string               `json:"sortBy"`
 }
 
 // ShoppingListSortType ...
@@ -199,13 +206,29 @@ type ShoppingItemSelector struct {
 // ShoppingTag ...
 // selects a tag
 type ShoppingTag struct {
-	ID                    string `json:"id"`
-	Name                  string `json:"name"`
-	Author                string `json:"author"`
-	AuthorLast            string `json:"authorLast"`
-	CreationTimestamp     int64  `json:"creationTimestamp"`
-	ModificationTimestamp int64  `json:"modificationTimestamp"`
-	DeletionTimestamp     int64  `json:"deletionTimestamp"`
+	ID                    string  `json:"id"`
+	Name                  string  `json:"name"`
+	Price                 float64 `json:"price,omitempty"`
+	Author                string  `json:"author"`
+	AuthorLast            string  `json:"authorLast"`
+	CreationTimestamp     int64   `json:"creationTimestamp"`
+	ModificationTimestamp int64   `json:"modificationTimestamp"`
+	DeletionTimestamp     int64   `json:"deletionTimestamp"`
+}
+
+type ShoppingListView struct {
+	List                          ShoppingListSpec   `json:"list"`
+	TemplateList                  ShoppingListSpec   `json:"templateList"`
+	TotalPrice                    float64            `json:"totalPrice"`
+	TotalPriceWithoutExcludedTags float64            `json:"totalPriceWithoutExcludedTags"`
+	CurrentPrice                  float64            `json:"currentPrice"`
+	SplitPrice                    float64            `json:"splitPrice"`
+	TotalItemsObtained            int                `json:"totalItemsObtained"`
+	TotalItems                    int                `json:"totalItems"`
+	PricePercentage               int                `json:"pricePercentage"`
+	ListTags                      []ShoppingTag      `json:"listTags"`
+	Tags                          []ShoppingTag      `json:"tags"`  // TODO rename this type
+	Items                         []ShoppingItemSpec `json:"items"` // TODO rename this type
 }
 
 // ShoppingTagOptions ...

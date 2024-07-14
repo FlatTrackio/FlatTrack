@@ -22,7 +22,8 @@
       <div class="level">
         <p class="subtitle is-5 mb-0" style="float: left">
           <b>{{ name }}</b>
-          ${{ currentPrice }}/${{ totalPrice }} ({{ totalPercentage }}%)
+          ${{ currentPrice }}/${{ totalPriceWithoutExcludedTags }} ({{
+          totalPercentage }}%)
           <span
             @click="PatchShoppingListCompleted(id, !completed)"
             class="display-is-editable pointer-cursor-on-hover"
@@ -54,8 +55,8 @@
             </li>
             <li
               v-if="
-                hasInitialLoaded || name !== '' || typeof name !== 'undefined'
-              "
+                  hasInitialLoaded || name !== '' || typeof name !== 'undefined'
+                  "
               class="is-active"
             >
               <router-link
@@ -86,9 +87,9 @@
               placeholder="Enter a title for this list"
               @keyup.enter.native="UpdateShoppingList"
               @keyup.esc.native="
-                editing = false;
-                editingMeta = false;
-              "
+                               editing = false;
+                               editingMeta = false;
+                               "
               icon-right="close-circle"
               icon-right-clickable
               @icon-right-click="name = ''"
@@ -102,15 +103,15 @@
         <div v-else>
           <h1
             v-if="
-              hasInitialLoaded || name !== '' || typeof name !== 'undefined'
-            "
+                hasInitialLoaded || name !== '' || typeof name !== 'undefined'
+                "
             id="ListName"
             class="title is-1 is-marginless display-is-editable pointer-cursor-on-hover"
             @click="
-              editing = true;
-              editingMeta = true;
-              FocusName();
-            "
+                  editing = true;
+                  editingMeta = true;
+                  FocusName();
+                  "
           >
             {{ name }}
           </h1>
@@ -133,9 +134,9 @@
                 placeholder="Enter extra information"
                 @keyup.enter.native="UpdateShoppingList"
                 @keyup.esc.native="
-                  editing = false;
-                  editingMeta = false;
-                "
+                                 editing = false;
+                                 editingMeta = false;
+                                 "
                 icon-right="close-circle"
                 icon-right-clickable
                 @icon-right-click="notes = ''"
@@ -152,14 +153,12 @@
                 <p
                   class="display-is-editable subtitle is-4 pointer-cursor-on-hover notes-highlight"
                   @click="
-                    editingMeta = true;
-                    editing = true;
-                    FocusNotes();
-                  "
+                        editingMeta = true;
+                        editing = true;
+                        FocusNotes();
+                        "
                 >
-                  <i>
-                    {{ notes }}
-                  </i>
+                  <i>{{ notes }} </i>
                 </p>
               </div>
             </div>
@@ -180,7 +179,7 @@
           >Add notes</b-button
         >
         <div v-if="editingMeta">
-          <b-button type="is-info" @click="UpdateShoppingList()">Done</b-button>
+          <b-button type="is-info" @click="UpdateShoppingList">Done</b-button>
           <br />
         </div>
         <br />
@@ -281,7 +280,7 @@
           </section>
         </div>
         <br />
-        <div v-if="listItemsFromTags.length > 0">
+        <div v-if="listItemsFromTags !== null && listItemsFromTags.length > 0">
           <b-loading
             :is-full-page="false"
             :active.sync="listIsLoading"
@@ -407,7 +406,8 @@
                     "
                     @obtained="
                       (o) => {
-                        item.obtained = o;
+                        GetShoppingList({ noUpdateItems: true });
+                        item.obtained = o
                       }
                     "
                   />
@@ -429,6 +429,7 @@
                       <span v-if="TagIsExcluded(itemTag.tag)">
                         <b-tag type="is-primary">price excluded</b-tag>
                         <infotooltip
+                          v-if="participatingFlatmates.length > 1 || manualSplit > 1"
                           :message="
                             'Split price plus tag price is $' +
                             (equalPricePerPerson + itemTag.price).toFixed(2)
@@ -443,10 +444,7 @@
             </section>
           </div>
           <div v-else-if="sortBy !== 'tag'">
-            <div
-              v-for="(item, index) in listItemsFromPlainList"
-              v-bind:key="item"
-            >
+            <div v-for="(item, index) in items" v-bind:key="item">
               <a :id="item.id"></a>
               <itemCard
                 :list="list"
@@ -464,6 +462,7 @@
                 "
                 @obtained="
                   (o) => {
+                    GetShoppingList({ noUpdateItems: true });
                     item.obtained = o;
                   }
                 "
@@ -538,14 +537,13 @@
           :func="ActivateNewItemModal"
         />
         <p class="subtitle is-4">
-          <b>Total items</b>: {{ obtainedCount }}/{{ totalItems }}
+          <b>Total items</b>: {{ totalItemsObtained }}/{{ totalItems }}
           <br />
-          <b>Total price</b>: ${{ currentPrice }}/${{ totalPrice }} ({{
-            totalPercentage
-          }}%)
+          <b>Total price</b>: ${{ currentPrice }}/${{
+          totalPriceWithoutExcludedTags }} ({{ pricePercentage }}%)
           <br />
-          <span v-if="totalTagExcludeList.length > 0">
-            <b>All inclusive price</b>: ${{ totalAllInclusivePrice }}
+          <span v-if="totalTagExclude.length > 0">
+            <b>All inclusive price</b>: ${{ totalPrice }}
             <br />
           </span>
           <span v-if="participatingFlatmates.length > 1 || manualSplit > 0">
@@ -670,30 +668,31 @@
               <div>
                 <b-checkbox
                   v-for="existingTag in tags"
-                  :key="existingTag"
-                  v-model="totalTagExcludeList"
+                  :key="existingTag.name"
+                  v-model="totalTagExclude"
                   @input="UpdateShoppingList"
-                  :native-value="existingTag"
+                  :native-value="existingTag.name"
                   size="is-medium"
                 >
-                  {{ existingTag }}
+                  {{ existingTag.name }}
                 </b-checkbox>
                 <p v-if="tags.length === 0">No tags found</p>
               </div>
 
+              <!-- TODO fix tag patching -->
               <h3>Tags in this list</h3>
               <div>
                 <b-checkbox
-                  v-for="existingListTag in tagsList"
-                  :key="existingListTag"
-                  v-model="totalTagExcludeList"
+                  v-for="existingListTag in listTags"
+                  :key="existingListTag.name"
+                  v-model="totalTagExclude"
                   @input="UpdateShoppingList"
-                  :native-value="existingListTag"
+                  :native-value="existingListTag.name"
                   size="is-medium"
                 >
-                  {{ existingListTag }}
+                  {{ existingListTag.name }}
                 </b-checkbox>
-                <p v-if="tagsList.length === 0">No tags found</p>
+                <p v-if="listTags.length === 0">No tags found</p>
               </div>
 
               <h3>Manual split</h3>
@@ -722,590 +721,532 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import shoppinglistCommon from '@/common/shoppinglist'
-import shoppinglist from '@/requests/authenticated/shoppinglist'
-import flatmates from '@/requests/authenticated/flatmates'
-import { DialogProgrammatic as Dialog } from 'buefy'
+  import common from "@/common/common";
+  import shoppinglistCommon from "@/common/shoppinglist";
+  import shoppinglist from "@/requests/authenticated/shoppinglist";
+  import flatmates from "@/requests/authenticated/flatmates";
+  import { DialogProgrammatic as Dialog } from "buefy";
 
-export default {
-  name: 'shopping-list',
-  data () {
-    return {
-      intervalLoop: null,
-      editing: false,
-      editingMeta: false,
-      notesFromEmpty: false,
-      itemSearch: shoppinglistCommon.GetShoppingListSearch(this.id) || '',
-      authorNames: '',
-      authorLastNames: '',
-      totalItems: 0,
-      loopCreated: new Date(),
-      sortBy: shoppinglistCommon.GetShoppingListSortBy() || 'tags',
-      itemDisplayState:
-        shoppinglistCommon.GetShoppingListObtainedFilter(this.id) || 0,
-      deviceIsMobile: false,
-      HeaderIsSticky: false,
-      TagTmp: '',
-      editingTag: '',
-      listIsLoading:
-        shoppinglistCommon.GetShoppingListFromCache(this.id).length > 0,
-      hasInitialLoaded: false,
-      deleteLoading: false,
-      ratherSmallerScreen: false,
-      templateListName: '',
-      canAnimate: false,
-      id: this.$route.params.id,
-      name: 'Unnamed list',
-      notes: '',
-      author: '',
-      authorLast: '',
-      completed: false,
-      creationTimestamp: 0,
-      modificationTimestamp: 0,
-      templateId: undefined,
-      list: shoppinglistCommon.GetShoppingListFromCache(this.id) || [],
-      listFull: [],
-      shoppingListSettingsOpen: false,
-      totalTagExcludeList: [],
-      tags: [],
-      tagsList: [],
-      flatmates: [],
-      manualSplit: 0,
-      isNewItemModalActive: false,
-      isEditItemModalActive: false,
-      newItemProps: {
-        withName: '',
-        withTag: ''
+  export default {
+    name: "shopping-list",
+    data() {
+      return {
+        intervalLoop: null,
+        editing: false,
+        editingMeta: false,
+        notesFromEmpty: false,
+        itemSearch: shoppinglistCommon.GetShoppingListSearch(this.id) || "",
+        authorNames: "",
+        authorLastNames: "",
+        loopCreated: new Date(),
+        sortBy: shoppinglistCommon.GetShoppingListSortBy() || "tags",
+        itemDisplayState:
+          shoppinglistCommon.GetShoppingListObtainedFilter(this.id) || 0,
+        deviceIsMobile: false,
+        HeaderIsSticky: false,
+        TagTmp: "",
+        editingTag: "",
+        listIsLoading:
+          shoppinglistCommon.GetShoppingListFromCache(this.id).length > 0,
+        hasInitialLoaded: false,
+        deleteLoading: false,
+        ratherSmallerScreen: false,
+        templateListName: "",
+        canAnimate: false,
+        id: this.$route.params.id,
+        name: "Unnamed list",
+        notes: "",
+        author: "",
+        authorLast: "",
+        completed: false,
+        creationTimestamp: 0,
+        modificationTimestamp: 0,
+        templateId: undefined,
+        list: shoppinglistCommon.GetShoppingListFromCache(this.id) || [],
+        listFull: [],
+        totalPrice: 0,
+        totalPriceWithoutExcludedTags: 0,
+        currentPrice: 0,
+        splitPrice: 0,
+        totalItemsObtained: 0,
+        totalItems: 0,
+        pricePercentage: 0,
+        listTags: [],
+        tags: [],
+        items: [],
+        shoppingListSettingsOpen: false,
+        totalTagExclude: [],
+        flatmates: [],
+        manualSplit: 0,
+        isNewItemModalActive: false,
+        isEditItemModalActive: false,
+        newItemProps: {
+          withName: "",
+          withTag: "",
+        },
+        editItemProps: {
+          listId: "",
+          id: "",
+        },
+      };
+    },
+    components: {
+      itemCard: () =>
+        import("@/components/authenticated/shopping-list-item-card-view.vue"),
+      floatingAddButton: () =>
+        import("@/components/common/floating-add-button.vue"),
+      shoppinglistItemNew: () =>
+        import("@/components/authenticated/shopping-list-item-new.vue"),
+      shoppinglistItemEdit: () =>
+        import("@/components/authenticated/shopping-list-item-edit.vue"),
+      infotooltip: () => import("@/components/common/info-tooltip.vue"),
+    },
+    computed: {
+      ItemId() {
+        return this.$route.query.itemId;
       },
-      editItemProps: {
-        listId: '',
-        id: ''
-      }
-    }
-  },
-  components: {
-    itemCard: () =>
-      import('@/components/authenticated/shopping-list-item-card-view.vue'),
-    floatingAddButton: () =>
-      import('@/components/common/floating-add-button.vue'),
-    shoppinglistItemNew: () =>
-      import('@/components/authenticated/shopping-list-item-new.vue'),
-    shoppinglistItemEdit: () =>
-      import('@/components/authenticated/shopping-list-item-edit.vue'),
-    infotooltip: () => import('@/components/common/info-tooltip.vue')
-  },
-  computed: {
-    ItemId () {
-      return this.$route.query.itemId
-    },
-    listItemsFromTags () {
-      return this.RestructureShoppingListToTags(
-        this.list.filter((item) => {
-          return this.ItemByNameInList(item)
-        })
-      )
-    },
-    listItemsFromPlainList () {
-      return this.list.filter((item) => {
-        return this.ItemByNameInList(item)
-      })
-    },
-    obtainedCount () {
-      if (this.listFull.length === 0) {
-        return 0
-      }
-      var obtained = 0
-      this.listFull.forEach((item) => {
-        obtained += item.obtained === true ? 1 : 0
-      })
-      return obtained
-    },
-    currentPrice () {
-      if (this.listFull.length === 0) {
-        return 0
-      }
-      var currentPrice = 0
-      this.listFull.forEach((item) => {
-        if (
-          item.obtained !== true ||
-          this.totalTagExcludeList.includes(item.tag)
-        ) {
-          return
+      listItemsFromTags() {
+        return this.RestructureShoppingListToTags(
+          this.items.filter((item) => {
+            return this.ItemByNameInList(item);
+          })
+        );
+      },
+      listItemsFromPlainList() {
+        return this.list.filter((item) => {
+          return this.ItemByNameInList(item);
+        });
+      },
+      participatingFlatmates() {
+        return this.flatmates.filter(
+          (u) => u.disabled !== true && u.registered === true
+        );
+      },
+      equalPricePerPerson() {
+        if (this.manualSplit !== 0) {
+          return this.totalPrice / this.manualSplit;
         }
-        if (typeof item.price !== 'number') {
-          item.price = 0
-        }
-        currentPrice += (item.price || 0) * item.quantity
-      })
-      currentPrice = currentPrice.toFixed(2)
-      return currentPrice
+        return this.totalPrice / this.participatingFlatmates.length;
+      },
     },
-    totalPrice () {
-      if (this.listFull.length === 0) {
-        return 0
-      }
-      var totalPrice = 0
-      this.listFull.forEach((item) => {
-        if (this.totalTagExcludeList.includes(item.tag)) {
-          return
-        }
-        if (typeof item.price !== 'number') {
-          item.price = 0
-        }
-        totalPrice += (item.price || 0) * item.quantity
-      })
-      totalPrice = totalPrice.toFixed(2)
-      return totalPrice
-    },
-    totalAllInclusivePrice () {
-      if (this.listFull.length === 0) {
-        return 0
-      }
-      var totalPrice = 0
-      this.listFull.forEach((item) => {
-        if (typeof item.price !== 'number') {
-          item.price = 0
-        }
-        totalPrice += (item.price || 0) * item.quantity
-      })
-      totalPrice = totalPrice.toFixed(2)
-      return totalPrice
-    },
-    participatingFlatmates () {
-      return this.flatmates.filter(
-        (u) => u.disabled !== true && u.registered === true
-      )
-    },
-    equalPricePerPerson () {
-      if (this.manualSplit !== 0) {
-        return this.totalPrice / this.manualSplit
-      }
-      return this.totalPrice / this.participatingFlatmates.length
-    },
-    totalPercentage () {
-      return Math.round((100 * this.currentPrice) / this.totalPrice) || 0
-    }
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
-    },
-    ActivateNewItemModal (tag) {
-      this.newItemProps = {
-        withName: this.itemSearch,
-        withTag: tag || ''
-      }
-      this.isNewItemModalActive = true
-      this.itemSearch = ''
-    },
-    ActivateEditItemModal (itemId) {
-      this.editItemProps = {
-        shoppingListId: this.id,
-        id: itemId
-      }
-      this.isEditItemModalActive = true
-    },
-    ItemByNameInList (item) {
-      var vm = this
-      return (
-        item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
-      )
-    },
-    FocusSearchBox () {
-      this.$refs.search.$el.focus()
-    },
-    RestructureShoppingListToTags (list) {
-      return shoppinglistCommon.RestructureShoppingListToTags(list)
-    },
-    GetShoppingList () {
-      if (this.editing === true) {
-        return
-      }
-      var id = this.id
-      shoppinglist
-        .GetShoppingList(id)
-        .then((resp) => {
-          this.name = resp.data.spec.name
-          this.notes = resp.data.spec.notes || ''
-          this.author = resp.data.spec.author
-          this.authorLast = resp.data.spec.authorLast
-          this.completed = resp.data.spec.completed
-          this.creationTimestamp = resp.data.spec.creationTimestamp
-          this.modificationTimestamp = resp.data.spec.modificationTimestamp
-          this.templateId = resp.data.spec.templateId
-          this.totalTagExcludeList = resp.data.spec.totalTagExclude || []
-        })
-        .catch((err) => {
-          if (err.response.status === 404) {
-            common.DisplayFailureToast(
-              'Error list not found' +
-                '<br/>' +
-                err.response.data.metadata.response
-            )
-            this.$router.push({ name: 'Shopping list' })
-            return
-          }
-          common.DisplayFailureToast(
-            'Error loading the shopping list' +
-              '<br/>' +
-              err.response.data.metadata.response
-          )
-        })
-
-      shoppinglist.GetAllShoppingListItemTags().then((resp) => {
-        this.itemIsLoading = false
-        if (resp.data.list === null) {
-          return
-        }
-        this.tags = resp.data.list.map((i) => i.name) || []
-      })
-      shoppinglist.GetShoppingListItemTags(this.id).then((resp) => {
-        this.tagsList = resp.data.list || []
-      })
-    },
-    UpdateShoppingList () {
-      this.notesFromEmpty = false
-      this.editingMeta = false
-      this.editing = false
-
-      var id = this.id
-      shoppinglist
-        .UpdateShoppingList(
-          id,
-          this.name,
-          this.notes,
-          this.completed,
-          this.totalTagExcludeList
-        )
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to update shopping list' +
-              '<br/>' +
-              err.response.data.metadata.response
-          )
-        })
-    },
-    PatchShoppingListCompleted (id, completed) {
-      shoppinglist
-        .PatchShoppingListCompleted(id, completed)
-        .then((resp) => {
-          this.completed = resp.data.spec.completed
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to set list as completed' +
-              '<br/>' +
-              err.response.data.metadata.response
-          )
-        })
-    },
-    DeleteShoppingListTagItems (name) {
-      Dialog.confirm({
-        title: 'Delete shopping list tag items',
-        message:
-          `Are you sure that you wish to delete '${name}'?` +
-          '<br/>' +
-          'This action cannot be undone.',
-        confirmText: 'Delete tag items',
-        type: 'is-danger',
-        hasIcon: true,
-        onConfirm: () => {
-          this.deleteLoading = true
-          shoppinglist
-            .DeleteShoppingListTagItems(this.id, name)
-            .then((resp) => {
-              this.deleteLoading = false
-              common.DisplaySuccessToast('Deleted the shopping list tag')
-              this.GetShoppingListItems()
-            })
-            .catch((err) => {
-              this.deleteLoading = false
-              common.DisplayFailureToast(
-                'Failed to delete the shopping list' +
-                  '<br/>' +
-                  err.response.data.metadata.response
-              )
-            })
-        }
-      })
-    },
-    DeleteShoppingList (id) {
-      Dialog.confirm({
-        title: 'Delete shopping list',
-        message:
-          'Are you sure that you wish to delete this shopping list?' +
-          '<br/>' +
-          'This action cannot be undone.',
-        confirmText: 'Delete shopping list',
-        type: 'is-danger',
-        hasIcon: true,
-        onConfirm: () => {
-          this.deleteLoading = true
-          window.clearInterval(this.intervalLoop)
-          shoppinglist
-            .DeleteShoppingList(id)
-            .then((resp) => {
-              common.DisplaySuccessToast('Deleted the shopping list')
-              shoppinglistCommon.DeleteShoppingListFromCache(id)
-              setTimeout(() => {
-                this.$router.push({ name: 'Shopping list' })
-              }, 1 * 1000)
-            })
-            .catch((err) => {
-              this.deleteLoading = false
-              common.DisplayFailureToast(
-                'Failed to delete the shopping list' +
-                  '<br/>' +
-                  err.response.data.metadata.response
-              )
-            })
-        }
-      })
-    },
-    GetShoppingListItems () {
-      var obtained
-      switch (this.itemDisplayState) {
-        case 1:
-          obtained = false
-          break
-        case 2:
-          obtained = true
-          break
-      }
-
-      shoppinglist
-        .GetShoppingListItems(this.id, this.sortBy, undefined)
-        .then((resp) => {
-          var responseList = resp.data.list || []
-          this.totalItems = responseList === null ? 0 : responseList.length
-          if (this.list === null) {
-            this.list = []
-          }
-
-          if (responseList !== this.list) {
-            this.listFull = responseList
-            this.list = responseList.filter(
-              (item) =>
-                item.obtained === obtained || typeof obtained === 'undefined'
-            )
-            shoppinglistCommon.WriteShoppingListToCache(this.id, this.list)
-            this.listIsLoading = false
-            this.hasInitialLoaded = true
-          }
-        })
-    },
-    UpdateShoppingListItemTag (tagName, tagNameNew) {
-      shoppinglist
-        .UpdateShoppingListItemTag(this.id, tagName, tagNameNew)
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to update the shopping list tag' +
-              '<br/>' +
-              err.response.data.metadata.response
-          )
-        })
-    },
-    TimestampToCalendar (timestamp) {
-      return common.TimestampToCalendar(timestamp)
-    },
-    LoopStart () {
-      if (shoppinglistCommon.GetShoppingListAutoRefresh() === 'false') {
-        return
-      }
-      this.intervalLoop = window.setInterval(() => {
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      ActivateNewItemModal(tag) {
+        this.newItemProps = {
+          withName: this.itemSearch,
+          withTag: tag || "",
+        };
+        this.isNewItemModalActive = true;
+        this.itemSearch = "";
+      },
+      ActivateEditItemModal(itemId) {
+        this.editItemProps = {
+          shoppingListId: this.id,
+          id: itemId,
+        };
+        this.isEditItemModalActive = true;
+      },
+      ItemByNameInList(item) {
+        var vm = this;
+        return (
+          item.name.toLowerCase().indexOf(vm.itemSearch.toLowerCase()) !== -1
+        );
+      },
+      FocusSearchBox() {
+        this.$refs.search.$el.focus();
+      },
+      RestructureShoppingListToTags(list) {
+        return shoppinglistCommon.RestructureShoppingListToTags(list);
+      },
+      GetShoppingList(opts = null) {
         if (this.editing === true) {
-          return
+          return;
         }
-        this.GetShoppingList()
-        this.GetShoppingListItems()
+        var obtained;
+        switch (this.itemDisplayState) {
+          case 1:
+            obtained = false;
+            break;
+          case 2:
+            obtained = true;
+            break;
+        }
 
-        var now = new Date()
-        var timePassed =
-          now.getTime() / 1000 - this.loopCreated.getTime() / 1000
-        if (timePassed >= 3600 / 4) {
-          window.clearInterval(this.intervalLoop)
+        var id = this.id;
+        shoppinglist
+          .GetShoppingListView(id, this.sortBy, obtained)
+          .then((resp) => {
+            const view = resp.data.data;
+            const list = view.list;
+            const templateList = view.templateList;
+            this.totalPrice = view.totalPrice;
+            this.totalPriceWithoutExcludedTags =
+              view.totalPriceWithoutExcludedTags;
+            this.currentPrice = view.currentPrice;
+            this.splitPrice = view.splitPrice;
+            this.totalItemsObtained = view.totalItemsObtained;
+            this.totalItems = view.totalItems;
+            this.pricePercentage = view.pricePercentage;
+            this.listTags = view.listTags || [];
+            this.tags = view.tags || [];
+
+            if (
+              opts === null ||
+              (opts !== null && opts.noUpdateItems !== true)
+            ) {
+              this.items = view.items || [];
+            }
+
+            this.name = list.name;
+            this.notes = list.notes || "";
+            this.author = list.author;
+            this.authorLast = list.authorLast;
+            this.completed = list.completed;
+            this.creationTimestamp = list.creationTimestamp;
+            this.modificationTimestamp = list.modificationTimestamp;
+            this.templateId = list.templateId;
+            this.totalTagExclude = list.totalTagExclude || [];
+
+            if (list.templateid !== null && templateList !== null) {
+              this.templateListName = templateList.name;
+            }
+
+            this.listIsLoading = false;
+            this.hasInitialLoaded = true;
+          })
+          .catch((err) => {
+            console.log({ err });
+            if (err.response.status === 404) {
+              common.DisplayFailureToast(
+                "Error list not found" +
+                  "<br/>" +
+                  err.response.data.metadata.response
+              );
+              this.$router.push({ name: "Shopping list" });
+              return;
+            }
+            common.DisplayFailureToast(
+              "Error loading the shopping list" +
+                "<br/>" +
+                err.response.data.metadata.response
+            );
+          });
+      },
+      UpdateShoppingList() {
+        this.notesFromEmpty = false;
+        this.editingMeta = false;
+        this.editing = false;
+
+        var id = this.id;
+        shoppinglist
+          .UpdateShoppingList(
+            id,
+            this.name,
+            this.notes,
+            this.completed,
+            this.totalTagExclude
+          )
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to update shopping list" +
+                "<br/>" +
+                err.response.data.metadata.response
+            );
+          });
+      },
+      PatchShoppingListCompleted(id, completed) {
+        shoppinglist
+          .PatchShoppingListCompleted(id, completed)
+          .then((resp) => {
+            this.completed = resp.data.spec.completed;
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to set list as completed" +
+                "<br/>" +
+                err.response.data.metadata.response
+            );
+          });
+      },
+      DeleteShoppingListTagItems(name) {
+        Dialog.confirm({
+          title: "Delete shopping list tag items",
+          message:
+            `Are you sure that you wish to delete '${name}'?` +
+            "<br/>" +
+            "This action cannot be undone.",
+          confirmText: "Delete tag items",
+          type: "is-danger",
+          hasIcon: true,
+          onConfirm: () => {
+            this.deleteLoading = true;
+            shoppinglist
+              .DeleteShoppingListTagItems(this.id, name)
+              .then(() => {
+                this.deleteLoading = false;
+                common.DisplaySuccessToast("Deleted the shopping list tag");
+                this.GetShoppingList();
+              })
+              .catch((err) => {
+                this.deleteLoading = false;
+                common.DisplayFailureToast(
+                  "Failed to delete the shopping list" +
+                    "<br/>" +
+                    err.response.data.metadata.response
+                );
+              });
+          },
+        });
+      },
+      DeleteShoppingList(id) {
+        Dialog.confirm({
+          title: "Delete shopping list",
+          message:
+            "Are you sure that you wish to delete this shopping list?" +
+            "<br/>" +
+            "This action cannot be undone.",
+          confirmText: "Delete shopping list",
+          type: "is-danger",
+          hasIcon: true,
+          onConfirm: () => {
+            this.deleteLoading = true;
+            window.clearInterval(this.intervalLoop);
+            shoppinglist
+              .DeleteShoppingList(id)
+              .then((resp) => {
+                common.DisplaySuccessToast("Deleted the shopping list");
+                shoppinglistCommon.DeleteShoppingListFromCache(id);
+                setTimeout(() => {
+                  this.$router.push({ name: "Shopping list" });
+                }, 1 * 1000);
+              })
+              .catch((err) => {
+                this.deleteLoading = false;
+                common.DisplayFailureToast(
+                  "Failed to delete the shopping list" +
+                    "<br/>" +
+                    err.response.data.metadata.response
+                );
+              });
+          },
+        });
+      },
+      UpdateShoppingListItemTag(tagName, tagNameNew) {
+        shoppinglist
+          .UpdateShoppingListItemTag(this.id, tagName, tagNameNew)
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to update the shopping list tag" +
+                "<br/>" +
+                err.response.data.metadata.response
+            );
+          });
+      },
+      TimestampToCalendar(timestamp) {
+        return common.TimestampToCalendar(timestamp);
+      },
+      LoopStart() {
+        if (shoppinglistCommon.GetShoppingListAutoRefresh() === "false") {
+          return;
         }
-      }, 3 * 1000)
+        this.intervalLoop = window.setInterval(() => {
+          if (this.editing === true) {
+            return;
+          }
+          this.GetShoppingList();
+
+          var now = new Date();
+          var timePassed =
+            now.getTime() / 1000 - this.loopCreated.getTime() / 1000;
+          if (timePassed >= 3600 / 4) {
+            window.clearInterval(this.intervalLoop);
+          }
+        }, 3 * 1000);
+      },
+      LoopStop() {
+        window.clearInterval(this.intervalLoop);
+      },
+      CheckDeviceIsMobile() {
+        this.deviceIsMobile = common.DeviceIsMobile();
+      },
+      ManageStickyHeader() {
+        this.HeaderIsSticky =
+          window.pageYOffset >
+          document.getElementById("ListName").offsetTop + 30;
+      },
+      ResetLoopTime() {
+        this.loopCreated = new Date();
+      },
+      FocusEl(name) {
+        this.$nextTick(() => {
+          this.$refs[name].focus();
+        });
+      },
+      FocusName() {
+        this.FocusEl("name");
+      },
+      FocusNotes() {
+        this.FocusEl("notes");
+      },
+      FocusSearch() {
+        this.FocusEl("search");
+      },
+      TagIsExcluded(tag) {
+        return this.totalTagExclude.includes(tag);
+      },
+      GetFlatmates() {
+        flatmates.GetAllFlatmates().then((resp) => {
+          if (resp.data.list === null) {
+            this.flatmates = [];
+            return;
+          }
+          this.flatmates = resp.data.list;
+        });
+      },
+      FmtAsCurrency(input) {
+        const fixed = input.toFixed(2);
+        const result = new Intl.NumberFormat().format(fixed);
+        return result;
+      },
     },
-    LoopStop () {
-      window.clearInterval(this.intervalLoop)
-    },
-    CheckDeviceIsMobile () {
-      this.deviceIsMobile = common.DeviceIsMobile()
-    },
-    ManageStickyHeader () {
-      this.HeaderIsSticky =
-        window.pageYOffset > document.getElementById('ListName').offsetTop + 30
-    },
-    ResetLoopTime () {
-      this.loopCreated = new Date()
-    },
-    FocusEl (name) {
-      this.$nextTick(() => {
-        this.$refs[name].focus()
-      })
-    },
-    FocusName () {
-      this.FocusEl('name')
-    },
-    FocusNotes () {
-      this.FocusEl('notes')
-    },
-    FocusSearch () {
-      this.FocusEl('search')
-    },
-    TagIsExcluded (tag) {
-      return this.totalTagExcludeList.includes(tag)
-    },
-    GetFlatmates () {
-      flatmates.GetAllFlatmates().then((resp) => {
-        if (resp.data.list === null) {
-          this.flatmates = []
-          return
+    watch: {
+      id() {
+        console.log("ID changed");
+        window.location.reload(false);
+      },
+      sortBy() {
+        shoppinglistCommon.WriteShoppingListSortBy(this.sortBy);
+        this.listIsLoading = true;
+        this.ResetLoopTime();
+        this.LoopStop();
+        this.LoopStart();
+      },
+      itemDisplayState() {
+        this.listIsLoading = true;
+        shoppinglistCommon.WriteShoppingListObtainedFilter(
+          this.id,
+          this.itemDisplayState
+        );
+      },
+      itemSearch() {
+        shoppinglistCommon.WriteShoppingListSearch(this.id, this.itemSearch);
+      },
+      hasInitialLoaded() {
+        this.canAnimate = true;
+      },
+      completed() {
+        var enableAnimations = common.GetEnableAnimations();
+        if (
+          this.completed === true &&
+          enableAnimations !== "false" &&
+          this.canAnimate === true
+        ) {
+          common.Hooray();
         }
-        this.flatmates = resp.data.list
-      })
-    }
-  },
-  watch: {
-    id () {
-      console.log('ID changed')
-      window.location.reload(false)
+      },
+      author() {
+        if (this.authorNames !== "") {
+          return;
+        }
+        flatmates.GetFlatmate(this.author).then((resp) => {
+          this.authorNames = resp.data.spec.names;
+        });
+      },
+      authorLast() {
+        if (this.authorLastNames !== "") {
+          return;
+        }
+        flatmates.GetFlatmate(this.authorLast).then((resp) => {
+          this.authorLastNames = resp.data.spec.names;
+        });
+      },
+      templateId() {
+        if (typeof this.templateId === "undefined" || this.templateId === "") {
+          return;
+        }
+        shoppinglist.GetShoppingList(this.templateId).then((resp) => {
+          this.templateListName = resp.data.spec.name;
+        });
+      },
+      isNewItemModalActive() {
+        if (this.isNewItemModalActive !== false) {
+          return;
+        }
+        this.GetShoppingList();
+      },
+      isEditItemModalActive() {
+        if (this.isEditItemModalActive !== false) {
+          return;
+        }
+        this.GetShoppingList();
+      },
     },
-    sortBy () {
-      shoppinglistCommon.WriteShoppingListSortBy(this.sortBy)
-      this.listIsLoading = true
-      this.ResetLoopTime()
-      this.LoopStop()
-      this.LoopStart()
-    },
-    itemDisplayState () {
-      this.listIsLoading = true
-      this.GetShoppingListItems()
-      shoppinglistCommon.WriteShoppingListObtainedFilter(
-        this.id,
-        this.itemDisplayState
-      )
-    },
-    itemSearch () {
-      shoppinglistCommon.WriteShoppingListSearch(this.id, this.itemSearch)
-    },
-    hasInitialLoaded () {
-      this.canAnimate = true
-    },
-    completed () {
-      var enableAnimations = common.GetEnableAnimations()
-      if (
-        this.completed === true &&
-        enableAnimations !== 'false' &&
-        this.canAnimate === true
-      ) {
-        common.Hooray()
+    async beforeMount() {
+      this.GetShoppingList();
+      this.GetFlatmates();
+      if (window.innerWidth <= 330) {
+        this.ratherSmallerScreen = true;
       }
     },
-    author () {
-      if (this.authorNames !== '') {
-        return
-      }
-      flatmates.GetFlatmate(this.author).then((resp) => {
-        this.authorNames = resp.data.spec.names
-      })
+    async created() {
+      this.CheckDeviceIsMobile();
+      window.addEventListener("resize", this.CheckDeviceIsMobile, true);
+      window.addEventListener("scroll", this.ManageStickyHeader, true);
+      this.LoopStart();
+      window.addEventListener("focus", this.ResetLoopTime, true);
+      // TODO better way to do this? why does this not pull in through the data state function?
+      this.itemDisplayState = shoppinglistCommon.GetShoppingListObtainedFilter(
+        this.id
+      );
     },
-    authorLast () {
-      if (this.authorLastNames !== '') {
-        return
+    mounted() {
+      if (typeof this.ItemId !== "undefined") {
+        var el = this.$refs[this.ItemId][0].$el;
+        window.scrollTo(0, el.offsetTop);
       }
-      flatmates.GetFlatmate(this.author).then((resp) => {
-        this.authorLastNames = resp.data.spec.names
-      })
     },
-    templateId () {
-      if (typeof this.templateId === 'undefined' || this.templateId === '') {
-        return
-      }
-      shoppinglist.GetShoppingList(this.templateId).then((resp) => {
-        this.templateListName = resp.data.spec.name
-      })
+    beforeDestroy() {
+      this.LoopStop();
+      window.removeEventListener("resize", this.CheckDeviceIsMobile, true);
+      window.removeEventListener("scroll", this.ManageStickyHeader, true);
+      window.removeEventListener("focus", this.ResetLoopTime, true);
     },
-    isNewItemModalActive() {
-      if (this.isNewItemModalActive !== false) {
-        return
-      }
-      this.GetShoppingListItems()
-    },
-    isEditItemModalActive() {
-      if (this.isEditItemModalActive !== false) {
-        return
-      }
-      this.GetShoppingListItems()
-    },
-  },
-  async beforeMount () {
-    this.GetShoppingList()
-    this.GetShoppingListItems()
-    this.GetFlatmates()
-    if (window.innerWidth <= 330) {
-      this.ratherSmallerScreen = true
-    }
-  },
-  async created () {
-    this.CheckDeviceIsMobile()
-    window.addEventListener('resize', this.CheckDeviceIsMobile, true)
-    window.addEventListener('scroll', this.ManageStickyHeader, true)
-    this.LoopStart()
-    window.addEventListener('focus', this.ResetLoopTime, true)
-    // TODO better way to do this? why does this not pull in through the data state function?
-    this.itemDisplayState = shoppinglistCommon.GetShoppingListObtainedFilter(
-      this.id
-    )
-  },
-  mounted () {
-    if (typeof this.ItemId !== 'undefined') {
-      var el = this.$refs[this.ItemId][0].$el
-      window.scrollTo(0, el.offsetTop)
-    }
-  },
-  beforeDestroy () {
-    this.LoopStop()
-    window.removeEventListener('resize', this.CheckDeviceIsMobile, true)
-    window.removeEventListener('scroll', this.ManageStickyHeader, true)
-    window.removeEventListener('focus', this.ResetLoopTime, true)
-  }
-}
+  };
 </script>
 
 <style scoped>
-.display-is-editable:hover {
-  text-decoration: underline dotted;
-  -webkit-transition: width 0.5s ease-in;
-}
-.card-content-list {
-  background-color: transparent;
-  padding-left: 1.5em;
-  padding-top: 0.6em;
-  padding-bottom: 0.6em;
-  padding-right: 1.5em;
-}
+  .display-is-editable:hover {
+    text-decoration: underline dotted;
+    -webkit-transition: width 0.5s ease-in;
+  }
+  .card-content-list {
+    background-color: transparent;
+    padding-left: 1.5em;
+    padding-top: 0.6em;
+    padding-bottom: 0.6em;
+    padding-right: 1.5em;
+  }
 
-.obtained {
-  color: #adadad;
-  text-decoration: line-through;
-}
+  .obtained {
+    color: #adadad;
+    text-decoration: line-through;
+  }
 
-.ListBar {
-  position: fixed;
-  height: auto;
-  width: 100%;
-  z-index: 20;
-  padding: 10px;
-  box-shadow: black 0px -45px 71px;
-  display: block;
-  background-color: hsla(0, 0%, 100%, 0.73);
-  backdrop-filter: blur(5px);
-}
+  .ListBar {
+    position: fixed;
+    height: auto;
+    width: 100%;
+    z-index: 20;
+    padding: 10px;
+    box-shadow: black 0px -45px 71px;
+    display: block;
+    background-color: hsla(0, 0%, 100%, 0.73);
+    backdrop-filter: blur(5px);
+  }
 
-.ListBarTop {
-  top: 0;
-}
+  .ListBarTop {
+    top: 0;
+  }
 </style>

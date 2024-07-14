@@ -21,6 +21,7 @@ package shoppinglist
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -87,6 +88,36 @@ func (m *ShoppingListManager) Validate(shoppingList types.ShoppingListSpec) (val
 	return true, nil
 }
 
+// GetView ...
+// returns a view for a shopping list to include all values to display the list
+func (m *ShoppingListManager) GetView(id string, options types.ShoppingListViewOptions) (view types.ShoppingListView, err error) {
+	obtainedFilter := options.Selector.Obtained
+	switch obtainedFilter {
+	case "":
+	case "true", "false":
+	default:
+		obtainedFilter = ""
+	}
+
+	sqlStatement := `select shopping_list_view($1, $2, $3)`
+	rows, err := m.db.Query(sqlStatement, id, obtainedFilter, options.SortBy)
+	if err != nil {
+		return types.ShoppingListView{}, err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	for rows.Next() {
+		view, err = getViewFromRows(rows)
+		if err != nil {
+			return types.ShoppingListView{}, err
+		}
+	}
+	return view, nil
+}
+
 // List ...
 // returns a list of all shopping lists (name, notes, author, etc...)
 func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingLists []types.ShoppingListSpec, err error) {
@@ -96,7 +127,7 @@ func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingL
 	if options.SortBy == types.ShoppingListSortByTemplated {
 		sqlStatement = `with popularity as (
                           select id, (select count(*) from shopping_list where templateid = c.id) as tally from shopping_list c)
-                        select id, name, notes, author, authorlast, completed, creationtimestamp, modificationtimestamp, deletiontimestamp, templateid, total_tag_exclude
+                        select id, name, notes, author, authorlast, completed, creationtimestamp, modificationtimestamp, deletiontimestamp, templateid, totalTagExclude
                         from shopping_list
                         join popularity using(id) where deletiontimestamp = 0 `
 	}
@@ -209,7 +240,7 @@ func (m *ShoppingListManager) Create(shoppingList types.ShoppingListSpec, option
 	shoppingList.AuthorLast = shoppingList.Author
 	shoppingList.Completed = false
 
-	sqlStatement := `insert into shopping_list (name, notes, author, authorLast, completed, templateId, total_tag_exclude)
+	sqlStatement := `insert into shopping_list (name, notes, author, authorLast, completed, templateId, totalTagExclude)
                          values ($1, $2, $3, $4, $5, $6, $7)
                          returning *`
 	rows, err := m.db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.Author, shoppingList.AuthorLast, shoppingList.Completed, shoppingList.TemplateID, pq.Array(shoppingList.TotalTagExclude))
@@ -280,7 +311,7 @@ func (m *ShoppingListManager) Patch(listID string, shoppingList types.ShoppingLi
 		return types.ShoppingListSpec{}, err
 	}
 
-	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, total_tag_exclude = $5, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $6
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, totalTagExclude = $5, modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $6
                          returning *`
 	rows, err := m.db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, pq.Array(shoppingList.TotalTagExclude), listID)
 	if err != nil {
@@ -308,7 +339,7 @@ func (m *ShoppingListManager) Update(listID string, shoppingList types.ShoppingL
 		return types.ShoppingListSpec{}, err
 	}
 
-	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, total_tag_exclude = $5::text[], modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $6
+	sqlStatement := `update shopping_list set name = $1, notes = $2, authorLast = $3, completed = $4, totalTagExclude = $5::text[], modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $6
                          returning *`
 	rows, err := m.db.Query(sqlStatement, shoppingList.Name, shoppingList.Notes, shoppingList.AuthorLast, shoppingList.Completed, pq.Array(shoppingList.TotalTagExclude), listID)
 	if err != nil {
@@ -402,4 +433,21 @@ func (m *ShoppingListManager) GetListCount() (count int, err error) {
 		return 0, err
 	}
 	return count, nil
+}
+
+// getViewFromRows ...
+// returns a shopping list view object from rows
+func getViewFromRows(rows *sql.Rows) (view types.ShoppingListView, err error) {
+	var data []byte
+	if err := rows.Scan(&data); err != nil {
+		return types.ShoppingListView{}, err
+	}
+	err = rows.Err()
+	if err != nil {
+		return types.ShoppingListView{}, err
+	}
+	if err := json.Unmarshal(data, &view); err != nil {
+		return types.ShoppingListView{}, err
+	}
+	return view, nil
 }

@@ -2975,6 +2975,262 @@ var _ = ginkgo.Describe("API e2e tests", func() {
 		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
 	})
 
+	ginkgo.It("should render a view for the shopping list", func() {
+		ginkgo.By("creating another user to split price")
+		account := types.UserSpec{
+			Names:       "Joe Bloggs",
+			Email:       "user123@example.com",
+			Password:    "Password123!",
+			PhoneNumber: "64200000000",
+			Birthday:    43200,
+			Groups:      []string{"flatmember"},
+		}
+		accountBytes, err := json.Marshal(account)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+		apiEndpoint := apiServerAPIprefix + "/admin/users"
+		resp, err := httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), accountBytes, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
+		userAccountResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
+		userAccountBytes, err := json.Marshal(userAccountResponse)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		var userAccount types.UserSpec
+		gomega.Expect(json.Unmarshal(userAccountBytes, &userAccount)).To(gomega.BeNil(), "failed to unmarshal")
+
+		ginkgo.By("getting users to expect two")
+		apiEndpoint = apiServerAPIprefix + "/admin/users"
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
+		response := httpserver.GetHTTPresponseBodyContents(resp)
+		gomega.Expect(len(response.List.([]interface{}))).To(gomega.Equal(2), "expected two user accounts")
+
+		ginkgo.By("getting shopping lists to expect none")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
+		response = httpserver.GetHTTPresponseBodyContents(resp)
+		gomega.Expect(response.List).To(gomega.BeNil(), "expected two user accounts")
+
+		shoppingList := types.ShoppingListSpec{
+			Name:            "My list",
+			TotalTagExclude: []string{"some personal items"},
+		}
+		shoppingListBytes, err := json.Marshal(shoppingList)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+		ginkgo.By("creating a shopping list")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists"
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
+		shoppingListResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListBytes, err = json.Marshal(shoppingListResponse)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		var shoppingListCreated types.ShoppingListSpec
+		gomega.Expect(json.Unmarshal(shoppingListBytes, &shoppingListCreated)).To(gomega.BeNil(), "failed to unmarshal")
+
+		gomega.Expect(shoppingListCreated.ID).ToNot(gomega.Equal(""), "shopping list created id must not be empty")
+		gomega.Expect(shoppingListCreated.Name).To(gomega.Equal(shoppingList.Name), "shopping list name does not match shopping list created name")
+
+		defer func() {
+			ginkgo.By("deleting the shopping list")
+			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID
+			resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api must have return code of http.StatusOK")
+
+			ginkgo.By("deleting the account")
+			apiEndpoint = apiServerAPIprefix + "/admin/users/" + userAccount.ID
+			resp, err = httpRequestWithHeader(http.MethodDelete, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
+		}()
+
+		ginkgo.By("listing shopping list items")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), nil, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOK")
+		shoppingListItemsResponse := httpserver.GetHTTPresponseBodyContents(resp).List
+		shoppingListItemsBytes, err := json.Marshal(shoppingListItemsResponse)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		var shoppingListItems []types.ShoppingItemSpec
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingListItems)).To(gomega.BeNil(), "failed to unmarshal")
+
+		gomega.Expect(len(shoppingListItems)).To(gomega.Equal(0), "There should be no items on the shopping list")
+
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/view"
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(200), "Unexpected status code")
+		bodyContents := httpserver.GetHTTPresponseBodyContents(resp)
+		shoppingListViewBytes, err := json.Marshal(bodyContents.Data)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		shoppingListView := types.ShoppingListView{}
+		gomega.Expect(json.Unmarshal(shoppingListViewBytes, &shoppingListView)).To(gomega.BeNil(), "failed to unmarshal")
+
+		gomega.Expect(shoppingListView.TotalPrice).To(gomega.Equal(float64(0)), "Unexpected total price")
+		gomega.Expect(shoppingListView.TotalPriceWithoutExcludedTags).To(gomega.Equal(float64(0)), "Unexpected total price without excluded tags")
+		gomega.Expect(shoppingListView.SplitPrice).To(gomega.Equal(float64(0)), "Unexpected split price")
+		gomega.Expect(shoppingListView.PricePercentage).To(gomega.Equal(0), "Unexpected price percentage")
+		gomega.Expect(shoppingListView.TotalItemsObtained).To(gomega.Equal(0), "Unexpected total items obtained")
+		gomega.Expect(shoppingListView.TotalItems).To(gomega.Equal(0), "Unexpected total items")
+
+		ginkgo.By("creating items on the list")
+		newShoppingListItems := []types.ShoppingItemSpec{
+			{
+				Name:     "Eggs",
+				Quantity: 1,
+				Tag:      "Dairy",
+			},
+			{
+				Name:     "Onions",
+				Price:    2,
+				Quantity: 1,
+				Tag:      "Fruits and veges",
+			},
+			{
+				Name:     "Pasta",
+				Price:    0.8,
+				Quantity: 3,
+				Obtained: true,
+				Tag:      "General",
+			},
+			{
+				Name:     "Bread",
+				Price:    3.5,
+				Quantity: 4,
+				Obtained: true,
+				Notes:    "Sourdough",
+				Tag:      "General",
+			},
+			{
+				Name:     "Lettuce",
+				Price:    3,
+				Quantity: 2,
+				Notes:    "Not plastic bagged ones",
+				Tag:      "Fruits and veges",
+			},
+			{
+				Name:     "Cheese",
+				Price:    11,
+				Quantity: 1,
+				Notes:    "it's personal.",
+				Tag:      "some personal items",
+			},
+		}
+
+		ginkgo.By("creating shopping list items")
+		for i, newShoppingListItem := range newShoppingListItems {
+			shoppingListBytes, err := json.Marshal(newShoppingListItem)
+			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
+			resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
+			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
+			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+			var shoppingItem types.ShoppingItemSpec
+			gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
+			gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
+			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
+			newShoppingListItems[i] = shoppingItem
+		}
+
+		ginkgo.By("fetching view")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/view"
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(200), "Unexpected status code")
+		bodyContents = httpserver.GetHTTPresponseBodyContents(resp)
+		shoppingListViewBytes, err = json.Marshal(bodyContents.Data)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		shoppingListView = types.ShoppingListView{}
+		gomega.Expect(json.Unmarshal(shoppingListViewBytes, &shoppingListView)).To(gomega.BeNil(), "failed to unmarshal")
+
+		ginkgo.By("checking view values")
+		gomega.Expect(shoppingListView.TotalPrice).To(gomega.Equal(35.4), "Unexpected total price")
+		gomega.Expect(shoppingListView.TotalPriceWithoutExcludedTags).To(gomega.Equal(float64(35.4)), "Unexpected total price without excluded tags")
+		gomega.Expect(shoppingListView.SplitPrice).To(gomega.Equal(17.7), "Unexpected split price")
+		gomega.Expect(shoppingListView.PricePercentage).To(gomega.Equal(46), "Unexpected price percentage")
+		gomega.Expect(shoppingListView.TotalItemsObtained).To(gomega.Equal(2), "Unexpected total items obtained")
+		gomega.Expect(shoppingListView.TotalItems).To(gomega.Equal(len(newShoppingListItems)), "Unexpected total items")
+
+		newShoppingListItems[0].Price = float64(6.5)
+		newShoppingListItems[4].Quantity = 1
+
+		ginkgo.By("updating items")
+		for i, newShoppingListItem := range newShoppingListItems {
+			if newShoppingListItem.Name != "Bread" {
+				newShoppingListItem.Obtained = true
+			}
+			shoppingListBytes, err := json.Marshal(newShoppingListItem)
+			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+			apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items/" + newShoppingListItem.ID
+			resp, err = httpRequestWithHeader(http.MethodPut, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+			gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+			shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
+			shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
+			gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+			var shoppingItem types.ShoppingItemSpec
+			gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
+			gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
+			gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusOK), "api have return code of http.StatusOk")
+			newShoppingListItems[i] = shoppingItem
+		}
+
+		// TODO add new item
+		ginkgo.By("adding a new personal item")
+		newShoppingListItem := types.ShoppingItemSpec{
+			Name:     "Crackers",
+			Price:    5.6,
+			Quantity: 1,
+			Notes:    "cheddar cheese flavour",
+			Tag:      "some personal items",
+		}
+		shoppingListBytes, err = json.Marshal(newShoppingListItem)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/items"
+		resp, err = httpRequestWithHeader(http.MethodPost, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		shoppingItemResponse := httpserver.GetHTTPresponseBodyContents(resp).Spec
+		shoppingListItemsBytes, err = json.Marshal(shoppingItemResponse)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+
+		var shoppingItem types.ShoppingItemSpec
+		gomega.Expect(json.Unmarshal(shoppingListItemsBytes, &shoppingItem)).To(gomega.BeNil(), "failed to unmarshal")
+		gomega.Expect(shoppingItem.ListID).To(gomega.Equal(shoppingListCreated.ID), "shopping item must belong to a list")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(http.StatusCreated), "api have return code of http.StatusCreated")
+		newShoppingListItems = append(newShoppingListItems, shoppingItem)
+
+		ginkgo.By("fetching view")
+		apiEndpoint = apiServerAPIprefix + "/apps/shoppinglist/lists/" + shoppingListCreated.ID + "/view"
+		resp, err = httpRequestWithHeader(http.MethodGet, fmt.Sprintf("%v/%v", apiServer, apiEndpoint), shoppingListBytes, "")
+		gomega.Expect(err).To(gomega.BeNil(), "Request should not return an error")
+		gomega.Expect(resp.StatusCode).To(gomega.Equal(200), "Unexpected status code")
+		bodyContents = httpserver.GetHTTPresponseBodyContents(resp)
+		shoppingListViewBytes, err = json.Marshal(bodyContents.Data)
+		gomega.Expect(err).To(gomega.BeNil(), "failed to marshal to JSON")
+		shoppingListView = types.ShoppingListView{}
+		gomega.Expect(json.Unmarshal(shoppingListViewBytes, &shoppingListView)).To(gomega.BeNil(), "failed to unmarshal")
+
+		ginkgo.By("checking updated view values")
+		gomega.Expect(shoppingListView.TotalPrice).To(gomega.Equal(44.5), "Unexpected total price")
+		gomega.Expect(shoppingListView.TotalPriceWithoutExcludedTags).To(gomega.Equal(float64(44.5)), "Unexpected total price without excluded tags")
+		gomega.Expect(shoppingListView.SplitPrice).To(gomega.Equal(22.25), "Unexpected split price")
+		gomega.Expect(shoppingListView.PricePercentage).To(gomega.Equal(87), "Unexpected price percentage")
+		gomega.Expect(shoppingListView.TotalItemsObtained).To(gomega.Equal(len(newShoppingListItems)-1), "Unexpected total items obtained")
+		gomega.Expect(shoppingListView.TotalItems).To(gomega.Equal(len(newShoppingListItems)), "Unexpected total items")
+	})
+
 	ginkgo.It("should require authorization for protected routes", func() {
 		apiEndpoint := apiServer + "/" + apiServerAPIprefix + "/user/profile"
 		req, err := http.NewRequest(http.MethodGet, apiEndpoint, nil)
