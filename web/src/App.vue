@@ -23,7 +23,7 @@
       class="pad-bottom full-height main-view-container"
       :class="{ 'pad-left': !publicPages && !onMobile && displayNavigationBar }"
     >
-      <router-view class="main-view" />
+      <router-view class="main-view" :key="$route.fullPath" />
     </div>
     <div>
       <bottombar v-if="onMobile && !publicPages" />
