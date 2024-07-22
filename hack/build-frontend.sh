@@ -5,8 +5,6 @@ set -o nounset
 set -o pipefail
 
 cd "$(git rev-parse --show-toplevel)/web" || exit 1
-rm -rf ./dist ../kodata/web
+rm -rf ../kodata/web
 
 npm run build
-
-cp -r ./dist ../kodata/web

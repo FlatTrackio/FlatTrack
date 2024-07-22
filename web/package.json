@@ -4,8 +4,8 @@
         "private": true,
         "scripts": {
                 "start": "vite",
-                "build": "vite build",
-                "build-watch": "vite build --watch",
+                "build": "vite build --outDir ../kodata/web --emptyOutDir",
+                "build-watch": "vite build --outDir ../kodata/web --emptyOutDir --watch",
                 "lint": "eslint --ext .js,.vue src",
                 "lintfix": "eslint --ext .js,.vue src --fix"
         },

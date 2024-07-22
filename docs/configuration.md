@@ -10,7 +10,7 @@ FlatTrack is solely configured to run with environment variables (or a `.env` fi
 | `APP_PORT`                           | The port for web traffic to bind to                                                                                           | `:8080` *             |
 | `APP_PORT_METRICS`                   | The port for metrics traffic to bind to                                                                                       | `:2112` *             |
 | `APP_PORT_HEALTH`                    | The port for web traffic to bind to                                                                                           | `:8081` *             |
-| `APP_DIST_FOLDER`                    | The location of the frontend web assets                                                                                       | `./dist`              |
+| `APP_WEB_FOLDER`                     | The location of the frontend web assets                                                                                       | `./kodata/web`        |
 | `APP_URL`                            | The location of the site                                                                                                      | `""`                  |
 | `APP_DB_HOST`                        | The Postgres host to connect to                                                                                               | `localhost`           |
 | `APP_DB_PORT`                        | The Postgres port use                                                                                                         | `5432`                |
