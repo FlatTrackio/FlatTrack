@@ -5,3 +5,7 @@ nav.breadcrumb {
 nav.breadcrumb ul {
     align-items: center;
 }
+
+div.item-page section.modal-card-body {
+    padding-bottom: 5rem;
+}

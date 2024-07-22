@@ -26,12 +26,7 @@
           </div>
           <div
             class="media-content pointer-cursor-on-hover"
-            @click="
-              $router.push({
-                name: 'View shopping list item',
-                params: { listId: listId, itemId: item.id },
-              })
-            "
+            @click="$emit('viewItem')"
           >
             <div class="block">
               <p
@@ -105,15 +100,7 @@
                 @click="DeleteShoppingListItem(item.id, index)"
               />
             </b-tooltip>
-            <span
-              class="pointer-cursor-on-hover"
-              @click="
-                $router.push({
-                  name: 'View shopping list item',
-                  params: { listId: listId, itemId: item.id },
-                })
-              "
-            >
+            <span class="pointer-cursor-on-hover" @click="$emit('viewItem')">
               <b-icon
                 icon="chevron-right"
                 size="is-medium"
