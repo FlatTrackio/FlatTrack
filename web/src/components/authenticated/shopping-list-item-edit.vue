@@ -167,7 +167,7 @@
           >
             Total price with quantity: ${{ itemCurrentPrice.toFixed(2) }}
           </p>
-          <div class="level">
+          <b-field grouped>
             <b-button
               type="is-warning"
               size="is-medium"
@@ -198,7 +198,7 @@
               @click="DeleteShoppingListItem(shoppingListId, id)"
             >
             </b-button>
-          </div>
+          </b-field>
           <p>
             Added {{ TimestampToCalendar(creationTimestamp) }}, by
             <router-link
