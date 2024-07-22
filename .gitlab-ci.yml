@@ -13,8 +13,8 @@ variables:
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
   EXTRA_REGISTRIES: docker.io
-  IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.18@sha256:32427bc0620132b2d9e79e405a1b27944d992501a20417a7f407427cc4c2b672
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.22.5-alpine3.19@sha256:0642d4f809abf039440540de1f0e83502401686e3946ed8e7398a1d94648aa6d
+  IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.20@sha256:09dbe0a53523c2482d85a037efc6b0e8e8bb16c6f1acf431fe36aa0ebc871c06
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.22.5-alpine3.20@sha256:0d3653dd6f35159ec6e3d10263a42372f6f194c3dea0b35235d72aabde86486e
   IMAGE_PYTHON: docker.io/python:3.8-buster@sha256:04c3f641c2254c229fd2f704c5199ff4bea57d26c1c29008ae3a4afddde98709
   IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.59.1-alpine@sha256:2a5293b5d25319a515db44f00c7e72466a78488106fbb995730580ef25fb8b20
   COSIGN_YES: "true"
@@ -52,12 +52,7 @@ variables:
 .setup-testing-repo: &setup-testing-repo |
   echo 'https://dl-cdn.alpinelinux.org/alpine/edge/testing' | tee -a /etc/apk/repositories
 
-build-container:
-  only:
-    refs:
-      - main
-      - tags
-  stage: build
+.build-container: &build-container
   image:
     name: $IMAGE_GOLANG_ALPINE
     entrypoint: [""]
@@ -70,17 +65,35 @@ build-container:
   before_script:
     - set -x
     - *setup-testing-repo
-    - apk add --no-cache curl cosign ko git
+    - apk add --no-cache curl cosign ko git crane
     - export KO_DOCKER_REPO="$(echo ${KO_DOCKER_REPO} | tr '[:upper:]' '[:lower:]')"
     - ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
     - *image-set-build-env
   script:
-    - |
-      mkdir -p ./kodata/{web/dist,}
-      cp -r ./web/dist ./kodata/web
-    - ./hack/publish.sh --sign
+    - ./hack/publish.sh $PUBLISH_FLAGS
+
+build-container-release:
+  <<: *build-container
+  stage: build
+  only:
+    refs:
+      - main
+      - tags
+  variables:
+    PUBLISH_FLAGS: "--sign --debug"
   needs:
-    - build-frontend
+    - build-frontend-release
+
+build-container-test:
+  <<: *build-container
+  stage: codequality
+  variables:
+    PUBLISH_FLAGS: "--tarball-test-only --debug"
+  only:
+    refs:
+      - merge_requests
+  needs:
+    - build-frontend-test
 
 copy-container-image-to-dockerhub:
   only:
@@ -103,12 +116,7 @@ copy-container-image-to-dockerhub:
         done
       done
 
-build-frontend:
-  only:
-    refs:
-      - main
-      - tags
-  stage: build
+.build-frontend: &build-frontend
   retry: 2
   image: $IMAGE_NODE_ALPINE
   before_script:
@@ -118,18 +126,26 @@ build-frontend:
     - npm i
   script:
     - npm run build
-  after_script:
-    - |
-      if [[ ! -z "$CI_COMMIT_TAG" ]]; then
-        mkdir -p "${RELEASE_FOLDER_NAME}/dist"
-        cd web/dist
-        cp -R . "${RELEASE_FOLDER_NAME}/dist"
-      fi
   artifacts:
     expire_in: 1 day
     paths:
-      - web/dist
+      - kodata/web
       - flattrack*/
+
+build-frontend-release:
+  <<: *build-frontend
+  stage: build
+  only:
+    refs:
+      - main
+      - tags
+
+build-frontend-test:
+  <<: *build-frontend
+  stage: codequality
+  only:
+    refs:
+      - merge_requests
 
 test-backend-e2e:
   only:

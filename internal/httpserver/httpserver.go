@@ -82,7 +82,7 @@ func NewHTTPServer(
 		SetupMessage: common.GetAppSetupMessage(),
 		LoginMessage: common.GetAppLoginMessage(),
 	}
-	router.PathPrefix("/").Handler(frontendHandler(common.GetAppDistFolder(), passthrough)).Methods(http.MethodGet)
+	router.PathPrefix("/").Handler(frontendHandler(common.GetAppWebFolder(), passthrough)).Methods(http.MethodGet)
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization", "User-Agent", "Accept-Encoding"},
