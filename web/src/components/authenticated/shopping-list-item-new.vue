@@ -163,7 +163,7 @@
           >
             Total price with quantity: ${{ itemCurrentPrice.toFixed(2) }}
           </p>
-          <div class="level">
+          <b-field grouped>
             <b-button
               type="is-warning"
               size="is-medium"
@@ -185,7 +185,7 @@
             >
               Add item
             </b-button>
-          </div>
+          </b-field>
         </div>
       </section>
     </div>
