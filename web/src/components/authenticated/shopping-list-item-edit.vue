@@ -14,43 +14,20 @@
 -->
 
 <template>
-  <div>
-    <div class="container">
-      <section class="section">
-        <nav
-          class="breadcrumb is-medium has-arrow-separator"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <router-link
-                :to="{
-                  name: 'View shopping list',
-                  params: { id: shoppingListId },
-                }"
-                >{{ shoppingListName }}</router-link
-              >
-            </li>
-            <li class="is-active">
-              <router-link
-                :to="{
-                  name: 'New shopping list item',
-                  params: { id: shoppingListId },
-                }"
-                >New shopping item</router-link
-              >
-            </li>
-          </ul>
-          <b-button
-            @click="CopyHrefToClipboard()"
-            icon-left="content-copy"
-            size="is-small"
-          ></b-button>
-        </nav>
+  <div class="item-page">
+    <div class="modal-card" style="width: auto">
+      <header class="modal-card-head">
+        <p class="modal-card-title">{{ name || "Unnamed item" }}</p>
+        <p class="modal-card-subtitle">View or edit this item</p>
+      </header>
+      <section class="modal-card-body">
         <div>
-          <h1 class="title is-1">New shopping item</h1>
-          <p class="subtitle is-3">Add an item to the list</p>
-          <b-field label="Name" class="is-marginless">
+          <b-loading
+            :is-full-page="false"
+            :active.sync="itemIsLoading"
+            :can-cancel="false"
+          ></b-loading>
+          <b-field label="Name">
             <b-input
               type="text"
               v-model="name"
@@ -61,24 +38,23 @@
               icon-right="close-circle"
               icon-right-clickable
               @icon-right-click="name = ''"
-              @keyup.enter.native="PostShoppingListItem"
-              autofocus
+              @keyup.enter.native="UpdateShoppingListItem"
               required
             >
             </b-input>
           </b-field>
-          <b-field label="Notes (optional)" class="is-marginless">
+          <b-field label="Notes (optional)">
             <b-input
               type="text"
               v-model="notes"
               size="is-medium"
-              icon="text"
-              placeholder="Enter information extra"
-              @keyup.enter.native="PostShoppingListItem"
+              maxlength="40"
+              placeholder="Enter extra information as notes to this item"
               icon-right="close-circle"
               icon-right-clickable
               @icon-right-click="notes = ''"
-              maxlength="40"
+              @keyup.enter.native="UpdateShoppingListItem"
+              icon="text"
             >
             </b-input>
           </b-field>
@@ -92,7 +68,7 @@
               icon-right="close-circle"
               icon-right-clickable
               @icon-right-click="price = ''"
-              @keyup.enter.native="PostShoppingListItem"
+              @keyup.enter.native="UpdateShoppingListItem"
               size="is-medium"
             >
             </b-input>
@@ -106,6 +82,7 @@
               expanded
               required
               controls-position="compact"
+              @keyup.enter.native="UpdateShoppingListItem"
               icon="numeric"
             >
             </b-numberinput>
@@ -119,7 +96,7 @@
                 />
               </p>
             </div>
-            <b-field class="is-marginless">
+            <b-field>
               <b-dropdown>
                 <b-button
                   icon-left="menu-down"
@@ -129,7 +106,6 @@
                   v-if="tagsList.length > 0 || tags.length > 0"
                 >
                 </b-button>
-
                 <b-dropdown-item disabled v-if="tagsList.length > 0"
                   >Tags in this list</b-dropdown-item
                 >
@@ -171,10 +147,10 @@
                 icon="tag"
                 maxlength="30"
                 placeholder="Enter a tag to group the item"
-                @keyup.enter.native="PostShoppingListItem"
                 icon-right="close-circle"
                 icon-right-clickable
                 @icon-right-click="tag = ''"
+                @keyup.enter.native="UpdateShoppingListItem"
                 size="is-medium"
               >
               </b-input>
@@ -187,22 +163,66 @@
           </b-field>
           <p
             v-if="typeof price !== 'undefined' && price !== 0 && quantity > 1"
-            class="m-1"
+            class="pb-2"
           >
             Total price with quantity: ${{ itemCurrentPrice.toFixed(2) }}
           </p>
-          <b-button
-            type="is-success"
-            size="is-medium"
-            icon-left="plus"
-            native-type="submit"
-            expanded
-            :loading="submitLoading"
-            :disabled="submitLoading"
-            @click="PostShoppingListItem"
-          >
-            Add item
-          </b-button>
+          <div class="level">
+            <b-button
+              type="is-warning"
+              size="is-medium"
+              icon-left="arrow-left"
+              native-type="submit"
+              @click="$parent.close()"
+            >
+              Back
+            </b-button>
+            <b-button
+              type="is-success"
+              size="is-medium"
+              icon-left="delta"
+              native-type="submit"
+              expanded
+              :loading="submitLoading"
+              :disabled="submitLoading"
+              @click="UpdateShoppingListItem"
+            >
+              Update item
+            </b-button>
+            <b-button
+              type="is-danger"
+              size="is-medium"
+              icon-left="delete"
+              native-type="submit"
+              :loading="deleteLoading"
+              @click="DeleteShoppingListItem(shoppingListId, id)"
+            >
+            </b-button>
+          </div>
+          <p>
+            Added {{ TimestampToCalendar(creationTimestamp) }}, by
+            <router-link
+              tag="a"
+              :to="{ name: 'My Flatmates', query: { id: author } }"
+              >{{ authorNames }}</router-link
+            >
+            <span v-if="templateId">
+              (templated from
+              <router-link
+                tag="a"
+                :to="{ name: 'View shopping list', params: { id: templateId } }"
+                >{{ templateListName }}</router-link
+              >)
+            </span>
+          </p>
+          <p v-if="creationTimestamp !== modificationTimestamp">
+            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by
+            <router-link
+              tag="a"
+              :to="{ name: 'My Flatmates', query: { id: authorLast } }"
+              >{{ authorLastNames }}</router-link
+            >
+          </p>
         </div>
       </section>
     </div>
@@ -212,48 +232,64 @@
 <script>
 import common from '@/common/common'
 import shoppinglist from '@/requests/authenticated/shoppinglist'
+import flatmates from '@/requests/authenticated/flatmates'
+import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
-  name: 'shopping-item-new',
+  name: 'shopping-item-view',
   components: {
     infotooltip: () => import('@/components/common/info-tooltip.vue')
   },
   data () {
     return {
-      shoppingListId: this.$route.params.id,
+      prevRoute: null,
       shoppingListName: '',
+      authorNames: '',
+      authorLastNames: '',
       tags: [],
       tagsList: [],
+      itemIsLoading: true,
       submitLoading: false,
+      deleteLoading: false,
+      templateListName: '',
       name: '',
       notes: '',
       price: 0,
       quantity: 1,
       tag: undefined,
-      obtained: false
+      obtained: false,
+      author: '',
+      authorLast: '',
+      templateId: undefined,
+      creationTimestamp: 0,
+      modificationTimestamp: 0
     }
+  },
+  props: {
+    id: String,
+    shoppingListId: String
   },
   methods: {
     CopyHrefToClipboard () {
       common.CopyHrefToClipboard()
     },
-    PostShoppingListItem () {
+    UpdateShoppingListItem () {
       this.submitLoading = true
       if (this.notes === '') {
         this.notes = undefined
       }
       if (this.price === 0) {
         this.price = undefined
-      } else {
-        this.price = parseFloat(this.price)
       }
       if (this.tag === '') {
         this.tag = 'Untagged'
       }
 
+      this.price = Number(this.price)
       shoppinglist
-        .PostShoppingListItem(
+        .UpdateShoppingListItem(
           this.shoppingListId,
+          this.id,
           this.name,
           this.notes,
           this.price,
@@ -263,19 +299,56 @@ export default {
         )
         .then((resp) => {
           var item = resp.data.spec
-          if (item.id !== '' || typeof item.id === 'undefined') {
-            this.$router.go(-1)
+          if (item.id !== '' && typeof item.id !== 'undefined') {
+            common.DisplaySuccessToast('Updated item successfully')
+            this.$parent.close()
           } else {
             this.submitLoading = false
             common.DisplayFailureToast('Unable to find created shopping item')
           }
         })
         .catch((err) => {
-          this.submitLoading = false
           common.DisplayFailureToast(
-            `Failed to add shopping list item - ${err.response.data.metadata.response}`
+            'Failed to add shopping list item' +
+              ' - ' +
+              err.response.data.metadata.response
           )
+          this.submitLoading = false
         })
+    },
+    DeleteShoppingListItem (listId, itemId) {
+      Dialog.confirm({
+        title: 'Delete item',
+        message:
+          'Are you sure that you wish to delete this shopping list item?' +
+          '<br/>' +
+          'This action cannot be undone.',
+        confirmText: 'Delete item',
+        type: 'is-danger',
+        hasIcon: true,
+        onConfirm: () => {
+          this.deleteLoading = true
+          shoppinglist
+            .DeleteShoppingListItem(listId, itemId)
+            .then((resp) => {
+              common.DisplaySuccessToast(resp.data.metadata.response)
+              setTimeout(() => {
+                this.$parent.close()
+              }, 1 * 1000)
+            })
+            .catch((err) => {
+              this.deleteLoading = false
+              common.DisplayFailureToast(
+                'Failed to delete shopping list item' +
+                  ' - ' +
+                  err.response.data.metadata.response
+              )
+            })
+        }
+      })
+    },
+    TimestampToCalendar (timestamp) {
+      return common.TimestampToCalendar(timestamp)
     }
   },
   computed: {
@@ -289,21 +362,68 @@ export default {
       .then((resp) => {
         var list = resp.data.spec
         this.shoppingListName = list.name
+        return shoppinglist.GetShoppingListItem(this.shoppingListId, this.id)
+      })
+      .then((resp) => {
+        var item = resp.data.spec
+        this.name = item.name
+        this.notes = item.notes
+        this.price = item.price
+        this.quantity = item.quantity
+        this.tag = item.tag
+        this.obtained = item.obtained
+        this.author = item.author
+        this.authorLast = item.authorLast
+        this.creationTimestamp = item.creationTimestamp
+        this.modificationTimestamp = item.modificationTimestamp
+        this.templateId = item.templateId
+        return flatmates.GetFlatmate(item.author)
+      })
+      .then((resp) => {
+        this.authorNames = resp.data.spec.names
+        return flatmates.GetFlatmate(this.authorLast)
+      })
+      .then((resp) => {
+        this.authorLastNames = resp.data.spec.names
         return shoppinglist.GetAllShoppingListItemTags()
       })
       .then((resp) => {
+        this.itemIsLoading = false
         this.tags = resp.data.list || []
         return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
       })
       .then((resp) => {
         this.tagsList = resp.data.list || []
+        if (typeof this.templateId === 'undefined' || this.templateId === '') {
+          return
+        }
+        return shoppinglist.GetShoppingList(this.templateId)
       })
-    if (this.$route.query.tag) {
-      this.tag = this.$route.query.tag
-    }
-    if (this.$route.query.name) {
-      this.name = this.$route.query.name
-    }
+      .then((resp) => {
+        if (typeof this.templateId === 'undefined' || this.templateId === '') {
+          return
+        }
+        this.templateListName = resp.data.spec.name
+      })
+      .catch((err) => {
+        if (err.response.status === 404) {
+          common.DisplayFailureToast(
+            'Error item not found' +
+              '<br/>' +
+              err.response.data.metadata.response
+          )
+          this.$router.push({
+            name: 'View shopping list',
+            params: { id: this.shoppingListId }
+          })
+          return
+        }
+        common.DisplayFailureToast(
+          'Error loading the shopping list item' +
+            '<br/>' +
+            err.response.data.metadata.response
+        )
+      })
   }
 }
 </script>

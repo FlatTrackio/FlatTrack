@@ -118,22 +118,6 @@ export default [
     }
   },
   {
-    path: '/apps/shopping-list/list/:id/new',
-    name: 'New shopping list item',
-    component: () => import('@/views/authenticated/shopping-list-item-new.vue'),
-    meta: {
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/apps/shopping-list/list/:listId/item/:itemId',
-    name: 'View shopping list item',
-    component: () => import('@/views/authenticated/shopping-list-item-view.vue'),
-    meta: {
-      requiresAuth: true
-    }
-  },
-  {
     path: '/apps/shopping-list/tags',
     name: 'Manage shopping tags',
     component: () => import('@/views/authenticated/shopping-list-tags.vue'),
@@ -229,21 +213,29 @@ export default [
           next()
         }
       }
-      registration.GetInstanceRegistered().then(resp => {
-        instanceRegistered = resp.data.data === true
-        // check if the authToken in localStorage isn't empty
-        var authToken = common.GetAuthToken()
-        hasAuthToken = (!(typeof authToken === 'undefined' || authToken === null || authToken === ''))
-        // check if authToken is valid
-        return login.GetUserAuth(false)
-      }).then(resp => {
-        validAuthToken = resp.data.data === true
-        handleRedirections()
-      }).catch(err => {
-        validAuthToken = err.response.data.data === true
-        handleRedirections()
-        next()
-      })
+      registration
+        .GetInstanceRegistered()
+        .then((resp) => {
+          instanceRegistered = resp.data.data === true
+          // check if the authToken in localStorage isn't empty
+          var authToken = common.GetAuthToken()
+          hasAuthToken = !(
+            typeof authToken === 'undefined' ||
+            authToken === null ||
+            authToken === ''
+          )
+          // check if authToken is valid
+          return login.GetUserAuth(false)
+        })
+        .then((resp) => {
+          validAuthToken = resp.data.data === true
+          handleRedirections()
+        })
+        .catch((err) => {
+          validAuthToken = err.response.data.data === true
+          handleRedirections()
+          next()
+        })
     }
   },
   {
@@ -262,21 +254,28 @@ export default [
       requiresNoAuth: true
     },
     beforeEnter: (to, from, next) => {
-      healthz.GetHealthz().then(resp => {
-        return registration.GetInstanceRegistered()
-      }).then(resp => {
-        if (resp.data.data === true) {
-          next('/')
-          return
-        }
-        next()
-      }).catch(err => {
-        if (err.config.url === '/_healthz' && err.response.data.data === false) {
-          next('/unavailable')
-          return
-        }
-        next()
-      })
+      healthz
+        .GetHealthz()
+        .then((resp) => {
+          return registration.GetInstanceRegistered()
+        })
+        .then((resp) => {
+          if (resp.data.data === true) {
+            next('/')
+            return
+          }
+          next()
+        })
+        .catch((err) => {
+          if (
+            err.config.url === '/_healthz' &&
+            err.response.data.data === false
+          ) {
+            next('/unavailable')
+            return
+          }
+          next()
+        })
     }
   },
   {
@@ -284,15 +283,18 @@ export default [
     name: 'Unavailable',
     component: () => import('@/views/public/unavailable.vue'),
     beforeEnter: (to, from, next) => {
-      healthz.GetHealthz().then(resp => {
-        if (resp.data.data === true) {
-          next('/')
-          return
-        }
-        next()
-      }).catch(() => {
-        next()
-      })
+      healthz
+        .GetHealthz()
+        .then((resp) => {
+          if (resp.data.data === true) {
+            next('/')
+            return
+          }
+          next()
+        })
+        .catch(() => {
+          next()
+        })
     }
   }
 ]
