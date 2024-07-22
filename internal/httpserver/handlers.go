@@ -14,6 +14,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/internal/common"
+	"gitlab.com/flattrack/flattrack/internal/timezones"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
@@ -2964,6 +2965,20 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
+// GetTimezones ...
+// returns version information about the instance
+func (h *HTTPServer) GetTimezones(w http.ResponseWriter, r *http.Request) {
+	list := timezones.List()
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched timezone information",
+		},
+		List: list,
+	}
+	log.Println(JSONresp.Metadata.Response)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
 func (h *HTTPServer) PostSchedulerRun(w http.ResponseWriter, r *http.Request) {
 	if !h.scheduling.GetEndpointEnabled() {
 		w.WriteHeader(http.StatusNotFound)
@@ -3094,6 +3109,40 @@ func (h *HTTPServer) HTTPvalidateJWT(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// HTTPvalidateJWTorSecret ...
+// middleware for checking JWT auth token validity
+func (h *HTTPServer) HTTPvalidateJWTorSecret(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		secret := r.FormValue("secret")
+		ss := h.registration.GetSecret()
+		initialized, err := h.system.GetHasInitialized()
+		if err != nil {
+			JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Internal error",
+				},
+			})
+			return
+		}
+		secretMatches := ss != secret
+		var context string
+		completed, claims, err := h.users.ValidateJWTauthToken(r)
+		if (completed && err == nil) || secretMatches || !initialized {
+			next.ServeHTTP(w, r)
+			return
+		}
+		if claims.ID != "" {
+			context = fmt.Sprintf("with user id '%v'", claims.ID)
+		}
+		log.Printf("Unauthorized request with token %v\n", context)
+		JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "Unauthorized",
+			},
+		})
+	}
+}
+
 // HTTPcheckGroupsFromID ...
 // middleware for checking if a route can be accessed given a ID and groupID
 func (h *HTTPServer) HTTPcheckGroupsFromID(next http.HandlerFunc, groupsAllowed ...string) http.HandlerFunc {
@@ -3131,11 +3180,12 @@ func (h *HTTPServer) HTTP404() http.HandlerFunc {
 
 func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 	routes := []struct {
-		EndpointPath     string
-		HandlerFunc      http.HandlerFunc
-		HTTPMethod       string
-		RequireAuth      bool
-		RequireAllGroups []string
+		EndpointPath        string
+		HandlerFunc         http.HandlerFunc
+		HTTPMethod          string
+		RequireAuth         bool
+		RequireAuthOrSecret bool
+		RequireAllGroups    []string
 	}{
 		{
 			EndpointPath: "",
@@ -3157,6 +3207,12 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 			HandlerFunc:  h.GetVersion,
 			HTTPMethod:   http.MethodGet,
 			RequireAuth:  true,
+		},
+		{
+			EndpointPath:        "/system/timezones",
+			HandlerFunc:         h.GetTimezones,
+			HTTPMethod:          http.MethodGet,
+			RequireAuthOrSecret: true,
 		},
 		{
 			EndpointPath: "/system/flatName",
@@ -3478,6 +3534,9 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		handler := r.HandlerFunc
 		if r.RequireAuth {
 			handler = h.HTTPvalidateJWT(handler)
+		}
+		if r.RequireAuthOrSecret {
+			handler = h.HTTPvalidateJWTorSecret(handler)
 		}
 		for _, g := range r.RequireAllGroups {
 			handler = h.HTTPcheckGroupsFromID(handler, g)

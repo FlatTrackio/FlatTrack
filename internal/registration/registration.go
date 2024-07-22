@@ -25,6 +25,7 @@ import (
 	"gitlab.com/flattrack/flattrack/internal/groups"
 	"gitlab.com/flattrack/flattrack/internal/settings"
 	"gitlab.com/flattrack/flattrack/internal/system"
+	"gitlab.com/flattrack/flattrack/internal/timezones"
 	"gitlab.com/flattrack/flattrack/internal/users"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
@@ -50,24 +51,27 @@ func NewManager(users *users.Manager, system *system.Manager, settings *settings
 	}
 }
 
+func (m *Manager) GetSecret() string {
+	return m.secret
+}
+
 // Register ...
 // perform initial FlatTrack instance setup
 func (m *Manager) Register(registration types.Registration) (successful bool, jwt string, err error) {
 	if m.secret != "" && registration.Secret != m.secret {
 		return false, "", fmt.Errorf("a matching setup secret must be passed to registration")
 	}
-	// TODO add timezone validation
-	err = m.settings.SetTimezone(registration.Timezone)
-	if err != nil {
+	if !timezones.IsAvailable(registration.Timezone) {
+		return false, "", fmt.Errorf("timezone '%v' not found", registration.Timezone)
+	}
+	if err := m.settings.SetTimezone(registration.Timezone); err != nil {
 		return false, "", err
 	}
 	// TODO add language validation
-	err = m.settings.SetTimezone(registration.Language)
-	if err != nil {
+	if err := m.settings.SetLanguage(registration.Language); err != nil {
 		return false, "", err
 	}
-	err = m.settings.SetFlatName(registration.FlatName)
-	if err != nil {
+	if err := m.settings.SetFlatName(registration.FlatName); err != nil {
 		return false, "", err
 	}
 	registration.User.Groups = defaultInitalizationGroups
@@ -80,8 +84,7 @@ func (m *Manager) Register(registration types.Registration) (successful bool, jw
 	if err != nil {
 		return false, "", err
 	}
-	err = m.system.SetHasInitialized()
-	if err != nil {
+	if err := m.system.SetHasInitialized(); err != nil {
 		return false, "", err
 	}
 	return true, jwt, err

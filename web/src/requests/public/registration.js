@@ -49,4 +49,24 @@ function PostAdminRegister (form, params) {
   )
 }
 
-export default { GetInstanceRegistered, PostAdminRegister }
+// GetInstanceRegistered
+// return a list of timezones
+function GetTimezones (secret) {
+  return Request(
+    {
+      url: '/api/system/timezones',
+      method: 'GET',
+      params: {
+        secret: secret
+      }
+    },
+    false,
+    true
+  )
+}
+
+export default {
+  GetInstanceRegistered,
+  GetTimezones,
+  PostAdminRegister
+}

@@ -51,8 +51,14 @@
               @keyup.enter.native="Register"
               expanded
             >
-              <option value="Pacific/Auckland">Pacific/Auckland</option>
-            </b-select>
+              <option disabled>Suggested</option>
+              <option v-for="tz in suggestedTimezones" :key="tz" :value="tz">
+                {{ tz }}
+              </option>
+              <option disabled>All</option>
+              <option v-for="tz in availableTimezones" :key="tz" :value="tz">
+                {{ tz }}
+              </option>
           </b-field>
           <br />
           <b-icon icon="home" size="is-medium"> </b-icon>
@@ -252,12 +258,28 @@ export default {
       email: null,
       phoneNumber: null,
       birthday: null,
-      password: null
+      password: null,
+      availableTimezones: [],
+      suggestedTimezones: ['Pacific/Auckland'],
+      secret: this.$route.query.secret || null
     }
   },
   components: {
     headerDisplay: () => import('@/components/common/header-display.vue'),
     infotooltip: () => import('@/components/common/info-tooltip.vue')
+  },
+  async beforeMount () {
+    registration
+      .GetTimezones(this.secret)
+      .then((resp) => {
+        this.availableTimezones = resp.data.list
+      })
+      .catch((err) => {
+        common.DisplayFailureToast(
+          'Failed to get a list of available timezones'
+        )
+        console.log(err)
+      })
   },
   methods: {
     Register () {
@@ -287,7 +309,7 @@ export default {
       }
       registration
         .PostAdminRegister(form, {
-          secret: this.$route.query.secret
+          secret: this.secret
         })
         .then((resp) => {
           if (resp.data.data !== '' || typeof resp.data.data !== 'undefined') {
