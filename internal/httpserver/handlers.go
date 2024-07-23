@@ -3086,47 +3086,47 @@ func (h *HTTPServer) Healthz(w http.ResponseWriter, r *http.Request) {
 
 // HTTPvalidateJWT ...
 // middleware for checking JWT auth token validity
-func (h *HTTPServer) HTTPvalidateJWT() func(http.HandlerFunc) http.HandlerFunc {
-	return func(ha http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			var context string
-			completed, claims, err := h.users.ValidateJWTauthToken(r)
-			if completed && err == nil {
-				ha.ServeHTTP(w, r)
-				return
-			}
-			if claims.ID != "" {
-				context = fmt.Sprintf("with user id '%v'", claims.ID)
-			}
-			log.Printf("Unauthorized request with token %v\n", context)
-			JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
-				Metadata: types.JSONResponseMetadata{
-					Response: "Unauthorized",
-				},
-			})
+func (h *HTTPServer) HTTPvalidateJWT(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var context string
+		completed, claims, err := h.users.ValidateJWTauthToken(r)
+		if completed && err == nil {
+			next.ServeHTTP(w, r)
+			return
 		}
+		if claims.ID != "" {
+			context = fmt.Sprintf("with user id '%v'", claims.ID)
+		}
+		log.Printf("Unauthorized request with token %v\n", context)
+		JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "Unauthorized",
+			},
+		})
 	}
 }
 
 // HTTPcheckGroupsFromID ...
 // middleware for checking if a route can be accessed given a ID and groupID
-func (h *HTTPServer) HTTPcheckGroupsFromID(groupsAllowed ...string) func(http.HandlerFunc) http.HandlerFunc {
-	return func(ha http.HandlerFunc) http.HandlerFunc {
-		return func(w http.ResponseWriter, r *http.Request) {
-			id, errID := h.users.GetIDFromJWT(r)
-			for _, group := range groupsAllowed {
-				if userInGroup, err := h.groups.CheckUserInGroup(id, group); userInGroup && err == nil && err == errID {
-					ha.ServeHTTP(w, r)
-					return
-				}
+func (h *HTTPServer) HTTPcheckGroupsFromID(next http.HandlerFunc, groupsAllowed ...string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, errID := h.users.GetIDFromJWT(r)
+		found := 0
+		for _, group := range groupsAllowed {
+			if userInGroup, err := h.groups.CheckUserInGroup(id, group); userInGroup && err == nil && err == errID {
+				found++
 			}
-			log.Printf("User '%v' tried to access route that is protected by '%v' group access", id, groupsAllowed)
-			JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
-				Metadata: types.JSONResponseMetadata{
-					Response: "Forbidden",
-				},
-			})
 		}
+		if found == len(groupsAllowed) {
+			next.ServeHTTP(w, r)
+			return
+		}
+		log.Printf("User '%v' tried to access route that is protected by '%v' group access", id, groupsAllowed)
+		JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "Forbidden",
+			},
+		})
 	}
 }
 
@@ -3143,9 +3143,11 @@ func (h *HTTPServer) HTTP404() http.HandlerFunc {
 
 func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 	routes := []struct {
-		EndpointPath string
-		HandlerFunc  http.HandlerFunc
-		HTTPMethod   string
+		EndpointPath     string
+		HandlerFunc      http.HandlerFunc
+		HTTPMethod       string
+		RequireAuth      bool
+		RequireAllGroups []string
 	}{
 		{
 			EndpointPath: "",
@@ -3164,33 +3166,43 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		},
 		{
 			EndpointPath: "/system/version",
-			HandlerFunc:  httpUseMiddleware(h.GetVersion, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetVersion,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/system/flatName",
-			HandlerFunc:  httpUseMiddleware(h.GetSettingsFlatName, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetSettingsFlatName,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
-			EndpointPath: "/admin/settings/flatName",
-			HandlerFunc:  httpUseMiddleware(h.SetSettingsFlatName, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodPost,
+			EndpointPath:     "/admin/settings/flatName",
+			HandlerFunc:      h.SetSettingsFlatName,
+			HTTPMethod:       http.MethodPost,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/settings/shoppingListNotes",
-			HandlerFunc:  httpUseMiddleware(h.PutSettingsShoppingList, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodPut,
+			EndpointPath:     "/admin/settings/shoppingListNotes",
+			HandlerFunc:      h.PutSettingsShoppingList,
+			HTTPMethod:       http.MethodPut,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/settings/flatNotes",
-			HandlerFunc:  httpUseMiddleware(h.GetSettingsFlatNotes, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodGet,
+			EndpointPath:     "/admin/settings/flatNotes",
+			HandlerFunc:      h.GetSettingsFlatNotes,
+			HTTPMethod:       http.MethodGet,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/settings/flatNotes",
-			HandlerFunc:  httpUseMiddleware(h.PutSettingsFlatNotes, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodPut,
+			EndpointPath:     "/admin/settings/flatNotes",
+			HandlerFunc:      h.PutSettingsFlatNotes,
+			HTTPMethod:       http.MethodPut,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
 			EndpointPath: "/admin/register",
@@ -3198,49 +3210,67 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 			HTTPMethod:   http.MethodPost,
 		},
 		{
-			EndpointPath: "/admin/users",
-			HandlerFunc:  httpUseMiddleware(h.GetAllUsers, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodGet,
+			EndpointPath:     "/admin/users",
+			HandlerFunc:      h.GetAllUsers,
+			HTTPMethod:       http.MethodGet,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/users/{id}",
-			HandlerFunc:  httpUseMiddleware(h.GetUser, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodGet,
+			EndpointPath:     "/admin/users/{id}",
+			HandlerFunc:      h.GetUser,
+			HTTPMethod:       http.MethodGet,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/users",
-			HandlerFunc:  httpUseMiddleware(h.PostUser, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodPost,
+			EndpointPath:     "/admin/users",
+			HandlerFunc:      h.PostUser,
+			HTTPMethod:       http.MethodPost,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/users/{id}",
-			HandlerFunc:  httpUseMiddleware(h.PatchUser, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodPatch,
+			EndpointPath:     "/admin/users/{id}",
+			HandlerFunc:      h.PatchUser,
+			HTTPMethod:       http.MethodPatch,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/users/{id}/disabled",
-			HandlerFunc:  httpUseMiddleware(h.PatchUserDisabled, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodPatch,
+			EndpointPath:     "/admin/users/{id}/disabled",
+			HandlerFunc:      h.PatchUserDisabled,
+			HTTPMethod:       http.MethodPatch,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/users/{id}",
-			HandlerFunc:  httpUseMiddleware(h.PutUser, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodPut,
+			EndpointPath:     "/admin/users/{id}",
+			HandlerFunc:      h.PutUser,
+			HTTPMethod:       http.MethodPut,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/users/{id}",
-			HandlerFunc:  httpUseMiddleware(h.DeleteUser, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodDelete,
+			EndpointPath:     "/admin/users/{id}",
+			HandlerFunc:      h.DeleteUser,
+			HTTPMethod:       http.MethodDelete,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/useraccountconfirms",
-			HandlerFunc:  httpUseMiddleware(h.GetUserConfirms, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodGet,
+			EndpointPath:     "/admin/useraccountconfirms",
+			HandlerFunc:      h.GetUserConfirms,
+			HTTPMethod:       http.MethodGet,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
-			EndpointPath: "/admin/useraccountconfirms/{id}",
-			HandlerFunc:  httpUseMiddleware(h.GetUserConfirm, h.HTTPvalidateJWT(), h.HTTPcheckGroupsFromID("admin")),
-			HTTPMethod:   http.MethodGet,
+			EndpointPath:     "/admin/useraccountconfirms/{id}",
+			HandlerFunc:      h.GetUserConfirm,
+			HTTPMethod:       http.MethodGet,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
 		},
 		{
 			EndpointPath: "/user/auth",
@@ -3254,8 +3284,9 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		},
 		{
 			EndpointPath: "/user/auth/reset",
-			HandlerFunc:  httpUseMiddleware(h.UserAuthReset, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.UserAuthReset,
 			HTTPMethod:   http.MethodPost,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/user/confirm/{id}",
@@ -3269,166 +3300,200 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		},
 		{
 			EndpointPath: "/user/profile",
-			HandlerFunc:  httpUseMiddleware(h.GetProfile, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetProfile,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/user/profile",
-			HandlerFunc:  httpUseMiddleware(h.PutProfile, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.PutProfile,
 			HTTPMethod:   http.MethodPut,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/user/profile",
-			HandlerFunc:  httpUseMiddleware(h.PatchProfile, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.PatchProfile,
 			HTTPMethod:   http.MethodPatch,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/users",
-			HandlerFunc:  httpUseMiddleware(h.GetAllUsers, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetAllUsers,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/users/{id}",
-			HandlerFunc:  httpUseMiddleware(h.GetUser, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetUser,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/groups",
-			HandlerFunc:  httpUseMiddleware(h.GetAllGroups, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetAllGroups,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/groups/{id}",
-			HandlerFunc:  httpUseMiddleware(h.GetGroup, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetGroup,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/user/can-i/group/{name}",
-			HandlerFunc:  httpUseMiddleware(h.UserCanIgroup, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.UserCanIgroup,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/settings/notes",
-			HandlerFunc:  httpUseMiddleware(h.GetSettingsShoppingListNotes, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetSettingsShoppingListNotes,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists",
-			HandlerFunc:  httpUseMiddleware(h.GetShoppingLists, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetShoppingLists,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{id}",
-			HandlerFunc:  httpUseMiddleware(h.GetShoppingList, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetShoppingList,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{id}",
-			HandlerFunc:  httpUseMiddleware(h.PatchShoppingList, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.PatchShoppingList,
 			HTTPMethod:   http.MethodPatch,
+			RequireAuth:  true,
 		},
-		{
-			EndpointPath: "/apps/shoppinglist/lists/{id}",
-			HandlerFunc:  httpUseMiddleware(h.PutShoppingList, h.HTTPvalidateJWT()),
-			HTTPMethod:   http.MethodPut,
-		},
+		{EndpointPath: "/apps/shoppinglist/lists/{id}", HandlerFunc: h.PutShoppingList, HTTPMethod: http.MethodPut, RequireAuth: true},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{id}/completed",
-			HandlerFunc:  httpUseMiddleware(h.PatchShoppingListCompleted, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.PatchShoppingListCompleted,
 			HTTPMethod:   http.MethodPatch,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{id}",
-			HandlerFunc:  httpUseMiddleware(h.DeleteShoppingList, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.DeleteShoppingList,
 			HTTPMethod:   http.MethodDelete,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists",
-			HandlerFunc:  httpUseMiddleware(h.PostShoppingList, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.PostShoppingList,
 			HTTPMethod:   http.MethodPost,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{id}/items",
-			HandlerFunc:  httpUseMiddleware(h.GetShoppingListItems, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetShoppingListItems,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{listId}/items/{itemId}",
-			HandlerFunc:  httpUseMiddleware(h.GetShoppingListItem, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetShoppingListItem,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{id}/items",
-			HandlerFunc:  httpUseMiddleware(h.PostItemToShoppingList, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.PostItemToShoppingList,
 			HTTPMethod:   http.MethodPost,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{listId}/items/{id}",
-			HandlerFunc:  httpUseMiddleware(h.PatchShoppingListItem, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.PatchShoppingListItem,
 			HTTPMethod:   http.MethodPatch,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{listId}/items/{id}",
-			HandlerFunc:  httpUseMiddleware(h.PutShoppingListItem, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.PutShoppingListItem,
 			HTTPMethod:   http.MethodPut,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{listId}/items/{id}/obtained",
-			HandlerFunc:  httpUseMiddleware(h.PatchShoppingListItemObtained, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.PatchShoppingListItemObtained,
 			HTTPMethod:   http.MethodPatch,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{listId}/items/{itemId}",
-			HandlerFunc:  httpUseMiddleware(h.DeleteShoppingListItem, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.DeleteShoppingListItem,
 			HTTPMethod:   http.MethodDelete,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{listId}/tag",
-			HandlerFunc:  httpUseMiddleware(h.DeleteShoppingListTagItems, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.DeleteShoppingListTagItems,
 			HTTPMethod:   http.MethodDelete,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{listId}/tags",
-			HandlerFunc:  httpUseMiddleware(h.GetShoppingListItemTags, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetShoppingListItemTags,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{listId}/tags/{tagName}",
-			HandlerFunc:  httpUseMiddleware(h.UpdateShoppingListItemTag, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.UpdateShoppingListItemTag,
 			HTTPMethod:   http.MethodPut,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/tags",
-			HandlerFunc:  httpUseMiddleware(h.PostShoppingTag, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.PostShoppingTag,
 			HTTPMethod:   http.MethodPost,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/tags",
-			HandlerFunc:  httpUseMiddleware(h.GetAllShoppingTags, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetAllShoppingTags,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/tags/{id}",
-			HandlerFunc:  httpUseMiddleware(h.GetShoppingTag, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetShoppingTag,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/tags/{id}",
-			HandlerFunc:  httpUseMiddleware(h.UpdateShoppingTag, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.UpdateShoppingTag,
 			HTTPMethod:   http.MethodPut,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/apps/shoppinglist/tags/{id}",
-			HandlerFunc:  httpUseMiddleware(h.DeleteShoppingTag, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.DeleteShoppingTag,
 			HTTPMethod:   http.MethodDelete,
+			RequireAuth:  true,
 		},
 		{
 			EndpointPath: "/flat/info",
-			HandlerFunc:  httpUseMiddleware(h.GetSettingsFlatNotes, h.HTTPvalidateJWT()),
+			HandlerFunc:  h.GetSettingsFlatNotes,
 			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
 		},
 	}
 	for _, r := range routes {
-		router.HandleFunc(r.EndpointPath, r.HandlerFunc).Methods(r.HTTPMethod, http.MethodOptions)
+		handler := r.HandlerFunc
+		if r.RequireAuth {
+			handler = h.HTTPvalidateJWT(handler)
+		}
+		for _, g := range r.RequireAllGroups {
+			handler = h.HTTPcheckGroupsFromID(handler, g)
+		}
+		router.HandleFunc(r.EndpointPath, handler).Methods(r.HTTPMethod)
 	}
 }
