@@ -7,7 +7,7 @@ FlatTrack is solely configured to run with environment variables (or a `.env` fi
 | Field                                | Description                                                                                                                   | Default               |
 |--------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|-----------------------|
 | `APP_ENV_FILE`                       | A `.env` file to load                                                                                                         | `.env`                |
-| `APP_PORT`                           | The port for web traffic to bind to                                                                                           | `:8080` *             |
+| `APP_PORT` or `PORT`                 | The port for web traffic to bind to                                                                                           | `:8080` *             |
 | `APP_PORT_METRICS`                   | The port for metrics traffic to bind to                                                                                       | `:2112` *             |
 | `APP_PORT_HEALTH`                    | The port for web traffic to bind to                                                                                           | `:8081` *             |
 | `APP_DIST_FOLDER`                    | The location of the frontend web assets                                                                                       | `./dist`              |

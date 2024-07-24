@@ -143,7 +143,9 @@ func GetMigrationsPath() (output string) {
 // GetAppPort ...
 // return the port which the app should serve HTTP on
 func GetAppPort() (output string) {
-	return GetEnvOrDefault("APP_PORT", ":8080")
+	return GetEnvOrDefault("PORT",
+		GetEnvOrDefault("APP_PORT", ":8080"),
+	)
 }
 
 // GetAppMetricsPort ...
