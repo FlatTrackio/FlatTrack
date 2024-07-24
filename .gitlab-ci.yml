@@ -80,7 +80,7 @@ build-container-release:
       - main
       - tags
   variables:
-    PUBLISH_FLAGS: "--sign --debug"
+    PUBLISH_FLAGS: "--sign"
   needs:
     - build-frontend-release
 
