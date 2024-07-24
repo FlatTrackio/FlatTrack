@@ -280,22 +280,26 @@ func SetFirstOrSecond(first string, second string) string {
 	return second
 }
 
-// GetAppDistFolder ...
+// GetAppWebFolder ...
 // return the path to the folder containing the frontend assets
-func GetAppDistFolder() string {
+func GetAppWebFolder() string {
 	if AppBuildMode == "production" || AppBuildMode == "staging" {
 		return AppAssetsFolder
 	}
-	if envSet := GetEnvOrDefault("APP_DIST_FOLDER", ""); envSet != "" {
+	if envSet := GetEnvOrDefault("APP_WEB_FOLDER", ""); envSet != "" {
 		return envSet
 	}
-	pwd, _ := os.Getwd()
-	return path.Join(pwd, "web", "dist")
+	pwd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	return path.Join(pwd, "kodata", "web")
 }
 
 // RegexMatchName ...
 // regex check for valid name string
 func RegexMatchName(name string) bool {
+	// TODO(help) support non-English names
 	matches, _ := regexp.MatchString(`^([ \\u00c0-\\u01ffa-zA-Z'\-])+$`, name)
 	return matches
 }
