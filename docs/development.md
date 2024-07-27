@@ -6,6 +6,26 @@ Requirements:
 -   [nodejs](https://nodejs.org/en/download/)
 -   a [Postgres](https://www.postgresql.org/download/) database
 
+## Install dependencies with Brew
+
+```sh
+brew install go nodejs npm
+```
+
+## Launch a workspace with Zellij
+
+install with Brew
+
+```sh
+brew install zellij
+```
+
+launch the workspace
+
+```sh
+./hack/start-dev.sh
+```
+
 ## Set up Postgres
 
 Docker/Podman:
