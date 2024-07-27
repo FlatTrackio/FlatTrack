@@ -26,11 +26,11 @@ layout {
   tab name="postgres" {
     postgres
   }
-  tab name="backend" split_direction="vertical" {
+  tab name="backend" split_direction="horizontal" {
     backend
     pane
   }
-  tab name="frontend" split_direction="vertical" {
+  tab name="frontend" split_direction="horizontal" {
     frontend
     pane
   }
