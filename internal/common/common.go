@@ -23,9 +23,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"net"
 	"os"
 	"path"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -143,9 +145,13 @@ func GetMigrationsPath() (output string) {
 // GetAppPort ...
 // return the port which the app should serve HTTP on
 func GetAppPort() (output string) {
-	return GetEnvOrDefault("PORT",
+	port := GetEnvOrDefault("PORT",
 		GetEnvOrDefault("APP_PORT", ":8080"),
 	)
+	if _, _, err := net.SplitHostPort(port); err != nil && strings.Contains(err.Error(), "missing port in address") {
+		port = ":" + port
+	}
+	return port
 }
 
 // GetAppMetricsPort ...
