@@ -15,7 +15,14 @@
 
 <template>
   <div>
-    <section>
+    <section
+      @click="
+             (mini === true && deviceIsMobile) &&    $router.push({
+                    name: 'View shopping list',
+                    params: { id: list.id },
+                  })
+                "
+    >
       <div class="card pointer-cursor-on-hover">
         <div class="card-content">
           <div class="media">
@@ -92,9 +99,7 @@
             </div>
             <br />
             <span v-if="list.notes !== '' && typeof list.notes !== 'undefined'">
-              <i>
-                {{ PreviewNotes(list.notes) }}
-              </i>
+              <i> {{ PreviewNotes(list.notes) }} </i>
               <br />
               <br />
             </span>
@@ -149,9 +154,9 @@ export default {
       Dialog.confirm({
         title: 'Delete shopping list',
         message:
-          'Are you sure that you wish to delete this shopping list?' +
-          '<br/>' +
-          'This action cannot be undone.',
+            'Are you sure that you wish to delete this shopping list?' +
+            '<br/>' +
+            'This action cannot be undone.',
         confirmText: 'Delete shopping list',
         type: 'is-danger',
         hasIcon: true,
@@ -172,8 +177,8 @@ export default {
               this.deleteLoading = false
               common.DisplayFailureToast(
                 'Failed to delete the shopping list' +
-                  '<br/>' +
-                  err.response.data.metadata.response
+                    '<br/>' +
+                    err.response.data.metadata.response
               )
             })
         }
@@ -188,11 +193,11 @@ export default {
 </script>
 
 <style>
-.display-items-on-the-same-line {
-  display: flex;
-}
+  .display-items-on-the-same-line {
+    display: flex;
+  }
 
-.display-items-on-the-same-line div {
-  margin-left: 10px;
-}
+  .display-items-on-the-same-line div {
+    margin-left: 10px;
+  }
 </style>
