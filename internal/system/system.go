@@ -21,6 +21,7 @@ package system
 import (
 	"database/sql"
 	"log"
+	"time"
 )
 
 // Manager for system configuration
@@ -32,6 +33,15 @@ func NewManager(db *sql.DB) *Manager {
 	return &Manager{
 		db: db,
 	}
+}
+
+type systemSetting struct {
+	ID                    string
+	Name                  string
+	Value                 string
+	CreationTimestamp     int64
+	ModificationTimestamp int64
+	DeletionTimestamp     int64
 }
 
 func (m *Manager) getValue(name string) (output string, err error) {
@@ -54,7 +64,11 @@ func (m *Manager) getValue(name string) (output string, err error) {
 }
 
 func (m *Manager) setValue(name, value string) (err error) {
-	sqlStatement := `update system set value = $2 where name = $1`
+	sqlStatement := `
+        update system set
+          value = $2,
+          modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int
+        where name = $1`
 	rows, err := m.db.Query(sqlStatement, name, value)
 	if err != nil {
 		return err
@@ -65,6 +79,32 @@ func (m *Manager) setValue(name, value string) (err error) {
 		}
 	}()
 	return nil
+}
+
+func (m *Manager) getSystemSetting(name string) (output systemSetting, err error) {
+	sqlStatement := `select * from system where name = $1`
+	rows, err := m.db.Query(sqlStatement, name)
+	if err != nil {
+		return systemSetting{}, err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	for rows.Next() {
+		if err := rows.Scan(
+			&output.ID,
+			&output.Name,
+			&output.Value,
+			&output.CreationTimestamp,
+			&output.ModificationTimestamp,
+			&output.DeletionTimestamp,
+		); err != nil {
+			return systemSetting{}, err
+		}
+	}
+	return output, nil
 }
 
 // GetHasInitialized ...
@@ -89,7 +129,44 @@ func (m *Manager) GetJWTsecret() (string, error) {
 	return m.getValue("jwtSecret")
 }
 
+func (m *Manager) generateJWTSecret() (err error) {
+	sqlStatement := `
+        update system set
+          value = md5(random()::text || clock_timestamp()::text)::uuid,
+          modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int
+          where name = 'jwtSecret'`
+	rows, err := m.db.Query(sqlStatement)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	return nil
+}
+
 // GetInstanceUUID returns the instance UUID
 func (m *Manager) GetInstanceUUID() (string, error) {
 	return m.getValue("instanceUUID")
+}
+
+func (m *Manager) RefreshJWTSecret() error {
+	// TODO factor last signed JWT and usage of it
+	const oneMonth = 32 * 24 * time.Hour
+	setting, err := m.getSystemSetting("jwtSecret")
+	if err != nil {
+		return err
+	}
+	mod := time.Unix(setting.ModificationTimestamp, 0)
+	age := time.Now().Sub(mod)
+	if age < oneMonth {
+		return nil
+	}
+	if err := m.generateJWTSecret(); err != nil {
+		return err
+	}
+	log.Println("[system]: updated jwt secret")
+	return nil
 }
