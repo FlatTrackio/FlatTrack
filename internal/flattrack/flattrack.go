@@ -44,7 +44,6 @@ func NewManager() *manager {
 	}
 	users := users.NewManager(db)
 	shoppinglist := shoppinglist.NewManager(db)
-	emails := emails.NewManager()
 	groups := groups.NewManager(db)
 	health := health.NewManager(db)
 	migrations := migrations.NewManager(db)
@@ -52,7 +51,10 @@ func NewManager() *manager {
 	system := system.NewManager(db)
 	registration := registration.NewManager(users, system, settings)
 	metrics := metrics.NewManager()
-	scheduling := scheduling.NewManager(db)
+	emails := emails.NewManager(settings, users)
+	scheduling := scheduling.NewManager(db).RegisterFunc(
+		emails.ReconcileUserCreatedEmails,
+	)
 	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling)
 	return &manager{
 		httpserver:   httpserver,

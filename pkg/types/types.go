@@ -237,16 +237,27 @@ type FlatNotes struct {
 	Notes string `json:"notes"`
 }
 
+type EmailSentStatus string
+
+const (
+	EmailSentStatusNoAction         EmailSentStatus = "NO_ACTION"
+	EmailSentStatusSentOnce         EmailSentStatus = "SENT_ONCE"
+	EmailSentStatusSentMoreThanOnce EmailSentStatus = "SENT_MORE_THAN_ONCE"
+	EmailSentStatusSendBackOff      EmailSentStatus = "SEND_BACKOFF"
+)
+
 // UserCreationSecretSpec ...
 // values for a user to confirm their account with
 type UserCreationSecretSpec struct {
-	ID                    string `json:"id"`
-	UserID                string `json:"userId"`
-	Secret                string `json:"secret"`
-	Valid                 bool   `json:"valid"`
-	CreationTimestamp     int64  `json:"creationTimestamp"`
-	ModificationTimestamp int64  `json:"modificationTimestamp"`
-	DeletionTimestamp     int64  `json:"deletionTimestamp"`
+	ID                    string          `json:"id"`
+	UserID                string          `json:"userId"`
+	Secret                string          `json:"secret"`
+	Valid                 bool            `json:"valid"`
+	EmailSentStatus       EmailSentStatus `json:"emailSentStatus"`
+	EmailSentDate         int64           `json:"emailSentDate"`
+	CreationTimestamp     int64           `json:"creationTimestamp"`
+	ModificationTimestamp int64           `json:"modificationTimestamp"`
+	DeletionTimestamp     int64           `json:"deletionTimestamp"`
 }
 
 // UserCreationSecretSelector ...
@@ -281,6 +292,12 @@ type SystemVersion struct {
 	GolangVersion string `json:"golangVersion"`
 	OSType        string `json:"osType"`
 	OSArch        string `json:"osArch"`
+}
+
+// SystemConfigurationInfo ...
+// values for how the instance is configured
+type SystemConfigurationInfo struct {
+	EmailServiceEnabled bool
 }
 
 // JSONResponseMetadata ...

@@ -31,6 +31,7 @@ type Manager struct {
 	password string
 	host     string
 	port     string
+	sender   string
 
 	auth smtp.Auth
 }
@@ -40,6 +41,7 @@ func NewManager() *Manager {
 	password := common.GetSMTPPassword()
 	host := common.GetSMTPHost()
 	port := common.GetSMTPPort()
+	sender := common.GetSMTPSender()
 	auth := smtp.PlainAuth("", username, password, host)
 
 	return &Manager{
@@ -47,6 +49,7 @@ func NewManager() *Manager {
 		password: password,
 		host:     host,
 		port:     port,
+		sender:   sender,
 
 		auth: auth,
 	}
@@ -55,20 +58,27 @@ func NewManager() *Manager {
 // SendEmail ...
 // send a HTML email to a subject
 func (m *Manager) SendEmail(content string, subject string, recipient string) error {
-	mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
-	subjectFmt := fmt.Sprintf("Subject: %v\n", subject)
-	msg := []byte(fmt.Sprintf("%v%v\n%v", subjectFmt, mime, content))
-	err := smtp.SendMail(
+	msg := ""
+	headers := map[string]string{
+		"From":         m.sender,
+		"To":           recipient,
+		"MIME-version": "1.0",
+		"Content-Type": `text/html; charset="UTF-8";`,
+		"Subject":      subject,
+	}
+	for k, v := range headers {
+		msg += fmt.Sprintf("%v: %v\n", k, v)
+	}
+	msg += "\n" + content
+	if err := smtp.SendMail(
 		fmt.Sprintf("%s:%s", m.host, m.port),
 		m.auth,
 		m.username,
 		[]string{recipient},
-		msg,
-	)
-
-	if err != nil {
+		[]byte(msg),
+	); err != nil {
 		log.Printf("Error: failed to send email mail %v\n", err)
 		return err
 	}
-	return err
+	return nil
 }

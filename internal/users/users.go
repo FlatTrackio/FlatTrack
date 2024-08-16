@@ -43,6 +43,7 @@ var (
 	ErrAuthInvalid                                       = fmt.Errorf("Authentication has been invalidated, please log in again")
 	ErrEmailAddressAlreadyUsed                           = fmt.Errorf("Email address is unable to be used")
 	ErrFailedToCreateUserCreationSecret                  = fmt.Errorf("Failed to create a user creation secret")
+	ErrFailedToPrepareUserCreationSecretUpdate           = fmt.Errorf("Failed to prepare user creation secret update")
 	ErrFailedToFindAccount                               = fmt.Errorf("Failed to find user account")
 	ErrFailedToFindUser                                  = fmt.Errorf("Failed to find user")
 	ErrFailedToListUserCreationSecrets                   = fmt.Errorf("Failed to list user creation secrets")
@@ -747,7 +748,17 @@ func (m *Manager) UpdateAsAdmin(id string, userAccount types.UserSpec) (userAcco
 // userCreationSecretsFromRows ...
 // constructs a UserCreationSecretSpec from rows
 func userCreationSecretsFromRows(rows *sql.Rows) (creationSecret types.UserCreationSecretSpec, err error) {
-	if err := rows.Scan(&creationSecret.ID, &creationSecret.UserID, &creationSecret.Secret, &creationSecret.Valid, &creationSecret.CreationTimestamp, &creationSecret.ModificationTimestamp, &creationSecret.DeletionTimestamp); err != nil {
+	if err := rows.Scan(
+		&creationSecret.ID,
+		&creationSecret.UserID,
+		&creationSecret.Secret,
+		&creationSecret.Valid,
+		&creationSecret.CreationTimestamp,
+		&creationSecret.ModificationTimestamp,
+		&creationSecret.DeletionTimestamp,
+		&creationSecret.EmailSentStatus,
+		&creationSecret.EmailSentDate,
+	); err != nil {
 		return types.UserCreationSecretSpec{}, err
 	}
 	if err := rows.Err(); err != nil {
@@ -831,8 +842,8 @@ func (m *userCreationSecretManager) Get(id string) (creationSecret types.UserCre
 // Create ...
 // creates a user creation secret for account confirming
 func (m *userCreationSecretManager) Create(userID string) (userCreationSecretInserted types.UserCreationSecretSpec, err error) {
-	sqlStatement := `insert into user_creation_secret (userId)
-                         values ($1)
+	sqlStatement := `insert into user_creation_secret (userId, emailSentStatus)
+                         values ($1, 'NO_ACTION')
                          returning *`
 	rows, err := m.db.Query(sqlStatement, userID)
 	if err != nil {
@@ -850,6 +861,48 @@ func (m *userCreationSecretManager) Create(userID string) (userCreationSecretIns
 		}
 	}
 	return userCreationSecretInserted, nil
+}
+
+// Update ...
+// updates the profile of a user account
+func (m *userCreationSecretManager) Update(userCreationSecret types.UserCreationSecretSpec) (userCreationSecretUpdated types.UserCreationSecretSpec, err error) {
+	existingUserCreationSecret, err := m.Get(userCreationSecret.ID)
+	if err != nil || existingUserCreationSecret.ID == "" {
+		return types.UserCreationSecretSpec{}, ErrFailedToFindAccountConfirmSecret
+	}
+
+	if err := mergo.Merge(&userCreationSecret, existingUserCreationSecret); err != nil {
+		return types.UserCreationSecretSpec{}, ErrFailedToPrepareUserCreationSecretUpdate
+	}
+
+	sqlStatement := `
+        update user_creation_secret set
+            emailSentStatus = $2,
+            emailSentDate = $3,
+            modificationTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int
+        where id = $1
+        returning *`
+	rows, err := m.db.Query(sqlStatement, userCreationSecret.ID, userCreationSecret.EmailSentStatus, userCreationSecret.EmailSentDate)
+	if err != nil {
+		// TODO add roll back, if there's failure
+		return types.UserCreationSecretSpec{}, err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	for rows.Next() {
+		userCreationSecretUpdated, err = userCreationSecretsFromRows(rows)
+		if err != nil {
+			log.Printf("error getting user object from rows (restricted): %v\n", err)
+			return types.UserCreationSecretSpec{}, ErrFailedToUpdateProfile
+		}
+	}
+	if userCreationSecret.ID == "" {
+		return types.UserCreationSecretSpec{}, ErrFailedToUpdateProfile
+	}
+	return userCreationSecretUpdated, nil
 }
 
 // Delete ...

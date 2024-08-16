@@ -2964,6 +2964,23 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
+// GetVersion ...
+// returns version information about the instance
+func (h *HTTPServer) GetConfiguration(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched version information",
+		},
+		Data: types.SystemConfigurationInfo{
+			EmailServiceEnabled: common.GetSMTPEnabled(),
+		},
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
 func (h *HTTPServer) PostSchedulerRun(w http.ResponseWriter, r *http.Request) {
 	if !h.scheduling.GetEndpointEnabled() {
 		w.WriteHeader(http.StatusNotFound)
@@ -3155,6 +3172,12 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		{
 			EndpointPath: "/system/version",
 			HandlerFunc:  h.GetVersion,
+			HTTPMethod:   http.MethodGet,
+			RequireAuth:  true,
+		},
+		{
+			EndpointPath: "/system/configurationInfo",
+			HandlerFunc:  h.GetConfiguration,
 			HTTPMethod:   http.MethodGet,
 			RequireAuth:  true,
 		},

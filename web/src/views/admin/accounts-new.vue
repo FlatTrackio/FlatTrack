@@ -182,7 +182,7 @@
             </b-input>
           </b-field>
         </div>
-        <div v-else>
+        <div v-else-if="emailServiceEnabled === false">
           <div class="notification is-warning mb-4">
             <p class="subtitle is-6">
               <b>Please note:</b> email account verification is not available
@@ -214,6 +214,7 @@
 <script>
 import common from '@/common/common'
 import groups from '@/requests/authenticated/groups'
+import system from '@/requests/authenticated/system'
 import adminFlatmates from '@/requests/admin/flatmates'
 
 export default {
@@ -245,7 +246,8 @@ export default {
       passwordConfirm: null,
       availableGroups: [],
       jsBirthday: null,
-      groupsFull: []
+      groupsFull: [],
+      emailServiceEnabled: false
     }
   },
   components: {
@@ -273,8 +275,8 @@ export default {
         .catch((err) => {
           common.DisplayFailureToast(
             'Failed to list groups' +
-              '<br/>' +
-              err.response.data.metadata.response
+                '<br/>' +
+                err.response.data.metadata.response
           )
         })
     },
@@ -324,13 +326,16 @@ export default {
         .catch((err) => {
           common.DisplayFailureToast(
             'Failed to create user account' +
-              `<br/>${err.response.data.metadata.response}`
+                `<br/>${err.response.data.metadata.response}`
           )
         })
     }
   },
   async beforeMount () {
     this.GetAvailableGroups()
+    system.GetConfigurationInfo().then((resp) => {
+      this.emailServiceEnabled = resp.data.data.emailServiceEnabled
+    })
   }
 }
 </script>

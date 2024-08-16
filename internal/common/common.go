@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"net/url"
 	"os"
 	"path"
 	"regexp"
@@ -34,11 +35,12 @@ import (
 // AppVars ...
 // defaults which are overridden with build
 var (
-	AppBuildVersion     = "0.0.0"
-	AppBuildHash        = "???"
-	AppBuildDate        = "???"
-	AppBuildMode        = "development"
-	AppDbMigrationsPath = "/var/run/ko/migrations"
+	AppBuildVersion       = "0.0.0"
+	AppBuildHash          = "???"
+	AppBuildDate          = "???"
+	AppBuildMode          = "development"
+	AppDbMigrationsPath   = "/var/run/ko/migrations"
+	AppEmailTemplatesPath = "/var/run/ko/emailTemplates"
 	// #nosec G101
 	AppAssetsFolder = "/var/run/ko/web"
 )
@@ -95,14 +97,24 @@ func GetDBsslMode() (output string) {
 
 // GetInstanceURL ...
 // return URL of the instance
-func GetInstanceURL() (output string) {
-	return GetEnvOrDefault("APP_URL", "")
+func GetInstanceURL() (output *url.URL) {
+	e := GetEnvOrDefault("APP_URL", "")
+	u, err := url.Parse(e)
+	if err != nil {
+		panic(err)
+	}
+	return u
 }
 
 // GetSMTPEnabled ...
 // return if the instance should send emails
-func GetSMTPEnabled() (output string) {
-	return GetEnvOrDefault("APP_SMTP_ENABLED", "false")
+func GetSMTPEnabled() (output bool) {
+	return GetEnvOrDefault("APP_SMTP_ENABLED", "false") == "true"
+}
+
+// GetSMTPUser return the email address to send emails from
+func GetSMTPSender() (output string) {
+	return GetEnvOrDefault("APP_SMTP_SENDER", "")
 }
 
 // GetSMTPUsername ...
@@ -140,6 +152,19 @@ func GetMigrationsPath() (output string) {
 	}
 	pwd, _ := os.Getwd()
 	return fmt.Sprintf("%v/kodata/migrations", pwd)
+}
+
+// GetMigrationsPath ...
+// return the path of the database migrations to use
+func GetEmailTemplatesPath() (output string) {
+	if envSet := GetEnvOrDefault("APP_EMAIL_TEMPLATES_PATH", ""); envSet != "" {
+		return envSet
+	}
+	if AppBuildMode == "production" || AppBuildMode == "staging" {
+		return AppEmailTemplatesPath
+	}
+	pwd, _ := os.Getwd()
+	return fmt.Sprintf("%v/kodata/emailTemplates", pwd)
 }
 
 // GetAppPort ...

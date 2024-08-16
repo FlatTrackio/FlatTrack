@@ -20,13 +20,23 @@ import Request from '@/requests/requests'
 
 // GetVersion
 // returns version information about the instance
-function GetVersion (redirect) {
+function GetVersion () {
   return Request({
     url: '/api/system/version',
     method: 'GET'
   })
 }
 
+// GetVersion
+// returns version information about the instance
+function GetConfigurationInfo () {
+  return Request({
+    url: '/api/system/configurationInfo',
+    method: 'GET'
+  })
+}
+
 export default {
-  GetVersion
+  GetVersion,
+  GetConfigurationInfo
 }
