@@ -1227,7 +1227,19 @@ export default {
       shoppinglist.GetShoppingList(this.templateId).then((resp) => {
         this.templateListName = resp.data.spec.name
       })
-    }
+    },
+    isNewItemModalActive() {
+      if (this.isNewItemModalActive !== false) {
+        return
+      }
+      this.GetShoppingListItems()
+    },
+    isEditItemModalActive() {
+      if (this.isEditItemModalActive !== false) {
+        return
+      }
+      this.GetShoppingListItems()
+    },
   },
   async beforeMount () {
     this.GetShoppingList()
