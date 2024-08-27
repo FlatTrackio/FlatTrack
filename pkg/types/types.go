@@ -24,6 +24,12 @@ import (
 	jwt "github.com/golang-jwt/jwt/v5"
 )
 
+type RequestContextKeyClaim string
+
+const (
+	RequestContextKeyClaimAuth RequestContextKeyClaim = "auth"
+)
+
 // Group ...
 // request object for a group
 type Group struct {

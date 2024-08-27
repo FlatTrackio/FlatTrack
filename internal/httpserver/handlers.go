@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html/template"
@@ -63,6 +64,9 @@ func frontendHandler(publicDir string, passthrough *frontendOptions) http.Handle
 }
 
 func (h *HTTPServer) GetAllUsers(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
+
 	selectors := types.UserSelector{}
 	if userSelectorID := r.FormValue("id"); userSelectorID != "" {
 		selectors.ID = userSelectorID
@@ -74,17 +78,7 @@ func (h *HTTPServer) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 		selectors.Group = userSelectorGroup
 	}
 	if r.FormValue("notSelf") == "true" {
-		id, err := h.users.GetIDFromJWT(r)
-		if err != nil {
-			log.Printf("error getting id from jwt: %v\n", err)
-			JSONResponse(r, w, http.StatusNotFound, types.JSONMessageResponse{
-				Metadata: types.JSONResponseMetadata{
-					Response: "failed to get user account id from token",
-				},
-			})
-			return
-		}
-		selectors.NotID = id
+		selectors.NotID = jwtUserID
 	}
 
 	users, err := h.users.List(false, selectors)
@@ -368,43 +362,6 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	jwtID, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-
-	isAdmin, err := h.groups.CheckUserInGroup(jwtID, "admin")
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to check user in group",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-
-	if isAdmin && userID == jwtID {
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "unable to disable user account of invoker",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusForbidden, JSONresp)
-		return
-	}
-
 	userAccountPatched, err := h.users.PatchDisabledAsAdmin(userID, userAccount.Disabled)
 	if err != nil {
 		context = err.Error()
@@ -430,6 +387,8 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 // DeleteUser ...
 // delete a user
 func (h *HTTPServer) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	vars := mux.Vars(r)
@@ -448,20 +407,7 @@ func (h *HTTPServer) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	myUserID, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-
-	if myUserID == userID {
+	if jwtUserID == userID {
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "unable to delete user account of invoker",
@@ -533,6 +479,8 @@ func (h *HTTPServer) GetProfile(w http.ResponseWriter, r *http.Request) {
 // PutProfile ...
 // Update a user account their id from their JWT
 func (h *HTTPServer) PutProfile(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var userAccount types.UserSpec
@@ -556,19 +504,7 @@ func (h *HTTPServer) PutProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-	userAccountUpdated, err := h.users.Update(id, userAccount)
+	userAccountUpdated, err := h.users.Update(jwtUserID, userAccount)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -593,6 +529,8 @@ func (h *HTTPServer) PutProfile(w http.ResponseWriter, r *http.Request) {
 // PatchProfile ...
 // patches a user account their id from their JWT
 func (h *HTTPServer) PatchProfile(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var userAccount types.UserSpec
@@ -616,19 +554,7 @@ func (h *HTTPServer) PatchProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
-		return
-	}
-	userAccountPatched, err := h.users.Patch(id, userAccount)
+	userAccountPatched, err := h.users.Patch(jwtUserID, userAccount)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -810,24 +736,15 @@ func (h *HTTPServer) UserAuthValidate(w http.ResponseWriter, r *http.Request) {
 // UserAuthReset ...
 // invalidates all JWTs
 func (h *HTTPServer) UserAuthReset(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to find user account with id: " + id,
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-	if err := h.users.GenerateNewAuthNonce(id); err != nil {
+	if err := h.users.GenerateNewAuthNonce(jwtUserID); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
-				Response: "failed to find user account with id: " + id,
+				Response: "failed to find user account with id: " + jwtUserID,
 			},
 		}
 		log.Println(JSONresp.Metadata.Response, context)
@@ -846,23 +763,12 @@ func (h *HTTPServer) UserAuthReset(w http.ResponseWriter, r *http.Request) {
 // UserCanIgroup ...
 // respond whether the current user account is in a group
 func (h *HTTPServer) UserCanIgroup(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	vars := mux.Vars(r)
 	groupName := vars["name"]
-
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
 
 	group, err := h.groups.GetByName(groupName)
 	if err != nil {
@@ -877,7 +783,7 @@ func (h *HTTPServer) UserCanIgroup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userIsInGroup, err := h.groups.CheckUserInGroup(id, group.Name)
+	userIsInGroup, err := h.groups.CheckUserInGroup(jwtUserID, group.Name)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1128,6 +1034,8 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 // PostShoppingList ...
 // creates a new shopping list to add items to
 func (h *HTTPServer) PostShoppingList(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var shoppingList types.ShoppingListSpec
@@ -1157,19 +1065,7 @@ func (h *HTTPServer) PostShoppingList(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-	shoppingList.Author = id
+	shoppingList.Author = jwtUserID
 	shoppingListInserted, err := h.shoppinglist.ShoppingList().Create(shoppingList, options)
 	if err != nil {
 		context = err.Error()
@@ -1195,6 +1091,8 @@ func (h *HTTPServer) PostShoppingList(w http.ResponseWriter, r *http.Request) {
 // PatchShoppingList ...
 // patches an existing shopping list
 func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var shoppingList types.ShoppingListSpec
@@ -1234,19 +1132,7 @@ func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-	shoppingList.AuthorLast = id
+	shoppingList.AuthorLast = jwtUserID
 	shoppingListPatched, err := h.shoppinglist.ShoppingList().Patch(list.ID, shoppingList)
 	if err != nil {
 		context = err.Error()
@@ -1272,6 +1158,8 @@ func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 // PutShoppingList ...
 // updates an existing shopping list
 func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var shoppingList types.ShoppingListSpec
@@ -1298,19 +1186,6 @@ func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	listID := vars["id"]
 
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-
 	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
@@ -1324,7 +1199,7 @@ func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shoppingList.AuthorLast = id
+	shoppingList.AuthorLast = jwtUserID
 	shoppingListUpdated, err := h.shoppinglist.ShoppingList().Update(list.ID, shoppingList)
 	if err != nil {
 		context = err.Error()
@@ -1492,6 +1367,8 @@ func (h *HTTPServer) GetShoppingListItem(w http.ResponseWriter, r *http.Request)
 // PostItemToShoppingList ...
 // adds an item to a shopping list
 func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var shoppingItem types.ShoppingItemSpec
@@ -1518,19 +1395,6 @@ func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Reque
 	vars := mux.Vars(r)
 	listID := vars["id"]
 
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-
 	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
@@ -1544,7 +1408,7 @@ func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	shoppingItem.Author = id
+	shoppingItem.Author = jwtUserID
 	shoppingItemInserted, err := h.shoppinglist.ShoppingItem().AddItemToList(list.ID, shoppingItem)
 	if err != nil {
 		context = err.Error()
@@ -1570,6 +1434,8 @@ func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Reque
 // PatchShoppingListCompleted ...
 // adds an item to a shopping list
 func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var shoppingList types.ShoppingListSpec
@@ -1596,19 +1462,6 @@ func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.R
 	vars := mux.Vars(r)
 	listID := vars["id"]
 
-	userID, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-
 	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
@@ -1622,7 +1475,7 @@ func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	patchedList, err := h.shoppinglist.ShoppingList().SetListCompleted(list.ID, shoppingList.Completed, userID)
+	patchedList, err := h.shoppinglist.ShoppingList().SetListCompleted(list.ID, shoppingList.Completed, jwtUserID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1647,6 +1500,8 @@ func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.R
 // PatchShoppingListItem ...
 // patches an item in a shopping list
 func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var shoppingItem types.ShoppingItemSpec
@@ -1673,19 +1528,6 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 	vars := mux.Vars(r)
 	itemID := vars["id"]
 	listID := vars["listId"]
-
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
 
 	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
@@ -1733,7 +1575,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	shoppingItem.AuthorLast = id
+	shoppingItem.AuthorLast = jwtUserID
 	patchedItem, err := h.shoppinglist.ShoppingItem().Patch(listID, item.ID, shoppingItem)
 	if err != nil {
 		context = err.Error()
@@ -1759,6 +1601,8 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 // PutShoppingListItem ...
 // updates an item in a shopping list
 func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var shoppingItem types.ShoppingItemSpec
@@ -1785,19 +1629,6 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 	vars := mux.Vars(r)
 	itemID := vars["id"]
 	listID := vars["listId"]
-
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
 
 	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
@@ -1845,7 +1676,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	shoppingItem.AuthorLast = id
+	shoppingItem.AuthorLast = jwtUserID
 	updatedItem, err := h.shoppinglist.ShoppingItem().Update(listID, item.ID, shoppingItem)
 	if err != nil {
 		context = err.Error()
@@ -1871,6 +1702,8 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 // PatchShoppingListItemObtained ...
 // patches an item in a shopping list
 func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var shoppingItem types.ShoppingItemSpec
@@ -1898,19 +1731,6 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 	itemID := vars["id"]
 	listID := vars["listId"]
 
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-
 	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
@@ -1957,7 +1777,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 		return
 	}
 
-	patchedItem, err := h.shoppinglist.ShoppingItem().SetItemObtained(listID, item.ID, shoppingItem.Obtained, id)
+	patchedItem, err := h.shoppinglist.ShoppingItem().SetItemObtained(listID, item.ID, shoppingItem.Obtained, jwtUserID)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -1982,24 +1802,13 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 // DeleteShoppingListItem ...
 // delete a shopping list item by it's id
 func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	vars := mux.Vars(r)
 	itemID := vars["itemId"]
 	listID := vars["listId"]
-
-	userID, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
 
 	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
@@ -2047,7 +1856,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.shoppinglist.ShoppingItem().Delete(item.ID, list.ID, userID); err != nil {
+	if err := h.shoppinglist.ShoppingItem().Delete(item.ID, list.ID, jwtUserID); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2070,6 +1879,8 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 // DeleteShoppingListTagItems ...
 // delete a shopping list items by matching a tag
 func (h *HTTPServer) DeleteShoppingListTagItems(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 	var item types.ShoppingItemSpec
 
@@ -2096,19 +1907,6 @@ func (h *HTTPServer) DeleteShoppingListTagItems(w http.ResponseWriter, r *http.R
 	vars := mux.Vars(r)
 	listID := vars["listId"]
 
-	userID, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-
 	list, err := h.shoppinglist.ShoppingList().Get(listID)
 	if err != nil {
 		context = err.Error()
@@ -2132,7 +1930,7 @@ func (h *HTTPServer) DeleteShoppingListTagItems(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := h.shoppinglist.ShoppingItem().DeleteTagItems(list.ID, item.Tag, userID); err != nil {
+	if err := h.shoppinglist.ShoppingItem().DeleteTagItems(list.ID, item.Tag, jwtUserID); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2310,6 +2108,8 @@ func (h *HTTPServer) GetAllShoppingTags(w http.ResponseWriter, r *http.Request) 
 // PostShoppingTag ...
 // creates a tag name
 func (h *HTTPServer) PostShoppingTag(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 
 	var tag types.ShoppingTag
@@ -2333,19 +2133,7 @@ func (h *HTTPServer) PostShoppingTag(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account id from token",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-	tag.Author = id
+	tag.Author = jwtUserID
 	tagCreated, err := h.shoppinglist.ShoppingTag().Create(tag)
 	if err != nil {
 		context = err.Error()
@@ -2410,32 +2198,11 @@ func (h *HTTPServer) GetShoppingTag(w http.ResponseWriter, r *http.Request) {
 // UpdateShoppingTag ...
 // updates a tag name
 func (h *HTTPServer) UpdateShoppingTag(w http.ResponseWriter, r *http.Request) {
+	reqClaims := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+	jwtUserID := reqClaims.ID
 	var context string
 	vars := mux.Vars(r)
 	id := vars["id"]
-
-	userID, err := h.users.GetIDFromJWT(r)
-	if err != nil {
-		context = err.Error()
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account from id",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
-		return
-	}
-	if userID == "" {
-		JSONresp := types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to get user account from id",
-			},
-		}
-		log.Println(JSONresp.Metadata.Response, context)
-		JSONResponse(r, w, http.StatusNotFound, JSONresp)
-		return
-	}
 
 	tag, err := h.shoppinglist.ShoppingTag().Get(id)
 	if err != nil {
@@ -2480,7 +2247,7 @@ func (h *HTTPServer) UpdateShoppingTag(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	tagUpdate.AuthorLast = userID
+	tagUpdate.AuthorLast = jwtUserID
 	tagUpdated, err := h.shoppinglist.ShoppingTag().Update(tag.ID, tagUpdate)
 	if err != nil {
 		context = err.Error()
@@ -3076,21 +2843,31 @@ func (h *HTTPServer) Healthz(w http.ResponseWriter, r *http.Request) {
 // middleware for checking JWT auth token validity
 func (h *HTTPServer) HTTPvalidateJWT(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var context string
-		completed, claims, err := h.users.ValidateJWTauthToken(r)
-		if completed && err == nil {
-			next.ServeHTTP(w, r)
+		var contextMsg string
+		valid, claims, err := h.users.ValidateJWTauthToken(r)
+		if err != nil {
+			log.Printf("error: %v\n", err)
+			JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Unauthorized",
+				},
+			})
 			return
 		}
 		if claims.ID != "" {
-			context = fmt.Sprintf("with user id '%v'", claims.ID)
+			contextMsg = fmt.Sprintf("with user id '%v'", claims.ID)
 		}
-		log.Printf("Unauthorized request with token %v\n", context)
-		JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "Unauthorized",
-			},
-		})
+		if !valid {
+			log.Printf("Unauthorized request with token %v\n", contextMsg)
+			JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Unauthorized",
+				},
+			})
+			return
+		}
+		ctx := context.WithValue(r.Context(), types.RequestContextKeyClaimAuth, claims)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }
 
@@ -3098,10 +2875,19 @@ func (h *HTTPServer) HTTPvalidateJWT(next http.HandlerFunc) http.HandlerFunc {
 // middleware for checking if a route can be accessed given a ID and groupID
 func (h *HTTPServer) HTTPcheckGroupsFromID(next http.HandlerFunc, groupsAllowed ...string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		id, errID := h.users.GetIDFromJWT(r)
+		reqClaims, ok := r.Context().Value(types.RequestContextKeyClaimAuth).(*types.JWTclaim)
+		if !ok {
+			JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
+				Metadata: types.JSONResponseMetadata{
+					Response: "Unable to find claims",
+				},
+			})
+			return
+		}
+		jwtUserID := reqClaims.ID
 		found := 0
 		for _, group := range groupsAllowed {
-			if userInGroup, err := h.groups.CheckUserInGroup(id, group); userInGroup && err == nil && err == errID {
+			if userInGroup, err := h.groups.CheckUserInGroup(jwtUserID, group); userInGroup && err == nil {
 				found++
 			}
 		}
@@ -3109,7 +2895,7 @@ func (h *HTTPServer) HTTPcheckGroupsFromID(next http.HandlerFunc, groupsAllowed 
 			next.ServeHTTP(w, r)
 			return
 		}
-		log.Printf("User '%v' tried to access route that is protected by '%v' group access", id, groupsAllowed)
+		log.Printf("User '%v' tried to access route that is protected by '%v' group access", jwtUserID, groupsAllowed)
 		JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "Forbidden",
@@ -3476,12 +3262,13 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 	}
 	for _, r := range routes {
 		handler := r.HandlerFunc
-		if r.RequireAuth {
-			handler = h.HTTPvalidateJWT(handler)
-		}
 		for _, g := range r.RequireAllGroups {
 			handler = h.HTTPcheckGroupsFromID(handler, g)
 		}
+		if r.RequireAuth {
+			handler = h.HTTPvalidateJWT(handler)
+		}
+		// NOTE handlers go in reverse order of dependency
 		router.HandleFunc(r.EndpointPath, handler).Methods(r.HTTPMethod)
 	}
 }
