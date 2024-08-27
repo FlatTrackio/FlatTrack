@@ -31,6 +31,10 @@ import (
 	"time"
 )
 
+const (
+	RequestContextKeyClaims = "auth"
+)
+
 // AppVars ...
 // defaults which are overridden with build
 var (
