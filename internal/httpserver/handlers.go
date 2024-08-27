@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
 	"path"
@@ -147,17 +146,7 @@ func (h *HTTPServer) PostUser(w http.ResponseWriter, r *http.Request) {
 	var context string
 
 	var user types.UserSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &user); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -196,17 +185,7 @@ func (h *HTTPServer) PutUser(w http.ResponseWriter, r *http.Request) {
 	var context string
 
 	var userAccount types.UserSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &userAccount); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&userAccount); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -219,8 +198,7 @@ func (h *HTTPServer) PutUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	_, err = h.users.GetByID(userID, false)
-	if err != nil {
+	if _, err := h.users.GetByID(userID, false); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -261,17 +239,7 @@ func (h *HTTPServer) PatchUser(w http.ResponseWriter, r *http.Request) {
 	var context string
 
 	var userAccount types.UserSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &userAccount); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&userAccount); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -284,8 +252,7 @@ func (h *HTTPServer) PatchUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	_, err = h.users.GetByID(userID, false)
-	if err != nil {
+	if _, err := h.users.GetByID(userID, false); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -326,17 +293,7 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 	var context string
 
 	var userAccount types.UserSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &userAccount); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&userAccount); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -349,8 +306,7 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID := vars["id"]
 
-	_, err = h.users.GetByID(userID, false)
-	if err != nil {
+	if _, err := h.users.GetByID(userID, false); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -484,17 +440,7 @@ func (h *HTTPServer) PutProfile(w http.ResponseWriter, r *http.Request) {
 	var context string
 
 	var userAccount types.UserSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &userAccount); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&userAccount); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -534,17 +480,7 @@ func (h *HTTPServer) PatchProfile(w http.ResponseWriter, r *http.Request) {
 	var context string
 
 	var userAccount types.UserSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &userAccount); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&userAccount); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -610,17 +546,7 @@ func (h *HTTPServer) GetSystemInitialized(w http.ResponseWriter, r *http.Request
 // authenticate a user
 func (h *HTTPServer) UserAuth(w http.ResponseWriter, r *http.Request) {
 	var user types.UserSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: faled to read request body; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &user); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -848,17 +774,7 @@ func (h *HTTPServer) SetSettingsFlatName(w http.ResponseWriter, r *http.Request)
 	var context string
 
 	var flatName types.FlatName
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &flatName); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&flatName); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -918,17 +834,7 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var registrationForm types.Registration
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &registrationForm); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&registrationForm); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1039,17 +945,7 @@ func (h *HTTPServer) PostShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
 
 	var shoppingList types.ShoppingListSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &shoppingList); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&shoppingList); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1096,17 +992,7 @@ func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
 
 	var shoppingList types.ShoppingListSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &shoppingList); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&shoppingList); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1163,17 +1049,7 @@ func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
 	var context string
 
 	var shoppingList types.ShoppingListSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &shoppingList); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&shoppingList); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1372,17 +1248,7 @@ func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Reque
 	var context string
 
 	var shoppingItem types.ShoppingItemSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &shoppingItem); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&shoppingItem); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1439,17 +1305,7 @@ func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.R
 	var context string
 
 	var shoppingList types.ShoppingListSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &shoppingList); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&shoppingList); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1505,17 +1361,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 	var context string
 
 	var shoppingItem types.ShoppingItemSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &shoppingItem); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&shoppingItem); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1606,17 +1452,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 	var context string
 
 	var shoppingItem types.ShoppingItemSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &shoppingItem); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&shoppingItem); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1707,17 +1543,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 	var context string
 
 	var shoppingItem types.ShoppingItemSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &shoppingItem); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&shoppingItem); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -1884,17 +1710,7 @@ func (h *HTTPServer) DeleteShoppingListTagItems(w http.ResponseWriter, r *http.R
 	var context string
 	var item types.ShoppingItemSpec
 
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &item); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2033,17 +1849,7 @@ func (h *HTTPServer) UpdateShoppingListItemTag(w http.ResponseWriter, r *http.Re
 	}
 
 	var tagUpdate types.ShoppingTag
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &tagUpdate); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&tagUpdate); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2113,17 +1919,7 @@ func (h *HTTPServer) PostShoppingTag(w http.ResponseWriter, r *http.Request) {
 	var context string
 
 	var tag types.ShoppingTag
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &tag); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&tag); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2228,17 +2024,7 @@ func (h *HTTPServer) UpdateShoppingTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var tagUpdate types.ShoppingTag
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &tagUpdate); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&tagUpdate); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2352,17 +2138,7 @@ func (h *HTTPServer) PutSettingsShoppingList(w http.ResponseWriter, r *http.Requ
 	var context string
 
 	var notes types.ShoppingListNotes
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &notes); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&notes); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2431,17 +2207,7 @@ func (h *HTTPServer) PutSettingsFlatNotes(w http.ResponseWriter, r *http.Request
 	var context string
 
 	var notes types.FlatNotes
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &notes); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&notes); err != nil {
 		log.Printf("error: failed to unmarshal; %v\n", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
@@ -2659,17 +2425,7 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 	secret := r.FormValue("secret")
 
 	var user types.UserSpec
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
-		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
-			Metadata: types.JSONResponseMetadata{
-				Response: "failed to read request body",
-			},
-		})
-		return
-	}
-	if err := json.Unmarshal(body, &user); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
