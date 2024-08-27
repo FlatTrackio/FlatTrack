@@ -28,7 +28,7 @@ import (
 
 	"github.com/imdario/mergo"
 
-	jwt "github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt/v5"
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/groups"
 	"gitlab.com/flattrack/flattrack/internal/system"
@@ -394,8 +394,8 @@ func (m *Manager) GenerateJWTauthToken(id string, authNonce string, expiresIn ti
 	token := jwt.NewWithClaims(jwtAlg, types.JWTclaim{
 		ID:        id,
 		AuthNonce: authNonce,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
 	})
 
@@ -433,6 +433,12 @@ func (m *Manager) ValidateJWTauthToken(r *http.Request) (valid bool, tokenClaims
 	}
 	claims := &types.JWTclaim{}
 	token, err := jwt.ParseWithClaims(tokenHeaderJWT, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
+		if token.Method.Alg() != jwtAlg.Alg() {
+			return nil, ErrAuthTokenFailed
+		}
 		return []byte(secret), nil
 	})
 	if err != nil {
@@ -442,13 +448,6 @@ func (m *Manager) ValidateJWTauthToken(r *http.Request) (valid bool, tokenClaims
 	if !token.Valid {
 		return false, &types.JWTclaim{}, ErrAuthInvalid
 	}
-	if err := token.Claims.Valid(); err != nil {
-		return false, &types.JWTclaim{}, ErrAuthInvalid
-	}
-	if token.Method.Alg() != jwtAlg.Alg() {
-		return false, &types.JWTclaim{}, ErrAuthTokenFailed
-	}
-
 	reqClaims, ok := token.Claims.(*types.JWTclaim)
 	if !ok {
 		return false, &types.JWTclaim{}, ErrFailedToReadJWTClaims
@@ -489,34 +488,14 @@ func (m *Manager) InvalidateAllAuthTokens(id string) (err error) {
 // return the userID in a JWT from a header in a HTTP request
 // TODO move into internal/httpserver/common.go
 func (m *Manager) GetIDFromJWT(r *http.Request) (id string, err error) {
-	secret, err := m.system.GetJWTsecret()
-	if err != nil {
-		return "", ErrFailedToFindSystemAuthSecret
-	}
-	tokenHeader := r.Header.Get("Authorization")
-	if tokenHeader == "" {
-		return "", ErrAuthorizationHeaderNotFound
-	}
-	authorizationHeader := strings.Split(tokenHeader, " ")
-	if authorizationHeader[0] != "bearer" || len(authorizationHeader) <= 1 {
-		return "", ErrAuthorizationHeaderNotFound
-	}
-	tokenHeaderJWT := authorizationHeader[1]
-	claims := &types.JWTclaim{}
-	token, err := jwt.ParseWithClaims(tokenHeaderJWT, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secret), nil
-	})
+	valid, claims, err := m.ValidateJWTauthToken(r)
 	if err != nil {
 		return "", err
 	}
-
-	reqClaims := token.Claims.(*types.JWTclaim)
-	user, err := m.GetByID(reqClaims.ID, true)
-	if err != nil || user.ID == "" {
-		log.Printf("error getting user by ID; %v\n", err)
-		return "", ErrFailedToFindAuthTokenAccountID
+	if !valid {
+		return "", ErrAuthInvalid
 	}
-	return user.ID, nil
+	return claims.ID, nil
 }
 
 // GetProfile ...
