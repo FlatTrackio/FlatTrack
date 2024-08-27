@@ -9,16 +9,10 @@ Requirements:
 ## Install dependencies with Brew
 
 ```sh
-brew install go nodejs npm
+brew bundle install --file ./hack/Brewfile
 ```
 
 ## Launch a workspace with Zellij
-
-install with Brew
-
-```sh
-brew install zellij
-```
 
 launch the workspace
 
