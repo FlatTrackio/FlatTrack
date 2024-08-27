@@ -21,7 +21,7 @@ package types
 import (
 	"net/http"
 
-	"github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt/v5"
 )
 
 // Group ...
@@ -315,5 +315,5 @@ type Endpoints []struct {
 type JWTclaim struct {
 	ID        string `json:"id"`
 	AuthNonce string `json:"authNonce"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
