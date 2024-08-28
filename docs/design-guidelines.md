@@ -1,4 +1,3 @@
-
 # Design guidelines
 
 How FlatTrack must be built.
@@ -14,22 +13,21 @@ The project must be:
 -   useful: the features provided should be exactly what people need
 -   reliable: it must be built for strong-reliablity
 -   secure: it must be secure by default; there must be large security focus
--   private: it must not communicate with third-parties for app resources and functions (exception of things like authentication via OAuth); information in the attached database must not leave where it resides
+-   private: it must not communicate with third-parties for app resources and functions (exception for optional things like authentication via OAuth); information in the attached database must not leave where it resides
 -   accessible: there must be many ways to run it or get an instance
 -   portable: it must be easy to pick up an instance and take it somewhere else
 -   conformant: no matter where it runs, it should be expected to be the same
 -   tested: it should be well-tested and audited for quality and consistency
--   using open standards:
 
 
 ## API
 
 The API must be:
 
--   stateless: it doesn&rsquo;t have any moving parts; nothing is stored in memory which is unique to the instance - so it can scale
+-   stateless: it doesn't have any moving parts; nothing is stored in memory which is unique to the instance - so it can scale
 -   dependency: it should live out of the database
 -   performant: it must be built to be fast
--   declarative: all resources (accounts, shopping lists, etc&#x2026;) must read and write mostly the same data (expect credentials and secrets)
+-   declarative: all resources (accounts, shopping lists, etc...) must read and write mostly the same data (expect credentials and secrets)
 -   structured: it must respond and accept JSON data
 -   split up into packages: each feature or area of FlatTrack must be split up in package for easy reuse and testing
 
