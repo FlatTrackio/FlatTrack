@@ -12,6 +12,20 @@ Requirements:
 brew bundle install --file ./hack/Brewfile
 ```
 
+
+## Write an environment file
+
+Write the credientials for the database into `.env`
+
+    APP_DB_USERNAME=flattrack
+    APP_DB_PASSWORD=flattrack
+    APP_DB_DATABASE=flattrack
+    APP_DB_HOST=localhost
+
+
+see the `example.env` file in the root of the repo for more.
+
+
 ## Launch a workspace with Zellij
 
 launch the workspace
@@ -19,6 +33,7 @@ launch the workspace
 ```sh
 ./hack/start-dev.sh
 ```
+
 
 ## Set up Postgres
 
@@ -59,16 +74,6 @@ Navigate to the root of the repo.
 Build the backend
 
     ./hack/verify-build-smoketest.sh
-
-
-## Write an environment file
-
-Write the credientials for the database into `.env`
-
-    APP_DB_USERNAME=flattrack
-    APP_DB_PASSWORD=flattrack
-    APP_DB_DATABASE=flattrack
-    APP_DB_HOST=localhost
 
 
 ### Start the backend
