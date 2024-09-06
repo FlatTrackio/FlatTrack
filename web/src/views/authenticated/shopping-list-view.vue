@@ -429,6 +429,7 @@
                       <span v-if="TagIsExcluded(itemTag.tag)">
                         <b-tag type="is-primary">price excluded</b-tag>
                         <infotooltip
+                          v-if="participatingFlatmates.length > 1 || manualSplit > 1"
                           :message="
                             'Split price plus tag price is $' +
                             (equalPricePerPerson + itemTag.price).toFixed(2)
