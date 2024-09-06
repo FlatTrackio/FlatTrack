@@ -24,12 +24,15 @@ import (
 	"log"
 
 	// include Pg
+	embeddedpostgres "github.com/fergusstrange/embedded-postgres"
 	_ "github.com/lib/pq"
+
 	"gitlab.com/flattrack/flattrack/internal/common"
 )
 
 var (
-	connectionString = ""
+	connectionString       = ""
+	embeddedpostgresServer = (*embeddedpostgres.EmbeddedPostgres)(nil)
 )
 
 type databaseConnection struct {
@@ -78,7 +81,22 @@ func GetConnectionString() (output string) {
 // Open ...
 // given database credentials, return a database connection
 func Open() (*sql.DB, error) {
-	connectionString = GetConnectionString()
+	if useEmbedded := common.GetDBuseEmbedded(); useEmbedded {
+		opts := []embeddedpostgres.Config{}
+		if dataPath := common.GetDBuseEmbeddedDataPath(); dataPath != "" {
+			cfg := embeddedpostgres.DefaultConfig().DataPath(dataPath)
+			opts = append(opts, cfg)
+		} else {
+			log.Println("NOTICE: persistence is not enabled")
+		}
+		embeddedpostgresServer = embeddedpostgres.NewDatabase(opts...)
+		if err := embeddedpostgresServer.Start(); err != nil {
+			return nil, err
+		}
+		connectionString = "postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable"
+	} else {
+		connectionString = GetConnectionString()
+	}
 	db, err := sql.Open("postgres", connectionString)
 	if err != nil {
 		return nil, err
@@ -89,6 +107,11 @@ func Open() (*sql.DB, error) {
 // Close ...
 // close the connection to the database
 func Close(db *sql.DB) (err error) {
+	if useEmbedded := common.GetDBuseEmbedded(); useEmbedded {
+		if err := embeddedpostgresServer.Stop(); err != nil {
+			log.Fatalf("failed to stop embedded postgres: %v", err)
+		}
+	}
 	if err := db.Close(); err != nil {
 		return err
 	}

@@ -93,6 +93,18 @@ func GetDBsslMode() (output string) {
 	return GetEnvOrDefault("APP_DB_SSLMODE", "disable")
 }
 
+// GetDBuseEmbedded ...
+// return whether to use an embedded database
+func GetDBuseEmbedded() (output bool) {
+	return GetEnvOrDefault("APP_DB_USE_EMBEDDED", "false") == "true"
+}
+
+// GetDBuseEmbeddedDataPath ...
+// return whether to use an embedded database
+func GetDBuseEmbeddedDataPath() (output string) {
+	return GetEnvOrDefault("APP_DB_USE_EMBEDDED_DATA_PATH", "")
+}
+
 // GetInstanceURL ...
 // return URL of the instance
 func GetInstanceURL() (output string) {

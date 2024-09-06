@@ -1,6 +1,7 @@
 package flattrack
 
 import (
+	"database/sql"
 	"log"
 
 	"github.com/joho/godotenv"
@@ -31,6 +32,7 @@ type manager struct {
 	settings     *settings.Manager
 	system       *system.Manager
 	scheduling   *scheduling.Manager
+	db           *sql.DB
 }
 
 func NewManager() *manager {
@@ -65,6 +67,7 @@ func NewManager() *manager {
 		settings:     settings,
 		system:       system,
 		scheduling:   scheduling,
+		db:           db,
 	}
 }
 
@@ -74,6 +77,7 @@ type managerInit struct {
 	health       *health.Manager
 	registration *registration.Manager
 	scheduling   *scheduling.Manager
+	db           *sql.DB
 }
 
 func (m *manager) Init() *managerInit {
@@ -86,10 +90,16 @@ func (m *manager) Init() *managerInit {
 		health:       m.health,
 		registration: m.registration,
 		scheduling:   m.scheduling,
+		db:           m.db,
 	}
 }
 
 func (mi *managerInit) Run() {
+	defer func() {
+		if err := database.Close(mi.db); err != nil {
+			log.Fatalf("failed to close database connection")
+		}
+	}()
 	go mi.metrics.Listen()
 	go mi.health.Listen()
 	go mi.scheduling.Run()
