@@ -1229,18 +1229,18 @@ export default {
         this.templateListName = resp.data.spec.name
       })
     },
-    isNewItemModalActive() {
+    isNewItemModalActive () {
       if (this.isNewItemModalActive !== false) {
         return
       }
       this.GetShoppingListItems()
     },
-    isEditItemModalActive() {
+    isEditItemModalActive () {
       if (this.isEditItemModalActive !== false) {
         return
       }
       this.GetShoppingListItems()
-    },
+    }
   },
   async beforeMount () {
     this.GetShoppingList()

@@ -40,6 +40,17 @@ function SetAuthToken (token) {
   return localStorage.setItem('authToken', token)
 }
 
+// HasAuthToken
+// returns whether an auth token is found
+function HasAuthToken () {
+  const authToken = GetAuthToken()
+  return !(
+    typeof authToken === 'undefined' ||
+    authToken === null ||
+    authToken === ''
+  )
+}
+
 // DeleteAuthToken
 // removes the JWT from localStorage
 function DeleteAuthToken () {
@@ -203,6 +214,7 @@ function CopyHrefToClipboard () {
 export default {
   GetAuthToken,
   SetAuthToken,
+  HasAuthToken,
   DeleteAuthToken,
   DisplaySuccessToast,
   DisplayFailureToast,
