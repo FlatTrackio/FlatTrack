@@ -193,14 +193,24 @@ export default [
     name: 'Login',
     component: () => import('@/views/public/login.vue'),
     beforeEnter: (to, from, next) => {
-      var instanceRegistered
-      var hasAuthToken
-      var validAuthToken
-      var nextRoute
+      let instanceRegistered
+      let hasAuthToken
+      let validAuthToken
+      let nextRoute
 
       function handleRedirections () {
-        if (instanceRegistered && validAuthToken) {
+        if (
+          instanceRegistered &&
+          validAuthToken &&
+          to.query.redirect === null
+        ) {
           nextRoute = '/'
+        } else if (
+          instanceRegistered &&
+          validAuthToken &&
+          to.query.redirect !== null
+        ) {
+          nextRoute = to.query.redirect
         } else if (!instanceRegistered) {
           nextRoute = '/setup'
         } else if (!(hasAuthToken || validAuthToken)) {
