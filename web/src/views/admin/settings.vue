@@ -23,53 +23,57 @@
         >
           <ul>
             <li>
-              <router-link :to="{ name: 'Admin home' }">Admin</router-link>
+              <router-link :to="{ name: 'Admin home' }">
+                Admin
+              </router-link>
             </li>
             <li class="is-active">
-              <router-link :to="{ name: 'Admin settings' }"
-                >Settings</router-link
-              >
+              <router-link :to="{ name: 'Admin settings' }">
+                Settings
+              </router-link>
             </li>
           </ul>
           <b-button
-            @click="CopyHrefToClipboard()"
             icon-left="content-copy"
             size="is-small"
-          ></b-button>
+            @click="CopyHrefToClipboard()"
+          />
         </nav>
-        <h1 class="title is-1">Settings</h1>
-        <p class="subtitle is-4">General FlatTrack settings</p>
+        <h1 class="title is-1">
+          Settings
+        </h1>
+        <p class="subtitle is-4">
+          General FlatTrack settings
+        </p>
         <b-loading
+          v-model:active="pageLoading"
           :is-full-page="false"
-          :active.sync="pageLoading"
           :can-cancel="false"
-        ></b-loading>
+        />
         <div>
           <label class="label">Flat name</label>
           <b-field>
             <b-input
-              type="text"
               v-model="flatName"
+              type="text"
               maxlength="20"
               placeholder="Enter your flat's name"
               icon="textbox"
               size="is-medium"
               icon-right="close-circle"
               icon-right-clickable
-              @icon-right-click="flatName = ''"
-              @keyup.enter.native="PostFlatName"
               expanded
               required
-            >
-            </b-input>
+              @icon-right-click="flatName = ''"
+              @keyup.enter="PostFlatName"
+            />
             <p class="control">
               <b-button
                 type="is-primary"
                 size="is-medium"
                 icon-left="check"
                 @click="PostFlatName"
-              >
-              </b-button>
+              />
             </p>
           </b-field>
         </div>
@@ -77,102 +81,100 @@
           <label class="label">Flat notes</label>
           <b-field>
             <b-input
-              type="textarea"
               v-model="flatNotes"
+              type="textarea"
               minlength="0"
               maxlength="500"
               placeholder="Enter notes about your flat. e.g: living space, rules, obligations, etc..."
               size="is-medium"
               icon-right="close-circle"
               icon-right-clickable
-              @icon-right-click="flatNotes = ''"
               expanded
-            >
-            </b-input>
+              @icon-right-click="flatNotes = ''"
+            />
             <p class="control">
               <b-button
                 type="is-primary"
                 size="is-medium"
                 icon-left="check"
                 @click="PutFlatNotes"
-              >
-              </b-button>
+              />
             </p>
           </b-field>
         </div>
-        <br />
+        <br>
       </section>
     </div>
   </div>
 </template>
 
 <script>
-import flatInfo from '@/requests/authenticated/flatInfo'
-import settings from '@/requests/admin/settings'
-import common from '@/common/common'
+  import flatInfo from "@/requests/authenticated/flatInfo";
+  import settings from "@/requests/admin/settings";
+  import common from "@/common/common";
 
-export default {
-  name: 'admin-settings',
-  data () {
-    return {
-      pageLoading: true,
-      flatName: '',
-      flatNotes: ''
-    }
-  },
-  async beforeMount () {
-    flatInfo
-      .GetFlatName()
-      .then((resp) => {
-        this.flatName = resp.data.spec
-        return flatInfo.GetFlatNotes()
-      })
-      .then((resp) => {
-        this.flatNotes = resp.data.spec.notes
-        this.pageLoading = false
-      })
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+  export default {
+    name: "AdminSettings",
+    data() {
+      return {
+        pageLoading: true,
+        flatName: "",
+        flatNotes: "",
+      };
     },
-    PostFlatName () {
-      if (this.flatName === '') {
-        common.DisplayFailureToast('Error: Flat name must not be empty')
-        return
-      }
-      settings
-        .PostFlatName(this.flatName)
+    async beforeMount() {
+      flatInfo
+        .GetFlatName()
         .then((resp) => {
-          common.DisplaySuccessToast('Set flat name')
+          this.flatName = resp.data.spec;
+          return flatInfo.GetFlatNotes();
         })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed set the flat name' +
-              '<br/>' +
-              (err.response.data.metadata.response || err)
-          )
-        })
-    },
-    PutFlatNotes () {
-      if (this.flatName === '') {
-        common.DisplayFailureToast('Error: Flat notes must not be empty')
-        return
-      }
-      settings
-        .PutFlatNotes(this.flatNotes)
         .then((resp) => {
-          common.DisplaySuccessToast('Set flat notes')
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed set the flat notes' + '<br/>' + err
-          )
-        })
+          this.flatNotes = resp.data.spec.notes;
+          this.pageLoading = false;
+        });
     },
-    TimestampToCalendar (timestamp) {
-      return common.TimestampToCalendar(timestamp)
-    }
-  }
-}
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      PostFlatName() {
+        if (this.flatName === "") {
+          common.DisplayFailureToast("Error: Flat name must not be empty");
+          return;
+        }
+        settings
+          .PostFlatName(this.flatName)
+          .then((resp) => {
+            common.DisplaySuccessToast("Set flat name");
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed set the flat name" +
+                "<br/>" +
+                (err.response.data.metadata.response || err)
+            );
+          });
+      },
+      PutFlatNotes() {
+        if (this.flatName === "") {
+          common.DisplayFailureToast("Error: Flat notes must not be empty");
+          return;
+        }
+        settings
+          .PutFlatNotes(this.flatNotes)
+          .then((resp) => {
+            common.DisplaySuccessToast("Set flat notes");
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed set the flat notes" + "<br/>" + err
+            );
+          });
+      },
+      TimestampToCalendar(timestamp) {
+        return common.TimestampToCalendar(timestamp);
+      },
+    },
+  };
 </script>

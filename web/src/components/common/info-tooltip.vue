@@ -24,17 +24,22 @@
       icon="information-outline"
       type="is-lightyellow"
       custom-size="mdi-24px"
-    >
-    </b-icon>
+    />
   </b-tooltip>
 </template>
 
 <script>
 export default {
-  name: 'password-tooltip-icon',
+  name: 'PasswordTooltipIcon',
   props: {
-    message: String,
-    position: String
+    message: {
+      default: "Hello!",
+      type: String,
+    },
+    position: {
+      default: "Hello!",
+      type: String,
+    }
   }
 }
 </script>

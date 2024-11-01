@@ -17,16 +17,26 @@
   <div>
     <div class="container">
       <section class="section is-large">
-        <h2 class="title is-2">Unknown page!</h2>
+        <h2 class="title is-2">
+          Unknown page!
+        </h2>
         <h4 class="title is-4">
           Hmmm maybe something went wrong {{ emojiConfused }}
         </h4>
-        <b-button tag="router-link" :to="{ name: 'Home' }" rounded
-          >Go home</b-button
+        <b-button
+          tag="router-link"
+          :to="{ name: 'Home' }"
+          rounded
         >
-        <b-button type="is-warning" @click="$router.go(-1)" rounded
-          >Go back</b-button
+          Go home
+        </b-button>
+        <b-button
+          type="is-warning"
+          rounded
+          @click="$router.go(-1)"
         >
+          Go back
+        </b-button>
       </section>
     </div>
   </div>
@@ -36,7 +46,7 @@
 import emoji from 'node-emoji'
 
 export default {
-  name: 'unknown-page',
+  name: 'UnknownPage',
   data () {
     return {
       emojiConfused: emoji.get('confused')

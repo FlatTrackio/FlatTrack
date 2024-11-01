@@ -17,11 +17,11 @@
   <div>
     <section
       @click="
-             (mini === true && deviceIsMobile) &&    $router.push({
-                    name: 'View shopping list',
-                    params: { id: list.id },
-                  })
-                "
+        (mini === true && deviceIsMobile) && $router.push({
+          name: 'View shopping list',
+          params: { id: list.id },
+        })
+      "
     >
       <div class="card pointer-cursor-on-hover">
         <div class="card-content">
@@ -39,8 +39,7 @@
                 icon="cart-outline"
                 :type="list.completed === true ? 'is-success' : ''"
                 size="is-medium"
-              >
-              </b-icon>
+              />
             </div>
             <div
               class="media-content"
@@ -52,7 +51,9 @@
               "
             >
               <div class="display-items-on-the-same-line">
-                <p class="title is-4">{{ list.name }}</p>
+                <p class="title is-4">
+                  {{ list.name }}
+                </p>
               </div>
               <p class="subtitle is-6">
                 <span
@@ -66,12 +67,16 @@
               </p>
             </div>
             <div class="media-right">
-              <b-tooltip label="Delete" class="is-paddingless" :delay="200">
+              <b-tooltip
+                label="Delete"
+                class="is-paddingless"
+                :delay="200"
+              >
                 <b-button
+                  v-if="deviceIsMobile === false"
                   type="is-danger"
                   icon-right="delete"
                   :loading="itemDeleting"
-                  v-if="deviceIsMobile === false"
                   @click="DeleteShoppingList(list.id)"
                 />
               </b-tooltip>
@@ -79,7 +84,7 @@
                 icon="chevron-right"
                 size="is-medium"
                 type="is-midgray"
-              ></b-icon>
+              />
             </div>
           </div>
           <div
@@ -97,20 +102,22 @@
                 {{ list.completed ? "Completed" : "Uncompleted" }}
               </b-tag>
             </div>
-            <br />
+            <br>
             <span v-if="list.notes !== '' && typeof list.notes !== 'undefined'">
               <i> {{ PreviewNotes(list.notes) }} </i>
-              <br />
-              <br />
+              <br>
+              <br>
             </span>
             <div v-if="typeof list.count !== 'undefined' && list.count > 0">
               {{ list.count }} item(s)
             </div>
-            <div v-else>0 items</div>
+            <div v-else>
+              0 items
+            </div>
           </div>
         </div>
       </div>
-      <br />
+      <br>
     </section>
   </div>
 </template>
@@ -122,14 +129,30 @@ import shoppinglist from '@/requests/authenticated/shoppinglist'
 import shoppinglistCommon from '@/common/shoppinglist'
 
 export default {
-  name: 'shopping-list-card-view',
+  name: 'ShoppingListCardView',
   props: {
-    mini: Boolean,
-    deviceIsMobile: Boolean,
-    index: Number,
-    lists: Object,
-    list: Object
+    mini: {
+      type: Boolean,
+      default: null
+    },
+    deviceIsMobile: {
+      type: Boolean,
+      default: null
+    },
+    index: {
+      type: Number,
+      default: null
+    },
+    lists: {
+      type: Object,
+      default: null
+    },
+    list: {
+      type: Object,
+      default: null
+    },
   },
+  emits: ['lists'],
   data () {
     return {
       deleteLoading: false,
@@ -137,6 +160,7 @@ export default {
       authorLastNames: ''
     }
   },
+  async beforeMount () {},
   methods: {
     PreviewNotes (notes) {
       if (notes.length <= 35) {
@@ -187,8 +211,7 @@ export default {
     TimestampToCalendar (timestamp) {
       return common.TimestampToCalendar(timestamp)
     }
-  },
-  async beforeMount () {}
+  }
 }
 </script>
 

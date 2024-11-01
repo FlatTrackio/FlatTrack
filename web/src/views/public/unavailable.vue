@@ -18,24 +18,29 @@
     <headerDisplay />
     <div class="container">
       <section class="section">
-        <h1 class="title is-1">Connection error</h1>
-        <b-message has-icon type="is-warning">
+        <h1 class="title is-1">
+          Connection error
+        </h1>
+        <b-message
+          has-icon
+          type="is-warning"
+        >
           <p class="subtitle is-4">
             Hmmm... something appears to have gone wrong with your FlatTrack
             instance.
-            <br />
-            <br />
+            <br>
+            <br>
             Please contact your system administrator.
-            <br />
-            <br />
+            <br>
+            <br>
           </p>
         </b-message>
         <b-button
           type="is-white"
-          @click="Reload"
           size="is-medium"
           rounded
           expanded
+          @click="Reload"
         >
           Refresh
         </b-button>
@@ -46,7 +51,7 @@
 
 <script>
 export default {
-  name: 'unavailable-page',
+  name: 'UnavailablePage',
   components: {
     headerDisplay: () => import('@/components/common/header-display.vue')
   },

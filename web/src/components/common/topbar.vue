@@ -21,13 +21,19 @@
       type="is-info"
       transparent="false"
     >
-      <template slot="brand">
-        <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
+      <template #brand>
+        <b-navbar-item
+          tag="router-link"
+          :to="{ name: 'Home' }"
+        >
           <!-- <img -->
           <!--   src="" -->
           <!--   alt="FlatTrack logo" -->
           <!--   /> -->
-          <h1 class="title is-5" style="color: #fff">
+          <h1
+            class="title is-5"
+            style="color: #fff"
+          >
             FlatTrack
             <span style="font-weight: normal">
               {{ flatName }}
@@ -35,15 +41,18 @@
           </h1>
         </b-navbar-item>
       </template>
-      <template slot="start">
-        <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
+      <template #start>
+        <b-navbar-item
+          tag="router-link"
+          :to="{ name: 'Home' }"
+        >
           Home
         </b-navbar-item>
         <b-navbar-item
+          v-if="false"
           href="https://flattrack.io/help"
           tag="a"
           target="_blank"
-          v-if="false"
         >
           FlatTrack Help
         </b-navbar-item>
@@ -53,13 +62,21 @@
         >
           Contact admin
         </b-navbar-item>
-        <b-navbar-item tag="router-link" :to="{ name: 'My Flat' }">
+        <b-navbar-item
+          tag="router-link"
+          :to="{ name: 'My Flat' }"
+        >
           My flat
         </b-navbar-item>
-        <b-navbar-item tag="router-link" :to="{ name: 'About FlatTrack' }">
+        <b-navbar-item
+          tag="router-link"
+          :to="{ name: 'About FlatTrack' }"
+        >
           About FlatTrack
         </b-navbar-item>
-        <b-navbar-item @click="signOut"> Sign out </b-navbar-item>
+        <b-navbar-item @click="signOut">
+          Sign out
+        </b-navbar-item>
       </template>
     </b-navbar>
   </div>
@@ -70,11 +87,17 @@ import common from '@/common/common'
 import flatInfo from '@/requests/authenticated/flatInfo'
 
 export default {
-  name: 'top-bar',
+  name: 'TopBar',
   data () {
     return {
       flatName: 'My Flat',
       ratherSmallerScreen: false
+    }
+  },
+  async beforeMount () {
+    this.GetFlatInfo()
+    if (window.innerWidth <= 330) {
+      this.ratherSmallerScreen = true
     }
   },
   methods: {
@@ -85,12 +108,6 @@ export default {
       flatInfo.GetFlatName().then((resp) => {
         this.flatName = resp.data.spec
       })
-    }
-  },
-  async beforeMount () {
-    this.GetFlatInfo()
-    if (window.innerWidth <= 330) {
-      this.ratherSmallerScreen = true
     }
   }
 }

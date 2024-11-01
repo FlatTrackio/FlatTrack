@@ -18,22 +18,38 @@
     <div class="container">
       <section class="section">
         <b-loading
+          v-model:active="pageLoading"
           :is-full-page="false"
-          :active.sync="pageLoading"
           :can-cancel="false"
-        ></b-loading>
-        <h1 class="title is-1">Home</h1>
-        <div v-if="notes !== '' || canUserAccountAdmin === true" class="my-4">
-          <p class="subtitle is-3">About {{ name }}</p>
-          <b-message type="is-primary" v-if="notes !== ''">
-            <span v-for="line in notesSplit" v-bind:key="line">
+        />
+        <h1 class="title is-1">
+          Home
+        </h1>
+        <div
+          v-if="notes !== '' || canUserAccountAdmin === true"
+          class="my-4"
+        >
+          <p class="subtitle is-3">
+            About {{ name }}
+          </p>
+          <b-message
+            v-if="notes !== ''"
+            type="is-primary"
+          >
+            <span
+              v-for="line in notesSplit"
+              :key="line"
+            >
               {{ line }}
-              <br />
+              <br>
             </span>
           </b-message>
-          <b-message type="is-warning" v-else>
+          <b-message
+            v-else
+            type="is-warning"
+          >
             This section for describing such things as, but not limited to:
-            <br />
+            <br>
             <ul style="list-style-type: disc">
               <li>how the flat life is</li>
               <li>rules</li>
@@ -45,23 +61,27 @@
             v-if="canUserAccountAdmin === true"
             icon-left="pencil"
             type="is-warning"
-            @click="$router.push({ name: 'Admin settings' })"
             rounded
+            @click="$router.push({ name: 'Admin settings' })"
           >
             Edit message
           </b-button>
         </div>
-        <p class="subtitle is-3">Recent activity</p>
-        <h1 class="subtitle is-4">Shopping lists</h1>
+        <p class="subtitle is-3">
+          Recent activity
+        </p>
+        <h1 class="subtitle is-4">
+          Shopping lists
+        </h1>
         <div v-if="lists.length > 0">
           <shoppingListCardView
+            v-for="(list, index) in lists"
+            :key="list"
             :list="list"
             :authors="authors"
             :lists="lists"
             :index="index"
-            v-for="(list, index) in lists"
-            v-bind:key="list"
-            :deviceIsMobile="true"
+            :device-is-mobile="true"
             :mini="true"
           />
           <p class="is-size-5 ml-3 mb-2">
@@ -69,15 +89,15 @@
               icon="party-popper"
               type="is-success"
               size="is-medium"
-            ></b-icon>
+            />
             You're all caught up! That's all for now
           </p>
           <b-button
             class="has-text-left"
-            @click="ClearItems"
             type="is-info"
             icon-left="close-box-outline"
             expanded
+            @click="ClearItems"
           >
             Clear
           </b-button>
@@ -88,8 +108,10 @@
           </b-message>
         </div>
         <div v-if="canUserAccountAdmin === true">
-          <br />
-          <h1 class="subtitle is-4">Admin</h1>
+          <br>
+          <h1 class="subtitle is-4">
+            Admin
+          </h1>
           <div
             class="card pointer-cursor-on-hover"
             @click="$router.push({ name: 'Admin accounts' })"
@@ -97,11 +119,16 @@
             <div class="card-content card-content-list">
               <div class="media">
                 <div class="media-left">
-                  <b-icon icon="account-group" size="is-medium"></b-icon>
+                  <b-icon
+                    icon="account-group"
+                    size="is-medium"
+                  />
                 </div>
                 <div class="media-content">
                   <div class="block">
-                    <p class="subtitle is-4">Review flatmember accounts</p>
+                    <p class="subtitle is-4">
+                      Review flatmember accounts
+                    </p>
                     <p class="subtitle is-6">
                       Add new and remove previous flatmate accounts
                     </p>
@@ -112,11 +139,11 @@
                     icon="chevron-right"
                     size="is-medium"
                     type="is-midgray"
-                  ></b-icon>
+                  />
                 </div>
               </div>
             </div>
-            <div class="content"></div>
+            <div class="content" />
           </div>
         </div>
       </section>
@@ -132,7 +159,11 @@ import cani from '@/requests/authenticated/can-i'
 import dayjs from 'dayjs'
 
 export default {
-  name: 'flattrack-home',
+  name: 'FlattrackHome',
+  components: {
+    shoppingListCardView: () =>
+      import('@/components/authenticated/shopping-list-card-view.vue')
+  },
   data () {
     return {
       name: '',
@@ -146,6 +177,26 @@ export default {
       sortBy: 'recentlyUpdated',
       canUserAccountAdmin: false
     }
+  },
+  async beforeMount () {
+    this.name = common.GetFlatnameFromCache() || this.name
+    flatInfo
+      .GetFlatName()
+      .then((resp) => {
+        if (this.name !== resp.data.spec) {
+          this.name = resp.data.spec
+          common.WriteFlatnameToCache(resp.data.spec)
+        }
+        return flatInfo.GetFlatNotes()
+      })
+      .then((resp) => {
+        this.notes = resp.data.spec.notes
+        this.notesSplit = this.notes.split('\n')
+      })
+    cani.GetCanIgroup('admin').then((resp) => {
+      this.canUserAccountAdmin = resp.data.data
+    })
+    this.GetShoppingLists()
   },
   methods: {
     GetShoppingLists () {
@@ -171,30 +222,6 @@ export default {
       common.WriteHomeLastViewedTimestamp(Number(dayjs().unix()))
       this.lists = []
     }
-  },
-  components: {
-    shoppingListCardView: () =>
-      import('@/components/authenticated/shopping-list-card-view.vue')
-  },
-  async beforeMount () {
-    this.name = common.GetFlatnameFromCache() || this.name
-    flatInfo
-      .GetFlatName()
-      .then((resp) => {
-        if (this.name !== resp.data.spec) {
-          this.name = resp.data.spec
-          common.WriteFlatnameToCache(resp.data.spec)
-        }
-        return flatInfo.GetFlatNotes()
-      })
-      .then((resp) => {
-        this.notes = resp.data.spec.notes
-        this.notesSplit = this.notes.split('\n')
-      })
-    cani.GetCanIgroup('admin').then((resp) => {
-      this.canUserAccountAdmin = resp.data.data
-    })
-    this.GetShoppingLists()
   }
 }
 </script>

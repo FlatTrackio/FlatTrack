@@ -23,36 +23,47 @@
         >
           <ul>
             <li>
-              <router-link :to="{ name: 'Account' }">My account</router-link>
+              <router-link :to="{ name: 'Account' }">
+                My account
+              </router-link>
             </li>
             <li class="is-active">
-              <router-link :to="{ name: 'Account Profile' }"
-                >Profile</router-link
-              >
+              <router-link :to="{ name: 'Account Profile' }">
+                Profile
+              </router-link>
             </li>
           </ul>
           <b-button
-            @click="CopyHrefToClipboard()"
             icon-left="content-copy"
             size="is-small"
-          ></b-button>
+            @click="CopyHrefToClipboard()"
+          />
         </nav>
-        <h1 class="title is-1">Profile</h1>
-        <p class="subtitle is-3">Manage your account</p>
+        <h1 class="title is-1">
+          Profile
+        </h1>
+        <p class="subtitle is-3">
+          Manage your account
+        </p>
         <b-loading
+          v-model:active="pageLoading"
           :is-full-page="false"
-          :active.sync="pageLoading"
           :can-cancel="false"
-        ></b-loading>
+        />
         <div class="card">
           <div class="card-content">
             <div class="media">
               <div class="media-content">
                 <figure class="image is-128x128">
-                  <img src="@/assets/256x256.png" alt="Placeholder image" />
+                  <img
+                    src="@/assets/256x256.png"
+                    alt="Placeholder image"
+                  >
                 </figure>
-                <br />
-                <p class="title is-3">{{ names }}</p>
+                <br>
+                <p class="title is-3">
+                  {{ names }}
+                </p>
                 <p class="subtitle is-5">
                   Joined {{ TimestampToCalendar(creationTimestamp) }}
                 </p>
@@ -60,65 +71,73 @@
             </div>
           </div>
         </div>
-        <br />
+        <br>
 
-        <b-field grouped group-multiline>
-          <div class="control" v-for="group in groups" v-bind:key="group">
+        <b-field
+          grouped
+          group-multiline
+        >
+          <div
+            v-for="group in groups"
+            :key="group"
+            class="control"
+          >
             <b-taglist attached>
-              <b-tag type="is-dark">is</b-tag>
-              <b-tag type="is-info">{{ group }}</b-tag>
+              <b-tag type="is-dark">
+                is
+              </b-tag>
+              <b-tag type="is-info">
+                {{ group }}
+              </b-tag>
             </b-taglist>
           </div>
         </b-field>
-        <br />
+        <br>
 
         <b-field label="Name(s)">
           <b-input
-            type="text"
             v-model="names"
+            type="text"
             maxlength="60"
             placeholder="Enter your name(s)"
             icon="textbox"
             size="is-medium"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="names = ''"
-            @keyup.enter.native="PatchProfile"
             required
-          >
-          </b-input>
+            @icon-right-click="names = ''"
+            @keyup.enter="PatchProfile"
+          />
         </b-field>
 
         <b-field label="Email">
           <b-input
-            type="email"
             v-model="email"
+            type="email"
             maxlength="70"
             icon="email"
             size="is-medium"
             placeholder="Enter your email address"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="email = ''"
-            @keyup.enter.native="PatchProfile"
             required
-          >
-          </b-input>
+            @icon-right-click="email = ''"
+            @keyup.enter="PatchProfile"
+          />
         </b-field>
         <b-field label="Phone number (optional)">
           <b-input
-            type="tel"
             v-model="phoneNumber"
+            type="tel"
             placeholder="Enter your phone number"
             icon="phone"
             size="is-medium"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="phoneNumber = ''"
-            @keyup.enter.native="PatchProfile"
             maxlength="30"
-          >
-          </b-input>
+            @icon-right-click="phoneNumber = ''"
+            @keyup.enter="PatchProfile"
+          />
         </b-field>
 
         <b-field label="Birthday (optional)">
@@ -132,10 +151,9 @@
             icon="cake-variant"
             size="is-medium"
             trap-focus
-          >
-          </b-datepicker>
+          />
         </b-field>
-        <br />
+        <br>
         <b-button
           type="is-success"
           size="is-medium"
@@ -152,98 +170,98 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import profile from '@/requests/authenticated/profile'
+  import common from "@/common/common";
+  import profile from "@/requests/authenticated/profile";
 
-export default {
-  name: 'account-profile',
-  data () {
-    const today = new Date()
-    const maxDate = new Date(
-      today.getFullYear() - 15,
-      today.getMonth(),
-      today.getDate()
-    )
-    const minDate = new Date(
-      today.getFullYear() - 100,
-      today.getMonth(),
-      today.getDate()
-    )
+  export default {
+    name: "AccountProfile",
+    data() {
+      const today = new Date();
+      const maxDate = new Date(
+        today.getFullYear() - 15,
+        today.getMonth(),
+        today.getDate()
+      );
+      const minDate = new Date(
+        today.getFullYear() - 100,
+        today.getMonth(),
+        today.getDate()
+      );
 
-    return {
-      maxDate: maxDate,
-      minDate: minDate,
-      focusedDate: maxDate,
-      passwordConfirm: '',
-      jsBirthday: null,
-      pageLoading: true,
-      names: '',
-      email: '',
-      phoneNumber: '',
-      groups: [],
-      password: '',
-      creationTimestamp: ''
-    }
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+      return {
+        maxDate: maxDate,
+        minDate: minDate,
+        focusedDate: maxDate,
+        passwordConfirm: "",
+        jsBirthday: null,
+        pageLoading: true,
+        names: "",
+        email: "",
+        phoneNumber: "",
+        groups: [],
+        password: "",
+        creationTimestamp: "",
+      };
     },
-    GetProfile () {
-      profile.GetProfile().then((resp) => {
-        this.names = resp.data.spec.names
-        this.birthday = resp.data.spec.birthday || null
-        this.jsBirthday =
-          this.birthday !== null ? new Date(this.birthday * 1000) : null
-        this.focusedDate = this.jsBirthday
-        this.phoneNumber = resp.data.spec.phoneNumber
-        this.groups = resp.data.spec.groups
-        this.email = resp.data.spec.email
-        this.creationTimestamp = resp.data.spec.creationTimestamp
-        this.pageLoading = false
-      })
+    computed: {
+      birthday() {
+        return new Date(this.jsBirthday || 0).getTime() / 1000 || 0;
+      },
     },
-    PatchProfile () {
-      if (this.password !== this.passwordConfirm) {
-        common.DisplayFailureToast(
-          'Unable to use password as they either do not match'
-        )
-        return
-      }
-      profile
-        .PatchProfile(
-          this.names,
-          this.email,
-          this.phoneNumber,
-          this.birthday,
-          this.password
-        )
-        .then((resp) => {
-          if (resp.data.spec.id === '') {
-            common.DisplayFailureToast('Failed to update profile')
-            return
-          }
-          common.DisplaySuccessToast('Successfully updated your profile')
-        })
-        .catch((err) => {
+    async beforeMount() {
+      this.GetProfile();
+    },
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      GetProfile() {
+        profile.GetProfile().then((resp) => {
+          this.names = resp.data.spec.names;
+          this.birthday = resp.data.spec.birthday || null;
+          this.jsBirthday =
+            this.birthday !== null ? new Date(this.birthday * 1000) : null;
+          this.focusedDate = this.jsBirthday;
+          this.phoneNumber = resp.data.spec.phoneNumber;
+          this.groups = resp.data.spec.groups;
+          this.email = resp.data.spec.email;
+          this.creationTimestamp = resp.data.spec.creationTimestamp;
+          this.pageLoading = false;
+        });
+      },
+      PatchProfile() {
+        if (this.password !== this.passwordConfirm) {
           common.DisplayFailureToast(
-            'Failed to update profile' +
-              '<br/>' +
-              err.response.data.metadata.response
+            "Unable to use password as they either do not match"
+          );
+          return;
+        }
+        profile
+          .PatchProfile(
+            this.names,
+            this.email,
+            this.phoneNumber,
+            this.birthday,
+            this.password
           )
-        })
+          .then((resp) => {
+            if (resp.data.spec.id === "") {
+              common.DisplayFailureToast("Failed to update profile");
+              return;
+            }
+            common.DisplaySuccessToast("Successfully updated your profile");
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to update profile" +
+                "<br/>" +
+                err.response.data.metadata.response
+            );
+          });
+      },
+      TimestampToCalendar(timestamp) {
+        return common.TimestampToCalendar(timestamp);
+      },
     },
-    TimestampToCalendar (timestamp) {
-      return common.TimestampToCalendar(timestamp)
-    }
-  },
-  computed: {
-    birthday () {
-      return new Date(this.jsBirthday || 0).getTime() / 1000 || 0
-    }
-  },
-  async beforeMount () {
-    this.GetProfile()
-  }
-}
+  };
 </script>

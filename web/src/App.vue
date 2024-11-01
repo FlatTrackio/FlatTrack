@@ -23,7 +23,10 @@
       class="pad-bottom full-height main-view-container"
       :class="{ 'pad-left': !publicPages && !onMobile && displayNavigationBar }"
     >
-      <router-view class="main-view" :key="$route.fullPath" />
+      <router-view
+        :key="$route.fullPath"
+        class="main-view"
+      />
     </div>
     <div>
       <bottombar v-if="onMobile && !publicPages" />
@@ -37,6 +40,11 @@ import routerCommon from '@/router/common'
 
 export default {
   name: 'App',
+  components: {
+    navbar: () => import('@/components/common/navbar.vue'),
+    topbar: () => import('@/components/common/topbar.vue'),
+    bottombar: () => import('@/components/common/bottombar.vue')
+  },
   data () {
     return {
       onMobile: false,
@@ -54,11 +62,6 @@ export default {
   created () {
     this.adjustForMobile()
     window.addEventListener('resize', this.adjustForMobile.bind(this))
-  },
-  components: {
-    navbar: () => import('@/components/common/navbar.vue'),
-    topbar: () => import('@/components/common/topbar.vue'),
-    bottombar: () => import('@/components/common/bottombar.vue')
   },
   methods: {
     adjustForMobile () {

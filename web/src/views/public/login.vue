@@ -18,44 +18,52 @@
     <headerDisplay />
     <div class="container">
       <section class="section form-width">
-        <h1 class="title is-1">Login</h1>
-        <p class="subtitle is-4">Welcome to FlatTrack, please login.</p>
-        <b-field label="Email" class="is-marginless">
+        <h1 class="title is-1">
+          Login
+        </h1>
+        <p class="subtitle is-4">
+          Welcome to FlatTrack, please login.
+        </p>
+        <b-field
+          label="Email"
+          class="is-marginless"
+        >
           <b-input
+            v-model="email"
             name="email"
             type="email"
-            v-model="email"
             maxlength="70"
             autofocus
             placeholder="Enter your email"
-            @keyup.enter.native="postLogin"
             size="is-medium"
             icon="email"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="email = ''"
             required
-          >
-          </b-input>
+            @keyup.enter="postLogin"
+            @icon-right-click="email = ''"
+          />
         </b-field>
-        <b-field label="Password" class="is-marginless">
+        <b-field
+          label="Password"
+          class="is-marginless"
+        >
           <b-input
+            v-model="password"
             name="password"
             type="password"
-            v-model="password"
             password-reveal
             maxlength="70"
-            @keyup.enter.native="postLogin"
             placeholder="Enter your password"
             size="is-medium"
             icon="textbox-password"
             pattern="^([a-zA-Z]*).{10,}$"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="password = ''"
             required
-          >
-          </b-input>
+            @keyup.enter="postLogin"
+            @icon-right-click="password = ''"
+          />
         </b-field>
         <div class="field">
           <p class="control">
@@ -82,10 +90,12 @@
             </b-button>
           </p>
           <div
-            class="notification is-warning mb-4 mt-2"
             v-if="typeof message !== 'undefined' && message !== ''"
+            class="notification is-warning mb-4 mt-2"
           >
-            <p class="subtitle is-6">{{ message }}</p>
+            <p class="subtitle is-6">
+              {{ message }}
+            </p>
           </div>
         </div>
       </section>
@@ -94,89 +104,89 @@
 </template>
 
 <script>
-import { LoadingProgrammatic as Loading } from 'buefy'
-import login from '@/requests/public/login'
-import common from '@/common/common'
+  import { LoadingProgrammatic as Loading } from "buefy";
+  import login from "@/requests/public/login";
+  import common from "@/common/common";
 
-export default {
-  name: 'login-page',
-  data () {
-    return {
-      redirect: this.$route.query.redirect || undefined,
-      authToken: this.$route.query.authToken || undefined,
-      message: common.GetLoginMessage() || undefined,
-      email: '',
-      password: ''
-    }
-  },
-  components: {
-    headerDisplay: () => import('@/components/common/header-display.vue')
-  },
-  methods: {
-    postLogin () {
-      const loadingComponent = Loading.open({
-        container: null
-      })
-      setTimeout(() => loadingComponent.close(), 20 * 1000)
-      login
-        .PostUserAuth(this.email, this.password)
-        .then((resp) => {
-          common.SetAuthToken(resp.data.data)
-          setTimeout(() => {
-            loadingComponent.close()
-            if (typeof this.redirect !== 'undefined' && this.redirect) {
-              this.$router.push({ path: this.redirect })
-              return
-            }
-            window.location.href = '/'
-          }, 2 * 1000)
-        })
-        .catch((err) => {
-          loadingComponent.close()
-          common.DisplayFailureToast(
-            err.response.data.metadata.response || err
-          )
-        })
+  export default {
+    name: "LoginPage",
+    components: {
+      headerDisplay: () => import("@/components/common/header-display.vue"),
     },
-    checkForLoginToken () {
-      var authToken = common.GetAuthToken()
-      if (
-        !(
-          typeof authToken === 'undefined' ||
-          authToken === null ||
-          authToken === ''
-        )
-      ) {
-        login.GetUserAuth(false).then((res) => {
-          // verify token via request or something
-          const loadingComponent = Loading.open({
-            container: null
-          })
-          common.DisplaySuccessToast(
-            'You are still signed in, going to the home page...'
-          )
-          setTimeout(() => {
-            loadingComponent.close()
-
-            if (this.redirect !== null) {
-              this.$router.push({ path: this.redirect })
-              return
-            }
-            this.$router.push({ name: 'Home' })
-          }, 2 * 1000)
-        })
+    data() {
+      return {
+        redirect: this.$route.query.redirect || undefined,
+        authToken: this.$route.query.authToken || undefined,
+        message: common.GetLoginMessage() || undefined,
+        email: "",
+        password: "",
+      };
+    },
+    mounted() {
+      if (typeof this.$route.query.authToken !== "undefined") {
+        common.SetAuthToken(this.$route.query.authToken);
+        this.$router.push({ name: "Home" });
+        return;
       }
-    }
-  },
-  mounted () {
-    if (typeof this.$route.query.authToken !== 'undefined') {
-      common.SetAuthToken(this.$route.query.authToken)
-      this.$router.push({ name: 'Home' })
-      return
-    }
-    this.checkForLoginToken()
-  }
-}
+      this.checkForLoginToken();
+    },
+    methods: {
+      postLogin() {
+        const loadingComponent = Loading.open({
+          container: null,
+        });
+        setTimeout(() => loadingComponent.close(), 20 * 1000);
+        login
+          .PostUserAuth(this.email, this.password)
+          .then((resp) => {
+            common.SetAuthToken(resp.data.data);
+            setTimeout(() => {
+              loadingComponent.close();
+              if (typeof this.redirect !== "undefined" && this.redirect) {
+                this.$router.push({ path: this.redirect });
+                return;
+              }
+              window.location.href = "/";
+            }, 2 * 1000);
+          })
+          .catch((err) => {
+            loadingComponent.close();
+            common.DisplayFailureToast(
+              err.response.data.metadata.response || err
+            );
+          });
+      },
+      checkForLoginToken() {
+        var authToken = common.GetAuthToken();
+        if (
+          !(
+            typeof authToken === "undefined" ||
+            authToken === null ||
+            authToken === ""
+          )
+        ) {
+          login.GetUserAuth(false).then((res) => {
+            // verify token via request or something
+            const loadingComponent = Loading.open({
+              container: null,
+            });
+            common.DisplaySuccessToast(
+              "You are still signed in, going to the home page..."
+            );
+            setTimeout(() => {
+              loadingComponent.close();
+
+              if (this.redirect !== null) {
+                this.$router.push({ path: this.redirect });
+                return;
+              }
+              this.$router.push({ name: "Home" });
+            }, 2 * 1000);
+          });
+        }
+      },
+    },
+  };
 </script>
 
 <style scoped></style>

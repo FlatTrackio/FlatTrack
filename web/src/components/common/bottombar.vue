@@ -16,33 +16,36 @@
 <template>
   <div :class="ratherSmallerScreen ? 'bottombar bottombar-fixed' : 'bottombar'">
     <b-loading
+      v-model:active="pageLoading"
       :is-full-page="false"
-      :active.sync="pageLoading"
       :can-cancel="false"
-    ></b-loading>
-    <md-bottom-bar class="md-accent bottombar-background" md-sync-route>
+    />
+    <md-bottom-bar
+      class="md-accent bottombar-background"
+      md-sync-route
+    >
       <md-bottom-bar-item
         :to="{ name: 'Home' }"
         exact
         md-label="Home"
         md-icon="home"
-      ></md-bottom-bar-item>
+      />
       <md-bottom-bar-item
         :to="{ name: 'Apps' }"
         md-label="Apps"
         md-icon="apps"
-      ></md-bottom-bar-item>
+      />
       <md-bottom-bar-item
         :to="{ name: 'Account' }"
         md-label="My Account"
         md-icon="account_box"
-      ></md-bottom-bar-item>
+      />
       <md-bottom-bar-item
+        v-if="canUserAccountAdmin"
         :to="{ name: 'Admin home' }"
         md-label="Admin"
         md-icon="web"
-        v-if="canUserAccountAdmin"
-      ></md-bottom-bar-item>
+      />
     </md-bottom-bar>
   </div>
 </template>
@@ -51,12 +54,18 @@
 import cani from '@/requests/authenticated/can-i'
 
 export default {
-  name: 'bottom-bar',
+  name: 'BottomBar',
   data () {
     return {
       pageLoading: true,
       canUserAccountAdmin: false,
       ratherSmallScreen: false
+    }
+  },
+  async beforeMount () {
+    this.CanIadmin()
+    if (window.innerWidth >= 330) {
+      this.ratherSmallerScreen = true
     }
   },
   methods: {
@@ -65,12 +74,6 @@ export default {
         this.canUserAccountAdmin = resp.data.data
         this.pageLoading = false
       })
-    }
-  },
-  async beforeMount () {
-    this.CanIadmin()
-    if (window.innerWidth >= 330) {
-      this.ratherSmallerScreen = true
     }
   }
 }

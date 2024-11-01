@@ -23,73 +23,75 @@
         >
           <ul>
             <li>
-              <router-link :to="{ name: 'Admin accounts' }"
-                >Accounts</router-link
-              >
+              <router-link :to="{ name: 'Admin accounts' }">
+                Accounts
+              </router-link>
             </li>
             <li class="is-active">
               <router-link
                 :to="{ name: 'View user account', params: { id: id } }"
-                >Edit account</router-link
               >
+                Edit account
+              </router-link>
             </li>
           </ul>
           <b-button
-            @click="CopyHrefToClipboard()"
             icon-left="content-copy"
             size="is-small"
-          ></b-button>
+            @click="CopyHrefToClipboard()"
+          />
         </nav>
-        <h1 class="title is-1">Edit account</h1>
-        <p class="subtitle is-4">Edit an existing user account</p>
+        <h1 class="title is-1">
+          Edit account
+        </h1>
+        <p class="subtitle is-4">
+          Edit an existing user account
+        </p>
         <b-loading
+          v-model:active="pageLoading"
           :is-full-page="false"
-          :active.sync="pageLoading"
           :can-cancel="false"
-        ></b-loading>
+        />
         <div v-if="registered !== true">
           <div class="notification is-warning">
             <p class="subtitle is-6">
-              <strong
-                >This account has been created but doesn't appear to be
-                registered.</strong
-              >
+              <strong>This account has been created but doesn't appear to be
+                registered.</strong>
             </p>
             <b-button
+              :icon-left="
+                showRegistrationCompletionDetails === false ? 'eye' : 'eye-off'
+              "
               @click="
                 showRegistrationCompletionDetails =
                   !showRegistrationCompletionDetails
               "
-              :icon-left="
-                showRegistrationCompletionDetails === false ? 'eye' : 'eye-off'
-              "
             >
-              {{
-                showRegistrationCompletionDetails === false ? "Show" : "Hide"
-              }}
-              registration details
+              {{ showRegistrationCompletionDetails === false ? "Show" : "Hide"
+              }} registration details
             </b-button>
             <div v-if="showRegistrationCompletionDetails === true">
-              <br />
+              <br>
               <div class="notification">
                 <div class="content">
                   <qrcode-vue
                     :value="
                       windowOrigin +
-                      '/useraccountconfirm/' +
-                      userAccountConfirmId +
-                      '?secret=' +
-                      userAccountConfirmSecret
+                        '/useraccountconfirm/' +
+                        userAccountConfirmId +
+                        '?secret=' +
+                        userAccountConfirmSecret
                     "
                     :size="200"
                     level="H"
-                  ></qrcode-vue>
-                  <br />
+                  />
+                  <br>
                   <p>
                     Have your flatmate scan the QR code above, or
-                    <a type="is-text" @click="CopyRegistrationLink"
-                      >click here</a
-                    >
+                    <a
+                      type="is-text"
+                      @click="CopyRegistrationLink"
+                    >click here</a>
                     to copy the registration link for you to send to your
                     flatmate
                   </p>
@@ -97,41 +99,39 @@
               </div>
             </div>
           </div>
-          <br />
+          <br>
         </div>
 
         <b-field label="Name(s)">
           <b-input
-            type="text"
             v-model="names"
+            type="text"
             maxlength="60"
             placeholder="Enter your flatmate's name"
             icon="textbox"
             size="is-medium"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="names = ''"
-            @keyup.enter.native="PatchUserAccount"
             required
-          >
-          </b-input>
+            @icon-right-click="names = ''"
+            @keyup.enter="PatchUserAccount"
+          />
         </b-field>
 
         <b-field label="Email">
           <b-input
-            type="email"
             v-model="email"
+            type="email"
             maxlength="70"
             placeholder="Enter your flatmate's email"
             icon="email"
             size="is-medium"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="email = ''"
-            @keyup.enter.native="PatchUserAccount"
             required
-          >
-          </b-input>
+            @icon-right-click="email = ''"
+            @keyup.enter="PatchUserAccount"
+          />
         </b-field>
 
         <section>
@@ -146,28 +146,26 @@
               icon="account-group"
               placeholder="Select groups"
               size="is-medium"
-              @keyup.enter.native="PatchUserAccount"
+              @keyup.enter="PatchUserAccount"
               @typing="GetFilteredGroups"
-            >
-            </b-taginput>
+            />
           </b-field>
         </section>
-        <br />
+        <br>
 
         <b-field label="Phone number (optional)">
           <b-input
-            type="tel"
             v-model="phoneNumber"
+            type="tel"
             placeholder="Enter your flatmate's phone number"
             icon="phone"
             size="is-medium"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="phoneNumber = ''"
-            @keyup.enter.native="PatchUserAccount"
             maxlength="30"
-          >
-          </b-input>
+            @icon-right-click="phoneNumber = ''"
+            @keyup.enter="PatchUserAccount"
+          />
         </b-field>
 
         <b-field label="Birthday (optional)">
@@ -180,10 +178,9 @@
             icon="cake-variant"
             size="is-medium"
             trap-focus
-          >
-          </b-datepicker>
+          />
         </b-field>
-        <br />
+        <br>
 
         <div class="field has-addons">
           <label class="label">Password</label>
@@ -195,8 +192,8 @@
         </div>
         <b-field>
           <b-input
-            type="password"
             v-model="password"
+            type="password"
             password-reveal
             maxlength="70"
             placeholder="Enter a password for your flatmate"
@@ -205,17 +202,16 @@
             validation-message="password is invalid. Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="password = ''"
-            @keyup.enter.native="PatchUserAccount"
             size="is-medium"
-          >
-          </b-input>
+            @icon-right-click="password = ''"
+            @keyup.enter="PatchUserAccount"
+          />
         </b-field>
 
         <b-field label="Confirm password">
           <b-input
-            type="password"
             v-model="passwordConfirm"
+            type="password"
             password-reveal
             maxlength="70"
             placeholder="Confirm a password for your flatmate"
@@ -224,11 +220,10 @@
             validation-message="password is invalid. Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="passwordConfirm = ''"
-            @keyup.enter.native="PatchUserAccount"
             size="is-medium"
-          >
-          </b-input>
+            @icon-right-click="passwordConfirm = ''"
+            @keyup.enter="PatchUserAccount"
+          />
         </b-field>
         <b-field>
           <b-button
@@ -241,37 +236,41 @@
           >
             Update user account
           </b-button>
-          <p class="control" v-if="myUserID !== id">
+          <p
+            v-if="myUserID !== id"
+            class="control"
+          >
             <b-button
               type="is-danger"
               size="is-medium"
               icon-left="delete"
               native-type="submit"
               @click="DeactivateUserAccount(id)"
-            >
-            </b-button>
+            />
           </p>
         </b-field>
 
         <b-collapse
+          v-if="myUserID !== id"
           class="card"
           animation="slide"
           aria-id="contentIdForA11y3"
-          v-if="myUserID !== id"
           :open="accountAdvancedOpen"
         >
-          <div
-            slot="trigger"
-            slot-scope="props"
-            class="card-header"
-            role="button"
-            aria-controls="contentIdForA11y3"
-          >
-            <p class="card-header-title">Advanced options</p>
-            <a class="card-header-icon">
-              <b-icon :icon="props.open ? 'menu-down' : 'menu-up'"> </b-icon>
-            </a>
-          </div>
+          <template #trigger="props">
+            <div
+              class="card-header"
+              role="button"
+              aria-controls="contentIdForA11y3"
+            >
+              <p class="card-header-title">
+                Advanced options
+              </p>
+              <a class="card-header-icon">
+                <b-icon :icon="props.open ? 'menu-down' : 'menu-up'" />
+              </a>
+            </div>
+          </template>
           <div class="card-content">
             <div class="content">
               <b-button
@@ -289,7 +288,7 @@
           </div>
         </b-collapse>
         <p class="subtitle is-6">
-          Created {{ TimestampToCalendar(creationTimestamp) }} <br />
+          Created {{ TimestampToCalendar(creationTimestamp) }} <br>
           <span v-if="creationTimestamp !== modificationTimestamp">
             Modified {{ TimestampToCalendar(modificationTimestamp) }}
           </span>
@@ -300,240 +299,240 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import groups from '@/requests/authenticated/groups'
-import flatmates from '@/requests/authenticated/flatmates'
-import adminFlatmates from '@/requests/admin/flatmates'
-import { DialogProgrammatic as Dialog } from 'buefy'
+  import common from "@/common/common";
+  import groups from "@/requests/authenticated/groups";
+  import flatmates from "@/requests/authenticated/flatmates";
+  import adminFlatmates from "@/requests/admin/flatmates";
+  import { DialogProgrammatic as Dialog } from "buefy";
 
-export default {
-  name: 'edit-account',
-  data () {
-    var today = new Date()
-    var maxDate = new Date(
-      today.getFullYear() - 15,
-      today.getMonth(),
-      today.getYear()
-    )
-    var minDate = new Date(
-      today.getFullYear() - 100,
-      today.getMonth(),
-      today.getYear()
-    )
-    var windowOrigin = window.location.origin
+  export default {
+    name: "EditAccount",
+    components: {
+      QrcodeVue: () => import("qrcode.vue"),
+      infotooltip: () => import("@/components/common/info-tooltip.vue"),
+    },
+    data() {
+      var today = new Date();
+      var maxDate = new Date(
+        today.getFullYear() - 15,
+        today.getMonth(),
+        today.getYear()
+      );
+      var minDate = new Date(
+        today.getFullYear() - 100,
+        today.getMonth(),
+        today.getYear()
+      );
+      var windowOrigin = window.location.origin;
 
-    return {
-      windowOrigin: windowOrigin,
-      maxDate: maxDate,
-      minDate: minDate,
-      showRegistrationCompletionDetails: false,
-      userAccountConfirmId: null,
-      userAccountConfirmSecret: null,
-      pageLoading: true,
-      disabledLoading: false,
-      accountAdvancedOpen: false,
-      myUserID: null,
-      id: this.$route.params.id,
-      names: null,
-      email: null,
-      phoneNumber: null,
-      birthday: 0,
-      groups: [],
-      registered: null,
-      disabled: false,
-      password: null,
-      passwordConfirm: null,
-      availableGroups: [],
-      jsBirthday: null,
-      groupsFull: []
-    }
-  },
-  components: {
-    QrcodeVue: () => import('qrcode.vue'),
-    infotooltip: () => import('@/components/common/info-tooltip.vue')
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+      return {
+        windowOrigin: windowOrigin,
+        maxDate: maxDate,
+        minDate: minDate,
+        showRegistrationCompletionDetails: false,
+        userAccountConfirmId: null,
+        userAccountConfirmSecret: null,
+        pageLoading: true,
+        disabledLoading: false,
+        accountAdvancedOpen: false,
+        myUserID: null,
+        id: this.$route.params.id,
+        names: null,
+        email: null,
+        phoneNumber: null,
+        birthday: 0,
+        groups: [],
+        registered: null,
+        disabled: false,
+        password: null,
+        passwordConfirm: null,
+        availableGroups: [],
+        jsBirthday: null,
+        groupsFull: [],
+      };
     },
-    TimestampToCalendar (timestamp) {
-      return common.TimestampToCalendar(timestamp)
-    },
-    GetAvailableGroups () {
-      groups
-        .GetGroups()
-        .then((resp) => {
-          this.availableGroups = resp.data.list
-          resp.data.list.map((group) => {
-            if (group.defaultGroup === true) {
-              this.groupsFull.push(group)
+    async beforeMount() {
+      this.GetAvailableGroups();
+      this.GetUserAccount();
+      this.myUserID = common.GetUserIDFromJWT();
+      if (this.registered !== true) {
+        adminFlatmates.GetUserAccountConfirms(this.id).then((resp) => {
+          var confirmsList = resp.data.list;
+          for (var confirmItem in confirmsList) {
+            if (confirmsList[confirmItem].userId !== this.id) {
+              continue;
             }
-          })
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to list groups' +
-              '<br/>' +
-              err.response.data.metadata.response
-          )
-        })
-    },
-    GetFilteredGroups (text) {
-      this.groups = this.availableGroups.filter((group) => {
-        return (
-          group.name.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
-        )
-      })
-    },
-    GetUserAccount () {
-      flatmates
-        .GetFlatmate(this.id)
-        .then((resp) => {
-          var user = resp.data.spec
-          this.names = user.names
-          this.email = user.email
-          this.phoneNumber = user.phoneNumber
-          this.birthday = user.birthday
-          this.registered = user.registered
-          this.disabled = user.disabled
-          this.groups = user.groups
-          this.groupsFull = []
-          this.creationTimestamp = user.creationTimestamp
-          this.modificationTimestamp = user.modificationTimestamp
-          this.availableGroups.map((group) => {
-            if (this.groups.includes(group.name)) {
-              this.groupsFull.push(group)
-            }
-          })
-          this.jsBirthday =
-            typeof this.birthday !== 'undefined'
-              ? new Date(this.birthday * 1000)
-              : null
-          this.pageLoading = false
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to fetch user account' +
-              '<br/>' +
-              (err.response.data.metadata.response || err)
-          )
-          this.$router.push({ name: 'Admin accounts' })
-        })
-    },
-    PatchUserAccount () {
-      if (
-        this.password !== this.passwordConfirm &&
-        this.password !== null &&
-        typeof this.password !== 'undefined'
-      ) {
-        common.DisplayFailureToast('Passwords do not match')
-        return
-      }
-      this.birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0
-
-      var groups = []
-      this.groupsFull.map((group) => {
-        if (group === '' || group.name === '') {
-          return
-        }
-        groups.push(group.name)
-      })
-      adminFlatmates
-        .PatchFlatmate(
-          this.id,
-          this.names,
-          this.email,
-          this.phoneNumber,
-          this.birthday,
-          groups,
-          this.password
-        )
-        .then((resp) => {
-          common.DisplaySuccessToast('Updated user account')
-          setTimeout(() => {
-            this.$router.push({ name: 'Admin accounts' })
-          }, 1 * 1000)
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to patch user account' +
-              '<br/>' +
-              (err.response.data.metadata.response || err)
-          )
-        })
-    },
-    PatchUserAccountDisabled () {
-      this.disabledLoading = true
-      adminFlatmates
-        .PatchFlatmateDisabled(this.id, !this.disabled)
-        .then((resp) => {
-          this.disabled = resp.data.spec.disabled
-          this.disabledLoading = false
-          common.DisplaySuccessToast(
-            `${this.disabled ? 'Disabled' : 'Enabled'} user account`
-          )
-        })
-        .catch((err) => {
-          this.disabledLoading = false
-          common.DisplayFailureToast(
-            'Failed to patch user account disabled field' +
-              '<br/>' +
-              (err.response.data.metadata.response || err)
-          )
-        })
-    },
-    DeactivateUserAccount (id) {
-      Dialog.confirm({
-        title: 'Deactivate user account',
-        message:
-          'Are you sure that you wish to permanently deactivate this account?' +
-          '<br/>' +
-          'This action cannot be undone.',
-        confirmText: 'Deactivate account',
-        type: 'is-danger',
-        hasIcon: true,
-        onConfirm: () => {
-          adminFlatmates
-            .DeleteFlatmate(id)
-            .then((resp) => {
-              common.DisplaySuccessToast(
-                'Permanently deactivated user account'
-              )
-              setTimeout(() => {
-                this.$router.push({ name: 'Admin accounts' })
-              }, 1 * 1000)
-            })
-            .catch((err) => {
-              common.DisplayFailureToast(
-                'Failed to permanently deactive user account' +
-                  '<br/>' +
-                  (err.response.data.metadata.response || err)
-              )
-            })
-        }
-      })
-    },
-    CopyRegistrationLink () {
-      var registrationLink = `${window.location.origin}/useraccountconfirm/${this.userAccountConfirmId}?secret=${this.userAccountConfirmSecret}`
-      window.prompt('Copy the following link', registrationLink)
-    }
-  },
-  async beforeMount () {
-    this.GetAvailableGroups()
-    this.GetUserAccount()
-    this.myUserID = common.GetUserIDFromJWT()
-    if (this.registered !== true) {
-      adminFlatmates.GetUserAccountConfirms(this.id).then((resp) => {
-        var confirmsList = resp.data.list
-        for (var confirmItem in confirmsList) {
-          if (confirmsList[confirmItem].userId !== this.id) {
-            continue
+            this.userAccountConfirmId = confirmsList[confirmItem].id;
+            this.userAccountConfirmSecret = confirmsList[confirmItem].secret;
           }
-          this.userAccountConfirmId = confirmsList[confirmItem].id
-          this.userAccountConfirmSecret = confirmsList[confirmItem].secret
+        });
+      }
+    },
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      TimestampToCalendar(timestamp) {
+        return common.TimestampToCalendar(timestamp);
+      },
+      GetAvailableGroups() {
+        groups
+          .GetGroups()
+          .then((resp) => {
+            this.availableGroups = resp.data.list;
+            resp.data.list.map((group) => {
+              if (group.defaultGroup === true) {
+                this.groupsFull.push(group);
+              }
+            });
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to list groups" +
+                "<br/>" +
+                err.response.data.metadata.response
+            );
+          });
+      },
+      GetFilteredGroups(text) {
+        this.groups = this.availableGroups.filter((group) => {
+          return (
+            group.name.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
+          );
+        });
+      },
+      GetUserAccount() {
+        flatmates
+          .GetFlatmate(this.id)
+          .then((resp) => {
+            var user = resp.data.spec;
+            this.names = user.names;
+            this.email = user.email;
+            this.phoneNumber = user.phoneNumber;
+            this.birthday = user.birthday;
+            this.registered = user.registered;
+            this.disabled = user.disabled;
+            this.groups = user.groups;
+            this.groupsFull = [];
+            this.creationTimestamp = user.creationTimestamp;
+            this.modificationTimestamp = user.modificationTimestamp;
+            this.availableGroups.map((group) => {
+              if (this.groups.includes(group.name)) {
+                this.groupsFull.push(group);
+              }
+            });
+            this.jsBirthday =
+              typeof this.birthday !== "undefined"
+                ? new Date(this.birthday * 1000)
+                : null;
+            this.pageLoading = false;
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to fetch user account" +
+                "<br/>" +
+                (err.response.data.metadata.response || err)
+            );
+            this.$router.push({ name: "Admin accounts" });
+          });
+      },
+      PatchUserAccount() {
+        if (
+          this.password !== this.passwordConfirm &&
+          this.password !== null &&
+          typeof this.password !== "undefined"
+        ) {
+          common.DisplayFailureToast("Passwords do not match");
+          return;
         }
-      })
-    }
-  }
-}
+        this.birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0;
+
+        var groups = [];
+        this.groupsFull.map((group) => {
+          if (group === "" || group.name === "") {
+            return;
+          }
+          groups.push(group.name);
+        });
+        adminFlatmates
+          .PatchFlatmate(
+            this.id,
+            this.names,
+            this.email,
+            this.phoneNumber,
+            this.birthday,
+            groups,
+            this.password
+          )
+          .then((resp) => {
+            common.DisplaySuccessToast("Updated user account");
+            setTimeout(() => {
+              this.$router.push({ name: "Admin accounts" });
+            }, 1 * 1000);
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to patch user account" +
+                "<br/>" +
+                (err.response.data.metadata.response || err)
+            );
+          });
+      },
+      PatchUserAccountDisabled() {
+        this.disabledLoading = true;
+        adminFlatmates
+          .PatchFlatmateDisabled(this.id, !this.disabled)
+          .then((resp) => {
+            this.disabled = resp.data.spec.disabled;
+            this.disabledLoading = false;
+            common.DisplaySuccessToast(
+              `${this.disabled ? "Disabled" : "Enabled"} user account`
+            );
+          })
+          .catch((err) => {
+            this.disabledLoading = false;
+            common.DisplayFailureToast(
+              "Failed to patch user account disabled field" +
+                "<br/>" +
+                (err.response.data.metadata.response || err)
+            );
+          });
+      },
+      DeactivateUserAccount(id) {
+        Dialog.confirm({
+          title: "Deactivate user account",
+          message:
+            "Are you sure that you wish to permanently deactivate this account?" +
+            "<br/>" +
+            "This action cannot be undone.",
+          confirmText: "Deactivate account",
+          type: "is-danger",
+          hasIcon: true,
+          onConfirm: () => {
+            adminFlatmates
+              .DeleteFlatmate(id)
+              .then((resp) => {
+                common.DisplaySuccessToast(
+                  "Permanently deactivated user account"
+                );
+                setTimeout(() => {
+                  this.$router.push({ name: "Admin accounts" });
+                }, 1 * 1000);
+              })
+              .catch((err) => {
+                common.DisplayFailureToast(
+                  "Failed to permanently deactive user account" +
+                    "<br/>" +
+                    (err.response.data.metadata.response || err)
+                );
+              });
+          },
+        });
+      },
+      CopyRegistrationLink() {
+        var registrationLink = `${window.location.origin}/useraccountconfirm/${this.userAccountConfirmId}?secret=${this.userAccountConfirmSecret}`;
+        window.prompt("Copy the following link", registrationLink);
+      },
+    },
+  };
 </script>

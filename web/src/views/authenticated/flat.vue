@@ -22,18 +22,27 @@
           aria-label="breadcrumbs"
         >
           <ul>
-            <li><router-link :to="{ name: 'Home' }">Home</router-link></li>
+            <li>
+              <router-link :to="{ name: 'Home' }">
+                Home
+              </router-link>
+            </li>
             <li class="is-active">
-              <router-link :to="{ name: 'My Flat' }">My flat</router-link>
+              <router-link :to="{ name: 'My Flat' }">
+                My flat
+              </router-link>
             </li>
           </ul>
           <b-button
-            @click="CopyHrefToClipboard()"
             icon-left="content-copy"
             size="is-small"
-          ></b-button>
+            @click="CopyHrefToClipboard()"
+          />
         </nav>
-        <h1 v-if="hasInitialLoaded || name !== ''" class="title is-1">
+        <h1
+          v-if="hasInitialLoaded || name !== ''"
+          class="title is-1"
+        >
           {{ name }}
         </h1>
         <b-skeleton
@@ -41,17 +50,28 @@
           size="is-medium"
           width="35%"
           :animated="true"
-        ></b-skeleton>
-        <p class="subtitle is-3">About your flat</p>
-        <b-message type="is-primary" v-if="notes !== ''">
-          <span v-for="line in notesSplit" v-bind:key="line">
+        />
+        <p class="subtitle is-3">
+          About your flat
+        </p>
+        <b-message
+          v-if="notes !== ''"
+          type="is-primary"
+        >
+          <span
+            v-for="line in notesSplit"
+            :key="line"
+          >
             {{ line }}
-            <br />
+            <br>
           </span>
         </b-message>
-        <b-message type="is-warning" v-else>
+        <b-message
+          v-else
+          type="is-warning"
+        >
           This section for describing such things as, but not limited to:
-          <br />
+          <br>
           <ul style="list-style-type: disc">
             <li>how the flat life is</li>
             <li>rules</li>
@@ -60,13 +80,14 @@
           </ul>
         </b-message>
         <b-button
-          icon-left="pencil"
           v-if="canUserAccountAdmin === true"
+          icon-left="pencil"
           type="is-warning"
-          @click="$router.push({ name: 'Admin settings' })"
           rounded
-          >Edit message</b-button
+          @click="$router.push({ name: 'Admin settings' })"
         >
+          Edit message
+        </b-button>
       </section>
     </div>
   </div>
@@ -78,7 +99,7 @@ import cani from '@/requests/authenticated/can-i'
 import common from '@/common/common'
 
 export default {
-  name: 'flat-home',
+  name: 'FlatHome',
   data () {
     return {
       name: '',
@@ -86,11 +107,6 @@ export default {
       notesSplit: '',
       hasInitialLoaded: false,
       canUserAccountAdmin: false
-    }
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
     }
   },
   async beforeMount () {
@@ -112,6 +128,11 @@ export default {
     cani.GetCanIgroup('admin').then((resp) => {
       this.canUserAccountAdmin = resp.data.data
     })
+  },
+  methods: {
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
+    }
   }
 }
 </script>

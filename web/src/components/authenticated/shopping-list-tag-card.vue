@@ -17,11 +17,23 @@
   <div class="card pointer-cursor-on-hover">
     <div class="card-content card-content-list">
       <div class="media">
-        <div class="media-left" @click="UpdateTag(tag)">
-          <b-icon icon="tag" size="is-medium" type="is-midgray"></b-icon>
+        <div
+          class="media-left"
+          @click="UpdateTag(tag)"
+        >
+          <b-icon
+            icon="tag"
+            size="is-medium"
+            type="is-midgray"
+          />
         </div>
-        <div class="media-content" @click="UpdateTag(tag)">
-          <p class="title is-4">{{ tag.name }}</p>
+        <div
+          class="media-content"
+          @click="UpdateTag(tag)"
+        >
+          <p class="title is-4">
+            {{ tag.name }}
+          </p>
           <p class="subtitle is-6">
             <span v-if="tag.creationTimestamp == tag.modificationTimestamp">
               Created {{ TimestampToCalendar(tag.creationTimestamp) }}, by
@@ -35,7 +47,11 @@
         </div>
         <div class="media-right">
           <!-- Delete button -->
-          <b-tooltip label="Delete" class="is-paddingless" :delay="200">
+          <b-tooltip
+            label="Delete"
+            class="is-paddingless"
+            :delay="200"
+          >
             <b-button
               type="is-danger"
               icon-right="delete"
@@ -55,18 +71,49 @@ import flatmates from '@/requests/authenticated/flatmates'
 import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
-  name: 'shopping-tag-card',
+  name: 'ShoppingTagCard',
+  props: {
+    tag: {
+      type: Object,
+      default: null
+    },
+    index: {
+      type: Number,
+      default: null
+    },
+    tags: {
+      type: Object,
+      default: null
+    },
+    displayFloatingAddButton: {
+      type: Boolean,
+      default: true
+    }
+  },
+  emits: ['displayFloatingAddButton', 'tags'],
   data () {
     return {
       authorNames: '...',
       authorNamesLast: '...'
     }
   },
-  props: {
-    tag: Object,
-    index: Number,
-    tags: Object,
-    displayFloatingAddButton: Boolean
+  async beforeMount () {
+    flatmates
+      .GetFlatmate(this.tag.author)
+      .then((resp) => {
+        this.authorNames = resp.data.spec.names
+        return flatmates.GetFlatmate(this.tag.authorLast)
+      })
+      .then((resp) => {
+        this.authorNamesLast = resp.data.spec.names
+      })
+      .catch((err) => {
+        common.DisplayFailureToast(
+          'Unable to find author of tag' +
+            '<br/>' +
+            err.response.data.metadata.response
+        )
+      })
   },
   methods: {
     TimestampToCalendar (timestamp) {
@@ -147,24 +194,6 @@ export default {
         }
       })
     }
-  },
-  async beforeMount () {
-    flatmates
-      .GetFlatmate(this.tag.author)
-      .then((resp) => {
-        this.authorNames = resp.data.spec.names
-        return flatmates.GetFlatmate(this.tag.authorLast)
-      })
-      .then((resp) => {
-        this.authorNamesLast = resp.data.spec.names
-      })
-      .catch((err) => {
-        common.DisplayFailureToast(
-          'Unable to find author of tag' +
-            '<br/>' +
-            err.response.data.metadata.response
-        )
-      })
   }
 }
 </script>

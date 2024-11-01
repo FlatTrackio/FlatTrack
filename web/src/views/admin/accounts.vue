@@ -23,27 +23,33 @@
         >
           <ul>
             <li>
-              <router-link :to="{ name: 'Admin home' }">Admin</router-link>
+              <router-link :to="{ name: 'Admin home' }">
+                Admin
+              </router-link>
             </li>
             <li class="is-active">
-              <router-link :to="{ name: 'Admin accounts' }"
-                >Accounts</router-link
-              >
+              <router-link :to="{ name: 'Admin accounts' }">
+                Accounts
+              </router-link>
             </li>
           </ul>
           <b-button
-            @click="CopyHrefToClipboard()"
             icon-left="content-copy"
             size="is-small"
-          ></b-button>
+            @click="CopyHrefToClipboard()"
+          />
         </nav>
-        <h1 class="title is-1">Accounts</h1>
-        <p class="subtitle is-4">Manage the account of your flatmates</p>
+        <h1 class="title is-1">
+          Accounts
+        </h1>
+        <p class="subtitle is-4">
+          Manage the account of your flatmates
+        </p>
         <b-loading
+          v-model:active="pageLoading"
           :is-full-page="false"
-          :active.sync="pageLoading"
           :can-cancel="false"
-        ></b-loading>
+        />
         <div>
           <section>
             <div
@@ -53,29 +59,34 @@
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
-                    <b-icon icon="account-plus" size="is-medium"> </b-icon>
+                    <b-icon
+                      icon="account-plus"
+                      size="is-medium"
+                    />
                   </div>
                   <div class="media-content">
-                    <p class="title is-4">Add a new flatmate</p>
+                    <p class="title is-4">
+                      Add a new flatmate
+                    </p>
                   </div>
                   <div class="media-right">
                     <b-icon
                       icon="chevron-right"
                       size="is-medium"
                       type="is-midgray"
-                    ></b-icon>
+                    />
                   </div>
                 </div>
               </div>
             </div>
           </section>
         </div>
-        <br />
+        <br>
         <div v-if="members && members.length">
           <div
-            class="card-margin pointer-cursor-on-hover"
             v-for="member of members"
-            v-bind:key="member"
+            :key="member"
+            class="card-margin pointer-cursor-on-hover"
             @click="
               $router.push({
                 name: 'View user account',
@@ -88,11 +99,16 @@
                 <div class="media">
                   <div class="media-left">
                     <figure class="image is-48x48">
-                      <img src="@/assets/96x96.png" alt="Placeholder image" />
+                      <img
+                        src="@/assets/96x96.png"
+                        alt="Placeholder image"
+                      >
                     </figure>
                   </div>
                   <div class="media-content">
-                    <p class="title is-4">{{ member.names }}</p>
+                    <p class="title is-4">
+                      {{ member.names }}
+                    </p>
                     <p class="subtitle is-6">
                       Joined {{ TimestampToCalendar(member.creationTimestamp) }}
                     </p>
@@ -102,57 +118,82 @@
                       icon="chevron-right"
                       size="is-medium"
                       type="is-midgray"
-                    ></b-icon>
+                    />
                   </div>
                 </div>
                 <div class="content">
-                  <b-field grouped group-multiline>
-                    <div
-                      class="control"
-                      v-for="group in member.groups"
-                      v-bind:key="group"
-                    >
-                      <b-taglist attached>
-                        <b-tag type="is-dark">is</b-tag>
-                        <b-tag type="is-info">{{ group }}</b-tag>
-                      </b-taglist>
-                    </div>
-                  </b-field>
-                  <p class="subtitle is-6" v-if="member.phoneNumber">
-                    Phone:
-                    <a :href="`tel:${member.phoneNumber}`">{{
-                      member.phoneNumber
-                    }}</a
-                    ><br />
-                  </p>
-                  <p class="subtitle is-6" v-if="member.email">
-                    Email:
-                    <a :href="`mailto:${member.email}`">{{ member.email }}</a
-                    ><br />
-                  </p>
-                  <a
-                    class="subtitle is-6"
-                    v-if="member.birthday && member.birthday !== 0"
-                  >
-                    Birthday: {{ TimestampToCalendar(member.birthday) }}<br />
-                  </a>
                   <b-field
                     grouped
                     group-multiline
+                  >
+                    <div
+                      v-for="group in member.groups"
+                      :key="group"
+                      class="control"
+                    >
+                      <b-taglist attached>
+                        <b-tag type="is-dark">
+                          is
+                        </b-tag>
+                        <b-tag type="is-info">
+                          {{ group }}
+                        </b-tag>
+                      </b-taglist>
+                    </div>
+                  </b-field>
+                  <p
+                    v-if="member.phoneNumber"
+                    class="subtitle is-6"
+                  >
+                    Phone:
+                    <a :href="`tel:${member.phoneNumber}`">{{
+                      member.phoneNumber
+                    }}</a><br>
+                  </p>
+                  <p
+                    v-if="member.email"
+                    class="subtitle is-6"
+                  >
+                    Email:
+                    <a :href="`mailto:${member.email}`">{{ member.email }}</a><br>
+                  </p>
+                  <a
+                    v-if="member.birthday && member.birthday !== 0"
+                    class="subtitle is-6"
+                  >
+                    Birthday: {{ TimestampToCalendar(member.birthday) }}<br>
+                  </a>
+                  <b-field
                     v-if="
                       member.registered !== true || member.disabled === true
                     "
+                    grouped
+                    group-multiline
                   >
                     <div class="control">
-                      <b-taglist attached v-if="member.registered !== true">
-                        <b-tag type="is-dark">has</b-tag>
-                        <b-tag type="is-danger">not registered</b-tag>
+                      <b-taglist
+                        v-if="member.registered !== true"
+                        attached
+                      >
+                        <b-tag type="is-dark">
+                          has
+                        </b-tag>
+                        <b-tag type="is-danger">
+                          not registered
+                        </b-tag>
                       </b-taglist>
                     </div>
                     <div class="control">
-                      <b-taglist attached v-if="member.disabled === true">
-                        <b-tag type="is-dark">has</b-tag>
-                        <b-tag type="is-warning">account disabled</b-tag>
+                      <b-taglist
+                        v-if="member.disabled === true"
+                        attached
+                      >
+                        <b-tag type="is-dark">
+                          has
+                        </b-tag>
+                        <b-tag type="is-warning">
+                          account disabled
+                        </b-tag>
                       </b-taglist>
                     </div>
                   </b-field>
@@ -172,24 +213,33 @@
             <div class="card-content">
               <div class="media">
                 <div class="media-left">
-                  <b-icon icon="account-off" size="is-medium"> </b-icon>
+                  <b-icon
+                    icon="account-off"
+                    size="is-medium"
+                  />
                 </div>
                 <div class="media-content">
-                  <p class="subtitle is-4" v-if="!pageLoading">
+                  <p
+                    v-if="!pageLoading"
+                    class="subtitle is-4"
+                  >
                     No flatmates found.
                   </p>
-                  <p class="subtitle is-4" v-else-if="pageLoading">
+                  <p
+                    v-else-if="pageLoading"
+                    class="subtitle is-4"
+                  >
                     Loading flatmates...
                   </p>
                 </div>
               </div>
               <p class="content subtitle is-5">
-                Hmmm, it appears that you don't have an flatmates added.<br />
+                Hmmm, it appears that you don't have an flatmates added.<br>
               </p>
             </div>
           </div>
         </div>
-        <floatingAddButton :routerLink="{ name: 'Admin new account' }" />
+        <floatingAddButton :router-link="{ name: 'Admin new account' }" />
       </section>
     </div>
   </div>
@@ -201,7 +251,11 @@ import flatmates from '@/requests/authenticated/flatmates'
 import common from '@/common/common'
 
 export default {
-  name: 'flatmates-accounts',
+  name: 'FlatmatesAccounts',
+  components: {
+    floatingAddButton: () =>
+      import('@/components/common/floating-add-button.vue')
+  },
   data () {
     return {
       members: [],
@@ -213,10 +267,6 @@ export default {
   async beforeMount () {
     this.groupQuery = this.$route.query.group
     this.FetchAllFlatmates()
-  },
-  components: {
-    floatingAddButton: () =>
-      import('@/components/common/floating-add-button.vue')
   },
   methods: {
     CopyHrefToClipboard () {

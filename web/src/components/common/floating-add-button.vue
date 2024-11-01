@@ -20,8 +20,8 @@
   >
     <md-speed-dial md-direction="bottom md-bottom-right">
       <md-speed-dial-target
-        @click="goToRouterLinkOrRunFunc"
         class="floating-add-button-colour"
+        @click="goToRouterLinkOrRunFunc"
       >
         <md-icon>add</md-icon>
       </md-speed-dial-target>
@@ -33,15 +33,24 @@
 import common from '@/common/common'
 
 export default {
-  name: 'floating-add-button',
+  name: 'FloatingAddButton',
+  props: {
+    routerLink: {
+      default: "/",
+      type: String,
+    },
+    func: {
+      type: Function,
+      default: () => {},
+    }
+  },
   data () {
     return {
       deviceIsMobile: false
     }
   },
-  props: {
-    routerLink: String,
-    func: Function
+  async beforeMount () {
+    this.deviceIsMobile = common.DeviceIsMobile()
   },
   methods: {
     goToRouterLinkOrRunFunc () {
@@ -55,9 +64,6 @@ export default {
         func()
       }
     }
-  },
-  async beforeMount () {
-    this.deviceIsMobile = common.DeviceIsMobile()
   }
 }
 </script>

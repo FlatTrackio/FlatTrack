@@ -22,63 +22,85 @@
           aria-label="breadcrumbs"
         >
           <ul>
-            <li><router-link :to="{ name: 'Home' }">Home</router-link></li>
+            <li>
+              <router-link :to="{ name: 'Home' }">
+                Home
+              </router-link>
+            </li>
             <li class="is-active">
-              <router-link :to="{ name: 'About FlatTrack' }"
-                >About FlatTrack</router-link
-              >
+              <router-link :to="{ name: 'About FlatTrack' }">
+                About FlatTrack
+              </router-link>
             </li>
           </ul>
           <b-button
-            @click="CopyHrefToClipboard()"
             icon-left="content-copy"
             size="is-small"
-          ></b-button>
+            @click="CopyHrefToClipboard()"
+          />
         </nav>
-        <h1 class="title is-1">About FlatTrack</h1>
-        <p class="subtitle is-3">What is FlatTrack?</p>
-        <b-message type="is-primary" has-icon icon="help">
+        <h1 class="title is-1">
+          About FlatTrack
+        </h1>
+        <p class="subtitle is-3">
+          What is FlatTrack?
+        </p>
+        <b-message
+          type="is-primary"
+          has-icon
+          icon="help"
+        >
           <p class="is-size-5">
-            <a href="https://flattrack.io" target="_blank" rel="noreferrer"
-              >FlatTrack</a
-            >
+            <a
+              href="https://flattrack.io"
+              target="_blank"
+              rel="noreferrer"
+            >FlatTrack</a>
             is a
             <a
               href="https://simple.wikipedia.org/wiki/Free_and_open-source_software"
               target="_blank"
               rel="noreferrer"
-              >Free and Open Source</a
-            >
+            >Free and Open Source</a>
             collaboration software for flats / community houses and homes with
             the goals of <b>easing common tasks</b> in living environments,
             <b>enabling closer collaboration</b>, and
             <b>empowering humans who live together</b>.
           </p>
         </b-message>
-        <p class="subtitle is-3">Collaborate</p>
-        <b-message type="is-primary" has-icon icon="help">
+        <p class="subtitle is-3">
+          Collaborate
+        </p>
+        <b-message
+          type="is-primary"
+          has-icon
+          icon="help"
+        >
           <p class="is-size-5">
-            FlatTrack is all about community.<br />
+            FlatTrack is all about community.<br>
             Together, we can define the standards on technology's assistance in
-            flat life.<br />
+            flat life.<br>
             Contribution is welcome and you are too! Please join the community
             over on
             <a
               href="https://gitlab.com/flattrack/flattrack"
               target="_blank"
               rel="noreferrer"
-              >GitLab</a
-            >.
+            >GitLab</a>.
           </p>
         </b-message>
-        <p class="subtitle is-3">This FlatTrack instance</p>
-        <b-message type="is-warning" has-icon icon="information-outline">
+        <p class="subtitle is-3">
+          This FlatTrack instance
+        </p>
+        <b-message
+          type="is-warning"
+          has-icon
+          icon="information-outline"
+        >
           <p class="is-size-5">
             <b>Version</b>: {{ version || "Unknown" }}
-            <span v-if="version !== versionFrontend"
-              >(frontend {{ versionFrontend }})</span
-            >
-            <br />
+            <span v-if="version !== versionFrontend">(frontend {{ versionFrontend }})</span>
+            <br>
             <b>Commit hash</b>:
             <a
               v-if="commitHash !== '???' && typeof commitHash !== 'undefined'"
@@ -87,36 +109,30 @@
               "
               target="_blank"
               rel="noreferrer"
-              >{{ commitHash }}</a
-            >
+            >{{ commitHash }}</a>
             <span v-else> Unknown </span>
             <a
               v-if="commitHash !== commitHashFrontend"
               :href="
                 'https://gitlab.com/flattrack/flattrack/-/commit/' +
-                commitHashFrontend
+                  commitHashFrontend
               "
               target="_blank"
               rel="noreferrer"
-              >{{ commitHashFrontend }}</a
-            >
-            <br />
+            >{{ commitHashFrontend }}</a>
+            <br>
             <b>Mode</b>: {{ mode || "Unknown" }}
-            <span v-if="mode !== modeFrontend"
-              >(frontend {{ modeFrontend }})</span
-            >
-            <br />
+            <span v-if="mode !== modeFrontend">(frontend {{ modeFrontend }})</span>
+            <br>
             <b>Date</b>: {{ date || "Unknown" }}
-            <span v-if="date !== dateFrontend"
-              >(frontend {{ dateFrontend }})</span
-            >
-            <br />
+            <span v-if="date !== dateFrontend">(frontend {{ dateFrontend }})</span>
+            <br>
             <b>Golang version</b>: {{ golangVersion || "Unknown" }}
-            <br />
+            <br>
             <b>Vue.js Version</b>: {{ vuejsVersion || "Unknown" }}
-            <br />
+            <br>
             <b>Operating System</b>: {{ osType || "Unknown" }}
-            <br />
+            <br>
             <b>Architecture</b>: {{ osArch || "Unknown" }}
           </p>
         </b-message>
@@ -132,7 +148,7 @@ import constants from '@/constants/constants'
 import vue from 'vue'
 
 export default {
-  name: 'about-flattrack',
+  name: 'AboutFlattrack',
   data () {
     return {
       hasInitialLoaded: false,
@@ -150,6 +166,9 @@ export default {
       dateFrontend: constants.appBuildDate
     }
   },
+  async beforeMount () {
+    this.GetVersion()
+  },
   methods: {
     CopyHrefToClipboard () {
       common.CopyHrefToClipboard()
@@ -166,9 +185,6 @@ export default {
         this.osArch = resp.data.data.osArch
       })
     }
-  },
-  async beforeMount () {
-    this.GetVersion()
   }
 }
 </script>

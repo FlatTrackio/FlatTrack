@@ -13,8 +13,8 @@ variables:
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
   EXTRA_REGISTRIES: docker.io
-  IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.20@sha256:09dbe0a53523c2482d85a037efc6b0e8e8bb16c6f1acf431fe36aa0ebc871c06
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.23.2-alpine3.20
+  IMAGE_NODE_ALPINE: docker.io/node:23-alpine3.20@sha256:1467ea23cce893347696b155b9e00e7f0ac7d21555eb6f27236f1328212e045e
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.23.2-alpine3.20@sha256:9dd2625a1ff2859b8d8b01d8f7822c0f528942fe56cfe7a1e7c38d3b8d72d679
   IMAGE_PYTHON: docker.io/python:3.8-buster@sha256:04c3f641c2254c229fd2f704c5199ff4bea57d26c1c29008ae3a4afddde98709
   IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.61.0-alpine
   COSIGN_YES: "true"

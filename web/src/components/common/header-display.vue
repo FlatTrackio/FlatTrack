@@ -17,8 +17,12 @@
   <div>
     <section class="hero is-info navbar-shadow">
       <div class="hero-body">
-        <p class="title">FlatTrack</p>
-        <p class="subtitle">Collaborate with your flatmates</p>
+        <p class="title">
+          FlatTrack
+        </p>
+        <p class="subtitle">
+          Collaborate with your flatmates
+        </p>
       </div>
     </section>
   </div>
@@ -26,7 +30,7 @@
 
 <script>
 export default {
-  name: 'header-display',
+  name: 'HeaderDisplay',
   props: {},
   data () {
     return {}

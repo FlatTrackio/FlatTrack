@@ -23,58 +23,60 @@
         >
           <ul>
             <li>
-              <router-link :to="{ name: 'Admin accounts' }"
-                >Accounts</router-link
-              >
+              <router-link :to="{ name: 'Admin accounts' }">
+                Accounts
+              </router-link>
             </li>
             <li class="is-active">
-              <router-link :to="{ name: 'Admin new account' }"
-                >New account</router-link
-              >
+              <router-link :to="{ name: 'Admin new account' }">
+                New account
+              </router-link>
             </li>
           </ul>
           <b-button
-            @click="CopyHrefToClipboard()"
             icon-left="content-copy"
             size="is-small"
-          ></b-button>
+            @click="CopyHrefToClipboard()"
+          />
         </nav>
-        <h1 class="title is-1">New account</h1>
-        <p class="subtitle is-4">Add a new flatmate</p>
+        <h1 class="title is-1">
+          New account
+        </h1>
+        <p class="subtitle is-4">
+          Add a new flatmate
+        </p>
 
         <b-field label="Names">
           <b-input
-            type="text"
             v-model="names"
+            type="text"
             maxlength="60"
             placeholder="Enter your flatmate's name"
             icon="textbox"
             size="is-medium"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="names = ''"
-            @keyup.enter.native="PostUserAccount"
             autofocus
             required
-          >
-          </b-input>
+            @icon-right-click="names = ''"
+            @keyup.enter="PostUserAccount"
+          />
         </b-field>
 
         <b-field label="Email">
           <b-input
-            type="email"
             v-model="email"
+            type="email"
             maxlength="70"
             placeholder="Enter your flatmate's email"
             icon="email"
             size="is-medium"
             icon-right="close-circle"
             icon-right-clickable
-            @icon-right-click="email = ''"
-            @keyup.enter.native="PostUserAccount"
             required
-          >
-          </b-input>
+            @icon-right-click="email = ''"
+            @keyup.enter="PostUserAccount"
+          />
         </b-field>
 
         <section>
@@ -89,34 +91,33 @@
               icon="account-group"
               placeholder="Select groups"
               size="is-medium"
-              @keyup.enter.native="PostUserAccount"
+              @keyup.enter="PostUserAccount"
               @typing="GetFilteredGroups"
             />
           </b-field>
         </section>
-        <br />
+        <br>
 
         <div class="field">
-          <b-checkbox v-model="setOnlyRequiredFields"
-            >Allow your flatmate to set their password, phone number, and
-            birthday</b-checkbox
-          >
+          <b-checkbox v-model="setOnlyRequiredFields">
+            Allow your flatmate to set their password, phone number, and
+            birthday
+          </b-checkbox>
         </div>
         <div v-if="!setOnlyRequiredFields">
           <b-field label="Phone number (optional)">
             <b-input
-              type="tel"
               v-model="phoneNumber"
+              type="tel"
               placeholder="Enter your flatmate's phone number"
               icon="phone"
               size="is-medium"
               icon-right="close-circle"
               icon-right-clickable
-              @icon-right-click="phoneNumber = ''"
-              @keyup.enter.native="PostUserAccount"
               maxlength="30"
-            >
-            </b-input>
+              @icon-right-click="phoneNumber = ''"
+              @keyup.enter="PostUserAccount"
+            />
           </b-field>
 
           <b-field label="Birthday (optional)">
@@ -129,10 +130,9 @@
               icon="cake-variant"
               size="is-medium"
               trap-focus
-            >
-            </b-datepicker>
+            />
           </b-field>
-          <br />
+          <br>
 
           <div class="field has-addons">
             <label class="label">Password</label>
@@ -144,8 +144,8 @@
           </div>
           <b-field>
             <b-input
-              type="password"
               v-model="password"
+              type="password"
               password-reveal
               maxlength="70"
               placeholder="Enter a password for your flatmate"
@@ -155,17 +155,16 @@
               validation-message="password is invalid. Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"
               icon-right="close-circle"
               icon-right-clickable
-              @icon-right-click="password = ''"
-              @keyup.enter.native="PostUserAccount"
               required
-            >
-            </b-input>
+              @icon-right-click="password = ''"
+              @keyup.enter="PostUserAccount"
+            />
           </b-field>
 
           <b-field label="Confirm password">
             <b-input
-              type="password"
               v-model="passwordConfirm"
+              type="password"
               password-reveal
               maxlength="70"
               placeholder="Confirm a password for your flatmate"
@@ -175,11 +174,10 @@
               validation-message="password is invalid. Make sure that your password has: 10 or more characters, at least one lower case letter, at least one upper case letter, at least one number"
               icon-right="close-circle"
               icon-right-clickable
-              @icon-right-click="passwordConfirm = ''"
-              @keyup.enter.native="PostUserAccount"
               required
-            >
-            </b-input>
+              @icon-right-click="passwordConfirm = ''"
+              @keyup.enter="PostUserAccount"
+            />
           </b-field>
         </div>
         <div v-else>
@@ -212,125 +210,125 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import groups from '@/requests/authenticated/groups'
-import adminFlatmates from '@/requests/admin/flatmates'
+  import common from "@/common/common";
+  import groups from "@/requests/authenticated/groups";
+  import adminFlatmates from "@/requests/admin/flatmates";
 
-export default {
-  name: 'new-account',
-  data () {
-    const today = new Date()
-    const maxDate = new Date(
-      today.getFullYear() - 15,
-      today.getMonth(),
-      today.getDay()
-    )
-    const minDate = new Date(
-      today.getFullYear() - 100,
-      today.getMonth(),
-      today.getDay()
-    )
+  export default {
+    name: "NewAccount",
+    components: {
+      infotooltip: () => import("@/components/common/info-tooltip.vue"),
+    },
+    data() {
+      const today = new Date();
+      const maxDate = new Date(
+        today.getFullYear() - 15,
+        today.getMonth(),
+        today.getDay()
+      );
+      const minDate = new Date(
+        today.getFullYear() - 100,
+        today.getMonth(),
+        today.getDay()
+      );
 
-    return {
-      pageLoading: false,
-      focusedDate: maxDate,
-      maxDate: maxDate,
-      minDate: minDate,
-      setOnlyRequiredFields: true,
-      names: null,
-      email: null,
-      phoneNumber: null,
-      birthday: 0,
-      password: null,
-      passwordConfirm: null,
-      availableGroups: [],
-      jsBirthday: null,
-      groupsFull: []
-    }
-  },
-  components: {
-    infotooltip: () => import('@/components/common/info-tooltip.vue')
-  },
-  methods: {
-    TimestampToCalendar (timestamp) {
-      return common.TimestampToCalendar(timestamp)
+      return {
+        pageLoading: false,
+        focusedDate: maxDate,
+        maxDate: maxDate,
+        minDate: minDate,
+        setOnlyRequiredFields: true,
+        names: null,
+        email: null,
+        phoneNumber: null,
+        birthday: 0,
+        password: null,
+        passwordConfirm: null,
+        availableGroups: [],
+        jsBirthday: null,
+        groupsFull: [],
+      };
     },
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+    async beforeMount() {
+      this.GetAvailableGroups();
     },
-    GetAvailableGroups () {
-      groups
-        .GetGroups()
-        .then((resp) => {
-          this.availableGroups = resp.data.list
-          this.groups = resp.data.list
-          resp.data.list.map((group) => {
-            if (group.defaultGroup === true) {
-              this.groupsFull = [...this.groupsFull, group]
-            }
+    methods: {
+      TimestampToCalendar(timestamp) {
+        return common.TimestampToCalendar(timestamp);
+      },
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      GetAvailableGroups() {
+        groups
+          .GetGroups()
+          .then((resp) => {
+            this.availableGroups = resp.data.list;
+            this.groups = resp.data.list;
+            resp.data.list.map((group) => {
+              if (group.defaultGroup === true) {
+                this.groupsFull = [...this.groupsFull, group];
+              }
+            });
           })
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to list groups' +
-              '<br/>' +
-              err.response.data.metadata.response
-          )
-        })
-    },
-    GetFilteredGroups (text) {
-      this.groups = this.availableGroups.filter((group) => {
-        return (
-          group.name.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
-        )
-      })
-    },
-    PostUserAccount () {
-      if (this.password !== this.passwordConfirm && this.password !== '') {
-        common.DisplayFailureToast('Passwords do not match')
-        return
-      }
-      this.birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0
-
-      var groups = []
-      this.groupsFull.map((group) => {
-        if (group === '' || group.name === '') {
-          return
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to list groups" +
+                "<br/>" +
+                err.response.data.metadata.response
+            );
+          });
+      },
+      GetFilteredGroups(text) {
+        this.groups = this.availableGroups.filter((group) => {
+          return (
+            group.name.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0
+          );
+        });
+      },
+      PostUserAccount() {
+        if (this.password !== this.passwordConfirm && this.password !== "") {
+          common.DisplayFailureToast("Passwords do not match");
+          return;
         }
-        groups.push(group.name)
-      })
-      adminFlatmates
-        .PostFlatmate(
-          this.names,
-          this.email,
-          this.phoneNumber,
-          this.birthday,
-          groups,
-          this.password
-        )
-        .then((resp) => {
-          common.DisplaySuccessToast('Created user account')
-          setTimeout(() => {
-            if (this.setOnlyRequiredFields === true) {
-              this.$router.push({
-                name: 'View user account',
-                params: { id: resp.data.spec.id }
-              })
-            } else {
-              this.$router.push({ name: 'Admin accounts' })
-            }
-          }, 1.5 * 1000)
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to create user account' +
-              `<br/>${err.response.data.metadata.response}`
+        this.birthday = new Date(this.jsBirthday || 0).getTime() / 1000 || 0;
+
+        var groups = [];
+        this.groupsFull.map((group) => {
+          if (group === "" || group.name === "") {
+            return;
+          }
+          groups.push(group.name);
+        });
+        adminFlatmates
+          .PostFlatmate(
+            this.names,
+            this.email,
+            this.phoneNumber,
+            this.birthday,
+            groups,
+            this.password
           )
-        })
-    }
-  },
-  async beforeMount () {
-    this.GetAvailableGroups()
-  }
-}
+          .then((resp) => {
+            common.DisplaySuccessToast("Created user account");
+            setTimeout(() => {
+              if (this.setOnlyRequiredFields === true) {
+                this.$router.push({
+                  name: "View user account",
+                  params: { id: resp.data.spec.id },
+                });
+              } else {
+                this.$router.push({ name: "Admin accounts" });
+              }
+            }, 1.5 * 1000);
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to create user account" +
+                `<br/>${err.response.data.metadata.response}`
+            );
+          });
+      },
+    },
+  };
 </script>

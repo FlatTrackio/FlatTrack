@@ -22,7 +22,10 @@
             class="media-left"
             @click="PatchItemObtained(item.id, !obtained)"
           >
-            <b-checkbox size="is-medium" v-model="obtained"></b-checkbox>
+            <b-checkbox
+              v-model="obtained"
+              size="is-medium"
+            />
           </div>
           <div
             class="media-content pointer-cursor-on-hover"
@@ -45,8 +48,7 @@
                   icon="currency-usd-off"
                   type="is-lightred"
                   size="is-small"
-                >
-                </b-icon>
+                />
               </p>
               <span>
                 <p class="subtitle is-6">
@@ -56,9 +58,9 @@
                   <span
                     v-if="
                       displayTag === true &&
-                      typeof item.tag !== 'undefined' &&
-                      typeof item.notes !== 'undefined' &&
-                      item.notes !== ''
+                        typeof item.tag !== 'undefined' &&
+                        typeof item.notes !== 'undefined' &&
+                        item.notes !== ''
                     "
                   >
                     -
@@ -71,12 +73,16 @@
             </div>
           </div>
           <div class="media-right">
-            <b-tooltip label="Duplicate" class="is-paddingless" :delay="200">
+            <b-tooltip
+              label="Duplicate"
+              class="is-paddingless"
+              :delay="200"
+            >
               <b-button
+                v-if="deviceIsMobile === false"
                 size="is-small"
                 type="is-white"
                 icon-right="content-duplicate"
-                v-if="deviceIsMobile === false"
                 @click="
                   PostShoppingListItem(
                     listId,
@@ -90,22 +96,29 @@
               />
             </b-tooltip>
 
-            <b-tooltip label="Delete" class="is-paddingless" :delay="200">
+            <b-tooltip
+              label="Delete"
+              class="is-paddingless"
+              :delay="200"
+            >
               <b-button
+                v-if="deviceIsMobile === false"
                 size="is-small"
                 type="is-danger"
                 icon-right="delete"
                 :loading="itemDeleting"
-                v-if="deviceIsMobile === false"
                 @click="DeleteShoppingListItem(item.id, index)"
               />
             </b-tooltip>
-            <span class="pointer-cursor-on-hover" @click="$emit('viewItem')">
+            <span
+              class="pointer-cursor-on-hover"
+              @click="$emit('viewItem')"
+            >
               <b-icon
                 icon="chevron-right"
                 size="is-medium"
                 type="is-midgray"
-              ></b-icon>
+              />
             </span>
           </div>
         </div>
@@ -120,21 +133,43 @@ import { DialogProgrammatic as Dialog } from 'buefy'
 import shoppinglist from '@/requests/authenticated/shoppinglist'
 
 export default {
-  name: 'shopping-list-item-card-view',
+  name: 'ShoppingListItemCardView',
+  props: {
+    item: {
+      type: Object,
+      default: null
+    },
+    listId: {
+      type: String,
+      default: null
+    },
+    list: {
+      type: Object,
+      default: null
+    },
+    index: {
+      type: Number,
+      default: null
+    },
+    displayTag: {
+      type: Boolean,
+      default: null
+    },
+    deviceIsMobile: {
+      type: Boolean,
+      default: null
+    },
+    itemDisplayState: {
+      type: Number,
+      default: null
+    },
+  },
+  emits: ['viewItem', 'list', 'obtained'],
   data () {
     return {
       itemDeleting: false,
       obtained: false
     }
-  },
-  props: {
-    item: Object,
-    listId: String,
-    list: Object,
-    index: Number,
-    displayTag: Boolean,
-    deviceIsMobile: Boolean,
-    itemDisplayState: Number
   },
   created () {
     this.obtained = this.item.obtained

@@ -23,75 +23,98 @@
         >
           <ul>
             <li>
-              <router-link :to="{ name: 'Shopping list' }"
-                >Shopping list</router-link
-              >
+              <router-link :to="{ name: 'Shopping list' }">
+                Shopping list
+              </router-link>
             </li>
             <li class="is-active">
-              <router-link :to="{ name: 'Manage shopping tags' }"
-                >Shopping tags</router-link
-              >
+              <router-link :to="{ name: 'Manage shopping tags' }">
+                Shopping tags
+              </router-link>
             </li>
           </ul>
           <b-button
-            @click="CopyHrefToClipboard()"
             icon-left="content-copy"
             size="is-small"
-          ></b-button>
+            @click="CopyHrefToClipboard()"
+          />
         </nav>
-        <h1 class="title is-1">Shopping tags</h1>
-        <p class="subtitle is-3">Manage tags used in your lists</p>
+        <h1 class="title is-1">
+          Shopping tags
+        </h1>
+        <p class="subtitle is-3">
+          Manage tags used in your lists
+        </p>
         <div>
           <label class="label">Search for tags</label>
           <b-field>
             <b-input
+              ref="search"
+              v-model="tagSearch"
               icon="magnify"
               size="is-medium"
               placeholder="Enter a tag name"
               type="search"
               expanded
-              v-model="tagSearch"
-              ref="search"
-            >
-            </b-input>
+            />
             <p class="control">
               <b-select
+                v-model="sortBy"
                 placeholder="Sort by"
                 icon="sort"
-                v-model="sortBy"
                 size="is-medium"
                 expanded
               >
-                <option value="recentlyAdded">Recently Added</option>
-                <option value="lastAdded">Last Added</option>
-                <option value="recentlyUpdated">Recently Updated</option>
-                <option value="lastUpdated">Last Updated</option>
-                <option value="alphabeticalDescending">A-z</option>
-                <option value="alphabeticalAscending">z-A</option>
+                <option value="recentlyAdded">
+                  Recently Added
+                </option>
+                <option value="lastAdded">
+                  Last Added
+                </option>
+                <option value="recentlyUpdated">
+                  Recently Updated
+                </option>
+                <option value="lastUpdated">
+                  Last Updated
+                </option>
+                <option value="alphabeticalDescending">
+                  A-z
+                </option>
+                <option value="alphabeticalAscending">
+                  z-A
+                </option>
               </b-select>
             </p>
           </b-field>
           <b-loading
+            v-model:active="pageLoading"
             :is-full-page="false"
-            :active.sync="pageLoading"
             :can-cancel="false"
-          ></b-loading>
+          />
           <section>
-            <div class="card pointer-cursor-on-hover" @click="AddNewTag">
+            <div
+              class="card pointer-cursor-on-hover"
+              @click="AddNewTag"
+            >
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
-                    <b-icon icon="tag" size="is-medium"> </b-icon>
+                    <b-icon
+                      icon="tag"
+                      size="is-medium"
+                    />
                   </div>
                   <div class="media-content">
-                    <p class="title is-4">Add a new tag</p>
+                    <p class="title is-4">
+                      Add a new tag
+                    </p>
                   </div>
                   <div class="media-right">
                     <b-icon
                       icon="chevron-right"
                       size="is-medium"
                       type="is-midgray"
-                    ></b-icon>
+                    />
                   </div>
                 </div>
               </div>
@@ -99,16 +122,22 @@
           </section>
         </div>
         <!-- TODO fix floating button -->
-        <floatingAddButton :func="AddNewTag" v-if="displayFloatingAddButton" />
-        <br />
+        <floatingAddButton
+          v-if="displayFloatingAddButton"
+          :func="AddNewTag"
+        />
+        <br>
         <div v-if="tagsFiltered.length > 0">
           <!-- Card per-tag -->
-          <div v-for="(tag, index) in tagsFiltered" v-bind:key="tag">
+          <div
+            v-for="(tag, index) in tagsFiltered"
+            :key="tag"
+          >
             <tagCard
               :tag="tag"
               :index="index"
               :tags="tags"
-              @displayFloatingAddButton="
+              @display-floating-add-button="
                 (value) => {
                   displayFloatingAddButton = value;
                 }
@@ -120,7 +149,7 @@
               "
             />
           </div>
-          <br />
+          <br>
           <p>{{ tagsFiltered.length }} tag(s)</p>
         </div>
         <div v-else>
@@ -132,22 +161,25 @@
                     icon="tag"
                     size="is-medium"
                     type="is-midgray"
-                  ></b-icon>
+                  />
                 </div>
                 <div class="media-content">
                   <p
-                    class="subtitle is-4"
                     v-if="tagSearch === '' && tags.length === 0 && !pageLoading"
+                    class="subtitle is-4"
                   >
                     No tags added yet.
                   </p>
                   <p
-                    class="subtitle is-4"
                     v-else-if="tagSearch !== '' && !pageLoading"
+                    class="subtitle is-4"
                   >
                     No tags found.
                   </p>
-                  <p class="subtitle is-4" v-else-if="pageLoading">
+                  <p
+                    v-else-if="pageLoading"
+                    class="subtitle is-4"
+                  >
                     Loading tags...
                   </p>
                 </div>
@@ -166,7 +198,13 @@ import shoppinglist from '@/requests/authenticated/shoppinglist'
 import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
-  name: 'shopping-tags',
+  name: 'ShoppingTags',
+  components: {
+    floatingAddButton: () =>
+      import('@/components/common/floating-add-button.vue'),
+    tagCard: () =>
+      import('@/components/authenticated/shopping-list-tag-card.vue')
+  },
   data () {
     return {
       displayFloatingAddButton: true,
@@ -177,12 +215,6 @@ export default {
       sortBy: 'alphabeticalDescending'
     }
   },
-  components: {
-    floatingAddButton: () =>
-      import('@/components/common/floating-add-button.vue'),
-    tagCard: () =>
-      import('@/components/authenticated/shopping-list-tag-card.vue')
-  },
   computed: {
     tagsFiltered () {
       return this.tags.filter((item) => {
@@ -192,6 +224,24 @@ export default {
     newTag () {
       return this.$route.query.newtag
     }
+  },
+  watch: {
+    sortBy () {
+      this.listIsLoading = true
+      this.GetShoppingTags()
+    },
+    newTag () {
+      if (this.newTag === 'prompt') {
+        this.AddNewTag()
+      }
+    }
+  },
+  async beforeMount () {
+    this.GetShoppingTags()
+  },
+  async created () {
+    this.CheckDeviceIsMobile()
+    window.addEventListener('resize', this.CheckDeviceIsMobile.bind(this))
   },
   methods: {
     CopyHrefToClipboard () {
@@ -253,24 +303,6 @@ export default {
     CheckDeviceIsMobile () {
       this.deviceIsMobile = common.DeviceIsMobile()
     }
-  },
-  watch: {
-    sortBy () {
-      this.listIsLoading = true
-      this.GetShoppingTags()
-    },
-    newTag () {
-      if (this.newTag === 'prompt') {
-        this.AddNewTag()
-      }
-    }
-  },
-  async beforeMount () {
-    this.GetShoppingTags()
-  },
-  async created () {
-    this.CheckDeviceIsMobile()
-    window.addEventListener('resize', this.CheckDeviceIsMobile.bind(this))
   }
 }
 </script>

@@ -22,21 +22,29 @@
           aria-label="breadcrumbs"
         >
           <ul>
-            <li><router-link :to="{ name: 'Apps' }">Apps</router-link></li>
+            <li>
+              <router-link :to="{ name: 'Apps' }">
+                Apps
+              </router-link>
+            </li>
             <li class="is-active">
-              <router-link :to="{ name: 'Shopping list' }"
-                >Shopping list</router-link
-              >
+              <router-link :to="{ name: 'Shopping list' }">
+                Shopping list
+              </router-link>
             </li>
           </ul>
           <b-button
-            @click="CopyHrefToClipboard()"
             icon-left="content-copy"
             size="is-small"
-          ></b-button>
+            @click="CopyHrefToClipboard()"
+          />
         </nav>
-        <h1 class="title is-1">Shopping list</h1>
-        <p class="subtitle is-3">Manage your weekly shop</p>
+        <h1 class="title is-1">
+          Shopping list
+        </h1>
+        <p class="subtitle is-3">
+          Manage your weekly shop
+        </p>
         <div v-if="notes !== '' || canUserAccountAdmin">
           <div class="content">
             <label class="label">Notes</label>
@@ -54,62 +62,82 @@
               </i>
             </p>
           </div>
-          <br />
+          <br>
         </div>
         <b-button
           class="has-text-left"
-          @click="$router.push({ name: 'Manage shopping tags' })"
           type="is-info"
           icon-left="tag-multiple"
           expanded
+          @click="$router.push({ name: 'Manage shopping tags' })"
         >
           Manage tags
         </b-button>
-        <br />
+        <br>
         <div>
           <b-tabs
+            v-model="listDisplayState"
             :position="deviceIsMobile ? 'is-centered' : ''"
             class="block is-marginless"
-            v-model="listDisplayState"
           >
-            <b-tab-item icon="format-list-checks" label="All"></b-tab-item>
-            <b-tab-item icon="playlist-remove" label="Uncompleted"></b-tab-item>
-            <b-tab-item icon="playlist-check" label="Completed"></b-tab-item>
+            <b-tab-item
+              icon="format-list-checks"
+              label="All"
+            />
+            <b-tab-item
+              icon="playlist-remove"
+              label="Uncompleted"
+            />
+            <b-tab-item
+              icon="playlist-check"
+              label="Completed"
+            />
           </b-tabs>
           <label class="label">Search for lists</label>
           <b-field>
             <b-input
+              ref="search"
+              v-model="listSearch"
               icon="magnify"
               size="is-medium"
               placeholder="Enter a list name"
               type="search"
               expanded
-              v-model="listSearch"
-              ref="search"
-            >
-            </b-input>
+            />
             <p class="control">
               <b-select
+                v-model="sortBy"
                 placeholder="Sort by"
                 icon="sort"
-                v-model="sortBy"
                 size="is-medium"
                 expanded
               >
-                <option value="recentlyAdded">Recently Added</option>
-                <option value="lastAdded">Last Added</option>
-                <option value="recentlyUpdated">Recently Updated</option>
-                <option value="lastUpdated">Last Updated</option>
-                <option value="alphabeticalDescending">A-z</option>
-                <option value="alphabeticalAscending">z-A</option>
+                <option value="recentlyAdded">
+                  Recently Added
+                </option>
+                <option value="lastAdded">
+                  Last Added
+                </option>
+                <option value="recentlyUpdated">
+                  Recently Updated
+                </option>
+                <option value="lastUpdated">
+                  Last Updated
+                </option>
+                <option value="alphabeticalDescending">
+                  A-z
+                </option>
+                <option value="alphabeticalAscending">
+                  z-A
+                </option>
               </b-select>
             </p>
           </b-field>
           <b-loading
+            v-model:active="pageLoading"
             :is-full-page="false"
-            :active.sync="pageLoading"
             :can-cancel="false"
-          ></b-loading>
+          />
           <section>
             <div
               class="card pointer-cursor-on-hover"
@@ -123,17 +151,22 @@
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
-                    <b-icon icon="cart-plus" size="is-medium"> </b-icon>
+                    <b-icon
+                      icon="cart-plus"
+                      size="is-medium"
+                    />
                   </div>
                   <div class="media-content">
-                    <p class="title is-4">Add a new list</p>
+                    <p class="title is-4">
+                      Add a new list
+                    </p>
                   </div>
                   <div class="media-right">
                     <b-icon
                       icon="chevron-right"
                       size="is-medium"
                       type="is-midgray"
-                    ></b-icon>
+                    />
                   </div>
                 </div>
               </div>
@@ -141,29 +174,29 @@
           </section>
         </div>
         <floatingAddButton
-          :routerLink="{
+          v-if="displayFloatingAddButton"
+          :router-link="{
             name: 'New shopping list',
             query: { name: listSearch || undefined },
           }"
-          v-if="displayFloatingAddButton"
         />
-        <br />
+        <br>
         <div v-if="listsFiltered.length > 0">
           <shoppingListCardView
+            v-for="(list, index) in listsFiltered"
+            :key="list"
             :list="list"
             :authors="authors"
             :lists="lists"
             :index="index"
-            v-for="(list, index) in listsFiltered"
-            v-bind:key="list"
-            :deviceIsMobile="deviceIsMobile"
+            :device-is-mobile="deviceIsMobile"
             @lists="
               (l) => {
                 lists = l;
               }
             "
           />
-          <br />
+          <br>
           <p>{{ listsFiltered.length }} shopping list(s)</p>
         </div>
         <div v-else>
@@ -175,46 +208,49 @@
                     icon="cart-remove"
                     size="is-medium"
                     type="is-midgray"
-                  ></b-icon>
+                  />
                 </div>
                 <div class="media-content">
                   <p
-                    class="subtitle is-4"
                     v-if="
                       listSearch === '' && lists.length === 0 && !pageLoading
                     "
+                    class="subtitle is-4"
                   >
                     No lists added yet.
                   </p>
                   <p
-                    class="subtitle is-4"
                     v-else-if="
                       listSearch === '' &&
-                      listDisplayState === 1 &&
-                      lists.length > 0 &&
-                      !pageLoading
+                        listDisplayState === 1 &&
+                        lists.length > 0 &&
+                        !pageLoading
                     "
+                    class="subtitle is-4"
                   >
                     All lists have been completed.
                   </p>
                   <p
-                    class="subtitle is-4"
                     v-else-if="
                       listSearch === '' &&
-                      listDisplayState === 2 &&
-                      lists.length > 0 &&
-                      !pageLoading
+                        listDisplayState === 2 &&
+                        lists.length > 0 &&
+                        !pageLoading
                     "
+                    class="subtitle is-4"
                   >
                     No lists have been completed yet.
                   </p>
                   <p
-                    class="subtitle is-4"
                     v-else-if="listSearch !== '' && !pageLoading"
+                    class="subtitle is-4"
                   >
                     No lists found.
                   </p>
-                  <p class="subtitle is-4" v-else-if="pageLoading">
+                  <p
+                    v-else-if="pageLoading"
+                    class="subtitle is-4"
+                  >
                     Loading lists...
                   </p>
                 </div>
@@ -235,7 +271,13 @@ import cani from '@/requests/authenticated/can-i'
 import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
-  name: 'shopping-list',
+  name: 'ShoppingList',
+  components: {
+    shoppingListCardView: () =>
+      import('@/components/authenticated/shopping-list-card-view.vue'),
+    floatingAddButton: () =>
+      import('@/components/common/floating-add-button.vue')
+  },
   data () {
     return {
       displayFloatingAddButton: true,
@@ -250,18 +292,32 @@ export default {
       sortBy: 'recentlyUpdated'
     }
   },
-  components: {
-    shoppingListCardView: () =>
-      import('@/components/authenticated/shopping-list-card-view.vue'),
-    floatingAddButton: () =>
-      import('@/components/common/floating-add-button.vue')
-  },
   computed: {
     listsFiltered () {
       return this.lists.filter((item) => {
         return this.ListDisplayState(item)
       })
     }
+  },
+  watch: {
+    sortBy () {
+      this.listIsLoading = true
+      this.GetShoppingLists()
+    }
+  },
+  async beforeMount () {
+    cani.GetCanIgroup('admin').then((resp) => {
+      this.canUserAccountAdmin = resp.data.data
+    })
+    this.GetShoppingLists()
+    this.GetShoppingListNotes()
+  },
+  beforeUnmount () {
+    window.removeEventListener('resize', this.CheckDeviceIsMobile, true)
+  },
+  async created () {
+    this.CheckDeviceIsMobile()
+    window.addEventListener('resize', this.CheckDeviceIsMobile, true)
   },
   methods: {
     CopyHrefToClipboard () {
@@ -365,26 +421,6 @@ export default {
     CheckDeviceIsMobile () {
       this.deviceIsMobile = common.DeviceIsMobile()
     }
-  },
-  watch: {
-    sortBy () {
-      this.listIsLoading = true
-      this.GetShoppingLists()
-    }
-  },
-  async beforeMount () {
-    cani.GetCanIgroup('admin').then((resp) => {
-      this.canUserAccountAdmin = resp.data.data
-    })
-    this.GetShoppingLists()
-    this.GetShoppingListNotes()
-  },
-  beforeDestroy () {
-    window.removeEventListener('resize', this.CheckDeviceIsMobile, true)
-  },
-  async created () {
-    this.CheckDeviceIsMobile()
-    window.addEventListener('resize', this.CheckDeviceIsMobile, true)
   }
 }
 </script>
