@@ -14,9 +14,9 @@ variables:
   POSTGRES_PASSWORD: flattrack
   EXTRA_REGISTRIES: docker.io
   IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.20@sha256:09dbe0a53523c2482d85a037efc6b0e8e8bb16c6f1acf431fe36aa0ebc871c06
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.23.2-alpine3.20
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.23.4-alpine3.20@sha256:9a31ef0803e6afdf564edc8ba4b4e17caed22a0b1ecd2c55e3c8fdd8d8f68f98
   IMAGE_PYTHON: docker.io/python:3.8-buster@sha256:04c3f641c2254c229fd2f704c5199ff4bea57d26c1c29008ae3a4afddde98709
-  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.61.0-alpine
+  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.62.2-alpine@sha256:0f3af3929517ed4afa1f1bcba4eae827296017720e08ecd5c68b9f0640bc310d
   COSIGN_YES: "true"
 
 .container-registry-login-dockerhub: &container-registry-login-dockerhub |
