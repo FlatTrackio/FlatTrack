@@ -54,8 +54,14 @@ IMAGE="$(ko publish \
 
 if [ "${SIGN:-}" = true ]; then
     cosign sign --recursive -y "$IMAGE"
-    cosign download sbom "$IMAGE" > /tmp/sbom-spdx.json
+    cosign download sbom "$IMAGE" >/tmp/sbom-spdx.json
     cosign attest -y --recursive --predicate /tmp/sbom-spdx.json "$IMAGE"
+
+    DIGESTS="$(crane manifest "$IMAGE" | jq -r .manifests[].digest)"
+    for DIGEST in $DIGESTS; do
+        cosign download sbom "$KO_DOCKER_REPO@$DIGEST" >/tmp/sbom-spdx-"$DIGEST".json
+        cosign attest -y --recursive --predicate /tmp/sbom-spdx-"$DIGEST".json "$KO_DOCKER_REPO@$DIGEST"
+    done
 fi
 
 if [ "${TEST_TARBALL:-}" = true ]; then
