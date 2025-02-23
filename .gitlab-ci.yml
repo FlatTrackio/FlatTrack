@@ -65,7 +65,7 @@ variables:
   before_script:
     - set -x
     - *setup-testing-repo
-    - apk add --no-cache curl cosign ko git crane
+    - apk add --no-cache curl cosign ko git crane jq
     - export KO_DOCKER_REPO="$(echo ${KO_DOCKER_REPO} | tr '[:upper:]' '[:lower:]')"
     - ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
     - *image-set-build-env
