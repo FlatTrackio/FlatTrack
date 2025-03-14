@@ -42,7 +42,7 @@
                 "sass": "^1.42.1",
                 "sass-loader": "^8.0.2",
                 "typescript": "~3.5.3",
-                "vite": "^4.3.9",
+                "vite": "^4.5.5",
                 "vite-plugin-pwa": "^0.16.4",
                 "vite-plugin-vue2": "^2.0.3",
                 "vue-template-compiler": "^2.6.14"
