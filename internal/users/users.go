@@ -217,7 +217,7 @@ func (m *Manager) List(includePassword bool, selectors types.UserSelector) (user
 		} else if selectors.ID != "" {
 			found = selectors.ID == user.ID
 		} else if selectors.NotID != "" {
-			found = !(selectors.NotID == user.ID)
+			found = selectors.NotID != user.ID
 		}
 		user.Groups = groupsOfUser
 		if !includePassword {
