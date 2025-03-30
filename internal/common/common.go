@@ -38,7 +38,7 @@ var (
 	AppBuildHash        = "???"
 	AppBuildDate        = "???"
 	AppBuildMode        = "development"
-	AppDbMigrationsPath = "/var/run/ko/migrations"
+	AppDBMigrationsPath = "/var/run/ko/migrations"
 	// #nosec G101
 	AppAssetsFolder = "/var/run/ko/web"
 )
@@ -136,7 +136,7 @@ func GetMigrationsPath() (output string) {
 		return envSet
 	}
 	if AppBuildMode == "production" || AppBuildMode == "staging" {
-		return AppDbMigrationsPath
+		return AppDBMigrationsPath
 	}
 	pwd, _ := os.Getwd()
 	return fmt.Sprintf("%v/kodata/migrations", pwd)

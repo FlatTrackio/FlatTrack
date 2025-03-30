@@ -181,23 +181,24 @@ func (m *ShoppingTagManager) List(options types.ShoppingTagOptions) (tags []type
 	sqlStatement := `select * from shopping_list_tag
                          where deletionTimestamp = 0
 	                 order by name asc`
-	if options.SortBy == types.ShoppingTagSortByRecentlyUpdated {
+	switch options.SortBy {
+	case types.ShoppingTagSortByRecentlyUpdated:
 		sqlStatement = `select * from shopping_list_tag
                          where deletionTimestamp = 0
 	                 order by modificationTimestamp desc`
-	} else if options.SortBy == types.ShoppingTagSortByLastUpdated {
+	case types.ShoppingTagSortByLastUpdated:
 		sqlStatement = `select * from shopping_list_tag
                          where deletionTimestamp = 0
 	                 order by modificationTimestamp asc`
-	} else if options.SortBy == types.ShoppingTagSortByLastAdded {
+	case types.ShoppingTagSortByLastAdded:
 		sqlStatement = `select * from shopping_list_tag
                          where deletionTimestamp = 0
 	                 order by creationTimestamp asc`
-	} else if options.SortBy == types.ShoppingTagSortByAlphabeticalDescending {
+	case types.ShoppingTagSortByAlphabeticalDescending:
 		sqlStatement = `select * from shopping_list_tag
                          where deletionTimestamp = 0
 	                 order by name asc`
-	} else if options.SortBy == types.ShoppingTagSortByAlphabeticalAscending {
+	case types.ShoppingTagSortByAlphabeticalAscending:
 		sqlStatement = `select * from shopping_list_tag
                          where deletionTimestamp = 0
 	                 order by name desc`

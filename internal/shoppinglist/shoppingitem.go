@@ -87,27 +87,28 @@ func (m *ShoppingItemManager) List(listID string, options types.ShoppingItemOpti
 		sqlStatement += ` and obtained = true`
 	default:
 	}
-	if options.SortBy == types.ShoppingItemSortByHighestPrice {
+	switch options.SortBy {
+	case types.ShoppingItemSortByHighestPrice:
 		sqlStatement += ` order by price desc, name asc`
-	} else if options.SortBy == types.ShoppingItemSortByHighestQuantity {
+	case types.ShoppingItemSortByHighestQuantity:
 		sqlStatement += ` order by quantity desc, name desc`
-	} else if options.SortBy == types.ShoppingItemSortByLowestPrice {
+	case types.ShoppingItemSortByLowestPrice:
 		sqlStatement += ` order by price asc, name asc`
-	} else if options.SortBy == types.ShoppingItemSortByLowestQuantity {
+	case types.ShoppingItemSortByLowestQuantity:
 		sqlStatement += ` order by quantity asc, name desc`
-	} else if options.SortBy == types.ShoppingItemSortByRecentlyAdded {
+	case types.ShoppingItemSortByRecentlyAdded:
 		sqlStatement += ` order by creationTimestamp desc`
-	} else if options.SortBy == types.ShoppingItemSortByRecentlyUpdated {
+	case types.ShoppingItemSortByRecentlyUpdated:
 		sqlStatement += ` order by modificationTimestamp desc`
-	} else if options.SortBy == types.ShoppingItemSortByLastAdded {
+	case types.ShoppingItemSortByLastAdded:
 		sqlStatement += ` order by creationTimestamp asc`
-	} else if options.SortBy == types.ShoppingItemSortByLastUpdated {
+	case types.ShoppingItemSortByLastUpdated:
 		sqlStatement += ` order by modificationTimestamp asc`
-	} else if options.SortBy == types.ShoppingItemSortByAlphabeticalDescending {
+	case types.ShoppingItemSortByAlphabeticalDescending:
 		sqlStatement += ` order by name asc`
-	} else if options.SortBy == types.ShoppingItemSortByAlphabeticalAscending {
+	case types.ShoppingItemSortByAlphabeticalAscending:
 		sqlStatement += ` order by name desc`
-	} else {
+	default:
 		sqlStatement += ` order by tag asc, name asc`
 	}
 	rows, err := m.db.Query(sqlStatement, sqlQueryValues...)

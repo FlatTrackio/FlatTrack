@@ -1,6 +1,6 @@
 module gitlab.com/flattrack/flattrack
 
-go 1.24.0
+go 1.24.1
 
 require (
 	github.com/NYTimes/gziphandler v1.1.1

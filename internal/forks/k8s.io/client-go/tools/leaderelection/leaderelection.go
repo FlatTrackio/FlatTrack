@@ -98,7 +98,7 @@ func NewLeaderElector(lec LeaderElectionConfig) (*LeaderElector, error) {
 	}
 
 	if lec.Lock == nil {
-		return nil, fmt.Errorf("Lock must not be nil.")
+		return nil, fmt.Errorf("Lock must not be nil")
 	}
 	id := lec.Lock.Identity()
 	if id == "" {

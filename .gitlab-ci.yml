@@ -13,10 +13,10 @@ variables:
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
   EXTRA_REGISTRIES: docker.io
-  IMAGE_NODE_ALPINE: docker.io/node:20-alpine3.20@sha256:09dbe0a53523c2482d85a037efc6b0e8e8bb16c6f1acf431fe36aa0ebc871c06
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.24.0-alpine3.20
-  IMAGE_PYTHON: docker.io/python:3.8-buster@sha256:04c3f641c2254c229fd2f704c5199ff4bea57d26c1c29008ae3a4afddde98709
-  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v1.64.5-alpine
+  IMAGE_NODE_ALPINE: docker.io/node:23.10.0-alpine3.21@sha256:6eae672406a2bc8ed93eab6f9f76a02eb247e06ba82b2f5032c0a4ae07e825ba
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.24.1-alpine3.21@sha256:43c094ad24b6ac0546c62193baeb3e6e49ce14d3250845d166c77c25f64b0386
+  IMAGE_PYTHON: docker.io/python:3.13.2-alpine3.21@sha256:323a717dc4a010fee21e3f1aac738ee10bb485de4e7593ce242b36ee48d6b352
+  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v2.0.2-alpine@sha256:53416810ed467f3ef6e63007bd5992cef833883f62ad0109c6a475f1f210dec4
   COSIGN_YES: "true"
 
 .container-registry-login-dockerhub: &container-registry-login-dockerhub |
@@ -122,7 +122,7 @@ copy-container-image-to-dockerhub:
   before_script:
     - *image-set-build-env
     - cd web
-    - apk add --no-cache make g++
+    - apk add --no-cache make g++ git
     - npm i
   script:
     - npm run build

@@ -67,7 +67,11 @@ func (f FileAccess) Get(name string) (objectBytes []byte, objectInfo minio.Objec
 		log.Printf("%#v\n", err)
 		return []byte{}, minio.ObjectInfo{}, err
 	}
-	defer object.Close()
+	defer func() {
+		if err := object.Close(); err != nil {
+			log.Printf("error closing object '%v': %v", fileName, err)
+		}
+	}()
 	objectInfo, err = object.Stat()
 	if err != nil {
 		log.Printf("%#v\n", err)
