@@ -21,6 +21,7 @@ FlatTrack is solely configured to run with environment variables (or a `.env` fi
 | `APP_DB_CONNECTION_STRING`           | a full Postgres database connection string                                                                                    |                       |
 | `APP_DB_MIGRATIONS_PATH`             | The path to the database migrations to migrate the Postgres database with                                                     | `./kodata/migrations` |
 | `APP_METRICS_ENABLED`                | Serve Prometheus metrics endpoint                                                                                             | `"true"`              |
+| `APP_MAINTENANCE_MODE`               | Set instance into a maintenance mode, disallowing access                                                                      |                       |
 | `APP_HEALTH_ENABLED`                 | Serve healthz endpoint                                                                                                        | `"true"`              |
 | `APP_SMTP_ENABLED`                   | Send SMTP email notifcations                                                                                                  | `"false"`             |
 | `APP_SMTP_USERNAME`                  | Username for SMTP emails                                                                                                      | `""`                  |

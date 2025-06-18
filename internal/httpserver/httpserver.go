@@ -31,16 +31,17 @@ type HTTPServer struct {
 	server *http.Server
 	db     *sql.DB
 
-	users        *users.Manager
-	shoppinglist *shoppinglist.Manager
-	emails       *emails.Manager
-	groups       *groups.Manager
-	health       *health.Manager
-	migrations   *migrations.Manager
-	registration *registration.Manager
-	settings     *settings.Manager
-	system       *system.Manager
-	scheduling   *scheduling.Manager
+	users           *users.Manager
+	shoppinglist    *shoppinglist.Manager
+	emails          *emails.Manager
+	groups          *groups.Manager
+	health          *health.Manager
+	migrations      *migrations.Manager
+	registration    *registration.Manager
+	settings        *settings.Manager
+	system          *system.Manager
+	scheduling      *scheduling.Manager
+	maintenanceMode bool
 }
 
 func NewHTTPServer(
@@ -68,6 +69,7 @@ func NewHTTPServer(
 	h.settings = settings
 	h.system = system
 	h.scheduling = scheduling
+	h.maintenanceMode = common.GetMaintenanceMode()
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/_healthz", h.Healthz)
