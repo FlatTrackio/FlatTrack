@@ -10,7 +10,8 @@ layout {
   }
   pane_template name="postgres" {
     command "podman"
-    args "compose" "--file" "./deployments/docker-compose-dev.yml" "up"
+    cwd "./deployments"
+    args "compose" "--file" "./docker-compose-dev.yml" "up"
   }
   pane_template name="backend" {
     command "gow"
@@ -23,6 +24,12 @@ layout {
     cwd "./web/"
     focus true
   }
+  pane_template name="frontend_shell" {
+    command "npm"
+    args "i"
+    cwd "./web/"
+    focus false
+  }
   tab name="postgres" {
     postgres
   }
@@ -32,6 +39,6 @@ layout {
   }
   tab name="frontend" split_direction="horizontal" {
     frontend
-    pane
+    frontend_shell
   }
 }
