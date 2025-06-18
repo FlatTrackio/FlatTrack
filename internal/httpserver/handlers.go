@@ -2586,6 +2586,17 @@ func (h *HTTPServer) Healthz(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
+	if h.maintenanceMode {
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "instance in maintenance mode",
+			},
+			Data: false,
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "healthy",
@@ -2672,6 +2683,9 @@ func (h *HTTPServer) HTTP404() http.HandlerFunc {
 }
 
 func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
+	if h.maintenanceMode {
+		return
+	}
 	routes := []struct {
 		EndpointPath     string
 		HandlerFunc      http.HandlerFunc

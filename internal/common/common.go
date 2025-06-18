@@ -253,6 +253,11 @@ func GetRegistrationSecret() string {
 	return GetEnvOrDefault("APP_REGISTRATION_SECRET", "")
 }
 
+// GetMaintenanceMode whether to make the instance unavailable
+func GetMaintenanceMode() bool {
+	return GetEnvOrDefault("APP_MAINTENANCE_MODE", "") == "true"
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {
