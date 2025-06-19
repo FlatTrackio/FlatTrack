@@ -52,6 +52,9 @@ function Request (request, redirect = true, publicRoute = false) {
           common.DeleteAuthToken()
           redirectToLogin(redirect)
         }
+        if (err.response.status === 503) {
+          window.location.href = "/unavailable";
+        }
         reject(err)
       })
   })
