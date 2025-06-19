@@ -2671,6 +2671,16 @@ func (h *HTTPServer) HTTPcheckGroupsFromID(next http.HandlerFunc, groupsAllowed 
 	}
 }
 
+func (h *HTTPServer) HTTPMaintenanceMode(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		JSONResponse(r, w, http.StatusServiceUnavailable, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "Instance in maintenance mode",
+			},
+		})
+	}
+}
+
 // HTTP404 ...
 // responds with 404
 func (h *HTTPServer) HTTP404() http.HandlerFunc {
@@ -2683,9 +2693,6 @@ func (h *HTTPServer) HTTP404() http.HandlerFunc {
 }
 
 func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
-	if h.maintenanceMode {
-		return
-	}
 	routes := []struct {
 		EndpointPath     string
 		HandlerFunc      http.HandlerFunc
@@ -3032,6 +3039,9 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 	}
 	for _, r := range routes {
 		handler := r.HandlerFunc
+		if h.maintenanceMode {
+			handler = h.HTTPMaintenanceMode(handler)
+		}
 		for _, g := range r.RequireAllGroups {
 			handler = h.HTTPcheckGroupsFromID(handler, g)
 		}
