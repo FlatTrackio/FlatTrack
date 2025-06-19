@@ -18,14 +18,10 @@
     <headerDisplay />
     <div class="container">
       <section class="section">
-        <h1 class="title is-1">Connection error</h1>
+        <h1 class="title is-1">Unavailable</h1>
         <b-message has-icon type="is-warning">
           <p class="subtitle is-4">
-            Hmmm... something appears to have gone wrong with your FlatTrack
-            instance.
-            <br />
-            <br />
-            Please contact your system administrator.
+            This FlatTrack instance is unavailable or not healthy.
             <br />
             <br />
           </p>
@@ -45,17 +41,17 @@
 </template>
 
 <script>
-export default {
-  name: 'unavailable-page',
-  components: {
-    headerDisplay: () => import('@/components/common/header-display.vue')
-  },
-  methods: {
-    Reload () {
-      this.$router.go()
-    }
-  }
-}
+  export default {
+    name: "unavailable-page",
+    components: {
+      headerDisplay: () => import("@/components/common/header-display.vue"),
+    },
+    methods: {
+      Reload() {
+        this.$router.go();
+      },
+    },
+  };
 </script>
 
 <style scoped></style>
