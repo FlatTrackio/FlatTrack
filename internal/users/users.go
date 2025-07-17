@@ -19,6 +19,7 @@
 package users
 
 import (
+	"crypto/subtle"
 	"database/sql"
 	"fmt"
 	"log"
@@ -377,7 +378,10 @@ func (m *Manager) CheckUserPassword(email string, password string) (matches bool
 		return false, err
 	}
 	passwordHashed := common.HashSHA512(password)
-	return user.Password == passwordHashed, nil
+	if matches := subtle.ConstantTimeCompare([]byte(user.Password), []byte(passwordHashed)) == 1; matches {
+		return true, nil
+	}
+	return false, nil
 }
 
 // GenerateJWTauthToken ...
