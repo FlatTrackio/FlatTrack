@@ -11,55 +11,60 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { defineConfig } from 'vite'
-import { createVuePlugin } from 'vite-plugin-vue2'
-import { VitePWA } from 'vite-plugin-pwa'
-const path = require('path')
+import { defineConfig } from "vite";
+import { createVuePlugin } from "vite-plugin-vue2";
+import { VitePWA } from "vite-plugin-pwa";
+const path = require("path");
 
 export default defineConfig({
   plugins: [
     createVuePlugin(),
     VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      registerType: "autoUpdate",
+      includeAssets: [
+        "favicon.svg",
+        "favicon.ico",
+        "robots.txt",
+        "apple-touch-icon.png",
+      ],
       manifest: {
-        name: 'FlatTrack',
-        short_name: 'Collaborate with your flatmates',
-        description: 'Collaborate with your flatmates',
-        theme_color: '#209cee',
+        name: "FlatTrack",
+        short_name: "FlatTrack",
+        description: "Collaborate with your flatmates",
+        theme_color: "#209cee",
         icons: [
           {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
+            src: "pwa-192x192.png",
+            sizes: "192x192",
+            type: "image/png",
           },
           {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
+            src: "pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
           },
           {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-            purpose: 'any maskable',
-          }
-        ]
-      }
-    })
+            src: "pwa-512x512.png",
+            sizes: "512x512",
+            type: "image/png",
+            purpose: "any maskable",
+          },
+        ],
+      },
+    }),
   ],
   build: {
-    assetsDir: 'assets/'
+    assetsDir: "assets/",
   },
   server: {
-    port: 8081
+    port: 8081,
   },
   resolve: {
     alias: [
       {
-        find: '@',
-        replacement: path.resolve(__dirname, 'src')
-      }
-    ]
-  }
-})
+        find: "@",
+        replacement: path.resolve(__dirname, "src"),
+      },
+    ],
+  },
+});
