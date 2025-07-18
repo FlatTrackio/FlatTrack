@@ -31,14 +31,17 @@ type manager struct {
 	settings     *settings.Manager
 	system       *system.Manager
 	scheduling   *scheduling.Manager
+
+	maintenanceMode bool
 }
 
 func NewManager() *manager {
 	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
 	envFile := common.GetAppEnvFile()
 	_ = godotenv.Load(envFile)
+	maintenanceMode := common.GetMaintenanceMode()
 	db, err := database.Open()
-	if err != nil {
+	if err != nil && !maintenanceMode {
 		log.Fatalf("failed to connect to database: %v", err)
 		return nil
 	}
@@ -53,18 +56,19 @@ func NewManager() *manager {
 	registration := registration.NewManager(users, system, settings)
 	metrics := metrics.NewManager()
 	scheduling := scheduling.NewManager(db)
-	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling)
+	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling, maintenanceMode)
 	return &manager{
-		httpserver:   httpserver,
-		metrics:      metrics,
-		emails:       emails,
-		groups:       groups,
-		health:       health,
-		migrations:   migrations,
-		registration: registration,
-		settings:     settings,
-		system:       system,
-		scheduling:   scheduling,
+		httpserver:      httpserver,
+		metrics:         metrics,
+		emails:          emails,
+		groups:          groups,
+		health:          health,
+		migrations:      migrations,
+		registration:    registration,
+		settings:        settings,
+		system:          system,
+		scheduling:      scheduling,
+		maintenanceMode: maintenanceMode,
 	}
 }
 
@@ -74,24 +78,31 @@ type managerInit struct {
 	health       *health.Manager
 	registration *registration.Manager
 	scheduling   *scheduling.Manager
+
+	maintenanceMode bool
 }
 
 func (m *manager) Init() *managerInit {
-	if err := m.migrations.Migrate(); err != nil {
+	if err := m.migrations.Migrate(); err != nil && !m.maintenanceMode {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 	return &managerInit{
-		httpserver:   m.httpserver,
-		metrics:      m.metrics,
-		health:       m.health,
-		registration: m.registration,
-		scheduling:   m.scheduling,
+		httpserver:      m.httpserver,
+		metrics:         m.metrics,
+		health:          m.health,
+		registration:    m.registration,
+		scheduling:      m.scheduling,
+		maintenanceMode: m.maintenanceMode,
 	}
 }
 
 func (mi *managerInit) Run() {
 	go mi.metrics.Listen()
 	go mi.health.Listen()
-	go mi.scheduling.Run()
+	if !mi.maintenanceMode {
+		go mi.scheduling.Run()
+	} else {
+		log.Println("Instance in maintenance mode. Will only serve message stating as such.")
+	}
 	mi.httpserver.Listen()
 }
