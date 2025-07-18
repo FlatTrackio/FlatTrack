@@ -56,6 +56,7 @@ func NewHTTPServer(
 	settings *settings.Manager,
 	system *system.Manager,
 	scheduling *scheduling.Manager,
+	maintenanceMode bool,
 ) (h *HTTPServer) {
 	h = &HTTPServer{}
 	h.db = db
@@ -69,7 +70,7 @@ func NewHTTPServer(
 	h.settings = settings
 	h.system = system
 	h.scheduling = scheduling
-	h.maintenanceMode = common.GetMaintenanceMode()
+	h.maintenanceMode = maintenanceMode
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/_healthz", h.Healthz)
