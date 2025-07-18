@@ -14,6 +14,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"gitlab.com/flattrack/flattrack/internal/common"
+	"gitlab.com/flattrack/flattrack/internal/database"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
@@ -2466,6 +2467,18 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 	mode := common.GetAppBuildMode()
 	date := common.GetAppBuildDate()
 	golangVersion := runtime.Version()
+	postgresVersion, err := database.GetVersion(h.db)
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get postgres version",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 	osType := runtime.GOOS
 	osArch := runtime.GOARCH
 
@@ -2474,13 +2487,14 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 			Response: "fetched version information",
 		},
 		Data: types.SystemVersion{
-			Version:       version,
-			CommitHash:    commitHash,
-			Mode:          mode,
-			Date:          date,
-			GolangVersion: golangVersion,
-			OSType:        osType,
-			OSArch:        osArch,
+			Version:         version,
+			CommitHash:      commitHash,
+			Mode:            mode,
+			Date:            date,
+			GolangVersion:   golangVersion,
+			PostgresVersion: postgresVersion,
+			OSType:          osType,
+			OSArch:          osArch,
 		},
 	}
 	log.Println(JSONresp.Metadata.Response, context)
