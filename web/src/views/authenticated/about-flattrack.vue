@@ -111,6 +111,8 @@
               >(frontend {{ dateFrontend }})</span
             >
             <br />
+            <b>Postgres Version</b>: {{ postgresVersion || "Unknown" }}
+            <br />
             <b>Golang version</b>: {{ golangVersion || "Unknown" }}
             <br />
             <b>Vue.js Version</b>: {{ vuejsVersion || "Unknown" }}
@@ -126,49 +128,51 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import system from '@/requests/authenticated/system'
-import constants from '@/constants/constants'
-import vue from 'vue'
+  import common from "@/common/common";
+  import system from "@/requests/authenticated/system";
+  import constants from "@/constants/constants";
+  import vue from "vue";
 
-export default {
-  name: 'about-flattrack',
-  data () {
-    return {
-      hasInitialLoaded: false,
-      version: '',
-      commitHash: '',
-      mode: '',
-      date: '',
-      golangVersion: '',
-      osType: '',
-      osArch: '',
-      vuejsVersion: vue.version,
-      versionFrontend: constants.appBuildVersion,
-      commitHashFrontend: constants.appBuildHash,
-      modeFrontend: constants.appBuildMode,
-      dateFrontend: constants.appBuildDate
-    }
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+  export default {
+    name: "about-flattrack",
+    data() {
+      return {
+        hasInitialLoaded: false,
+        version: "",
+        commitHash: "",
+        mode: "",
+        date: "",
+        golangVersion: "",
+        postgresVersion: "",
+        osType: "",
+        osArch: "",
+        vuejsVersion: vue.version,
+        versionFrontend: constants.appBuildVersion,
+        commitHashFrontend: constants.appBuildHash,
+        modeFrontend: constants.appBuildMode,
+        dateFrontend: constants.appBuildDate,
+      };
     },
-    GetVersion () {
-      system.GetVersion().then((resp) => {
-        this.hasInitialLoaded = true
-        this.version = resp.data.data.version
-        this.commitHash = resp.data.data.commitHash
-        this.mode = resp.data.data.mode
-        this.date = resp.data.data.date
-        this.golangVersion = resp.data.data.golangVersion
-        this.osType = resp.data.data.osType
-        this.osArch = resp.data.data.osArch
-      })
-    }
-  },
-  async beforeMount () {
-    this.GetVersion()
-  }
-}
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      GetVersion() {
+        system.GetVersion().then((resp) => {
+          this.hasInitialLoaded = true;
+          this.version = resp.data.data.version;
+          this.commitHash = resp.data.data.commitHash;
+          this.mode = resp.data.data.mode;
+          this.date = resp.data.data.date;
+          this.golangVersion = resp.data.data.golangVersion;
+          this.postgresVersion = resp.data.data.postgresVersion;
+          this.osType = resp.data.data.osType;
+          this.osArch = resp.data.data.osArch;
+        });
+      },
+    },
+    async beforeMount() {
+      this.GetVersion();
+    },
+  };
 </script>

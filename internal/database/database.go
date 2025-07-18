@@ -121,3 +121,26 @@ func Ping(db *sql.DB) (err error) {
 	}
 	return nil
 }
+
+// Version ...
+// Return Postgres version
+func GetVersion(db *sql.DB) (version string, err error) {
+	rows, err := db.Query(`SELECT current_setting('server_version')`)
+	if err != nil {
+		log.Println("Error querying database", err.Error())
+		return "", err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			log.Printf("error: failed to close rows: %v\n", err)
+		}
+	}()
+	rows.Next()
+	if err := rows.Scan(&version); err != nil {
+		return "", err
+	}
+	if err := rows.Err(); err != nil {
+		return "", err
+	}
+	return version, nil
+}
