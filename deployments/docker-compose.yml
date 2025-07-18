@@ -4,7 +4,7 @@
 #     it is recommended to add an SSL/TLS to the set up, so the connection is secure.
 #     if you wish to make this setup production-ish, you may wish to investigate the linuxserver/letsencrypt image to add to the stack.
 
-version: '3'
+version: "3"
 
 volumes:
   flattrack_db:
@@ -12,8 +12,9 @@ volumes:
 
 services:
   flattrack_db:
-    image: postgres:16.1-alpine3.19
+    image: docker.io/postgres:17.5-alpine3.22@sha256:6567bca8d7bc8c82c5922425a0baee57be8402df92bae5eacad5f01ae9544daa
     restart: unless-stopped
+    read_only: true
     volumes:
       - flattrack_db:/var/lib/postgres
     environment:
@@ -38,5 +39,5 @@ services:
       - flattrack_db
     read_only: true
     ports:
-      - '8080:8080'
+      - "8080:8080"
     # if using a reverse proxy, you'll need to set expose instead of ports (so the reverse-proxy can bind to both 80 and 443)
