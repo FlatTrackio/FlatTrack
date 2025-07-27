@@ -19,6 +19,7 @@ variables:
   IMAGE_LYCHEE: docker.io/lycheeverse/lychee:sha-469ccd0-alpine@sha256:41e05e0a9effda7b1fabbf94d26d888327517dc21d320f577fcce10eec7b3eca
   IMAGE_POSTGRES: docker.io/postgres:17.5-alpine3.22@sha256:6567bca8d7bc8c82c5922425a0baee57be8402df92bae5eacad5f01ae9544daa
   IMAGE_MINIO: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
+  IMAGE_CONFORM: registry.gitlab.com/bobymcbobs/container-images/conform:v1753521600-daa77a05@sha256:3142518fe8224247f53665b9082220fb557c14b617f9a4530384c3e121958acf
   COSIGN_YES: "true"
 
 .container-registry-login-dockerhub: &container-registry-login-dockerhub |
@@ -338,20 +339,14 @@ pages-smoketest:
   script: ./hack/build-docs.sh
 
 conform:
-  stage: codequality
   only:
     refs:
       - merge_requests
+  stage: codequality
   image:
-    name: docker.io/library/alpine:3.18
+    name: $IMAGE_CONFORM
     entrypoint: [""]
   before_script:
-    - apk add --no-cache curl git
     - git fetch origin
-    - |
-      curl -sSL \
-        -o /usr/local/bin/conform \
-        https://github.com/siderolabs/conform/releases/download/v0.1.0-alpha.27/conform-linux-amd64
-    - chmod +x /usr/local/bin/conform
   script:
-    - conform enforce --commit-ref=refs/remotes/origin/main
+    - /conform enforce --commit-ref=refs/remotes/origin/main
