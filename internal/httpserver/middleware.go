@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"log"
+	"maps"
 	"net/http"
 )
 
@@ -18,9 +19,7 @@ func (r *statusRecorder) WriteHeader(status int) {
 // scrubHeaders to remove sensitive data logged
 func scrubHeaders(in http.Header) (o http.Header) {
 	o = http.Header{}
-	for k, v := range in {
-		o[k] = v
-	}
+	maps.Copy(o, in)
 	if az := o.Get("Authorization"); az != "" {
 		o.Set("Authorization", "bearer [REDACTED]")
 	}
@@ -36,9 +35,9 @@ func logging(next http.Handler) http.Handler {
 		recorder := &statusRecorder{
 			ResponseWriter: w,
 		}
+		next.ServeHTTP(recorder, r)
 		scrubbedHeaders := scrubHeaders(r.Header)
 		log.Printf("%v %v %v %v %v %v %#v", recorder.Status, r.Method, r.URL, r.Proto, requestIP, r.RemoteAddr, scrubbedHeaders)
-		next.ServeHTTP(recorder, r)
 	})
 }
 
