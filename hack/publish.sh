@@ -70,10 +70,13 @@ fi
 if [ "${TEST_TARBALL:-}" = true ]; then
     crane registry serve --address :5001 &
     REGPID=$!
+    until curl -qsSL localhost:5001/v2; do
+        sleep 2s
+    done
     IMG=$(crane --insecure push /tmp/flattrack.tar localhost:5001/ft)
 
     RESULT="$(crane export "$IMG" - | tar -tvf - |
-        grep -E '(etc/passwd|usr/share/zoneinfo|etc/ssl/certs|ko-app/flattrack|ko/web/assets/.*\.js|ko/migrations/.*\.sql)')"
+        grep -E '(etc/passwd|usr/share/zoneinfo|etc/ssl/certs|ko-app/flattrack|ko/web/assets/.*\.js|ko/migrations/.*\.sql|ko/sbom.spdx.json)')"
     CODE=$?
     if [ ! $CODE -eq 0 ]; then
         echo "error: failed to build image correctly" >/dev/stderr
