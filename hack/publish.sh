@@ -87,3 +87,8 @@ if [ "${TEST_TARBALL:-}" = true ]; then
     echo "success: image is built correctly"
     kill "$REGPID"
 fi
+
+echo "Published image to: $IMAGE"
+if [ -n "${IMAGE_RESULT_FILE:-}" ]; then
+    printf "%s" "$IMAGE" >"$IMAGE_RESULT_FILE"
+fi
