@@ -1,6 +1,6 @@
 module gitlab.com/flattrack/flattrack
 
-go 1.25.0
+go 1.25.3
 
 replace github.com/imdario/mergo => dario.cat/mergo v1.0.2
 
