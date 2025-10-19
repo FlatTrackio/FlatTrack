@@ -14,8 +14,8 @@ variables:
   POSTGRES_PASSWORD: flattrack
   EXTRA_REGISTRIES: docker.io
   IMAGE_NODE_ALPINE: docker.io/node:23.10.0-alpine3.21@sha256:6eae672406a2bc8ed93eab6f9f76a02eb247e06ba82b2f5032c0a4ae07e825ba
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.25.0-alpine3.22@sha256:f18a072054848d87a8077455f0ac8a25886f2397f88bfdd222d6fafbb5bba440
-  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v2.4.0@sha256:91460846c43b3de53eb77e968b17363e8747e6f3fc190575b52be60c49446e23
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.25.3-alpine3.22@sha256:aee43c3ccbf24fdffb7295693b6e33b21e01baec1b2a55acc351fde345e9ec34
+  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v2.5.0@sha256:0c8e590120a98ada5d0d9423e65dd957067e70c87efd692e83d5a311ddfc3151
   IMAGE_PYTHON: docker.io/python:3.13.2-alpine3.21@sha256:323a717dc4a010fee21e3f1aac738ee10bb485de4e7593ce242b36ee48d6b352
   IMAGE_LYCHEE: docker.io/lycheeverse/lychee:sha-469ccd0-alpine@sha256:41e05e0a9effda7b1fabbf94d26d888327517dc21d320f577fcce10eec7b3eca
   IMAGE_POSTGRES: docker.io/postgres:17.5-alpine3.22@sha256:6567bca8d7bc8c82c5922425a0baee57be8402df92bae5eacad5f01ae9544daa
