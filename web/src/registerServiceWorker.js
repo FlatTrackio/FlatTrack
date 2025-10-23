@@ -11,30 +11,40 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { register } from 'register-service-worker'
-import { ToastProgrammatic as Toast } from 'buefy'
+import { register } from "register-service-worker";
+import { getCurrentInstance } from "vue";
+import { ToastProgrammatic as Toast } from "buefy";
+
+const instance = getCurrentInstance();
+const app = instance?.appContext.app;
 
 if (
-  'serviceWorker' in navigator &&
-  localStorage.getItem('ft-no-sw') !== 'true'
+  "serviceWorker" in navigator &&
+  localStorage.getItem("ft-no-sw") !== "true"
 ) {
   register(`${import.meta.env.BASE_URL}sw.js`, {
-    ready () {},
-    registered () {},
-    cached () {},
-    updatefound () {
-      window.location.reload(true)
+    ready() {},
+    registered() {},
+    cached() {},
+    updatefound() {
+      window.location.reload(true);
     },
-    updated () {
-      Toast.open({
-        message: 'FlatTrack was updated',
-        type: 'is-info',
-        position: 'is-bottom'
-      })
+    updated() {
+      new Toast(app).open({
+        message: "FlatTrack was updated",
+        type: "is-info",
+        position: "is-bottom",
+      });
     },
-    offline () {},
-    error (error) {
-      console.error('Error during service worker registration:', error)
-    }
-  })
+    offline() {
+      new Toast(app).open({
+        message: "Internet connection unavailable",
+        type: "is-warning",
+        position: "is-bottom",
+      });
+    },
+    error(error) {
+      console.error("Error during service worker registration:", error);
+    },
+  });
 }

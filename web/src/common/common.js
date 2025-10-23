@@ -16,199 +16,192 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import {
-  ToastProgrammatic as Toast,
-  DialogProgrammatic as Dialog,
-  LoadingProgrammatic as Loading
-} from 'buefy'
-import dayjs from 'dayjs'
-import dayjsCalendar from 'dayjs/plugin/calendar'
-import confetti from 'canvas-confetti'
-import { Buffer } from 'buffer'
+import dayjs from "dayjs";
+import dayjsCalendar from "dayjs/plugin/calendar";
+import confetti from "canvas-confetti";
 
-dayjs.extend(dayjsCalendar)
+dayjs.extend(dayjsCalendar);
 
 // GetAuthToken
 // returns the JWT from localStorage
-function GetAuthToken () {
-  return localStorage.getItem('authToken')
+function GetAuthToken() {
+  return localStorage.getItem("authToken");
 }
 
 // SetAuthToken
 // returns the JWT from localStorage
-function SetAuthToken (token) {
-  return localStorage.setItem('authToken', token)
+function SetAuthToken(token) {
+  return localStorage.setItem("authToken", token);
 }
 
 // HasAuthToken
 // returns whether an auth token is found
-function HasAuthToken () {
-  const authToken = GetAuthToken()
+function HasAuthToken() {
+  const authToken = GetAuthToken();
   return !(
-    typeof authToken === 'undefined' ||
+    typeof authToken === "undefined" ||
     authToken === null ||
-    authToken === ''
-  )
+    authToken === ""
+  );
 }
 
 // DeleteAuthToken
 // removes the JWT from localStorage
-function DeleteAuthToken () {
-  return localStorage.removeItem('authToken')
+function DeleteAuthToken() {
+  return localStorage.removeItem("authToken");
 }
 
 // DisplaySuccessToast
 // shows a toast at the top of the screen with a message and a green background for 8 seconds
-function DisplaySuccessToast (message) {
-  Toast.open({
+function DisplaySuccessToast(buefy, message) {
+  buefy.toast.open({
     duration: 4 * 1000,
     message: message,
-    position: 'is-bottom',
-    type: 'is-success',
+    position: "is-bottom",
+    type: "is-success",
     hasIcon: true,
-    queue: false
-  })
+    queue: false,
+  });
 }
 
 // DisplayFailureToast
 // shows a toast at the top of the screen with a message and a red background for 8 seconds
-function DisplayFailureToast (message) {
-  Toast.open({
+function DisplayFailureToast(buefy, message) {
+  buefy.toast.open({
     duration: 4 * 1000,
     message: message,
-    position: 'is-bottom',
-    type: 'is-danger',
+    position: "is-bottom",
+    type: "is-danger",
     hasIcon: true,
-    queue: false
-  })
+    queue: false,
+  });
 }
 
 // SignoutDialog
 // shows a dialog prompt to signout
-function SignoutDialog () {
-  Dialog.confirm({
-    message: 'Are you sure you want to sign out?',
-    type: 'is-danger',
-    hasIcon: 'true',
+function SignoutDialog(buefy) {
+  buefy.dialog.confirm({
+    message: "Are you sure you want to sign out?",
+    type: "is-danger",
+    hasIcon: "true",
     onConfirm: () => {
-      const loadingComponent = Loading.open({
-        container: null
-      })
+      const loadingComponent = buefy.loading.open({
+        container: null,
+      });
       setTimeout(() => {
-        DeleteAuthToken()
-        window.location.href = '/login'
-        loadingComponent.close()
-      }, 1 * 1000)
-    }
-  })
+        DeleteAuthToken();
+        window.location.href = "/login";
+        loadingComponent.close();
+      }, 1 * 1000);
+    },
+  });
 }
 
 // TimestampToCalendar
 // converts a unix timestamp to a human readable string
-function TimestampToCalendar (timestamp) {
+function TimestampToCalendar(timestamp) {
   return dayjs(timestamp * 1000)
     .calendar(null, {
-      sameDay: '[Today] h:mm A',
-      nextDay: '[Tomorrow] h:mm A',
-      nextWeek: 'dddd [at] h:mm A',
-      lastDay: '[Yesterday] h:mm A',
-      lastWeek: 'dddd [at] h:mm A',
-      sameElse: 'DD/MM/YYYY'
+      sameDay: "[Today] h:mm A",
+      nextDay: "[Tomorrow] h:mm A",
+      nextWeek: "dddd [at] h:mm A",
+      lastDay: "[Yesterday] h:mm A",
+      lastWeek: "dddd [at] h:mm A",
+      sameElse: "DD/MM/YYYY",
     })
-    .toLowerCase()
+    .toLowerCase();
 }
 
 // DeviceIsMobile
 // returns bool if the device is mobile (from screen size)
-function DeviceIsMobile () {
-  return window.innerWidth <= 870
+function DeviceIsMobile() {
+  return window.innerWidth <= 870;
 }
 
 // GetFlatnameFromCache
 // returns the flatname
-function GetFlatnameFromCache () {
-  return localStorage.getItem('flatname')
+function GetFlatnameFromCache() {
+  return localStorage.getItem("flatname");
 }
 
 // WriteFlatnameToCache
 // sets the flatname in the cache
-function WriteFlatnameToCache (name) {
-  localStorage.setItem('flatname', name)
+function WriteFlatnameToCache(name) {
+  localStorage.setItem("flatname", name);
 }
 
 // GetHomeLastViewedTimestamp
 // returns the timestamp of when the home page was last loaded or cleared
-function GetHomeLastViewedTimestamp () {
-  return Number(localStorage.getItem('homeLastViewedTimestamp'))
+function GetHomeLastViewedTimestamp() {
+  return Number(localStorage.getItem("homeLastViewedTimestamp"));
 }
 
 // WriteHomeLastViewedTimestamp
 // sets the timestamp of when the home page was last loaded or cleared
-function WriteHomeLastViewedTimestamp (timestamp) {
-  localStorage.setItem('homeLastViewedTimestamp', String(timestamp))
+function WriteHomeLastViewedTimestamp(timestamp) {
+  localStorage.setItem("homeLastViewedTimestamp", String(timestamp));
 }
 
 // GetEnableAnimations
 // returns if animations is enabled
-function GetEnableAnimations () {
-  var enabled = localStorage.getItem('enableAnimations')
-  if (typeof enabled === 'undefined') {
-    WriteEnableAnimations('false')
-    enabled = 'false'
+function GetEnableAnimations() {
+  var enabled = localStorage.getItem("enableAnimations");
+  if (typeof enabled === "undefined") {
+    WriteEnableAnimations("false");
+    enabled = "false";
   }
-  return enabled
+  return enabled;
 }
 
 // WriteEnableAnimations
 // sets animations to enabled or disabled
-function WriteEnableAnimations (enable) {
-  return localStorage.setItem('enableAnimations', enable)
+function WriteEnableAnimations(enable) {
+  return localStorage.setItem("enableAnimations", enable);
 }
 
 // Hooray
 // launch the confetti
-function Hooray () {
+function Hooray() {
   confetti({
     particleCount: 100,
     spread: 70,
     origin: { y: 1 },
-    zIndex: 19
-  })
+    zIndex: 19,
+  });
 }
 
 // GetUserIDFromJWT
 // retrieves the UserID from the JWT
-function GetUserIDFromJWT () {
-  var jwt = localStorage.getItem('authToken')
-  var jwtSplit = jwt.split('.')
+function GetUserIDFromJWT() {
+  const jwt = localStorage.getItem("authToken");
+  const jwtSplit = jwt.split(".");
   if (jwtSplit.length !== 3) {
-    return null
+    return null;
   }
-  var claimsPayloadBase64 = jwtSplit[1]
-  var buff = Buffer.from(claimsPayloadBase64, 'base64')
-  var claimsPayloadString = buff.toString('utf-8')
-  var claimsPayload = JSON.parse(claimsPayloadString)
-  var userID = claimsPayload['id']
-  return userID
+  const claimsPayloadBase64 = jwtSplit[1];
+  const claimsPayloadString = atob(claimsPayloadBase64);
+  const claimsPayload = JSON.parse(claimsPayloadString);
+  const userID = claimsPayload["id"];
+  return userID;
 }
 
 // GetSetupMessage
 // returns a message to display on setup
-function GetSetupMessage () {
+function GetSetupMessage() {
   return (
-    document.head.querySelector('[name~=setupmessage][content]').content || ''
-  )
+    document.head.querySelector("[name~=setupmessage][content]")?.content || ""
+  );
 }
 
 // GetLoginMessage
 // returns a message to display on login
-function GetLoginMessage () {
+function GetLoginMessage() {
   return (
-    document.head.querySelector('[name~=loginmessage][content]').content || ''
-  )
+    document.head.querySelector("[name~=loginmessage][content]")?.content || ""
+  );
 }
-function CopyHrefToClipboard () {
-  navigator.clipboard.writeText(window.location.href)
+function CopyHrefToClipboard() {
+  navigator.clipboard.writeText(window.location.href);
 }
 
 export default {
@@ -231,5 +224,5 @@ export default {
   GetUserIDFromJWT,
   GetSetupMessage,
   GetLoginMessage,
-  CopyHrefToClipboard
-}
+  CopyHrefToClipboard,
+};

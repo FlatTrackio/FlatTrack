@@ -11,14 +11,28 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { defineConfig } from "vite";
-import { createVuePlugin } from "vite-plugin-vue2";
-import { VitePWA } from "vite-plugin-pwa";
-const path = require("path");
+import { defineConfig } from 'npm:vite@^5.2.10'
+import vue from 'npm:@vitejs/plugin-vue@^5.0.4'
 
+import 'npm:vue@3.2.26'
+import "npm:vue-router@^4.6.3"
+import "npm:axios@1.7.2"
+import "npm:dayjs@1.11.11"
+import 'npm:@mdi/js@7.4.47'
+import 'npm:buefy@3.0.3'
+import 'npm:canvas-confetti@1.4.0'
+import 'npm:node-emoji@1.11.0'
+import 'npm:qrcode.vue@1.7.0'
+import 'npm:sass@1.93.2'
+import 'npm:sass-loader@16.0.5'
+import { NodePackageImporter } from 'npm:sass-embedded@1.93.2';
+import { VitePWA } from "npm:vite-plugin-pwa@1.1.0";
+import * as path from "jsr:@std/path"
+
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    createVuePlugin(),
+    vue(),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: [
@@ -63,8 +77,16 @@ export default defineConfig({
     alias: [
       {
         find: "@",
-        replacement: path.resolve(__dirname, "src"),
+        replacement: path.join(Deno.cwd(), "src"),
       },
     ],
   },
-});
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler',
+        importers: [new NodePackageImporter()],
+      }
+    }
+  }
+})

@@ -16,91 +16,179 @@
 <template>
   <div :class="ratherSmallerScreen ? 'bottombar bottombar-fixed' : 'bottombar'">
     <b-loading
+      v-model:active="pageLoading"
       :is-full-page="false"
-      :active.sync="pageLoading"
       :can-cancel="false"
-    ></b-loading>
-    <md-bottom-bar class="md-accent bottombar-background" md-sync-route>
-      <md-bottom-bar-item
-        :to="{ name: 'Home' }"
-        exact
-        md-label="Home"
-        md-icon="home"
-      ></md-bottom-bar-item>
-      <md-bottom-bar-item
-        :to="{ name: 'Apps' }"
-        md-label="Apps"
-        md-icon="apps"
-      ></md-bottom-bar-item>
-      <md-bottom-bar-item
-        :to="{ name: 'Account' }"
-        md-label="My Account"
-        md-icon="account_box"
-      ></md-bottom-bar-item>
-      <md-bottom-bar-item
-        :to="{ name: 'Admin home' }"
-        md-label="Admin"
-        md-icon="web"
-        v-if="canUserAccountAdmin"
-      ></md-bottom-bar-item>
-    </md-bottom-bar>
+    />
+    <div class="bottombar bbitems">
+      <div
+        v-for="item in routes"
+        :key="item"
+        class="bbitem"
+        @click="$router.push({ name: item.routeName })"
+      >
+        <div
+          v-if="item.display"
+          :class="$route.name === item.routeName ? 'active' : ''"
+        >
+          <b-icon
+            :icon="item.icon"
+            size="is-small"
+          />
+          <span> {{ item.name }} </span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
-import cani from '@/requests/authenticated/can-i'
+  import cani from "@/requests/authenticated/can-i";
 
-export default {
-  name: 'bottom-bar',
-  data () {
-    return {
-      pageLoading: true,
-      canUserAccountAdmin: false,
-      ratherSmallScreen: false
-    }
-  },
-  methods: {
-    CanIadmin () {
-      cani.GetCanIgroup('admin').then((resp) => {
-        this.canUserAccountAdmin = resp.data.data
-        this.pageLoading = false
-      })
-    }
-  },
-  async beforeMount () {
-    this.CanIadmin()
-    if (window.innerWidth >= 330) {
-      this.ratherSmallerScreen = true
-    }
-  }
-}
+  export default {
+    name: "BottomBar",
+    data() {
+      return {
+        pageLoading: true,
+        canUserAccountAdmin: false,
+        ratherSmallScreen: false,
+      };
+    },
+    computed: {
+      routes() {
+        return [
+          { name: "Home", icon: "home", routeName: "Home", display: true },
+          { name: "Apps", icon: "apps", routeName: "Apps", display: true },
+          {
+            name: "Account",
+            icon: "account",
+            routeName: "Account",
+            display: true,
+          },
+          {
+            name: "Admin",
+            icon: "web",
+            routeName: "Admin home",
+            display: this.canUserAccountAdmin === true,
+          },
+        ];
+      },
+    },
+    async beforeMount() {
+      this.CanIadmin();
+      if (window.innerWidth >= 330) {
+        this.ratherSmallerScreen = true;
+      }
+    },
+    methods: {
+      CanIadmin() {
+        cani.GetCanIgroup("admin").then((resp) => {
+          this.canUserAccountAdmin = resp.data.data;
+          this.pageLoading = false;
+        });
+      },
+    },
+  };
 </script>
 
 <style>
 .bottombar-fixed {
-  position: fixed;
+    position: fixed;
 }
 
 .bottombar {
-  #position: fixed;
-  width: 100%;
-  bottom: 0;
-  display: inline-flex;
-  align-items: flex-end;
-  #background: rbga(#209cee, 0.8);
-  z-index: 100;
-  background: inherit;
+    width: 100%;
+    height: 3.5rem;
+    bottom: 0;
+    display: inline-flex;
+    align-items: flex-end;
+    z-index: 100;
+    background-color: #ffffff52;
+    box-shadow: 0 5px 5px -3px #0003, 0 8px 10px 1px #00000024,
+                0 3px 14px 2px #0000001f;
+    backdrop-filter: blur(10px);
 }
 
 .bottombar:before {
-  content: "";
-  box-shadow: inset 0 0 0 200px rgba(255, 255, 255, 0.3);
-  filter: blur(10px);
-  background: inherit;
+    content: "";
+    box-shadow: inset 0 0 0 200px rgba(255, 255, 255, 0.3);
+    filter: blur(10px);
 }
 
-.bottombar-background {
-  background-color: hsla(0, 0%, 100%, 0.73);
-  backdrop-filter: blur(5px);
+.bbitems .bbitem {
+    width: 100%;
+    user-select: none;
 }
+.bbitems .bbitem div {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    padding: 0.5rem 0;
+}
+@keyframes bbactive {
+    0%, 40% {
+        background-color: #81d1f02b;
+        font-size: 1rem;
+        height: 100%;
+    }
+    100% {
+        background-color: #c1c1c13d;
+        font-size: 1.09rem;
+        height: calc(100% - 0.05px);
+    }
+}
+.bbitems .bbitem:hover:has(div.active) {
+    background-color: #81d1f02b;
+    transition: background-color 1s;
+}
+.bbitems .bbitem:has(div.active) {
+    background-color: #c1c1c13d;
+    box-shadow: 0 0 6px -4px black inset;
+    transition: background-color 1s;
+    font-size: 1.09rem;
+    animation-name: bbactive;
+    animation-duration: 0.7s;
+    height: calc(100% - 0.05px);
+}
+.bbitems .bbitem:has(div.active) div {
+    top: 0.09rem;
+    position: relative;
+}
+
+@media (prefers-color-scheme: dark) {
+    .bottombar {
+        background-color: #2b2b2b4a;
+    }
+    .bbitems .bbitem:has(div.active) {
+        background-color: #d4d4d499;
+        color: black;
+    }
+}
+
+[data-theme="dark"] .bottombar {
+    background-color: #2b2b2b4a;
+}
+[data-theme="dark"] .bbitems .bbitem:has(div.active) {
+    background-color: #d4d4d499;
+    color: black;
+  }
+@media (prefers-color-scheme: light) {
+    .bottombar {
+        background-color: #ffffff52;
+    }
+    .bbitems .bbitem:has(div.active) {
+        background-color: #c1c1c13d;
+      color: unset;
+    }
+  }
+
+  [data-theme="light"] .bottombar {
+    background-color: #ffffff52;
+  }
+  [data-theme="light"] .bbitems .bbitem:has(div.active) {
+    background-color: #81d1f02b;
+    color: black;
+  }
 </style>

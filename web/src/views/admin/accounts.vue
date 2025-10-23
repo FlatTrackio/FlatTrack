@@ -17,34 +17,18 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav
-          class="breadcrumb is-medium has-arrow-separator"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <router-link :to="{ name: 'Admin home' }">Admin</router-link>
-            </li>
-            <li class="is-active">
-              <router-link :to="{ name: 'Admin accounts' }"
-                >Accounts</router-link
-              >
-            </li>
-          </ul>
-          <b-button
-            @click="CopyHrefToClipboard()"
-            icon-left="content-copy"
-            size="is-small"
-          ></b-button>
-        </nav>
+        <breadcrumb
+          back-link-name="Admin home"
+          :current-page-name="$route.name"
+        />
         <h1 class="title is-1">Accounts</h1>
         <p class="subtitle is-4">Manage the account of your flatmates</p>
         <b-loading
+          v-model:active="pageLoading"
           :is-full-page="false"
-          :active.sync="pageLoading"
           :can-cancel="false"
-        ></b-loading>
-        <div>
+        />
+        <div class="mb-5">
           <section>
             <div
               class="card pointer-cursor-on-hover"
@@ -53,7 +37,7 @@
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
-                    <b-icon icon="account-plus" size="is-medium"> </b-icon>
+                    <b-icon icon="account-plus" size="is-medium" />
                   </div>
                   <div class="media-content">
                     <p class="title is-4">Add a new flatmate</p>
@@ -63,19 +47,18 @@
                       icon="chevron-right"
                       size="is-medium"
                       type="is-midgray"
-                    ></b-icon>
+                    />
                   </div>
                 </div>
               </div>
             </div>
           </section>
         </div>
-        <br />
         <div v-if="members && members.length">
           <div
-            class="card-margin pointer-cursor-on-hover"
             v-for="member of members"
-            v-bind:key="member"
+            :key="member"
+            class="card-margin pointer-cursor-on-hover"
             @click="
               $router.push({
                 name: 'View user account',
@@ -102,57 +85,56 @@
                       icon="chevron-right"
                       size="is-medium"
                       type="is-midgray"
-                    ></b-icon>
+                    />
                   </div>
                 </div>
                 <div class="content">
                   <b-field grouped group-multiline>
                     <div
-                      class="control"
                       v-for="group in member.groups"
-                      v-bind:key="group"
+                      :key="group"
+                      class="control"
                     >
                       <b-taglist attached>
-                        <b-tag type="is-dark">is</b-tag>
-                        <b-tag type="is-info">{{ group }}</b-tag>
+                        <b-tag type="is-dark"> is </b-tag>
+                        <b-tag type="is-info"> {{ group }} </b-tag>
                       </b-taglist>
                     </div>
                   </b-field>
-                  <p class="subtitle is-6" v-if="member.phoneNumber">
+                  <p v-if="member.phoneNumber" class="subtitle is-6">
                     Phone:
-                    <a :href="`tel:${member.phoneNumber}`">{{
-                      member.phoneNumber
-                    }}</a
+                    <a :href="`tel:${member.phoneNumber}`"
+                      >{{ member.phoneNumber }}</a
                     ><br />
                   </p>
-                  <p class="subtitle is-6" v-if="member.email">
+                  <p v-if="member.email" class="subtitle is-6">
                     Email:
                     <a :href="`mailto:${member.email}`">{{ member.email }}</a
                     ><br />
                   </p>
                   <a
-                    class="subtitle is-6"
                     v-if="member.birthday && member.birthday !== 0"
+                    class="subtitle is-6"
                   >
                     Birthday: {{ TimestampToCalendar(member.birthday) }}<br />
                   </a>
                   <b-field
-                    grouped
-                    group-multiline
                     v-if="
                       member.registered !== true || member.disabled === true
                     "
+                    grouped
+                    group-multiline
                   >
                     <div class="control">
-                      <b-taglist attached v-if="member.registered !== true">
-                        <b-tag type="is-dark">has</b-tag>
-                        <b-tag type="is-danger">not registered</b-tag>
+                      <b-taglist v-if="member.registered !== true" attached>
+                        <b-tag type="is-dark"> has </b-tag>
+                        <b-tag type="is-danger"> not registered </b-tag>
                       </b-taglist>
                     </div>
                     <div class="control">
-                      <b-taglist attached v-if="member.disabled === true">
-                        <b-tag type="is-dark">has</b-tag>
-                        <b-tag type="is-warning">account disabled</b-tag>
+                      <b-taglist v-if="member.disabled === true" attached>
+                        <b-tag type="is-dark"> has </b-tag>
+                        <b-tag type="is-warning"> account disabled </b-tag>
                       </b-taglist>
                     </div>
                   </b-field>
@@ -160,10 +142,10 @@
               </div>
             </div>
           </div>
-          <div class="section">
+          <div class="m-3">
             <p>
-              {{ members.length }}
-              {{ members.length === 1 ? "flatmate" : "flatmates" }}
+              {{ members.length }} {{ members.length === 1 ? "flatmate" :
+              "flatmates" }}
             </p>
           </div>
         </div>
@@ -172,80 +154,89 @@
             <div class="card-content">
               <div class="media">
                 <div class="media-left">
-                  <b-icon icon="account-off" size="is-medium"> </b-icon>
+                  <b-icon icon="account-off" size="is-medium" />
                 </div>
                 <div class="media-content">
-                  <p class="subtitle is-4" v-if="!pageLoading">
+                  <p v-if="!pageLoading" class="subtitle is-4">
                     No flatmates found.
                   </p>
-                  <p class="subtitle is-4" v-else-if="pageLoading">
-                    Loading flatmates...
-                  </p>
+                  <b-skeleton
+                    class="mb-5"
+                    v-else
+                    size="is-medium"
+                    width="35%"
+                    :animated="true"
+                  />
                 </div>
               </div>
-              <p class="content subtitle is-5">
+              <p v-if="!pageLoading" class="content subtitle is-5">
                 Hmmm, it appears that you don't have an flatmates added.<br />
               </p>
+              <b-skeleton
+                class="mb-5"
+                v-else
+                size="is-medium"
+                width="35%"
+                :animated="true"
+              />
             </div>
           </div>
         </div>
-        <floatingAddButton :routerLink="{ name: 'Admin new account' }" />
+        <floatingAddButton :router-link="{ name: 'Admin new account' }" />
       </section>
     </div>
   </div>
 </template>
 
 <script>
-import emoji from 'node-emoji'
-import flatmates from '@/requests/authenticated/flatmates'
-import common from '@/common/common'
+  import * as emoji from "node-emoji";
+  import flatmates from "@/requests/authenticated/flatmates";
+  import floatingAddButton from "@/components/common/floating-add-button.vue";
+  import breadcrumb from "@/components/common/breadcrumb.vue";
+  import common from "@/common/common";
 
-export default {
-  name: 'flatmates-accounts',
-  data () {
-    return {
-      members: [],
-      groupQuery: undefined,
-      emojiSmile: emoji.get('smile'),
-      pageLoading: true
-    }
-  },
-  async beforeMount () {
-    this.groupQuery = this.$route.query.group
-    this.FetchAllFlatmates()
-  },
-  components: {
-    floatingAddButton: () =>
-      import('@/components/common/floating-add-button.vue')
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+  export default {
+    name: "FlatmatesAccounts",
+    components: {
+      floatingAddButton,
+      breadcrumb,
     },
-    FetchAllFlatmates () {
-      if (typeof this.groupQuery !== 'undefined') {
-        var group = this.groupQuery
-      }
-      flatmates
-        .GetAllFlatmates(undefined, undefined, group)
-        .then((resp) => {
-          this.pageLoading = false
-          this.members = resp.data.list
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to list flatmates' +
-              `<br/>${err.response.data.metadata.response}`
-          )
-        })
+    data() {
+      return {
+        members: [],
+        groupQuery: undefined,
+        emojiSmile: emoji.get("smile"),
+        pageLoading: true,
+      };
     },
-    TimestampToCalendar (timestamp) {
-      return common.TimestampToCalendar(timestamp)
-    }
-  }
-}
+    async beforeMount() {
+      this.groupQuery = this.$route.query.group;
+      this.FetchAllFlatmates();
+    },
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      FetchAllFlatmates() {
+        if (typeof this.groupQuery !== "undefined") {
+          var group = this.groupQuery;
+        }
+        flatmates
+          .GetAllFlatmates(undefined, undefined, group)
+          .then((resp) => {
+            this.pageLoading = false;
+            this.members = resp.data.list;
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to list flatmates" +
+                `<br/>${err.response.data.metadata.response}`
+            );
+          });
+      },
+      TimestampToCalendar(timestamp) {
+        return common.TimestampToCalendar(timestamp);
+      },
+    },
+  };
 </script>
-
-<style src="../../assets/style.css"></style>
-
-<style scoped></style>

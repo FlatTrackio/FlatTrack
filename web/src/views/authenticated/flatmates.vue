@@ -17,24 +17,7 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav
-          class="breadcrumb is-medium has-arrow-separator"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li><router-link :to="{ name: 'Apps' }">Apps</router-link></li>
-            <li class="is-active">
-              <router-link :to="{ name: 'My Flatmates' }"
-                >Flatmates</router-link
-              >
-            </li>
-          </ul>
-          <b-button
-            @click="CopyHrefToClipboard()"
-            icon-left="content-copy"
-            size="is-small"
-          ></b-button>
-        </nav>
+        <breadcrumb back-link-name="Apps" :current-page-name="$route.name" />
         <h1 class="title is-1">Flatmates</h1>
         <p class="subtitle is-3">
           <span v-if="typeof GroupQuery === 'undefined'">
@@ -45,16 +28,12 @@
           </span>
         </p>
         <b-loading
+          v-model:active="pageLoading"
           :is-full-page="false"
-          :active.sync="pageLoading"
           :can-cancel="false"
-        ></b-loading>
+        />
         <div v-if="members && members.length > 0">
-          <div
-            class="card-margin"
-            v-for="member of members"
-            v-bind:key="member"
-          >
+          <div v-for="member of members" :key="member" class="card-margin">
             <div class="card">
               <div class="card-content">
                 <div class="media">
@@ -73,59 +52,58 @@
                 <div class="content">
                   <b-field grouped group-multiline>
                     <div
-                      class="control"
                       v-for="group in member.groups"
-                      v-bind:key="group"
+                      :key="group"
+                      class="control"
                     >
                       <b-taglist attached>
-                        <b-tag type="is-dark">is</b-tag>
-                        <b-tag type="is-info">{{ group }}</b-tag>
+                        <b-tag type="is-dark"> is </b-tag>
+                        <b-tag type="is-info"> {{ group }} </b-tag>
                       </b-taglist>
                     </div>
                   </b-field>
-                  <p class="subtitle is-6" v-if="member.phoneNumber">
+                  <p v-if="member.phoneNumber" class="subtitle is-6">
                     Phone:
-                    <a :href="`tel:${member.phoneNumber}`">{{
-                      member.phoneNumber
-                    }}</a
+                    <a :href="`tel:${member.phoneNumber}`"
+                      >{{ member.phoneNumber }}</a
                     ><br />
                   </p>
-                  <p class="subtitle is-6" v-if="member.email">
+                  <p v-if="member.email" class="subtitle is-6">
                     Email:
                     <a :href="`mailto:${member.email}`">{{ member.email }}</a
                     ><br />
                   </p>
                   <a
-                    class="subtitle is-6"
                     v-if="member.birthday && member.birthday !== 0"
+                    class="subtitle is-6"
                   >
                     Birthday: {{ TimestampToCalendar(member.birthday) }}<br />
                   </a>
                   <b-field
-                    grouped
-                    group-multiline
                     v-if="
                       member.registered !== true ||
-                      member.disabled === true ||
-                      member.deletionTimestamp !== 0
+                        member.disabled === true ||
+                        member.deletionTimestamp !== 0
                     "
+                    grouped
+                    group-multiline
                   >
                     <div class="control">
-                      <b-taglist attached v-if="member.registered !== true">
-                        <b-tag type="is-dark">has</b-tag>
-                        <b-tag type="is-danger">not registered</b-tag>
+                      <b-taglist v-if="member.registered !== true" attached>
+                        <b-tag type="is-dark"> has </b-tag>
+                        <b-tag type="is-danger"> not registered </b-tag>
                       </b-taglist>
                     </div>
                     <div class="control">
-                      <b-taglist attached v-if="member.disabled === true">
-                        <b-tag type="is-dark">has</b-tag>
-                        <b-tag type="is-warning">account disabled</b-tag>
+                      <b-taglist v-if="member.disabled === true" attached>
+                        <b-tag type="is-dark"> has </b-tag>
+                        <b-tag type="is-warning"> account disabled </b-tag>
                       </b-taglist>
                     </div>
                     <div class="control">
-                      <b-taglist attached v-if="member.deletionTimestamp !== 0">
-                        <b-tag type="is-dark">has</b-tag>
-                        <b-tag type="is-danger">account deactivatived</b-tag>
+                      <b-taglist v-if="member.deletionTimestamp !== 0" attached>
+                        <b-tag type="is-dark"> has </b-tag>
+                        <b-tag type="is-danger"> account deactivatived </b-tag>
                       </b-taglist>
                     </div>
                   </b-field>
@@ -134,17 +112,17 @@
             </div>
           </div>
           <b-button
-            type="is-warning"
-            @click="ClearFilter"
             v-if="$route.query.id || $route.query.group"
+            type="is-warning"
             expanded
+            @click="ClearFilter"
           >
             Clear filter
           </b-button>
-          <div class="section">
+          <div class="m-3">
             <p>
-              {{ members.length }}
-              {{ members.length === 1 ? "flatmate" : "flatmates" }}
+              {{ members.length }} {{ members.length === 1 ? "flatmate" :
+              "flatmates" }}
             </p>
           </div>
         </div>
@@ -153,15 +131,19 @@
             <div class="card-content">
               <div class="media">
                 <div class="media-left">
-                  <b-icon icon="account-off" size="is-medium"> </b-icon>
+                  <b-icon icon="account-off" size="is-medium" />
                 </div>
                 <div class="media-content">
-                  <p class="subtitle is-4" v-if="!pageLoading">
+                  <p v-if="!pageLoading" class="subtitle is-4">
                     No flatmates found.
                   </p>
-                  <p class="subtitle is-4" v-else-if="pageLoading">
-                    Loading flatmates...
-                  </p>
+                  <b-skeleton
+                    class="mb-5"
+                    v-else
+                    size="is-medium"
+                    width="35%"
+                    :animated="true"
+                  />
                 </div>
               </div>
               <p class="content subtitle is-6">
@@ -177,84 +159,84 @@
 </template>
 
 <script>
-import emoji from 'node-emoji'
-import flatmates from '@/requests/authenticated/flatmates'
-import common from '@/common/common'
+  import * as emoji from "node-emoji";
+  import flatmates from "@/requests/authenticated/flatmates";
+  import common from "@/common/common";
+  import breadcrumb from "@/components/common/breadcrumb.vue";
 
-export default {
-  name: 'flat-flatmates',
-  data () {
-    return {
-      pageLoading: true,
-      members: [],
-      emojiSmile: emoji.get('smile')
-    }
-  },
-  async beforeMount () {
-    if (typeof this.IdQuery !== 'undefined') {
-      var id = this.IdQuery
-      flatmates
-        .GetFlatmate(id)
-        .then((resp) => {
-          this.members = [resp.data.spec]
-          this.pageLoading = false
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed fetch flatmate info' + `<br/>${err}`
-          )
-        })
-    } else {
-      this.FetchAllFlatmates()
-    }
-  },
-  computed: {
-    GroupQuery () {
-      return this.$route.query.group
+  export default {
+    name: "FlatFlatmates",
+    components: {
+      breadcrumb,
     },
-    IdQuery () {
-      return this.$route.query.id
-    }
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+    data() {
+      return {
+        pageLoading: true,
+        members: [],
+        emojiSmile: emoji.get("smile"),
+      };
     },
-    FetchAllFlatmates () {
-      if (typeof this.GroupQuery !== 'undefined') {
-        var group = this.GroupQuery
-      } else if (typeof this.IdQuery !== 'undefined') {
-        var id = this.IdQuery
+    computed: {
+      GroupQuery() {
+        return this.$route.query.group;
+      },
+      IdQuery() {
+        return this.$route.query.id;
+      },
+    },
+    watch: {
+      GroupQuery() {
+        this.FetchAllFlatmates();
+      },
+    },
+    async beforeMount() {
+      if (typeof this.IdQuery !== "undefined") {
+        var id = this.IdQuery;
+        flatmates
+          .GetFlatmate(id)
+          .then((resp) => {
+            this.members = [resp.data.spec];
+            this.pageLoading = false;
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed fetch flatmate info" + `<br/>${err}`
+            );
+          });
+      } else {
+        this.FetchAllFlatmates();
       }
-      var notSelf = true
-      flatmates
-        .GetAllFlatmates(id, notSelf, group)
-        .then((resp) => {
-          this.pageLoading = false
-          this.members = resp.data.list
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to list flatmates' + `<br/>${err}`
-          )
-        })
     },
-    ClearFilter () {
-      this.$router.replace({ name: 'My Flatmates' })
-      this.FetchAllFlatmates()
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      FetchAllFlatmates() {
+        if (typeof this.GroupQuery !== "undefined") {
+          var group = this.GroupQuery;
+        } else if (typeof this.IdQuery !== "undefined") {
+          var id = this.IdQuery;
+        }
+        var notSelf = true;
+        flatmates
+          .GetAllFlatmates(id, notSelf, group)
+          .then((resp) => {
+            this.pageLoading = false;
+            this.members = resp.data.list;
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              "Failed to list flatmates" + `<br/>${err}`
+            );
+          });
+      },
+      ClearFilter() {
+        this.$router.replace({ name: "My Flatmates" });
+        this.FetchAllFlatmates();
+      },
+      TimestampToCalendar(timestamp) {
+        return common.TimestampToCalendar(timestamp);
+      },
     },
-    TimestampToCalendar (timestamp) {
-      return common.TimestampToCalendar(timestamp)
-    }
-  },
-  watch: {
-    GroupQuery () {
-      this.FetchAllFlatmates()
-    }
-  }
-}
+  };
 </script>
-
-<style src="../../assets/style.css"></style>
-
-<style scoped></style>

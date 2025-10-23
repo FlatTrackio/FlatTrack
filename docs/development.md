@@ -2,8 +2,8 @@
 
 Requirements:
 
--   [golang](https://golang.org/doc/install)
--   [nodejs](https://nodejs.org/en/download/)
+-   [Go](https://golang.org/doc/install)
+-   [Deno](https://deno.com/)
 -   a [Postgres](https://www.postgresql.org/download/) database
 
 ## Install dependencies with Brew
@@ -58,13 +58,9 @@ Manually connecting to the Postgres database:
 
 Navigate to the `web` folder.
 
-Install Frontend dependencies
-
-    npm i
-
 Build the frontend
 
-    npm run build
+    deno task build
 
 
 ## Backend build

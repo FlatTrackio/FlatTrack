@@ -17,24 +17,7 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav
-          class="breadcrumb is-medium has-arrow-separator"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li><router-link :to="{ name: 'Home' }">Home</router-link></li>
-            <li class="is-active">
-              <router-link :to="{ name: 'About FlatTrack' }"
-                >About FlatTrack</router-link
-              >
-            </li>
-          </ul>
-          <b-button
-            @click="CopyHrefToClipboard()"
-            icon-left="content-copy"
-            size="is-small"
-          ></b-button>
-        </nav>
+        <breadcrumb back-link-name="Home" :current-page-name="$route.name" />
         <h1 class="title is-1">About FlatTrack</h1>
         <p class="subtitle is-3">What is FlatTrack?</p>
         <b-message type="is-primary" has-icon icon="help">
@@ -73,54 +56,65 @@
         </b-message>
         <p class="subtitle is-3">This FlatTrack instance</p>
         <b-message type="is-warning" has-icon icon="information-outline">
-          <p class="is-size-5">
-            <b>Version</b>: {{ version || "Unknown" }}
-            <span v-if="version !== versionFrontend"
-              >(frontend {{ versionFrontend }})</span
-            >
-            <br />
-            <b>Commit hash</b>:
-            <a
-              v-if="commitHash !== '???' && typeof commitHash !== 'undefined'"
-              :href="
+          <div v-if="!pageLoading">
+            <p class="is-size-5">
+              <b>Version</b>: {{ version || "Unknown" }}
+              <span v-if="version !== versionFrontend"
+                >(frontend {{ versionFrontend }})</span
+              >
+            </p>
+            <p class="is-size-5">
+              <b>Commit hash</b>:
+              <a
+                v-if="commitHash !== '???' && typeof commitHash !== 'undefined'"
+                :href="
                 'https://gitlab.com/flattrack/flattrack/-/commit/' + commitHash
               "
-              target="_blank"
-              rel="noreferrer"
-              >{{ commitHash }}</a
-            >
-            <span v-else> Unknown </span>
-            <a
-              v-if="commitHash !== commitHashFrontend"
-              :href="
+                target="_blank"
+                rel="noreferrer"
+                >{{ commitHash }}</a
+              >
+              <span v-else> Unknown </span>
+              <a
+                v-if="commitHash !== commitHashFrontend"
+                :href="
                 'https://gitlab.com/flattrack/flattrack/-/commit/' +
-                commitHashFrontend
+                  commitHashFrontend
               "
-              target="_blank"
-              rel="noreferrer"
-              >{{ commitHashFrontend }}</a
-            >
-            <br />
-            <b>Mode</b>: {{ mode || "Unknown" }}
-            <span v-if="mode !== modeFrontend"
-              >(frontend {{ modeFrontend }})</span
-            >
-            <br />
-            <b>Date</b>: {{ date || "Unknown" }}
-            <span v-if="date !== dateFrontend"
-              >(frontend {{ dateFrontend }})</span
-            >
-            <br />
-            <b>Postgres Version</b>: {{ postgresVersion || "Unknown" }}
-            <br />
-            <b>Golang version</b>: {{ golangVersion || "Unknown" }}
-            <br />
-            <b>Vue.js Version</b>: {{ vuejsVersion || "Unknown" }}
-            <br />
-            <b>Operating System</b>: {{ osType || "Unknown" }}
-            <br />
-            <b>Architecture</b>: {{ osArch || "Unknown" }}
-          </p>
+                target="_blank"
+                rel="noreferrer"
+                >{{ commitHashFrontend }}</a
+              >
+            </p>
+            <p class="is-size-5">
+              <b>Mode</b>: {{ mode || "Unknown" }}
+              <span v-if="mode !== modeFrontend"
+                >(frontend {{ modeFrontend }})</span
+              >
+            </p>
+            <p class="is-size-5">
+              <b>Date</b>: {{ date || "Unknown" }}
+              <span v-if="date !== dateFrontend"
+                >(frontend {{ dateFrontend }})</span
+              >
+            </p>
+            <p class="is-size-5">
+              <b>Postgres Version</b>: {{ postgresVersion || "Unknown" }}
+            </p>
+            <p class="is-size-5">
+              <b>Golang version</b>: {{ golangVersion || "Unknown" }}
+            </p>
+            <p class="is-size-5">
+              <b>Vue.js Version</b>: {{ vuejsVersion || "Unknown" }}
+            </p>
+            <p class="is-size-5">
+              <b>Operating System</b>: {{ osType || "Unknown" }}
+            </p>
+            <p class="is-size-5">
+              <b>Architecture</b>: {{ osArch || "Unknown" }}
+            </p>
+          </div>
+          <b-skeleton v-else size="is-medium" width="35%" :animated="true" />
         </b-message>
       </section>
     </div>
@@ -131,13 +125,17 @@
   import common from "@/common/common";
   import system from "@/requests/authenticated/system";
   import constants from "@/constants/constants";
-  import vue from "vue";
+  import breadcrumb from "@/components/common/breadcrumb.vue";
+  import * as vue from "vue";
 
   export default {
-    name: "about-flattrack",
+    name: "AboutFlattrack",
+    components: {
+      breadcrumb,
+    },
     data() {
       return {
-        hasInitialLoaded: false,
+        pageLoading: true,
         version: "",
         commitHash: "",
         mode: "",
@@ -153,13 +151,16 @@
         dateFrontend: constants.appBuildDate,
       };
     },
+    async beforeMount() {
+      this.GetVersion();
+    },
     methods: {
       CopyHrefToClipboard() {
         common.CopyHrefToClipboard();
       },
       GetVersion() {
         system.GetVersion().then((resp) => {
-          this.hasInitialLoaded = true;
+          this.pageLoading = false;
           this.version = resp.data.data.version;
           this.commitHash = resp.data.data.commitHash;
           this.mode = resp.data.data.mode;
@@ -170,9 +171,6 @@
           this.osArch = resp.data.data.osArch;
         });
       },
-    },
-    async beforeMount() {
-      this.GetVersion();
     },
   };
 </script>

@@ -16,37 +16,36 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import Request from '@/requests/requests'
+import Request from "@/requests/requests";
 
 // GetInstanceRegistered
 // determine if the instance of FlatTrack is registered
-function GetInstanceRegistered () {
+function GetInstanceRegistered() {
   return Request(
     {
-      url: '/api/system/initialized',
-      method: 'GET'
+      url: "/api/system/initialized",
+      method: "GET",
     },
     undefined,
     true
-  )
+  );
 }
 
 // PostAdminRegister
 // login and return a JWT
-function PostAdminRegister (form, params) {
-  console.log({ params })
+function PostAdminRegister(form, params) {
   return Request(
     {
-      url: '/api/admin/register',
-      method: 'POST',
+      url: "/api/admin/register",
+      method: "POST",
       data: form,
       params: {
-        ...params
-      }
+        ...params,
+      },
     },
     false,
     true
-  )
+  );
 }
 
-export default { GetInstanceRegistered, PostAdminRegister }
+export default { GetInstanceRegistered, PostAdminRegister };

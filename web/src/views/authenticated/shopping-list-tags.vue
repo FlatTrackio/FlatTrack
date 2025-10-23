@@ -17,48 +17,29 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav
-          class="breadcrumb is-medium has-arrow-separator"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <router-link :to="{ name: 'Shopping list' }"
-                >Shopping list</router-link
-              >
-            </li>
-            <li class="is-active">
-              <router-link :to="{ name: 'Manage shopping tags' }"
-                >Shopping tags</router-link
-              >
-            </li>
-          </ul>
-          <b-button
-            @click="CopyHrefToClipboard()"
-            icon-left="content-copy"
-            size="is-small"
-          ></b-button>
-        </nav>
+        <breadcrumb
+          back-link-name="Shopping list"
+          :current-page-name="$route.name"
+        />
         <h1 class="title is-1">Shopping tags</h1>
         <p class="subtitle is-3">Manage tags used in your lists</p>
         <div>
           <label class="label">Search for tags</label>
           <b-field>
             <b-input
+              ref="search"
+              v-model="tagSearch"
               icon="magnify"
               size="is-medium"
               placeholder="Enter a tag name"
               type="search"
               expanded
-              v-model="tagSearch"
-              ref="search"
-            >
-            </b-input>
+            />
             <p class="control">
               <b-select
+                v-model="sortBy"
                 placeholder="Sort by"
                 icon="sort"
-                v-model="sortBy"
                 size="is-medium"
                 expanded
               >
@@ -72,16 +53,16 @@
             </p>
           </b-field>
           <b-loading
+            v-model:active="pageLoading"
             :is-full-page="false"
-            :active.sync="pageLoading"
             :can-cancel="false"
-          ></b-loading>
+          />
           <section>
             <div class="card pointer-cursor-on-hover" @click="AddNewTag">
               <div class="card-content">
                 <div class="media">
                   <div class="media-left">
-                    <b-icon icon="tag" size="is-medium"> </b-icon>
+                    <b-icon icon="tag" size="is-medium" />
                   </div>
                   <div class="media-content">
                     <p class="title is-4">Add a new tag</p>
@@ -91,7 +72,7 @@
                       icon="chevron-right"
                       size="is-medium"
                       type="is-midgray"
-                    ></b-icon>
+                    />
                   </div>
                 </div>
               </div>
@@ -99,16 +80,16 @@
           </section>
         </div>
         <!-- TODO fix floating button -->
-        <floatingAddButton :func="AddNewTag" v-if="displayFloatingAddButton" />
+        <floatingAddButton v-if="displayFloatingAddButton" :func="AddNewTag" />
         <br />
         <div v-if="tagsFiltered.length > 0">
           <!-- Card per-tag -->
-          <div v-for="(tag, index) in tagsFiltered" v-bind:key="tag">
+          <div v-for="(tag, index) in tagsFiltered" :key="tag">
             <tagCard
               :tag="tag"
               :index="index"
               :tags="tags"
-              @displayFloatingAddButton="
+              @display-floating-add-button="
                 (value) => {
                   displayFloatingAddButton = value;
                 }
@@ -128,28 +109,28 @@
             <div class="card-content card-content-list">
               <div class="media">
                 <div class="media-left">
-                  <b-icon
-                    icon="tag"
-                    size="is-medium"
-                    type="is-midgray"
-                  ></b-icon>
+                  <b-icon icon="tag" size="is-medium" type="is-midgray" />
                 </div>
                 <div class="media-content">
                   <p
-                    class="subtitle is-4"
                     v-if="tagSearch === '' && tags.length === 0 && !pageLoading"
+                    class="subtitle is-4"
                   >
                     No tags added yet.
                   </p>
                   <p
-                    class="subtitle is-4"
                     v-else-if="tagSearch !== '' && !pageLoading"
+                    class="subtitle is-4"
                   >
                     No tags found.
                   </p>
-                  <p class="subtitle is-4" v-else-if="pageLoading">
-                    Loading tags...
-                  </p>
+                  <b-skeleton
+                    class="mb-5"
+                    v-else
+                    size="is-medium"
+                    width="35%"
+                    :animated="true"
+                  />
                 </div>
               </div>
             </div>
@@ -161,118 +142,121 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import shoppinglist from '@/requests/authenticated/shoppinglist'
-import { DialogProgrammatic as Dialog } from 'buefy'
+  import common from "@/common/common";
+  import shoppinglist from "@/requests/authenticated/shoppinglist";
+  import floatingAddButton from "@/components/common/floating-add-button.vue";
+  import tagCard from "@/components/authenticated/shopping-list-tag-card.vue";
+  import breadcrumb from "@/components/common/breadcrumb.vue";
 
-export default {
-  name: 'shopping-tags',
-  data () {
-    return {
-      displayFloatingAddButton: true,
-      tags: [],
-      deviceIsMobile: false,
-      tagSearch: '',
-      pageLoading: true,
-      sortBy: 'alphabeticalDescending'
-    }
-  },
-  components: {
-    floatingAddButton: () =>
-      import('@/components/common/floating-add-button.vue'),
-    tagCard: () =>
-      import('@/components/authenticated/shopping-list-tag-card.vue')
-  },
-  computed: {
-    tagsFiltered () {
-      return this.tags.filter((item) => {
-        return this.TagDisplayState(item)
-      })
+  export default {
+    name: "ShoppingTags",
+    components: {
+      floatingAddButton,
+      tagCard,
+      breadcrumb,
     },
-    newTag () {
-      return this.$route.query.newtag
-    }
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+    data() {
+      return {
+        displayFloatingAddButton: true,
+        tags: [],
+        deviceIsMobile: false,
+        tagSearch: "",
+        pageLoading: true,
+        sortBy: "alphabeticalDescending",
+      };
     },
-    GetShoppingTags () {
-      shoppinglist
-        .GetShoppingTags(this.sortBy)
-        .then((resp) => {
-          this.tags = resp.data.list || []
-          this.pageLoading = false
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            `Hmmm seems somethings gone wrong loading the shopping tags; ${err.response.data.metadata.response}`
-          )
-        })
+    computed: {
+      tagsFiltered() {
+        return this.tags.filter((item) => {
+          return this.TagDisplayState(item);
+        });
+      },
+      newTag() {
+        return this.$route.query.newtag;
+      },
     },
-    AddNewTag () {
-      this.displayFloatingAddButton = false
-      Dialog.prompt({
-        title: 'New tag',
-        message: `Enter the name of a tag to create.`,
-        container: null,
-        icon: 'tag',
-        hasIcon: true,
-        inputAttrs: {
-          placeholder: 'e.g. Fruits and Veges',
-          maxlength: 30
-        },
-        trapFocus: true,
-        onConfirm: (value) => {
-          shoppinglist
-            .PostShoppingTag(value)
-            .then(() => {
-              this.pageLoading = true
-              this.GetShoppingTags()
-              this.displayFloatingAddButton = true
-            })
-            .catch((err) => {
-              common.DisplayFailureToast(
-                `Failed to create tag; ${err.response.data.metadata.response}`
-              )
-              this.displayFloatingAddButton = true
-            })
-        },
-        onCancel: () => {
-          this.displayFloatingAddButton = true
+    watch: {
+      sortBy() {
+        this.listIsLoading = true;
+        this.GetShoppingTags();
+      },
+      newTag() {
+        if (this.newTag === "prompt") {
+          this.AddNewTag();
         }
-      })
+      },
     },
-    TagDisplayState (tag) {
-      return this.SearchTags(tag)
+    async beforeMount() {
+      this.GetShoppingTags();
     },
-    SearchTags (tag) {
-      var vm = this
-      return tag.name.toLowerCase().indexOf(vm.tagSearch.toLowerCase()) !== -1
+    async created() {
+      this.CheckDeviceIsMobile();
+      window.addEventListener("resize", this.CheckDeviceIsMobile.bind(this));
     },
-    CheckDeviceIsMobile () {
-      this.deviceIsMobile = common.DeviceIsMobile()
-    }
-  },
-  watch: {
-    sortBy () {
-      this.listIsLoading = true
-      this.GetShoppingTags()
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      GetShoppingTags() {
+        shoppinglist
+          .GetShoppingTags(this.sortBy)
+          .then((resp) => {
+            this.tags = resp.data.list || [];
+            this.pageLoading = false;
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              `Hmmm seems somethings gone wrong loading the shopping tags; ${err.response.data.metadata.response}`
+            );
+          });
+      },
+      AddNewTag() {
+        this.displayFloatingAddButton = false;
+        this.$buefy.dialog.prompt({
+          title: "New tag",
+          message: `Enter the name of a tag to create.`,
+          container: null,
+          icon: "tag",
+          hasIcon: true,
+          inputAttrs: {
+            placeholder: "e.g. Fruits and Veges",
+            maxlength: 30,
+          },
+          trapFocus: true,
+          onConfirm: (value) => {
+            shoppinglist
+              .PostShoppingTag(value)
+              .then(() => {
+                this.pageLoading = true;
+                this.GetShoppingTags();
+                this.displayFloatingAddButton = true;
+              })
+              .catch((err) => {
+                common.DisplayFailureToast(
+                  `Failed to create tag; ${err.response.data.metadata.response}`
+                );
+                this.displayFloatingAddButton = true;
+              });
+          },
+          onCancel: () => {
+            this.displayFloatingAddButton = true;
+          },
+        });
+      },
+      TagDisplayState(tag) {
+        return this.SearchTags(tag);
+      },
+      SearchTags(tag) {
+        var vm = this;
+        return (
+          tag.name.toLowerCase().indexOf(vm.tagSearch.toLowerCase()) !== -1
+        );
+      },
+      CheckDeviceIsMobile() {
+        this.deviceIsMobile = common.DeviceIsMobile();
+      },
     },
-    newTag () {
-      if (this.newTag === 'prompt') {
-        this.AddNewTag()
-      }
-    }
-  },
-  async beforeMount () {
-    this.GetShoppingTags()
-  },
-  async created () {
-    this.CheckDeviceIsMobile()
-    window.addEventListener('resize', this.CheckDeviceIsMobile.bind(this))
-  }
-}
+  };
 </script>
 
 <style scoped></style>

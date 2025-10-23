@@ -16,62 +16,60 @@
 <template>
   <div class="item-page">
     <div class="modal-card" style="width: auto">
-      <header class="modal-card-head">
-        <p class="modal-card-title">{{ name || "Unnamed item" }}</p>
+      <header class="modal-card-head is-flex-wrap-wrap">
+        <p v-if="!itemIsLoading" class="modal-card-title">{{ name }}</p>
+        <b-skeleton v-else size="is-small" width="35%" :animated="true" />
         <p class="modal-card-subtitle">View or edit this item</p>
       </header>
       <section class="modal-card-body">
         <div>
           <b-loading
+            v-model:active="itemIsLoading"
             :is-full-page="false"
-            :active.sync="itemIsLoading"
             :can-cancel="false"
-          ></b-loading>
+          />
           <b-field label="Name">
             <b-input
-              type="text"
               v-model="name"
+              type="text"
               size="is-medium"
               maxlength="30"
               icon="text"
               placeholder="Enter a name for this item"
               icon-right="close-circle"
               icon-right-clickable
+              required
               @icon-right-click="name = ''"
               @keyup.enter.native="UpdateShoppingListItem"
-              required
-            >
-            </b-input>
+            />
           </b-field>
           <b-field label="Notes (optional)">
             <b-input
-              type="text"
               v-model="notes"
+              type="text"
               size="is-medium"
               maxlength="40"
               placeholder="Enter extra information as notes to this item"
               icon-right="close-circle"
               icon-right-clickable
+              icon="text"
               @icon-right-click="notes = ''"
               @keyup.enter.native="UpdateShoppingListItem"
-              icon="text"
-            >
-            </b-input>
+            />
           </b-field>
           <b-field label="Price (optional)">
             <b-input
+              v-model="price"
               type="number"
               step="0.01"
               placeholder="0.00"
-              v-model="price"
               icon="currency-usd"
               icon-right="close-circle"
               icon-right-clickable
+              size="is-medium"
               @icon-right-click="price = ''"
               @keyup.enter.native="UpdateShoppingListItem"
-              size="is-medium"
-            >
-            </b-input>
+            />
           </b-field>
           <b-field label="Quantity">
             <b-numberinput
@@ -82,10 +80,9 @@
               expanded
               required
               controls-position="compact"
-              @keyup.enter.native="UpdateShoppingListItem"
               icon="numeric"
-            >
-            </b-numberinput>
+              @keyup.enter.native="UpdateShoppingListItem"
+            />
           </b-field>
           <div>
             <div class="field has-addons">
@@ -98,82 +95,92 @@
             </div>
             <b-field>
               <b-dropdown>
-                <b-button
-                  icon-left="menu-down"
-                  type="is-primary"
-                  slot="trigger"
-                  size="is-medium"
-                  v-if="tagsList.length > 0 || tags.length > 0"
-                >
-                </b-button>
-                <b-dropdown-item disabled v-if="tagsList.length > 0"
-                  >Tags in this list</b-dropdown-item
-                >
-                <div
-                  v-for="existingListTag in tagsList"
-                  v-bind:key="existingListTag"
-                >
+                <template #trigger>
+                  <b-button
+                    v-if="tagsList.length > 0 || tags.length > 0"
+                    icon-left="menu-down"
+                    type="is-primary"
+                    size="is-medium"
+                  />
+                </template>
+                <b-dropdown-item v-if="tagsList.length > 0" disabled>
+                  Tags in this list
+                </b-dropdown-item>
+                <div v-for="existingListTag in tagsList" :key="existingListTag">
                   <b-dropdown-item
                     v-if="
-                      existingListTag !== '' &&
-                      existingListTag.length > 0 &&
-                      typeof existingListTag !== 'undefined'
-                    "
+                        existingListTag !== '' &&
+                        existingListTag.length > 0 &&
+                        typeof existingListTag !== 'undefined'
+                        "
                     :value="existingListTag"
                     @click="tag = existingListTag"
-                    >{{ existingListTag }}</b-dropdown-item
                   >
+                    {{ existingListTag }}
+                  </b-dropdown-item>
                 </div>
-                <b-dropdown-item disabled v-if="tags.length > 0"
-                  >Tags in all lists</b-dropdown-item
-                >
-                <div v-for="existingTag in tags" v-bind:key="existingTag">
+                <b-dropdown-item v-if="tags.length > 0" disabled>
+                  Tags in all lists
+                </b-dropdown-item>
+                <div v-for="existingTag in tags" :key="existingTag">
                   <b-dropdown-item
                     v-if="
-                      existingTag.name !== '' &&
-                      existingTag.name.length > 0 &&
-                      typeof existingTag.name !== 'undefined'
-                    "
+                        existingTag.name !== '' &&
+                        existingTag.name.length > 0 &&
+                        typeof existingTag.name !== 'undefined'
+                        "
                     :value="existingTag.name"
                     @click="tag = existingTag.name"
-                    >{{ existingTag.name }}</b-dropdown-item
                   >
+                    {{ existingTag.name }}
+                  </b-dropdown-item>
                 </div>
               </b-dropdown>
               <b-input
+                v-model="tag"
                 expanded
                 type="text"
-                v-model="tag"
                 icon="tag"
                 maxlength="30"
                 placeholder="Enter a tag to group the item"
                 icon-right="close-circle"
                 icon-right-clickable
+                size="is-medium"
                 @icon-right-click="tag = ''"
                 @keyup.enter.native="UpdateShoppingListItem"
-                size="is-medium"
-              >
-              </b-input>
+              />
             </b-field>
           </div>
           <b-field label="Obtained">
-            <b-checkbox size="is-medium" v-model="obtained">
+            <b-checkbox v-model="obtained" size="is-medium">
               Obtained
             </b-checkbox>
           </b-field>
-          <p
-            v-if="typeof price !== 'undefined' && price !== 0 && quantity > 1"
-            class="pb-2"
-          >
-            Total price with quantity: ${{ itemCurrentPrice.toFixed(2) }}
-          </p>
-          <b-field grouped>
+          <div v-if="!itemIsLoading">
+            <p
+              v-if="typeof price !== 'undefined' && price !== 0 && quantity > 1"
+              class="pb-2"
+            >
+              Total price with quantity: ${{ itemCurrentPrice.toFixed(2) }}
+            </p>
+          </div>
+          <b-skeleton v-else size="is-small" width="35%" :animated="true" />
+          <b-field class="m-0">
+            <b-button
+              size="is-medium"
+              icon-left="content-duplicate"
+              type="is-text"
+              @click="PostShoppingListItem"
+              >Duplicate item</b-button
+            >
+          </b-field>
+          <b-field addons>
             <b-button
               type="is-warning"
               size="is-medium"
               icon-left="arrow-left"
               native-type="submit"
-              @click="$parent.close()"
+              @click="$emit('close')"
             >
               Back
             </b-button>
@@ -187,7 +194,7 @@
               :disabled="submitLoading"
               @click="UpdateShoppingListItem"
             >
-              Update item
+              Update
             </b-button>
             <b-button
               type="is-danger"
@@ -196,33 +203,37 @@
               native-type="submit"
               :loading="deleteLoading"
               @click="DeleteShoppingListItem(shoppingListId, id)"
-            >
-            </b-button>
+            />
           </b-field>
-          <p>
-            Added {{ TimestampToCalendar(creationTimestamp) }}, by
-            <router-link
-              tag="a"
-              :to="{ name: 'My Flatmates', query: { id: author } }"
-              >{{ authorNames }}</router-link
-            >
-            <span v-if="templateId">
-              (templated from
+          <div v-if="!itemIsLoading">
+            <p>
+              Added {{ TimestampToCalendar(creationTimestamp) }}, by
               <router-link
                 tag="a"
-                :to="{ name: 'View shopping list', params: { id: templateId } }"
-                >{{ templateListName }}</router-link
-              >)
-            </span>
-          </p>
-          <p v-if="creationTimestamp !== modificationTimestamp">
-            Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by
-            <router-link
-              tag="a"
-              :to="{ name: 'My Flatmates', query: { id: authorLast } }"
-              >{{ authorLastNames }}</router-link
-            >
-          </p>
+                :to="{ name: 'My Flatmates', query: { id: author } }"
+              >
+                {{ authorNames }}
+              </router-link>
+              <span v-if="templateId">
+                (templated from
+                <router-link
+                  tag="a"
+                  :to="{ name: 'View shopping list', params: { id: templateId } }"
+                  >{{ templateListName }}</router-link
+                >)
+              </span>
+            </p>
+            <p v-if="creationTimestamp !== modificationTimestamp">
+              Last updated {{ TimestampToCalendar(modificationTimestamp) }}, by
+              <router-link
+                tag="a"
+                :to="{ name: 'My Flatmates', query: { id: authorLast } }"
+              >
+                {{ authorLastNames }}
+              </router-link>
+            </p>
+          </div>
+          <b-skeleton v-else size="is-small" width="35%" :animated="true" />
         </div>
       </section>
     </div>
@@ -230,200 +241,261 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import shoppinglist from '@/requests/authenticated/shoppinglist'
-import flatmates from '@/requests/authenticated/flatmates'
-import { DialogProgrammatic as Dialog } from 'buefy'
+  import common from "@/common/common";
+  import shoppinglist from "@/requests/authenticated/shoppinglist";
+  import flatmates from "@/requests/authenticated/flatmates";
+  import infotooltip from "@/components/common/info-tooltip.vue";
 
-export default {
-  name: 'shopping-item-view',
-  components: {
-    infotooltip: () => import('@/components/common/info-tooltip.vue')
-  },
-  data () {
-    return {
-      prevRoute: null,
-      shoppingListName: '',
-      authorNames: '',
-      authorLastNames: '',
-      tags: [],
-      tagsList: [],
-      itemIsLoading: true,
-      submitLoading: false,
-      deleteLoading: false,
-      templateListName: '',
-      name: '',
-      notes: '',
-      price: 0,
-      quantity: 1,
-      tag: undefined,
-      obtained: false,
-      author: '',
-      authorLast: '',
-      templateId: undefined,
-      creationTimestamp: 0,
-      modificationTimestamp: 0
-    }
-  },
-  props: {
-    id: String,
-    shoppingListId: String
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+  export default {
+    name: "ShoppingItemView",
+    components: {
+      infotooltip,
     },
-    UpdateShoppingListItem () {
-      this.submitLoading = true
-      if (this.notes === '') {
-        this.notes = undefined
-      }
-      if (this.price === 0) {
-        this.price = undefined
-      }
-      if (this.tag === '') {
-        this.tag = 'Untagged'
-      }
-
-      this.price = Number(this.price)
+    props: {
+      id: String,
+      shoppingListId: String,
+    },
+    data() {
+      return {
+        prevRoute: null,
+        shoppingListName: "",
+        authorNames: "",
+        authorLastNames: "",
+        tags: [],
+        tagsList: [],
+        itemIsLoading: true,
+        submitLoading: false,
+        deleteLoading: false,
+        templateListName: "",
+        name: "",
+        notes: "",
+        price: 0,
+        quantity: 1,
+        tag: undefined,
+        obtained: false,
+        author: "",
+        authorLast: "",
+        templateId: undefined,
+        creationTimestamp: 0,
+        modificationTimestamp: 0,
+      };
+    },
+    computed: {
+      itemCurrentPrice() {
+        return this.price * this.quantity;
+      },
+    },
+    async beforeMount() {
       shoppinglist
-        .UpdateShoppingListItem(
-          this.shoppingListId,
-          this.id,
-          this.name,
-          this.notes,
-          this.price,
-          this.quantity,
-          this.tag,
-          this.obtained
-        )
+        .GetShoppingList(this.shoppingListId)
         .then((resp) => {
-          var item = resp.data.spec
-          if (item.id !== '' && typeof item.id !== 'undefined') {
-            common.DisplaySuccessToast('Updated item successfully')
-            this.$parent.close()
-          } else {
-            this.submitLoading = false
-            common.DisplayFailureToast('Unable to find created shopping item')
+          var list = resp.data.spec;
+          this.shoppingListName = list.name;
+          return shoppinglist.GetShoppingListItem(this.shoppingListId, this.id);
+        })
+        .then((resp) => {
+          var item = resp.data.spec;
+          this.name = item.name;
+          this.notes = item.notes;
+          this.price = item.price;
+          this.quantity = item.quantity;
+          this.tag = item.tag;
+          this.obtained = item.obtained;
+          this.author = item.author;
+          this.authorLast = item.authorLast;
+          this.creationTimestamp = item.creationTimestamp;
+          this.modificationTimestamp = item.modificationTimestamp;
+          this.templateId = item.templateId;
+          return flatmates.GetFlatmate(item.author);
+        })
+        .then((resp) => {
+          this.authorNames = resp.data.spec.names;
+          return flatmates.GetFlatmate(this.authorLast);
+        })
+        .then((resp) => {
+          this.authorLastNames = resp.data.spec.names;
+          return shoppinglist.GetAllShoppingListItemTags();
+        })
+        .then((resp) => {
+          this.itemIsLoading = false;
+          this.tags = resp.data.list || [];
+          return shoppinglist.GetShoppingListItemTags(this.shoppingListId);
+        })
+        .then((resp) => {
+          this.tagsList = resp.data.list || [];
+          if (
+            typeof this.templateId === "undefined" ||
+            this.templateId === ""
+          ) {
+            return;
           }
+          return shoppinglist.GetShoppingList(this.templateId);
+        })
+        .then((resp) => {
+          if (
+            typeof this.templateId === "undefined" ||
+            this.templateId === ""
+          ) {
+            return;
+          }
+          this.templateListName = resp.data.spec.name;
         })
         .catch((err) => {
+          if (err.response.status === 404) {
+            common.DisplayFailureToast(
+              this.$buefy,
+              "Error item not found" +
+                "<br/>" +
+                err.response.data.metadata.response
+            );
+            this.$router.push({
+              name: "View shopping list",
+              params: { id: this.shoppingListId },
+            });
+            return;
+          }
           common.DisplayFailureToast(
-            'Failed to add shopping list item' +
-              ' - ' +
+            this.$buefy,
+            "Error loading the shopping list item" +
+              "<br/>" +
               err.response.data.metadata.response
-          )
-          this.submitLoading = false
-        })
+          );
+        });
     },
-    DeleteShoppingListItem (listId, itemId) {
-      Dialog.confirm({
-        title: 'Delete item',
-        message:
-          'Are you sure that you wish to delete this shopping list item?' +
-          '<br/>' +
-          'This action cannot be undone.',
-        confirmText: 'Delete item',
-        type: 'is-danger',
-        hasIcon: true,
-        onConfirm: () => {
-          this.deleteLoading = true
-          shoppinglist
-            .DeleteShoppingListItem(listId, itemId)
-            .then((resp) => {
-              common.DisplaySuccessToast(resp.data.metadata.response)
-              setTimeout(() => {
-                this.$parent.close()
-              }, 1 * 1000)
-            })
-            .catch((err) => {
-              this.deleteLoading = false
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      UpdateShoppingListItem() {
+        this.submitLoading = true;
+        if (this.notes === "") {
+          this.notes = undefined;
+        }
+        if (this.price === 0) {
+          this.price = undefined;
+        }
+        if (this.tag === "") {
+          this.tag = "Untagged";
+        }
+
+        this.price = Number(this.price);
+        shoppinglist
+          .UpdateShoppingListItem(
+            this.shoppingListId,
+            this.id,
+            this.name,
+            this.notes,
+            this.price,
+            this.quantity,
+            this.tag,
+            this.obtained
+          )
+          .then((resp) => {
+            var item = resp.data.spec;
+            if (item.id !== "" && typeof item.id !== "undefined") {
+              common.DisplaySuccessToast(
+                this.$buefy,
+                "Updated item successfully"
+              );
+              this.$emit("close");
+            } else {
+              this.submitLoading = false;
               common.DisplayFailureToast(
-                'Failed to delete shopping list item' +
-                  ' - ' +
-                  err.response.data.metadata.response
-              )
-            })
-        }
-      })
-    },
-    TimestampToCalendar (timestamp) {
-      return common.TimestampToCalendar(timestamp)
-    }
-  },
-  computed: {
-    itemCurrentPrice () {
-      return this.price * this.quantity
-    }
-  },
-  async beforeMount () {
-    shoppinglist
-      .GetShoppingList(this.shoppingListId)
-      .then((resp) => {
-        var list = resp.data.spec
-        this.shoppingListName = list.name
-        return shoppinglist.GetShoppingListItem(this.shoppingListId, this.id)
-      })
-      .then((resp) => {
-        var item = resp.data.spec
-        this.name = item.name
-        this.notes = item.notes
-        this.price = item.price
-        this.quantity = item.quantity
-        this.tag = item.tag
-        this.obtained = item.obtained
-        this.author = item.author
-        this.authorLast = item.authorLast
-        this.creationTimestamp = item.creationTimestamp
-        this.modificationTimestamp = item.modificationTimestamp
-        this.templateId = item.templateId
-        return flatmates.GetFlatmate(item.author)
-      })
-      .then((resp) => {
-        this.authorNames = resp.data.spec.names
-        return flatmates.GetFlatmate(this.authorLast)
-      })
-      .then((resp) => {
-        this.authorLastNames = resp.data.spec.names
-        return shoppinglist.GetAllShoppingListItemTags()
-      })
-      .then((resp) => {
-        this.itemIsLoading = false
-        this.tags = resp.data.list || []
-        return shoppinglist.GetShoppingListItemTags(this.shoppingListId)
-      })
-      .then((resp) => {
-        this.tagsList = resp.data.list || []
-        if (typeof this.templateId === 'undefined' || this.templateId === '') {
-          return
-        }
-        return shoppinglist.GetShoppingList(this.templateId)
-      })
-      .then((resp) => {
-        if (typeof this.templateId === 'undefined' || this.templateId === '') {
-          return
-        }
-        this.templateListName = resp.data.spec.name
-      })
-      .catch((err) => {
-        if (err.response.status === 404) {
-          common.DisplayFailureToast(
-            'Error item not found' +
-              '<br/>' +
-              err.response.data.metadata.response
-          )
-          this.$router.push({
-            name: 'View shopping list',
-            params: { id: this.shoppingListId }
+                this.$buefy,
+                "Unable to find created shopping item"
+              );
+            }
           })
-          return
-        }
-        common.DisplayFailureToast(
-          'Error loading the shopping list item' +
-            '<br/>' +
-            err.response.data.metadata.response
-        )
-      })
-  }
-}
+          .catch((err) => {
+            common.DisplayFailureToast(
+              this.$buefy,
+              "Failed to update shopping list item" +
+                " - " +
+                err.response.data.metadata.response
+            );
+            this.submitLoading = false;
+          });
+      },
+      PostShoppingListItem() {
+        this.$buefy.dialog.confirm({
+          title: "Duplicate item",
+          message:
+            "Are you sure that you wish to duplicate this shopping list item?",
+          confirmText: "Duplicate item",
+          type: "is-warning",
+          hasIcon: true,
+          onConfirm: () => {
+            this.submitLoading = true;
+            if (this.notes === "") {
+              this.notes = undefined;
+            }
+            if (this.price === 0) {
+              this.price = undefined;
+            } else {
+              this.price = parseFloat(this.price);
+            }
+
+            shoppinglist
+              .PostShoppingListItem(this.shoppingListId, this.name, this.notes, this.price, this.quantity, this.tag)
+              .then((resp) => {
+                var item = resp.data.spec;
+                if (item.id === "" || typeof item.id === "undefined") {
+                  this.submitLoading = false;
+                  common.DisplayFailureToast(
+                    this.$buefy,
+                    "Unable to find created shopping item"
+                  );
+                }
+                this.$emit('close')
+              })
+              .catch((err) => {
+                this.submitLoading = false;
+                common.DisplayFailureToast(
+                  this.$buefy,
+                  `Failed to add shopping list item - ${err.response.data.metadata.response}`
+                );
+              });
+          },
+        });
+      },
+      DeleteShoppingListItem(listId, itemId) {
+        this.$buefy.dialog.confirm({
+          title: "Delete item",
+          message:
+            "Are you sure that you wish to delete this shopping list item?" +
+            "<br/>" +
+            "This action cannot be undone.",
+          confirmText: "Delete item",
+          type: "is-danger",
+          hasIcon: true,
+          onConfirm: () => {
+            this.deleteLoading = true;
+            shoppinglist
+              .DeleteShoppingListItem(listId, itemId)
+              .then((resp) => {
+                common.DisplaySuccessToast(
+                  this.$buefy,
+                  resp.data.metadata.response
+                );
+                setTimeout(() => {
+                  this.$emit("close");
+                }, 1 * 1000);
+              })
+              .catch((err) => {
+                this.deleteLoading = false;
+                common.DisplayFailureToast(
+                  this.$buefy,
+                  "Failed to delete shopping list item" +
+                    " - " +
+                    err.response.data.metadata.response
+                );
+              });
+          },
+        });
+      },
+      TimestampToCalendar(timestamp) {
+        return common.TimestampToCalendar(timestamp);
+      },
+    },
+  };
 </script>

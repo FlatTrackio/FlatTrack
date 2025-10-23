@@ -11,20 +11,16 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import Vue from 'vue'
-import App from './App.vue'
-import router from './router'
-import Buefy from 'buefy'
-import VueMaterial from 'vue-material'
-import 'vue-material/dist/vue-material.min.css'
-import './registerServiceWorker'
+import { createApp } from "vue";
+import App from "./App.vue";
+import router from "./router";
+import Buefy from "buefy";
+import "./registerServiceWorker";
+import "buefy/dist/css/buefy.css";
 
-Vue.use(VueMaterial)
-Vue.use(Buefy, {
-  defaultIconPack: 'mdi'
-})
-Vue.config.productionTip = false
-new Vue({
-  router,
-  render: h => h(App)
-}).$mount('#app')
+const app = createApp(App);
+app.use(Buefy, {
+  defaultIconPack: "mdi",
+});
+app.use(router);
+app.mount("#app");

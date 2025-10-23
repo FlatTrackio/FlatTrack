@@ -18,36 +18,50 @@
 
 const themes = [
   {
-    name: 'light',
-    icon: 'weather-sunny'
-  }
-]
-const themeDefault = 'light'
+    name: "system",
+    icon: "cogs",
+  },
+  {
+    name: "light",
+    icon: "weather-sunny",
+  },
+  {
+    name: "dark",
+    icon: "weather-night",
+  },
+];
+const themeDefault = themes[0];
 
 // GetTheme
 // returns the current theme
-function GetTheme () {
-  return JSON.parse(localStorage.getItem('appTheme')) || {}
+function GetTheme() {
+  return JSON.parse(localStorage.getItem("appTheme")) || themes[0];
 }
 
 // SetTheme
 // sets the current theme
-function SetTheme (name) {
-  var theme = themes.filter((theme) => theme.name === name)
-  if (typeof theme === 'undefined') {
-    theme = themes.filter((theme) => theme.name === themeDefault)
+function SetTheme(name) {
+  let theme = themes.filter((theme) => theme.name === name);
+  if (typeof theme === "undefined") {
+    theme = themes.filter((theme) => theme.name === themeDefault);
   }
-  return localStorage.setItem('appTheme', JSON.stringify(theme[0] || {}))
+  document.documentElement.setAttribute("data-theme", theme[0].name);
+  return localStorage.setItem("appTheme", JSON.stringify(theme[0] || {}));
+}
+
+function ListThemes() {
+  return themes;
 }
 
 // SetThemeDefault
 // sets the default theme
-function SetThemeDefault () {
-  SetTheme('light')
+function SetThemeDefault() {
+  SetTheme(themeDefault.name);
 }
 
 export default {
   GetTheme,
   SetTheme,
-  SetThemeDefault
-}
+  SetThemeDefault,
+  ListThemes,
+};

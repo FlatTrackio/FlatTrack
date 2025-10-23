@@ -14,29 +14,36 @@
 -->
 
 <template>
-  <div>
-    <section class="hero is-info navbar-shadow ft">
-      <div class="hero-body">
-        <p class="title">
-          FlatTrack
-        </p>
-        <p class="subtitle">
-          Collaborate with your flatmates
-        </p>
-      </div>
-    </section>
-  </div>
+  <b-breadcrumb separator="has-arrow-separator">
+    <b-breadcrumb-item tag="router-link" :to="{ name: backLinkName }">
+      {{ backLinkName }}
+    </b-breadcrumb-item>
+    <b-breadcrumb-item tag="router-link" :to="{ name: currentPageName }" active>
+      {{ currentPageNameOverride || currentPageName }}
+    </b-breadcrumb-item>
+    <b-button
+      icon-left="content-copy"
+      size="is-small"
+      @click="CopyHrefToClipboard()"
+    />
+  </b-breadcrumb>
 </template>
 
 <script>
+  import common from "@/common/common";
+
   export default {
-    name: "HeaderDisplay",
-    props: {},
-    data() {
-      return {};
+    name: "BreadcrumbNav",
+    props: {
+      backLinkName: String,
+      currentPageName: String,
+      currentPageNameOverride: String,
     },
-    created() {},
+    data() {},
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+    },
   };
 </script>
-
-<style scoped></style>

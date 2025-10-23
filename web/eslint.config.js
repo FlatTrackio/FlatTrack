@@ -11,30 +11,14 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-module.exports = {
-  root: true,
-  env: {
-    node: true
+import { defineConfig } from "eslint/config";
+import pluginVue from "eslint-plugin-vue";
+
+export default defineConfig([
+  ...pluginVue.configs["flat/recommended"],
+  {
+    rules: {
+      "no-debugger": Deno.env.get("ENV") === "production" ? "error" : "off",
+    },
   },
-  'extends': [
-    'plugin:vue/essential',
-    '@vue/standard',
-    '@vue/typescript'
-  ],
-  rules: {
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
-  },
-  parserOptions: {
-    parser: '@typescript-eslint/parser'
-  },
-  overrides: [
-    {
-      files: [
-        '**/__test__/*.{j,t}s?(x)'
-      ],
-      env: {
-        mocha: true
-      }
-    }
-  ]
-}
+]);
