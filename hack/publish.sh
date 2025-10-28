@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 set -o errexit
 set -o nounset
@@ -75,10 +75,23 @@ if [ "${TEST_TARBALL:-}" = true ]; then
     done
     IMG=$(crane --insecure push /tmp/flattrack.tar localhost:5001/ft)
 
+    CORRECT=true
+
     RESULT="$(crane export "$IMG" - | tar -tvf - |
         grep -E '(etc/passwd|usr/share/zoneinfo|etc/ssl/certs|ko-app/flattrack|ko/web/assets/.*\.js|ko/migrations/.*\.sql|ko/sbom.spdx.json)')"
     CODE=$?
     if [ ! $CODE -eq 0 ]; then
+        CORRECT=false
+    fi
+    TEMPDIR="$(mktemp -d)"
+    crane export "$IMG" - | tar -xf - -C "$TEMPDIR"
+    RESULT="$(file "$TEMPDIR/ko-app/flattrack" | grep -q -E 'ELF.*statically linked')"
+    CODE=$?
+    if [ ! $CODE -eq 0 ]; then
+        CORRECT=false
+    fi
+    echo "$RESULT"
+    if [ "$CORRECT" = false ]; then
         echo "error: failed to build image correctly" >/dev/stderr
         echo "$RESULT" >/dev/stderr
         kill "$REGPID"
@@ -88,7 +101,12 @@ if [ "${TEST_TARBALL:-}" = true ]; then
     kill "$REGPID"
 fi
 
-echo "Published image to: $IMAGE"
+IMAGE_DEST_REFS=""
+for DEST in $(echo "$IMAGE_DESTINATIONS" | tr ',' ' '); do
+    IMAGE_DEST_REFS="\n- $KO_DOCKER_REPO:$DEST$IMAGE_DEST_REFS"
+done
+
+echo -e "Published image to: \n- $IMAGE $IMAGE_DEST_REFS"
 if [ -n "${IMAGE_RESULT_FILE:-}" ]; then
     printf "%s" "$IMAGE" >"$IMAGE_RESULT_FILE"
 fi

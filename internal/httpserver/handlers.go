@@ -2935,7 +2935,12 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 			HTTPMethod:   http.MethodPatch,
 			RequireAuth:  true,
 		},
-		{EndpointPath: "/apps/shoppinglist/lists/{id}", HandlerFunc: h.PutShoppingList, HTTPMethod: http.MethodPut, RequireAuth: true},
+		{
+			EndpointPath: "/apps/shoppinglist/lists/{id}",
+			HandlerFunc:  h.PutShoppingList,
+			HTTPMethod:   http.MethodPut,
+			RequireAuth:  true,
+		},
 		{
 			EndpointPath: "/apps/shoppinglist/lists/{id}/completed",
 			HandlerFunc:  h.PatchShoppingListCompleted,
