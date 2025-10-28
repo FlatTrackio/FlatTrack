@@ -17,11 +17,19 @@
   <div>
     <div class="container">
       <section class="section">
-        <h1 class="title is-1">My Account</h1>
-        <p class="subtitle is-4">Manage your account</p>
-        <p></p>
-        <br />
-        <div v-for="app in apps" v-bind:key="app">
+        <h1 class="title is-1">
+          My Account
+        </h1>
+        <p class="subtitle is-4">
+          Manage your account
+        </p>
+        <p />
+        <br>
+        <div
+          v-for="app in apps"
+          :key="app"
+          class="mb-5"
+        >
           <div
             class="card pointer-cursor-on-hover"
             @click="$router.push({ name: app.routeName })"
@@ -29,43 +37,57 @@
             <div class="card-content">
               <div class="media">
                 <div class="media-left">
-                  <b-icon :icon="app.icon" size="is-medium"></b-icon>
+                  <b-icon
+                    :icon="app.icon"
+                    size="is-medium"
+                  />
                 </div>
                 <div class="media-content">
-                  <p class="title is-3">{{ app.name }}</p>
-                  <p class="subtitle is-5">{{ app.description }}</p>
+                  <p class="title is-3">
+                    {{ app.name }}
+                  </p>
+                  <p class="subtitle is-5">
+                    {{ app.description }}
+                  </p>
                 </div>
                 <div class="media-right">
                   <b-icon
                     icon="chevron-right"
                     size="is-medium"
                     type="is-midgray"
-                  ></b-icon>
+                  />
                 </div>
               </div>
             </div>
-            <div class="content"></div>
+            <div class="content" />
           </div>
-          <br />
         </div>
         <div
-          class="card pointer-cursor-on-hover"
           v-if="typeof CurrentTheme === 'object'"
-          disabled
-          style="display: none"
+          class="card pointer-cursor-on-hover"
         >
-          <div class="card-content">
+          <div
+            class="card-content"
+            @click="NextTheme"
+          >
             <div class="media">
               <div class="media-left">
-                <b-icon :icon="CurrentTheme.icon" size="is-medium"></b-icon>
+                <b-icon
+                  :icon="CurrentTheme.icon"
+                  size="is-medium"
+                />
               </div>
               <div class="media-content">
-                <p class="title is-3">Current theme</p>
-                <p class="subtitle is-5">{{ CurrentTheme.name }}</p>
+                <p class="title is-3">
+                  Current theme
+                </p>
+                <p class="subtitle is-5">
+                  {{ CurrentTheme.name }}
+                </p>
               </div>
             </div>
           </div>
-          <div class="content"></div>
+          <div class="content" />
         </div>
       </section>
     </div>
@@ -73,40 +95,51 @@
 </template>
 
 <script>
-import theme from '@/common/theme'
+  import theme from "@/common/theme";
 
-export default {
-  name: 'account-home',
-  data () {
-    return {
-      apps: [
-        {
-          name: 'Profile',
-          description: 'Manage your general information',
-          icon: 'account-circle',
-          routeName: 'Account Profile'
-        },
-        {
-          name: 'Security',
-          description: 'Manage your account security',
-          icon: 'lock-question',
-          routeName: 'Account Security'
-        },
-        {
-          name: 'Settings',
-          description: 'Manage settings for this device',
-          icon: 'account-cog',
-          routeName: 'Account Settings'
+  export default {
+    name: "AccountHome",
+    data() {
+      return {
+        apps: [
+          {
+            name: "Profile",
+            description: "Manage your general information",
+            icon: "account-circle",
+            routeName: "Account Profile",
+          },
+          {
+            name: "Security",
+            description: "Manage your account security",
+            icon: "lock-question",
+            routeName: "Account Security",
+          },
+          {
+            name: "Settings",
+            description: "Manage settings for this device",
+            icon: "account-cog",
+            routeName: "Account Settings",
+          },
+        ],
+      CurrentTheme:  theme.GetTheme(),
+      };
+    },
+    methods: {
+      NextTheme() {
+        const currentTheme = theme.GetTheme();
+        const themes = theme.ListThemes();
+        const currentThemeIndex = themes.findIndex(i => i.name === currentTheme.name)
+        const nextThemeIndex = currentThemeIndex + 1
+        if (currentThemeIndex === -1) {
+          theme.SetThemeDefault()
+          return
         }
-      ]
-    }
-  },
-  computed: {
-    CurrentTheme () {
-      return theme.GetTheme()
-    }
-  }
-}
+        const nextTheme = themes[nextThemeIndex % themes.length]
+        theme.SetTheme(nextTheme.name)
+        this.CurrentTheme = theme.GetTheme()
+      },
+    },
+  };
 </script>
 
 <style scoped></style>

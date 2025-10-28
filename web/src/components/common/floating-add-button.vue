@@ -18,64 +18,76 @@
     :class="deviceIsMobile ? 'floating-add-button-mobile' : ''"
     class="floating-add-button"
   >
-    <md-speed-dial md-direction="bottom md-bottom-right">
-      <md-speed-dial-target
-        @click="goToRouterLinkOrRunFunc"
-        class="floating-add-button-colour"
-      >
-        <md-icon>add</md-icon>
-      </md-speed-dial-target>
-    </md-speed-dial>
+    <div
+      class="floating-add-button-colour"
+      @click="goToRouterLinkOrRunFunc"
+    >
+      <b-icon
+        icon="plus"
+        size="is-medium"
+        type="is-white"
+      />
+    </div>
   </div>
 </template>
 
 <script>
-import common from '@/common/common'
+  import common from "@/common/common";
 
-export default {
-  name: 'floating-add-button',
-  data () {
-    return {
-      deviceIsMobile: false
-    }
-  },
-  props: {
-    routerLink: String,
-    func: Function
-  },
-  methods: {
-    goToRouterLinkOrRunFunc () {
-      var routerLink = this.routerLink
-      var func = this.func
-      if (routerLink !== '' && typeof routerLink !== 'undefined') {
-        this.$router.push(routerLink)
-        return
-      }
-      if (typeof func === 'function') {
-        func()
-      }
-    }
-  },
-  async beforeMount () {
-    this.deviceIsMobile = common.DeviceIsMobile()
-  }
-}
+  export default {
+    name: "FloatingAddButton",
+    props: {
+      routerLink: String,
+      func: Function,
+    },
+    data() {
+      return {
+        deviceIsMobile: false,
+      };
+    },
+    async beforeMount() {
+      this.deviceIsMobile = common.DeviceIsMobile();
+    },
+    methods: {
+      goToRouterLinkOrRunFunc() {
+        var routerLink = this.routerLink;
+        var func = this.func;
+        if (routerLink !== "" && typeof routerLink !== "undefined") {
+          this.$router.push(routerLink);
+          return;
+        }
+        if (typeof func === "function") {
+          func();
+        }
+      },
+    },
+  };
 </script>
 
 <style scope>
-.floating-add-button {
-  display: block;
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  z-index: 100;
-}
+  .floating-add-button {
+    display: block;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    z-index: 100;
+    margin-bottom: 1rem;
+    margin-right: 1rem;
+  }
 
-.floating-add-button-mobile {
-  margin-bottom: 50px;
-}
+  .floating-add-button div {
+    display: flex;
+    border-radius: 50%;
+    padding: 0.75rem;
+    box-shadow: 0 0 21px -6px #000000b0;
+  }
 
-.floating-add-button-colour {
-  background-color: #448aff;
-}
+  .floating-add-button-mobile {
+    margin-bottom: 5rem;
+    margin-right: 1.5rem;
+  }
+
+  .floating-add-button-colour {
+    background-color: #448aff;
+  }
 </style>

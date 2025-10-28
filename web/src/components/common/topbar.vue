@@ -18,10 +18,9 @@
     <b-navbar
       class="navbar-shadow gradient-blue"
       :fixed-top="ratherSmallerScreen !== true"
-      type="is-info"
       transparent="false"
     >
-      <template slot="brand">
+      <template #brand>
         <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
           <!-- <img -->
           <!--   src="" -->
@@ -29,23 +28,16 @@
           <!--   /> -->
           <h1 class="title is-5" style="color: #fff">
             FlatTrack
-            <span style="font-weight: normal">
-              {{ flatName }}
-            </span>
+            <span style="font-weight: normal"> {{ flatName }} </span>
           </h1>
         </b-navbar-item>
       </template>
-      <template slot="start">
+      <template #start>
         <b-navbar-item tag="router-link" :to="{ name: 'Home' }">
           Home
         </b-navbar-item>
-        <b-navbar-item
-          href="https://flattrack.io/help"
-          tag="a"
-          target="_blank"
-          v-if="false"
-        >
-          FlatTrack Help
+        <b-navbar-item href="https://flattrack.io/" tag="a" target="_blank">
+          FlatTrack site
         </b-navbar-item>
         <b-navbar-item
           tag="router-link"
@@ -66,42 +58,46 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import flatInfo from '@/requests/authenticated/flatInfo'
+  import common from "@/common/common";
+  import flatInfo from "@/requests/authenticated/flatInfo";
 
-export default {
-  name: 'top-bar',
-  data () {
-    return {
-      flatName: 'My Flat',
-      ratherSmallerScreen: false
-    }
-  },
-  methods: {
-    signOut () {
-      common.SignoutDialog()
+  export default {
+    name: "TopBar",
+    data() {
+      return {
+        flatName: "My Flat",
+        ratherSmallerScreen: false,
+      };
     },
-    GetFlatInfo () {
-      flatInfo.GetFlatName().then((resp) => {
-        this.flatName = resp.data.spec
-      })
-    }
-  },
-  async beforeMount () {
-    this.GetFlatInfo()
-    if (window.innerWidth <= 330) {
-      this.ratherSmallerScreen = true
-    }
-  }
-}
+    async beforeMount() {
+      this.GetFlatInfo();
+      if (window.innerWidth <= 330) {
+        this.ratherSmallerScreen = true;
+      }
+    },
+    methods: {
+      signOut() {
+        common.SignoutDialog();
+      },
+      GetFlatInfo() {
+        flatInfo.GetFlatName().then((resp) => {
+          this.flatName = resp.data.spec;
+        });
+      },
+    },
+  };
 </script>
 
 <style>
-#topbar {
-  z-index: 100;
-}
+  #topbar {
+    z-index: 100;
+  }
 
-.gradient-blue {
-  background-image: linear-gradient(141deg, #04a6d7, #209cee 71%, #3287f5);
-}
+  .gradient-blue {
+    background-image: linear-gradient(141deg, #04a6d7, #209cee 71%, #3287f5);
+  }
+
+  a.navbar-burger {
+      --bulma-navbar-burger-color: hsl(0, 0%, 100%);
+  }
 </style>

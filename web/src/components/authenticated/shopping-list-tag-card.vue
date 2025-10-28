@@ -17,11 +17,23 @@
   <div class="card pointer-cursor-on-hover">
     <div class="card-content card-content-list">
       <div class="media">
-        <div class="media-left" @click="UpdateTag(tag)">
-          <b-icon icon="tag" size="is-medium" type="is-midgray"></b-icon>
+        <div
+          class="media-left"
+          @click="UpdateTag(tag)"
+        >
+          <b-icon
+            icon="tag"
+            size="is-medium"
+            type="is-midgray"
+          />
         </div>
-        <div class="media-content" @click="UpdateTag(tag)">
-          <p class="title is-4">{{ tag.name }}</p>
+        <div
+          class="media-content"
+          @click="UpdateTag(tag)"
+        >
+          <p class="title is-4">
+            {{ tag.name }}
+          </p>
           <p class="subtitle is-6">
             <span v-if="tag.creationTimestamp == tag.modificationTimestamp">
               Created {{ TimestampToCalendar(tag.creationTimestamp) }}, by
@@ -35,7 +47,11 @@
         </div>
         <div class="media-right">
           <!-- Delete button -->
-          <b-tooltip label="Delete" class="is-paddingless" :delay="200">
+          <b-tooltip
+            label="Delete"
+            class="is-paddingless"
+            :delay="200"
+          >
             <b-button
               type="is-danger"
               icon-right="delete"
@@ -52,21 +68,38 @@
 import common from '@/common/common'
 import shoppinglist from '@/requests/authenticated/shoppinglist'
 import flatmates from '@/requests/authenticated/flatmates'
-import { DialogProgrammatic as Dialog } from 'buefy'
 
 export default {
-  name: 'shopping-tag-card',
+  name: 'ShoppingTagCard',
+  props: {
+    tag: Object,
+    index: Number,
+    tags: Object,
+    displayFloatingAddButton: Boolean
+  },
   data () {
     return {
       authorNames: '...',
       authorNamesLast: '...'
     }
   },
-  props: {
-    tag: Object,
-    index: Number,
-    tags: Object,
-    displayFloatingAddButton: Boolean
+  async beforeMount () {
+    flatmates
+      .GetFlatmate(this.tag.author)
+      .then((resp) => {
+        this.authorNames = resp.data.spec.names
+        return flatmates.GetFlatmate(this.tag.authorLast)
+      })
+      .then((resp) => {
+        this.authorNamesLast = resp.data.spec.names
+      })
+      .catch((err) => {
+        common.DisplayFailureToast(
+          'Unable to find author of tag' +
+            '<br/>' +
+            err.response.data.metadata.response
+        )
+      })
   },
   methods: {
     TimestampToCalendar (timestamp) {
@@ -92,11 +125,11 @@ export default {
             .then((resp) => {
               this.pageLoading = true
               tag.name = resp.data.spec.name
-              common.DisplaySuccessToast(resp.data.metadata.response)
+              common.DisplaySuccessToast(this.$buefy, resp.data.metadata.response)
               this.$emit('displayFloatingAddButton', true)
             })
             .catch((err) => {
-              common.DisplayFailureToast(
+              common.DisplayFailureToast(this.$buefy,
                 `Failed to create tag; ${err.response.data.metadata.response}`
               )
               this.$emit('displayFloatingAddButton', true)
@@ -109,7 +142,7 @@ export default {
     },
     DeleteShoppingListTag (id, index) {
       this.$emit('displayFloatingAddButton', false)
-      Dialog.confirm({
+      this.$buefy.dialog.confirm({
         title: 'Delete tag',
         message:
           'Are you sure that you wish to delete this shopping list tag?' +
@@ -126,14 +159,14 @@ export default {
           shoppinglist
             .DeleteShoppingTag(id)
             .then((resp) => {
-              common.DisplaySuccessToast(resp.data.metadata.response)
+              common.DisplaySuccessToast(this.$buefy, resp.data.metadata.response)
               let removedFromTags = this.tags
               removedFromTags.splice(this.index, 1)
               this.$emit('tags', removedFromTags)
               this.$emit('displayFloatingAddButton', true)
             })
             .catch((err) => {
-              common.DisplayFailureToast(
+              common.DisplayFailureToast(this.$buefy,
                 'Failed to delete shopping tag' +
                   ' - ' +
                   err.response.data.metadata.response
@@ -147,24 +180,6 @@ export default {
         }
       })
     }
-  },
-  async beforeMount () {
-    flatmates
-      .GetFlatmate(this.tag.author)
-      .then((resp) => {
-        this.authorNames = resp.data.spec.names
-        return flatmates.GetFlatmate(this.tag.authorLast)
-      })
-      .then((resp) => {
-        this.authorNamesLast = resp.data.spec.names
-      })
-      .catch((err) => {
-        common.DisplayFailureToast(
-          'Unable to find author of tag' +
-            '<br/>' +
-            err.response.data.metadata.response
-        )
-      })
   }
 }
 </script>

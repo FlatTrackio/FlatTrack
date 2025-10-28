@@ -17,36 +17,27 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav
-          class="breadcrumb is-medium has-arrow-separator"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <router-link :to="{ name: 'Account' }">My account</router-link>
-            </li>
-            <li class="is-active">
-              <router-link :to="{ name: 'Account Settings' }"
-                >Settings</router-link
-              >
-            </li>
-          </ul>
-          <b-button
-            @click="CopyHrefToClipboard()"
-            icon-left="content-copy"
-            size="is-small"
-          ></b-button>
-        </nav>
-        <h1 class="title is-1">Settings</h1>
-        <p class="subtitle is-3">Manage settings for this device</p>
+        <breadcrumb
+          back-link-name="Account"
+          :current-page-name="$route.name"
+        />
+        <h1 class="title is-1">
+          Settings
+        </h1>
+        <p class="subtitle is-3">
+          Manage settings for this device
+        </p>
         <b-loading
+          v-model:active="pageLoading"
           :is-full-page="false"
-          :active.sync="pageLoading"
           :can-cancel="false"
-        ></b-loading>
+        />
 
         <b-field label="Miscellaneous">
-          <b-checkbox size="is-medium" v-model="enableAnimations">
+          <b-checkbox
+            v-model="enableAnimations"
+            size="is-medium"
+          >
             Enable Animations
           </b-checkbox>
         </b-field>
@@ -57,17 +48,16 @@
 
 <script>
 import common from '@/common/common'
+  import breadcrumb from "@/components/common/breadcrumb.vue";
 
 export default {
-  name: 'settings-home',
+  name: 'SettingsHome',
+    components: {
+      breadcrumb,
+    },
   data () {
     return {
       enableAnimations: common.GetEnableAnimations() !== 'false'
-    }
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
     }
   },
   watch: {
@@ -77,6 +67,11 @@ export default {
         common.Hooray()
       }
     }
-  }
+  },
+  methods: {
+    CopyHrefToClipboard () {
+      common.CopyHrefToClipboard()
+    }
+  },
 }
 </script>

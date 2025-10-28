@@ -17,81 +17,74 @@
   <div>
     <div class="container">
       <section class="section">
-        <nav
-          class="breadcrumb is-medium has-arrow-separator"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <router-link :to="{ name: 'Shopping list' }"
-                >Shopping list</router-link
-              >
-            </li>
-            <li class="is-active">
-              <router-link :to="{ name: 'New shopping list' }"
-                >New shopping list</router-link
-              >
-            </li>
-          </ul>
-          <b-button
-            @click="CopyHrefToClipboard()"
-            icon-left="content-copy"
-            size="is-small"
-          ></b-button>
-        </nav>
+        <breadcrumb
+          back-link-name="Shopping list"
+          :current-page-name="$route.name"
+        />
         <div>
-          <h1 class="title is-1">New shopping list</h1>
-          <p class="subtitle is-3">Start a new list for your next shop</p>
+          <h1 class="title is-1">
+            New shopping list
+          </h1>
+          <p class="subtitle is-3">
+            Start a new list for your next shop
+          </p>
           <b-field label="Name">
             <b-input
-              type="text"
               v-model="name"
+              type="text"
               maxlength="30"
-              icon="textbox"
+              icon="form-textbox"
               size="is-medium"
               placeholder="Enter a title for this list"
               autofocus
               icon-right="close-circle"
               icon-right-clickable
+              required
               @icon-right-click="name = ''"
               @keyup.enter.native="PostNewShoppingList"
-              required
-            >
-            </b-input>
+            />
           </b-field>
           <b-field label="Notes (optional)">
             <b-input
+              v-model="notes"
               type="text"
               size="is-medium"
-              v-model="notes"
               icon="text"
               placeholder="Enter extra information"
-              @keyup.enter.native="PostNewShoppingList"
               icon-right="close-circle"
               icon-right-clickable
-              @icon-right-click="notes = ''"
               maxlength="100"
-            >
-            </b-input>
+              @keyup.enter.native="PostNewShoppingList"
+              @icon-right-click="notes = ''"
+            />
           </b-field>
-          <b-field label="Template list (optional)" v-if="lists.length > 0">
+          <b-field
+            v-if="lists.length > 0"
+            label="Template list (optional)"
+          >
             <b-select
-              placeholder="Optionally select a list to base a new list off"
               v-model="listTemplate"
+              placeholder="Optionally select a list to base a new list off"
               icon="content-copy"
               expanded
               size="is-medium"
             >
-              <option value="">No template</option>
-              <option disabled></option>
-              <option v-for="list in lists" :value="list.id" :key="list.id">
+              <option value="">
+                No template
+              </option>
+              <option disabled />
+              <option
+                v-for="list in lists"
+                :key="list.id"
+                :value="list.id"
+              >
                 {{ list.name }}
               </option>
             </b-select>
           </b-field>
           <div
-            class="field"
             v-if="listTemplate !== '' && typeof listTemplate !== 'undefined'"
+            class="field"
           >
             <label class="label"> Select items </label>
             <div class="field">
@@ -151,61 +144,67 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import shoppinglist from '@/requests/authenticated/shoppinglist'
+  import common from "@/common/common";
+  import shoppinglist from "@/requests/authenticated/shoppinglist";
+  import breadcrumb from "@/components/common/breadcrumb.vue";
 
-export default {
-  name: 'shopping-list-new',
-  data () {
-    return {
-      name: '',
-      notes: '',
-      listTemplate: '',
-      templateListItemSelector: 'all',
-      lists: []
-    }
-  },
-  methods: {
-    CopyHrefToClipboard () {
-      common.CopyHrefToClipboard()
+  export default {
+    name: "ShoppingListNew",
+    components: {
+      breadcrumb,
     },
-    PostNewShoppingList () {
-      if (this.notes === '') {
-        this.notes = undefined
-      }
-      this.submitLoading = true
-      shoppinglist
-        .PostShoppingList(
-          this.name,
-          this.notes,
-          this.listTemplate,
-          this.templateListItemSelector
-        )
-        .then((resp) => {
-          this.submitLoading = false
-          var list = resp.data.spec
-          if (list.id !== '' || typeof list.id === 'undefined') {
-            this.$router.push({
-              name: 'View shopping list',
-              params: { id: list.id }
-            })
-          } else {
-            common.DisplayFailureToast('Unable to find created shopping list')
-          }
-        })
-        .catch((err) => {
-          this.submitLoading = false
-          common.DisplayFailureToast(
-            `Failed to create shopping list - ${err.response.data.metadata.response}`
+    data() {
+      return {
+        name: "",
+        notes: "",
+        listTemplate: "",
+        templateListItemSelector: "all",
+        lists: [],
+      };
+    },
+    async beforeMount() {
+      shoppinglist.GetShoppingLists(undefined, "templated").then((resp) => {
+        this.lists = resp.data.list || [];
+      });
+      this.name = this.$route.query.name;
+    },
+    methods: {
+      CopyHrefToClipboard() {
+        common.CopyHrefToClipboard();
+      },
+      PostNewShoppingList() {
+        if (this.notes === "") {
+          this.notes = undefined;
+        }
+        this.submitLoading = true;
+        shoppinglist
+          .PostShoppingList(
+            this.name,
+            this.notes,
+            this.listTemplate,
+            this.templateListItemSelector
           )
-        })
-    }
-  },
-  async beforeMount () {
-    shoppinglist.GetShoppingLists(undefined, 'templated').then((resp) => {
-      this.lists = resp.data.list || []
-    })
-    this.name = this.$route.query.name
-  }
-}
+          .then((resp) => {
+            this.submitLoading = false;
+            var list = resp.data.spec;
+            if (list.id !== "" || typeof list.id === "undefined") {
+              this.$router.push({
+                name: "View shopping list",
+                params: { id: list.id },
+              });
+            } else {
+              common.DisplayFailureToast(
+                "Unable to find created shopping list"
+              );
+            }
+          })
+          .catch((err) => {
+            this.submitLoading = false;
+            common.DisplayFailureToast(
+              `Failed to create shopping list - ${err.response.data.metadata.response}`
+            );
+          });
+      },
+    },
+  };
 </script>

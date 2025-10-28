@@ -14,28 +14,35 @@
 -->
 
 <template>
-    <section>
-        <div style="padding: 1.5rem">
-        <b-carousel
-            v-model="carousel"
-            :animated="animated"
-            :has-drag="drag"
-            :autoplay="autoPlay"
-            :pause-hover="pauseHover"
-            :pause-info="pauseInfo"
-            :pause-info-type="pauseType"
-            :interval="interval"
-            :repeat="repeat"
-            @change="info($event)">
-            <b-carousel-item v-for="(carousel, i) in carousels" :key="i">
-                <section :class="`hero is-medium is-${carousel.color} is-bold`">
-                    <div class="hero-body has-text-centered">
-                        <h1 class="title">{{carousel.title}}</h1>
-                    </div>
-                </section>
-            </b-carousel-item>
-        </b-carousel>
-    </section>
+  <section>
+    <div style="padding: 1.5rem">
+      <b-carousel
+        v-model="carousel"
+        :animated="animated"
+        :has-drag="drag"
+        :autoplay="autoPlay"
+        :pause-hover="pauseHover"
+        :pause-info="pauseInfo"
+        :pause-info-type="pauseType"
+        :interval="interval"
+        :repeat="repeat"
+        @change="info($event)"
+      >
+        <b-carousel-item
+          v-for="(carousel, i) in carousels"
+          :key="i"
+        >
+          <section :class="`hero is-medium is-${carousel.color} is-bold`">
+            <div class="hero-body has-text-centered">
+              <h1 class="title">
+                {{ carousel.title }}
+              </h1>
+            </div>
+          </section>
+        </b-carousel-item>
+      </b-carousel>
+    </div>
+  </section>
 </template>
 
 <script>

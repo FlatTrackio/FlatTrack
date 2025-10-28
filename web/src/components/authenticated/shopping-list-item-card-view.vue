@@ -22,7 +22,7 @@
             class="media-left"
             @click="PatchItemObtained(item.id, !obtained)"
           >
-            <b-checkbox size="is-medium" v-model="obtained"></b-checkbox>
+            <b-checkbox v-model="obtained" size="is-medium" />
           </div>
           <div
             class="media-content pointer-cursor-on-hover"
@@ -31,7 +31,7 @@
             <div class="block">
               <p
                 :class="obtained === true ? 'obtained' : ''"
-                class="subtitle is-4 is-marginless"
+                class="subtitle is-4 m-0"
               >
                 {{ item.name }}
                 <span
@@ -45,68 +45,51 @@
                   icon="currency-usd-off"
                   type="is-lightred"
                   size="is-small"
-                >
-                </b-icon>
+                />
               </p>
               <span>
                 <p class="subtitle is-6">
-                  <span v-if="displayTag === true">
-                    {{ item.tag }}
-                  </span>
+                  <b-icon
+                    v-if="displayTag === true"
+                    icon="tag-multiple"
+                    type="is-info"
+                    size="is-small"
+                  />
+                  <span v-if="displayTag === true"> {{ item.tag }} </span>
                   <span
                     v-if="
                       displayTag === true &&
-                      typeof item.tag !== 'undefined' &&
-                      typeof item.notes !== 'undefined' &&
-                      item.notes !== ''
+                        typeof item.tag !== 'undefined' &&
+                        typeof item.notes !== 'undefined' &&
+                        item.notes !== ''
                     "
                   >
                     -
                   </span>
-                  <i>
-                    {{ item.notes }}
-                  </i>
+                  <i> {{ item.notes }} </i>
                 </p>
               </span>
             </div>
           </div>
-          <div class="media-right">
-            <b-tooltip label="Duplicate" class="is-paddingless" :delay="200">
-              <b-button
-                size="is-small"
-                type="is-white"
-                icon-right="content-duplicate"
-                v-if="deviceIsMobile === false"
-                @click="
-                  PostShoppingListItem(
-                    listId,
-                    item.name,
-                    item.notes,
-                    item.price,
-                    item.quantity,
-                    item.tag
-                  )
-                "
-              />
-            </b-tooltip>
-
-            <b-tooltip label="Delete" class="is-paddingless" :delay="200">
-              <b-button
-                size="is-small"
-                type="is-danger"
-                icon-right="delete"
-                :loading="itemDeleting"
-                v-if="deviceIsMobile === false"
-                @click="DeleteShoppingListItem(item.id, index)"
-              />
-            </b-tooltip>
-            <span class="pointer-cursor-on-hover" @click="$emit('viewItem')">
-              <b-icon
-                icon="chevron-right"
-                size="is-medium"
-                type="is-midgray"
-              ></b-icon>
-            </span>
+          <div class="media-right is-flex">
+            <b-field>
+              <b-tooltip label="Delete" class="is-paddingless" :delay="200">
+                <b-button
+                  size="is-small"
+                  type="is-danger"
+                  icon-right="delete"
+                  :loading="itemDeleting"
+                  @click="DeleteShoppingListItem(item.id, index)"
+                />
+              </b-tooltip>
+              <span class="pointer-cursor-on-hover" @click="$emit('viewItem')">
+                <b-icon
+                  icon="chevron-right"
+                  size="is-medium"
+                  type="is-midgray"
+                />
+              </span>
+            </b-field>
           </div>
         </div>
       </div>
@@ -115,143 +98,108 @@
 </template>
 
 <script>
-import common from '@/common/common'
-import { DialogProgrammatic as Dialog } from 'buefy'
-import shoppinglist from '@/requests/authenticated/shoppinglist'
+  import common from "@/common/common";
+  import shoppinglist from "@/requests/authenticated/shoppinglist";
 
-export default {
-  name: 'shopping-list-item-card-view',
-  data () {
-    return {
-      itemDeleting: false,
-      obtained: false
-    }
-  },
-  props: {
-    item: Object,
-    listId: String,
-    list: Object,
-    index: Number,
-    displayTag: Boolean,
-    deviceIsMobile: Boolean,
-    itemDisplayState: Number
-  },
-  created () {
-    this.obtained = this.item.obtained
-  },
-  methods: {
-    PatchItemObtained (itemId, obtained) {
-      this.$emit('obtained', obtained)
-      shoppinglist
-        .PatchShoppingListItemObtained(this.listId, itemId, obtained)
-        .then(() => {
-          var displayAll =
-            typeof this.itemDisplayState === 'number' &&
-            this.itemDisplayState === 0
-          if (displayAll === true) {
-            return
-          }
-          let removedFromList = this.list
-          removedFromList.splice(this.index, 1)
-          this.$emit('list', removedFromList)
-        })
-        .catch((err) => {
-          common.DisplayFailureToast(
-            'Failed to patch the obtained field of this item' +
-              '<br/>' +
-              err.response.data.metadata.response
-          )
-        })
+  export default {
+    name: "ShoppingListItemCardView",
+    props: {
+      item: Object,
+      listId: String,
+      list: Object,
+      index: Number,
+      displayTag: Boolean,
+      deviceIsMobile: Boolean,
+      itemDisplayState: Number,
     },
-    DeleteShoppingListItem (itemId, index) {
-      Dialog.confirm({
-        title: 'Delete item',
-        message:
-          'Are you sure that you wish to delete this shopping list item?' +
-          '<br/>' +
-          'This action cannot be undone.',
-        confirmText: 'Delete item',
-        type: 'is-danger',
-        hasIcon: true,
-        onConfirm: () => {
-          this.itemDeleting = true
-          shoppinglist
-            .DeleteShoppingListItem(this.listId, itemId)
-            .then((resp) => {
-              common.DisplaySuccessToast(resp.data.metadata.response)
-              let removedFromList = this.list
-              removedFromList.splice(this.index, 1)
-              this.$emit('list', removedFromList)
-            })
-            .catch((err) => {
-              common.DisplayFailureToast(
-                'Failed to delete shopping list item' +
-                  ' - ' +
-                  err.response.data.metadata.response
-              )
-              this.itemDeleting = false
-            })
-        }
-      })
+    data() {
+      return {
+        itemDeleting: false,
+        obtained: false,
+      };
     },
-    PostShoppingListItem (listId, name, notes, price, quantity, tag) {
-      Dialog.confirm({
-        title: 'Duplicate item',
-        message:
-          'Are you sure that you wish to duplicate this shopping list item?',
-        confirmText: 'Duplicate item',
-        type: 'is-warning',
-        hasIcon: true,
-        onConfirm: () => {
-          this.submitLoading = true
-          if (notes === '') {
-            notes = undefined
-          }
-          if (price === 0) {
-            price = undefined
-          } else {
-            price = parseFloat(price)
-          }
-
-          shoppinglist
-            .PostShoppingListItem(listId, name, notes, price, quantity, tag)
-            .then((resp) => {
-              var item = resp.data.spec
-              if (item.id === '' || typeof item.id === 'undefined') {
-                this.submitLoading = false
+    created() {
+      this.obtained = this.item.obtained;
+    },
+    methods: {
+      PatchItemObtained(itemId, obtained) {
+        this.$emit("obtained", obtained);
+        shoppinglist
+          .PatchShoppingListItemObtained(this.listId, itemId, obtained)
+          .then(() => {
+            var displayAll =
+              typeof this.itemDisplayState === "number" &&
+              this.itemDisplayState === 0;
+            if (displayAll === true) {
+              return;
+            }
+            let removedFromList = this.list;
+            removedFromList.splice(this.index, 1);
+            this.$emit("list", removedFromList);
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              this.$buefy,
+              "Failed to patch the obtained field of this item" +
+                "<br/>" +
+                err.response.data.metadata.response
+            );
+          });
+      },
+      DeleteShoppingListItem(itemId, index) {
+        this.$buefy.dialog.confirm({
+          title: "Delete item",
+          message:
+            "Are you sure that you wish to delete this shopping list item?" +
+            "<br/>" +
+            "This action cannot be undone.",
+          confirmText: "Delete item",
+          type: "is-danger",
+          hasIcon: true,
+          onConfirm: () => {
+            this.itemDeleting = true;
+            shoppinglist
+              .DeleteShoppingListItem(this.listId, itemId)
+              .then((resp) => {
+                common.DisplaySuccessToast(
+                  this.$buefy,
+                  resp.data.metadata.response
+                );
+                let removedFromList = this.list;
+                removedFromList.splice(this.index, 1);
+                this.$emit("list", removedFromList);
+              })
+              .catch((err) => {
                 common.DisplayFailureToast(
-                  'Unable to find created shopping item'
-                )
-              }
-            })
-            .catch((err) => {
-              this.submitLoading = false
-              common.DisplayFailureToast(
-                `Failed to add shopping list item - ${err.response.data.metadata.response}`
-              )
-            })
-        }
-      })
-    }
-  }
-}
+                  this.$buefy,
+                  "Failed to delete shopping list item" +
+                    " - " +
+                    err.response.data.metadata.response
+                );
+                this.itemDeleting = false;
+              });
+          },
+        });
+      },
+    },
+  };
 </script>
 
 <style scoped>
-.display-is-editable:hover {
-  text-decoration: underline dotted;
-  -webkit-transition: width 0.5s ease-in;
-}
-.card-content-list {
-  background-color: transparent;
-  padding-left: 1.5em;
-  padding-top: 0.6em;
-  padding-bottom: 0.6em;
-  padding-right: 1.5em;
-}
+  .display-is-editable:hover {
+    text-decoration: underline dotted;
+    -webkit-transition: width 0.5s ease-in;
+  }
+  .card-content-list {
+    background-color: transparent;
+    padding-left: 1.5em;
+    padding-top: 0.6em;
+    padding-bottom: 0.6em;
+    padding-right: 1.5em;
+  }
 
-.obtained {
-  color: #adadad;
-  text-decoration: line-through;
-}
+  .obtained {
+    color: #adadad;
+    text-decoration: line-through;
+  }
 </style>

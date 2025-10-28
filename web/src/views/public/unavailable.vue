@@ -18,20 +18,25 @@
     <headerDisplay />
     <div class="container">
       <section class="section">
-        <h1 class="title is-1">Unavailable</h1>
-        <b-message has-icon type="is-warning">
+        <h1 class="title is-1">
+          Unavailable
+        </h1>
+        <b-message
+          has-icon
+          type="is-warning"
+        >
           <p class="subtitle is-4">
             This FlatTrack instance is unavailable or not healthy.
-            <br />
-            <br />
+            <br>
+            <br>
           </p>
         </b-message>
         <b-button
           type="is-white"
-          @click="Reload"
           size="is-medium"
           rounded
           expanded
+          @click="Reload"
         >
           Refresh
         </b-button>
@@ -41,10 +46,11 @@
 </template>
 
 <script>
+  import headerDisplay from "@/components/common/header-display.vue"
   export default {
-    name: "unavailable-page",
+    name: "UnavailablePage",
     components: {
-      headerDisplay: () => import("@/components/common/header-display.vue"),
+      headerDisplay
     },
     methods: {
       Reload() {

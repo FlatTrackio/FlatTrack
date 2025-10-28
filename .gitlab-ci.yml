@@ -13,7 +13,7 @@ variables:
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
   EXTRA_REGISTRIES: docker.io
-  IMAGE_NODE_ALPINE: docker.io/node:23.10.0-alpine3.21@sha256:6eae672406a2bc8ed93eab6f9f76a02eb247e06ba82b2f5032c0a4ae07e825ba
+  IMAGE_DENO_ALPINE: docker.io/denoland/deno:alpine-2.5.4@sha256:9b5cfe963dc3ee97dde39c7b29989709de34b11fc72565ee8fe223a43d08c4a6
   IMAGE_GOLANG_ALPINE: docker.io/golang:1.25.3-alpine3.22@sha256:aee43c3ccbf24fdffb7295693b6e33b21e01baec1b2a55acc351fde345e9ec34
   IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v2.5.0@sha256:0c8e590120a98ada5d0d9423e65dd957067e70c87efd692e83d5a311ddfc3151
   IMAGE_PYTHON: docker.io/python:3.13.2-alpine3.21@sha256:323a717dc4a010fee21e3f1aac738ee10bb485de4e7593ce242b36ee48d6b352
@@ -125,14 +125,12 @@ copy-container-image-to-dockerhub:
 
 .build-frontend: &build-frontend
   retry: 2
-  image: $IMAGE_NODE_ALPINE
+  image: $IMAGE_DENO_ALPINE
   before_script:
     - *image-set-build-env
     - cd web
-    - apk add --no-cache make g++ git
-    - npm i
   script:
-    - npm run build
+    - deno task build
   artifacts:
     expire_in: 1 day
     paths:
@@ -275,14 +273,12 @@ lint-frontend:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_NODE_ALPINE
+  image: $IMAGE_DENO_ALPINE
   allow_failure: true
   before_script:
     - cd web
-    - apk add --no-cache make g++
-    - npm i
   script:
-    - npm run lint
+    - deno task lint
 
 lint-backend:
   only:
