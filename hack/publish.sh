@@ -38,13 +38,13 @@ if [[ -n "${CI_COMMIT_TAG:-}" ]]; then
     APP_BUILD_MODE=production
     IMAGE_DESTINATIONS="$APP_BUILD_VERSION"
 fi
-_IMAGE_LABELS="org.opencontainers.image.authors=FlatTrack https://flattrack.io
-org.opencontainers.image.created=$(date +%Y-%m-%dT%XZ)
+_IMAGE_LABELS="org.opencontainers.image.authors='FlatTrack https://flattrack.io'
+org.opencontainers.image.created=$(git show -s --format=%cd --date=format:'%Y-%m-%dT%H%MZ')
 org.opencontainers.image.source=https://gitlab.com/flattrack/flattrack
 org.opencontainers.image.title=FlatTrack
 org.opencontainers.image.url=https://flattrack.io
 org.opencontainers.image.vendor=FlatTrack
-org.opencontainers.image.description=FlatTrack is a Free and Open Source collaboration software for flats and homes with the goals of easing common tasks, enabling closer collaboration, and empowering humans who live together.
+org.opencontainers.image.description=Collaboration software for flats and living spaces
 io.artifacthub.package.readme-url=https://gitlab.com/flattrack/flattrack/-/raw/main/README.md?ref_type=heads
 io.artifacthub.package.license=AGPL-3.0
 io.artifacthub.package.alternative-locations=docker.io/flattrack/flattrack"
@@ -90,7 +90,7 @@ if [ "${TEST_TARBALL:-}" = true ]; then
     IMG=$(crane --insecure push /tmp/flattrack.tar localhost:5001/ft)
 
     CORRECT=true
-
+    crane config "$IMG" | jq
     RESULT="$(crane export "$IMG" - | tar -tvf - |
         grep -E '(etc/passwd|usr/share/zoneinfo|etc/ssl/certs|ko-app/flattrack|ko/web/assets/.*\.js|ko/migrations/.*\.sql|ko/sbom.spdx.json)')"
     CODE=$?
