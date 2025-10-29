@@ -77,7 +77,7 @@
     },
     methods: {
       signOut() {
-        common.SignoutDialog();
+        common.SignoutDialog(this.$buefy);
       },
       GetFlatInfo() {
         flatInfo.GetFlatName().then((resp) => {
