@@ -326,10 +326,11 @@
           },
           trapFocus: true,
           onConfirm: (value) => {
+            this.pageLoading = true;
             shoppinglist
               .PutShoppingListNotes(value)
               .then(() => {
-                this.pageLoading = true;
+                this.pageLoading = false;
                 this.displayFloatingAddButton = true;
                 this.GetShoppingListNotes();
               })
@@ -339,6 +340,7 @@
                     `<br/>${err.response.data.metadata.response}`
                 );
                 this.displayFloatingAddButton = true;
+                this.pageLoading = false;
               });
           },
           onCancel: () => {
