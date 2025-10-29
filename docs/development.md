@@ -34,8 +34,9 @@ launch the workspace
 ./hack/start-dev.sh
 ```
 
+## Manually
 
-## Set up Postgres
+### Set up Postgres
 
 Docker/Podman:
 
@@ -45,16 +46,16 @@ Docker/Podman:
            -e POSTGRES_DB=flattrack \
            -e POSTGRES_USER=flattrack \
            -e POSTGRES_PASSWORD=flattrack \
-           postgres:16.1-alpine3.19
+           docker.io/postgres:17.5-alpine3.22
 
 Manually connecting to the Postgres database:
 
     psql -U flattrack -d flattrack -w -h localhost
 
-(entering the password as FlatTrack)
+(entering the password as `flattrack`)
 
 
-## Frontend build
+### Frontend build
 
 Navigate to the `web` folder.
 
@@ -62,8 +63,7 @@ Build the frontend
 
     deno task build
 
-
-## Backend build
+### Backend build
 
 Navigate to the root of the repo.
 
@@ -71,19 +71,15 @@ Build the backend
 
     ./hack/verify-build-smoketest.sh
 
-
 ### Start the backend
 
     go run .
-
 
 ### Remove migrations
 
     gomigrate -source "file://$(pwd)/migrations" -database postgres://flattrack:flattrack@localhost/flattrack?sslmode=disable down
 
-
 ## Project structure and details
-
 
 ### API
 
@@ -120,11 +116,11 @@ To run the docs in development, use:
 
     mkdocs serve
 
-
 ## Making a release checklist
 
 Things to do before making a release:
 
 -   ensure docs represent the latest changes
 -   ensure linting passes
+-   generate change list with `git cliff --tag "new tag name here" "$(git describe --tags --abbrev=0)"..HEAD`
 

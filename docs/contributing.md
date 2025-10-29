@@ -1,6 +1,6 @@
 # Contributing
 
-How to contribute to FlatTrack.  
+How to contribute to FlatTrack.
 
 ## Code
 

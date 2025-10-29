@@ -13,7 +13,7 @@
 
 <br/>
 
-(FlatTrack is current in alpha)
+(FlatTrack is currently in alpha)
 
 ## Features
 
@@ -55,7 +55,7 @@ To view the documentation, please check out the GitLab-hosted [FlatTrack docs](h
 
 ### Development
 
-From code, to assets/artwork, to community, to documentation, there are many ways to contribute.  
+From code, to assets/artwork, to community, to documentation, there are many ways to contribute.
 To learn how to contribute, please refer to the [development+contribution documentation](./docs/development.md).
 Looking for something to do? Check out the [FlatTrack issues](https://gitlab.com/flattrack/flattrack/-/issues) page.
 
@@ -69,7 +69,7 @@ Please read:
 
 ## License
 
-Copyright 2019-2024 Caleb Woodbine.
+Copyright 2019-2025 Caleb Woodbine.
 This project is licensed under the [AGPL-3.0](http://www.gnu.org/licenses/agpl-3.0.html) and is [Free Software](https://www.gnu.org/philosophy/free-sw.en.html).
 This program comes with absolutely no warranty.
 
