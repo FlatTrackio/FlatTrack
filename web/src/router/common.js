@@ -1,61 +1,62 @@
-import common from '@/common/common'
-import cani from '@/requests/authenticated/can-i'
-import login from '@/requests/public/login'
+import common from "@/common/common";
+import cani from "@/requests/authenticated/can-i";
+import login from "@/requests/public/login";
 
 // requireAuthToken
 // given an no auth token redirect to the login page
-function requireAuthToken (to, from, next) {
-  var authToken = common.GetAuthToken()
+async function requireAuthToken(to, from, next) {
+  var authToken = common.GetAuthToken();
   if (
-    typeof authToken === 'undefined' ||
+    typeof authToken === "undefined" ||
     authToken === null ||
-    authToken === ''
+    authToken === ""
   ) {
-    next({ path: '/login', query: { redirect: to.fullPath } })
-    return
+    next({ path: "/login", query: { redirect: to.fullPath } });
+    return;
   }
-  next()
+  next();
 }
 
 // requireNoAuthToken
 // given an auth token, redirect to the home page
-function requireNoAuthToken (to, from, next) {
-  var authToken = common.GetAuthToken()
+async function requireNoAuthToken(to, from, next) {
+  var authToken = common.GetAuthToken();
   if (
-    typeof authToken === 'undefined' ||
+    typeof authToken === "undefined" ||
     authToken === null ||
-    authToken === ''
+    authToken === ""
   ) {
-    next()
-    return
+    next();
+    return;
   }
   login.GetUserAuth(false).then(() => {
-    window.location.href = '/'
-  })
+    window.location.href = "/";
+  });
 }
 
-function requireGroup (to, from, next) {
+async function requireGroup(to, from, next) {
+  console.log("Checking group");
   cani
     .GetCanIgroup(to.meta.requiresGroup)
     .then((resp) => {
       if (resp.data.data === true) {
-        next()
+        next();
       } else {
-        next(from.path)
+        next(from.path);
       }
     })
     .catch(() => {
-      next(from.path)
-    })
+      next(from.path);
+    });
 }
 
-function isPublicRoute (to) {
-  return to.meta.requiresAuth !== true
+function isPublicRoute(to) {
+  return to.meta.requiresAuth !== true;
 }
 
 export default {
   requireAuthToken,
   requireNoAuthToken,
   requireGroup,
-  isPublicRoute
-}
+  isPublicRoute,
+};

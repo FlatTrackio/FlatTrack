@@ -21,11 +21,11 @@ router.beforeEach(async (to, from, next) => {
     document.title = `${to.name} | FlatTrack`;
   }
   if (to.meta.requiresAuth === true && common.HasAuthToken() === false) {
-    routerCommon.requireAuthToken(to, from, next);
+    await routerCommon.requireAuthToken(to, from, next);
   } else if (to.meta.requiresNoAuth === true) {
-    routerCommon.requireNoAuthToken(to, from, next);
-  } else if (typeof to.requiresGroup !== "undefined") {
-    routerCommon.requireGroup(to, from, next);
+    await routerCommon.requireNoAuthToken(to, from, next);
+  } else if (typeof to.meta.requiresGroup !== "undefined") {
+    await routerCommon.requireGroup(to, from, next);
   } else {
     next();
   }
