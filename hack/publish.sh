@@ -38,6 +38,15 @@ if [[ -n "${CI_COMMIT_TAG:-}" ]]; then
     APP_BUILD_MODE=production
     IMAGE_DESTINATIONS="$APP_BUILD_VERSION"
 fi
+_IMAGE_LABELS="org.opencontainers.image.authors=FlatTrack https://flattrack.io
+org.opencontainers.image.created=$(date +%Y-%m-%dT%XZ)
+org.opencontainers.image.source=https://gitlab.com/flattrack/flattrack
+org.opencontainers.image.title=FlatTrack
+org.opencontainers.image.url=https://flattrack.io
+org.opencontainers.image.vendor=FlatTrack"
+
+IMAGE_LABELS="$(printf "$_IMAGE_LABELS" | tr '\n' ',')"
+
 echo "Commit made on '${APP_BUILD_DATE:-}'"
 
 export KO_DOCKER_REPO \
@@ -51,6 +60,7 @@ IMAGE="$(ko publish \
     --bare \
     --tags "${IMAGE_DESTINATIONS}" \
     --sbom-dir "$LOCAL_SBOM_PATH" \
+    --image-label "$IMAGE_LABELS" \
     $KO_FLAGS \
     .)"
 
