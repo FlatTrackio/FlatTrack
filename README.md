@@ -9,7 +9,7 @@
 
 > Collaborate with your flatmates
 
-<img style='margin-left: auto; margin-right: auto;' alt='flattrack shopping list preview' src='./screenshots/flatmates-mobile.png' width=350>
+<img style='margin-left: auto; margin-right: auto;' alt='flattrack shopping list preview' src='./screenshots/shopping-list-mobile.png' width=350>
 
 <br/>
 
