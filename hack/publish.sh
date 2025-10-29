@@ -44,9 +44,10 @@ org.opencontainers.image.source=https://gitlab.com/flattrack/flattrack
 org.opencontainers.image.title=FlatTrack
 org.opencontainers.image.url=https://flattrack.io
 org.opencontainers.image.vendor=FlatTrack
+org.opencontainers.image.description=FlatTrack is a Free and Open Source collaboration software for flats and homes with the goals of easing common tasks, enabling closer collaboration, and empowering humans who live together.
 io.artifacthub.package.readme-url=https://gitlab.com/flattrack/flattrack/-/raw/main/README.md?ref_type=heads
 io.artifacthub.package.license=AGPL-3.0
-io.artifacthub.package.alternative-locations=docker.io/flattrack/flattrack
+io.artifacthub.package.alternative-locations=docker.io/flattrack/flattrack"
 
 IMAGE_LABELS="$(printf "$_IMAGE_LABELS" | tr '\n' ',')"
 

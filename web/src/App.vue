@@ -156,6 +156,7 @@
 
   html {
     background-color: #fbfbfb;
+    overflow-x: hidden;
   }
 
   .pointer-cursor-on-hover {
