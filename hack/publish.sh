@@ -18,7 +18,13 @@ if echo "${@:-}" | grep -q '\-\-local'; then
 fi
 if echo "${@:-}" | grep -q '\-\-tarball-test-only'; then
     TEST_TARBALL=true
-    KO_FLAGS="--tarball /tmp/flattrack.tar --platform=linux/amd64 --push=false $KO_FLAGS"
+    KO_FLAGS="--insecure-registry --platform=linux/amd64 $KO_FLAGS"
+    crane registry serve --address :5001 &
+    REGPID=$!
+    until curl -qsSL localhost:5001/v2; do
+        sleep 2s
+    done
+    export KO_DOCKER_REPO=localhost:5001/ft
 fi
 if echo "${@:-}" | grep -q '\-\-insecure'; then
     KO_FLAGS="--insecure-registry $KO_FLAGS"
@@ -47,7 +53,7 @@ org.opencontainers.image.vendor=FlatTrack
 org.opencontainers.image.description=Collaboration software for flats and living spaces
 io.artifacthub.package.readme-url=https://gitlab.com/flattrack/flattrack/-/raw/main/README.md?ref_type=heads
 io.artifacthub.package.license=AGPL-3.0
-io.artifacthub.package.alternative-locations=docker.io/flattrack/flattrack"
+io.artifacthub.package.alternative-locations=index.docker.io/flattrack/flattrack"
 
 IMAGE_LABELS="$(printf "$_IMAGE_LABELS" | tr '\n' ',')"
 
@@ -65,6 +71,7 @@ IMAGE="$(ko publish \
     --tags "${IMAGE_DESTINATIONS}" \
     --sbom-dir "$LOCAL_SBOM_PATH" \
     --image-label "$IMAGE_LABELS" \
+    --image-annotation "$IMAGE_LABELS" \
     $KO_FLAGS \
     .)"
 
@@ -82,23 +89,17 @@ if [ "${SIGN:-}" = true ]; then
 fi
 
 if [ "${TEST_TARBALL:-}" = true ]; then
-    crane registry serve --address :5001 &
-    REGPID=$!
-    until curl -qsSL localhost:5001/v2; do
-        sleep 2s
-    done
-    IMG=$(crane --insecure push /tmp/flattrack.tar localhost:5001/ft)
-
     CORRECT=true
-    crane config "$IMG" | jq
-    RESULT="$(crane export "$IMG" - | tar -tvf - |
+    crane config "$IMAGE" | jq
+    crane manifest "$IMAGE" | jq
+    RESULT="$(crane export "$IMAGE" - | tar -tvf - |
         grep -E '(etc/passwd|usr/share/zoneinfo|etc/ssl/certs|ko-app/flattrack|ko/web/assets/.*\.js|ko/migrations/.*\.sql|ko/sbom.spdx.json)')"
     CODE=$?
     if [ ! $CODE -eq 0 ]; then
         CORRECT=false
     fi
     TEMPDIR="$(mktemp -d)"
-    crane export "$IMG" - | tar -xf - --exclude 'dev/*' -C "$TEMPDIR"
+    crane export "$IMAGE" - | tar -xf - --exclude 'dev/*' -C "$TEMPDIR"
     RESULT="$(file "$TEMPDIR/ko-app/flattrack" | grep -q -E 'ELF.*statically linked')"
     CODE=$?
     if [ ! $CODE -eq 0 ]; then
