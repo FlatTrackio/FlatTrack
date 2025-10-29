@@ -21,12 +21,8 @@
           back-link-name="Admin accounts"
           :current-page-name="$route.name"
         />
-        <h1 class="title is-1">
-          Edit account
-        </h1>
-        <p class="subtitle is-4">
-          Edit an existing user account
-        </p>
+        <h1 class="title is-1">Edit account</h1>
+        <p class="subtitle is-4">Edit an existing user account</p>
         <b-loading
           v-model:active="pageLoading"
           :is-full-page="false"
@@ -35,8 +31,10 @@
         <div v-if="registered !== true">
           <div class="notification is-warning">
             <p class="subtitle is-6">
-              <strong>This account has been created but doesn't appear to be
-                registered.</strong>
+              <strong
+                >This account has been created but doesn't appear to be
+                registered.</strong
+              >
             </p>
             <b-button
               :icon-left="
@@ -51,7 +49,7 @@
               }} registration details
             </b-button>
             <div v-if="showRegistrationCompletionDetails === true">
-              <br>
+              <br />
               <div class="notification">
                 <div class="content">
                   <qrcode-vue
@@ -65,13 +63,12 @@
                     :size="200"
                     level="H"
                   />
-                  <br>
+                  <br />
                   <p>
                     Have your flatmate scan the QR code above, or
-                    <a
-                      type="is-text"
-                      @click="CopyRegistrationLink"
-                    >click here</a>
+                    <a type="is-text" @click="CopyRegistrationLink"
+                      >click here</a
+                    >
                     to copy the registration link for you to send to your
                     flatmate
                   </p>
@@ -79,7 +76,7 @@
               </div>
             </div>
           </div>
-          <br>
+          <br />
         </div>
 
         <b-field label="Name(s)">
@@ -131,7 +128,7 @@
             />
           </b-field>
         </section>
-        <br>
+        <br />
 
         <b-field label="Phone number (optional)">
           <b-input
@@ -160,7 +157,7 @@
             trap-focus
           />
         </b-field>
-        <br>
+        <br />
 
         <div class="field has-addons">
           <label class="label">Password</label>
@@ -216,10 +213,7 @@
           >
             Update user account
           </b-button>
-          <p
-            v-if="myUserID !== id"
-            class="control"
-          >
+          <p v-if="myUserID !== id" class="control">
             <b-button
               type="is-danger"
               size="is-medium"
@@ -232,22 +226,18 @@
 
         <b-collapse
           v-if="myUserID !== id"
+          v-model="accountAdvancedOpen"
           class="card"
           animation="slide"
           aria-id="contentIdForA11y3"
-          :open="accountAdvancedOpen"
         >
           <template #trigger="props">
             <div
-            
-            
               class="card-header"
               role="button"
               aria-controls="contentIdForA11y3"
             >
-              <p class="card-header-title">
-                Advanced options
-              </p>
+              <p class="card-header-title">Advanced options</p>
               <a class="card-header-icon">
                 <b-icon :icon="props.open ? 'menu-down' : 'menu-up'" />
               </a>
@@ -257,10 +247,10 @@
             <div class="content">
               <b-button
                 size="is-medium"
-                type="is-warning"
+                :type="disabled ? 'is-danger' : 'is-warning'"
                 :loading="disabledLoading"
                 :icon-left="
-                  disabled ? 'check-box-outline' : 'checkbox-blank-outline'
+                  disabled ? 'checkbox-outline' : 'checkbox-blank-outline'
                 "
                 @click="PatchUserAccountDisabled"
               >
@@ -270,7 +260,7 @@
           </div>
         </b-collapse>
         <p class="subtitle is-6">
-          Created {{ TimestampToCalendar(creationTimestamp) }} <br>
+          Created {{ TimestampToCalendar(creationTimestamp) }} <br />
           <span v-if="creationTimestamp !== modificationTimestamp">
             Modified {{ TimestampToCalendar(modificationTimestamp) }}
           </span>
