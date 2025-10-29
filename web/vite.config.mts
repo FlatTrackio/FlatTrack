@@ -25,6 +25,8 @@ import 'npm:node-emoji@1.11.0'
 import 'npm:qrcode.vue@1.7.0'
 import 'npm:sass@1.93.2'
 import 'npm:sass-loader@16.0.5'
+import 'npm:register-service-worker@^1.7.2'
+import 'npm:autoprefixer@^10.4.21'
 import { NodePackageImporter } from 'npm:sass-embedded@1.93.2';
 import { VitePWA } from "npm:vite-plugin-pwa@1.1.0";
 import * as path from "jsr:@std/path"
