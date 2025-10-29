@@ -43,7 +43,10 @@ org.opencontainers.image.created=$(date +%Y-%m-%dT%XZ)
 org.opencontainers.image.source=https://gitlab.com/flattrack/flattrack
 org.opencontainers.image.title=FlatTrack
 org.opencontainers.image.url=https://flattrack.io
-org.opencontainers.image.vendor=FlatTrack"
+org.opencontainers.image.vendor=FlatTrack
+io.artifacthub.package.readme-url=https://gitlab.com/flattrack/flattrack/-/raw/main/README.md?ref_type=heads
+io.artifacthub.package.license=AGPL-3.0
+io.artifacthub.package.alternative-locations=docker.io/flattrack/flattrack
 
 IMAGE_LABELS="$(printf "$_IMAGE_LABELS" | tr '\n' ',')"
 
