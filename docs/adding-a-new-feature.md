@@ -26,7 +26,7 @@ For a new change to the database with a new feature, migrations (up) must be mer
 ### Feature functions
 
 In the `pkg` folder, `yourfeature/yourfeature.go` should be created with the feature functions.
-FlatTrack is generally resource oriented, so what&rsquo;s put in is the same as what&rsquo;s returned (except passwords).
+FlatTrack is generally resource oriented, so what's put in is the same as what's returned (except passwords).
 For a fully flexible feature, make sure that all of the regular HTTP verbs are covered with resource modifications:
 
 -   create
@@ -56,7 +56,7 @@ Endpoints are stored in `pkg/routes/endpoints.go`
 ### Request handlers
 
 Request handlers are the linking of the frontend to the backend.
-The handlers are based on the HTTP verbs for managing the feature&rsquo;s resources.
+The handlers are based on the HTTP verbs for managing the feature's resources.
 They are responsible for formulating the request in the way that the backend understands.
 
 Request handlers are located in `web/src/requests`, then in either `admin`, `authenticated`, and/or `public`.

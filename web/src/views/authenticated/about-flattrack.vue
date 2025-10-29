@@ -32,10 +32,9 @@
               rel="noreferrer"
               >Free and Open Source</a
             >
-            collaboration software for flats / community houses and homes with
-            the goals of <b>easing common tasks</b> in living environments,
-            <b>enabling closer collaboration</b>, and
-            <b>empowering humans who live together</b>.
+            collaboration software for flats and homes with the goals of
+            <b>easing common tasks</b>, <b>enabling closer collaboration</b>,
+            and <b>empowering humans who live together</b>.
           </p>
         </b-message>
         <p class="subtitle is-3">Collaborate</p>
