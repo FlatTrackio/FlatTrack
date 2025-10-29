@@ -45,7 +45,7 @@ if [[ -n "${CI_COMMIT_TAG:-}" ]]; then
     IMAGE_DESTINATIONS="$APP_BUILD_VERSION"
 fi
 _IMAGE_LABELS="org.opencontainers.image.authors='FlatTrack https://flattrack.io'
-org.opencontainers.image.created=$(git show -s --format=%cd --date=format:'%Y-%m-%dT%H%MZ')
+org.opencontainers.image.created=$(git show -s --format=%cd --date=format:'%Y-%m-%dT%H:%M:%SZ')
 org.opencontainers.image.source=https://gitlab.com/flattrack/flattrack
 org.opencontainers.image.title=FlatTrack
 org.opencontainers.image.url=https://flattrack.io

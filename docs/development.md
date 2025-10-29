@@ -77,37 +77,32 @@ Build the backend
 
 ### Remove migrations
 
-    gomigrate -source "file://$(pwd)/migrations" -database postgres://flattrack:flattrack@localhost/flattrack?sslmode=disable down
+    gomigrate -source "file://$(pwd)/kodata/migrations" -database postgres://flattrack:flattrack@localhost/flattrack?sslmode=disable down
 
 ## Project structure and details
 
 ### API
 
-Written in golang, the API is located in [pkg/routes](https://gitlab.com/flattrack/flattrack/-/tree/master/pkg/routes).
+Written in Go, the HTTP server is located in [internal/httpserver](https://gitlab.com/flattrack/flattrack/-/tree/main/internal/httpserver).
 
 The features and areas are separated into packages.
 
 1.  Testing
 
-    Tests are located in [test/backend/e2e](https://gitlab.com/flattrack/flattrack/-/tree/master/test/backend/e2e). So far there are only e2e tests for FlatTrack&rsquo;s API.
+    Tests are located in [test/backend/e2e](https://gitlab.com/flattrack/flattrack/-/tree/main/test/backend/e2e). So far there are only e2e tests for FlatTrack&rsquo;s API.
 
 
 ### Frontend
 
-Written in Vue.js + JavaScript, the frontend is located in [web](https://gitlab.com/flattrack/flattrack/-/tree/master/test/frontend).
+Written in Vue.js + JavaScript, the frontend is located in [web](https://gitlab.com/flattrack/flattrack/-/tree/main/test/frontend).
 
 The frontend makes requests to the backend to perform actions.
 
 
 ### Database
 
-The migrations and database structuring is located in [migrations](https://gitlab.com/flattrack/flattrack/-/tree/master/migrations).
+The migrations and database structuring is located in [migrations](https://gitlab.com/flattrack/flattrack/-/tree/main/kodata/migrations).
 Each table is created with [golang-migrate](https://github.com/golang-migrate/migrate).
-
-
-### Assets
-
-Images are located in [web/assets](https://gitlab.com/flattrack/flattrack/-/tree/master/web/assets), these are used throughout the project (such as in the frontend, and readme).
 
 
 ## Docs
