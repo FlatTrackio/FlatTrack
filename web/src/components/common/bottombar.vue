@@ -21,21 +21,12 @@
       :can-cancel="false"
     />
     <div class="bottombar bbitems">
-      <div
-        v-for="item in routes"
-        :key="item"
-        class="bbitem"
-        @click="$router.push({ name: item.routeName })"
-      >
-        <div
-          v-if="item.display"
-          :class="$route.name === item.routeName ? 'active' : ''"
-        >
-          <b-icon
-            :icon="item.icon"
-            size="is-small"
-          />
-          <span> {{ item.name }} </span>
+      <div v-for="item in routes" :key="item">
+        <div class="bbitem" @click="$router.push({ name: item.routeName })">
+          <div :class="$route.name === item.routeName ? 'active' : ''">
+            <b-icon :icon="item.icon" size="is-small" />
+            <span> {{ item.name }} </span>
+          </div>
         </div>
       </div>
     </div>
@@ -57,21 +48,31 @@
     computed: {
       routes() {
         return [
-          { name: "Home", icon: "home", routeName: "Home", display: true },
-          { name: "Apps", icon: "apps", routeName: "Apps", display: true },
+          {
+            name: "Home",
+            icon: "home",
+            routeName: "Home",
+            requiresAdmin: false,
+          },
+          {
+            name: "Apps",
+            icon: "apps",
+            routeName: "Apps",
+            requiresAdmin: false,
+          },
           {
             name: "Account",
             icon: "account",
             routeName: "Account",
-            display: true,
+            requiresAdmin: false,
           },
           {
             name: "Admin",
             icon: "web",
             routeName: "Admin home",
-            display: this.canUserAccountAdmin === true,
+            requiresAdmin: true,
           },
-        ];
+        ].filter(i => !i.requiresAdmin || i.requiresAdmin && this.canUserAccountAdmin === true);
       },
     },
     async beforeMount() {
@@ -92,11 +93,11 @@
 </script>
 
 <style>
-.bottombar-fixed {
+  .bottombar-fixed {
     position: fixed;
-}
+  }
 
-.bottombar {
+  .bottombar {
     width: 100%;
     height: 3.5rem;
     bottom: 0;
@@ -105,45 +106,46 @@
     z-index: 100;
     background-color: #ffffff52;
     box-shadow: 0 5px 5px -3px #0003, 0 8px 10px 1px #00000024,
-                0 3px 14px 2px #0000001f;
+      0 3px 14px 2px #0000001f;
     backdrop-filter: blur(10px);
-}
+  }
 
-.bottombar:before {
+  .bottombar:before {
     content: "";
     box-shadow: inset 0 0 0 200px rgba(255, 255, 255, 0.3);
     filter: blur(10px);
-}
+  }
 
-.bbitems .bbitem {
+  .bbitems div {
     width: 100%;
     user-select: none;
-}
-.bbitems .bbitem div {
+  }
+  .bbitems div .bbitem div {
     position: static;
     display: flex;
     flex-direction: column;
     align-items: center;
     width: 100%;
     padding: 0.5rem 0;
-}
-@keyframes bbactive {
-    0%, 40% {
-        background-color: #81d1f02b;
-        font-size: 1rem;
-        height: 100%;
+  }
+  @keyframes bbactive {
+    0%,
+    40% {
+      background-color: #81d1f02b;
+      font-size: 1rem;
+      height: 100%;
     }
     100% {
-        background-color: #c1c1c13d;
-        font-size: 1.09rem;
-        height: calc(100% - 0.05px);
+      background-color: #c1c1c13d;
+      font-size: 1.09rem;
+      height: calc(100% - 0.05px);
     }
-}
-.bbitems .bbitem:hover:has(div.active) {
+  }
+  .bbitems div .bbitem:hover:has(div.active) {
     background-color: #81d1f02b;
     transition: background-color 1s;
-}
-.bbitems .bbitem:has(div.active) {
+  }
+  .bbitems div .bbitem:has(div.active) {
     background-color: #c1c1c13d;
     box-shadow: 0 0 6px -4px black inset;
     transition: background-color 1s;
@@ -151,35 +153,35 @@
     animation-name: bbactive;
     animation-duration: 0.7s;
     height: calc(100% - 0.05px);
-}
-.bbitems .bbitem:has(div.active) div {
+  }
+  .bbitems div .bbitem:has(div.active) div {
     top: 0.09rem;
     position: relative;
-}
+  }
 
-@media (prefers-color-scheme: dark) {
+  @media (prefers-color-scheme: dark) {
     .bottombar {
-        background-color: #2b2b2b4a;
+      background-color: #2b2b2b4a;
     }
-    .bbitems .bbitem:has(div.active) {
-        background-color: #d4d4d499;
-        color: black;
+    .bbitems div .bbitem:has(div.active) {
+      background-color: #d4d4d499;
+      color: black;
     }
-}
+  }
 
-[data-theme="dark"] .bottombar {
+  [data-theme="dark"] .bottombar {
     background-color: #2b2b2b4a;
-}
-[data-theme="dark"] .bbitems .bbitem:has(div.active) {
+  }
+  [data-theme="dark"] .bbitems div .bbitem:has(div.active) {
     background-color: #d4d4d499;
     color: black;
   }
-@media (prefers-color-scheme: light) {
+  @media (prefers-color-scheme: light) {
     .bottombar {
-        background-color: #ffffff52;
+      background-color: #ffffff52;
     }
-    .bbitems .bbitem:has(div.active) {
-        background-color: #c1c1c13d;
+    .bbitems div .bbitem:has(div.active) {
+      background-color: #c1c1c13d;
       color: unset;
     }
   }
@@ -187,7 +189,7 @@
   [data-theme="light"] .bottombar {
     background-color: #ffffff52;
   }
-  [data-theme="light"] .bbitems .bbitem:has(div.active) {
+  [data-theme="light"] .bbitems div .bbitem:has(div.active) {
     background-color: #81d1f02b;
     color: black;
   }
