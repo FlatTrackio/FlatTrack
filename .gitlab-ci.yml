@@ -21,6 +21,7 @@ variables:
   IMAGE_POSTGRES: docker.io/postgres:17.5-alpine3.22@sha256:6567bca8d7bc8c82c5922425a0baee57be8402df92bae5eacad5f01ae9544daa
   IMAGE_MINIO: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
   IMAGE_CONFORM: registry.gitlab.com/bobymcbobs/container-images/conform:v1753521600-daa77a05@sha256:3142518fe8224247f53665b9082220fb557c14b617f9a4530384c3e121958acf
+  IMAGE_ORAS: ghcr.io/oras-project/oras:v1.3.0@sha256:6ce045ce069a89934d6666b8b49f9c4c0145201bd6de6dbe2aee267814c55468
   COSIGN_YES: "true"
 
 .container-registry-login-dockerhub: &container-registry-login-dockerhub |
@@ -344,3 +345,20 @@ conform:
     - git fetch origin
   script:
     - /conform enforce --commit-ref=refs/remotes/origin/main
+
+push-artifacthub-yml:
+  only:
+    refs:
+      - main
+  stage: codequality
+  image:
+    name: $IMAGE_ORAS
+    entrypoint: [""]
+  before_script:
+    - oras login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+  script:
+    - |
+      oras push \
+        registry.gitlab.com/flattrack/flattrack:artifacthub.io \
+        --config /dev/null:application/vnd.cncf.artifacthub.config.v1+yaml \
+        artifacthub-repo.yml:application/vnd.cncf.artifacthub.repository-metadata.layer.v1.yaml
