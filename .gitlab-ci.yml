@@ -1,11 +1,12 @@
----
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
 stages:
-  - codequality
-  - test
-  - build
-  - post-build
-  - pages
-
+- test
 variables:
   APP_BUILD_VERSION: 0.0.0
   APP_BUILD_MODE: development
@@ -22,9 +23,8 @@ variables:
   IMAGE_MINIO: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
   IMAGE_CONFORM: registry.gitlab.com/bobymcbobs/container-images/conform:v1753521600-daa77a05@sha256:3142518fe8224247f53665b9082220fb557c14b617f9a4530384c3e121958acf
   IMAGE_ORAS: ghcr.io/oras-project/oras:v1.3.0@sha256:6ce045ce069a89934d6666b8b49f9c4c0145201bd6de6dbe2aee267814c55468
-  COSIGN_YES: "true"
-
-.container-registry-login-dockerhub: &container-registry-login-dockerhub |
+  COSIGN_YES: 'true'
+".container-registry-login-dockerhub": |
   mkdir -p $(getent passwd $(id -u) | cut -d ':' -f6)/.docker
   cat << EOF > $(getent passwd $(id -u) | cut -d ':' -f6)/.docker/config.json
   {
@@ -35,8 +35,7 @@ variables:
     }
   }
   EOF
-
-.image-set-build-env: &image-set-build-env |
+".image-set-build-env": |
   echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
   export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
   export APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
@@ -53,112 +52,289 @@ variables:
   export VITE_APP_AppBuildHash="$APP_BUILD_HASH"
   export VITE_APP_AppBuildMode="$APP_BUILD_MODE"
   PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
+".setup-testing-repo": 'echo ''https://dl-cdn.alpinelinux.org/alpine/edge/testing''
+  | tee -a /etc/apk/repositories
 
-.setup-testing-repo: &setup-testing-repo |
-  echo 'https://dl-cdn.alpinelinux.org/alpine/edge/testing' | tee -a /etc/apk/repositories
+  '
+".setup-community-repo": 'echo ''https://dl-cdn.alpinelinux.org/alpine/edge/community''
+  | tee -a /etc/apk/repositories
 
-.setup-community-repo: &setup-community-repo |
-  echo 'https://dl-cdn.alpinelinux.org/alpine/edge/community' | tee -a /etc/apk/repositories
-
-.build-container: &build-container
+  '
+".build-container":
   image:
-    name: $IMAGE_GOLANG_ALPINE
-    entrypoint: [""]
+    name: "$IMAGE_GOLANG_ALPINE"
+    entrypoint:
+    - ''
   retry: 2
   id_tokens:
     SIGSTORE_ID_TOKEN:
-      aud: "sigstore"
+      aud: sigstore
   variables:
     KO_DOCKER_REPO: "$CI_REGISTRY_IMAGE"
   before_script:
-    - set -x
-    - *setup-testing-repo
-    - apk add --no-cache curl cosign ko git crane jq syft bash file tar gzip
-    - export KO_DOCKER_REPO="$(echo ${KO_DOCKER_REPO} | tr '[:upper:]' '[:lower:]')"
-    - ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
-    - *image-set-build-env
-  script:
-    - ./hack/publish.sh $PUBLISH_FLAGS
+  - set -x
+  - 'echo ''https://dl-cdn.alpinelinux.org/alpine/edge/testing'' | tee -a /etc/apk/repositories
 
+    '
+  - apk add --no-cache curl cosign ko git crane jq syft bash file tar gzip
+  - export KO_DOCKER_REPO="$(echo ${KO_DOCKER_REPO} | tr '[:upper:]' '[:lower:]')"
+  - ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
+  - |
+    echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
+    export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
+    export APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
+    export APP_BUILD_VERSION=0.0.0
+    export APP_BUILD_MODE=staging
+    export IMAGE_TAGS="latest"
+    if [[ ! -z "$CI_COMMIT_TAG" ]]; then
+      export APP_BUILD_VERSION="$CI_COMMIT_TAG"
+      export APP_BUILD_MODE=production
+      export IMAGE_TAGS="$APP_BUILD_VERSION"
+    fi
+    export VITE_APP_AppBuildVersion="$APP_BUILD_VERSION"
+    export VITE_APP_AppBuildDate="$APP_BUILD_DATE"
+    export VITE_APP_AppBuildHash="$APP_BUILD_HASH"
+    export VITE_APP_AppBuildMode="$APP_BUILD_MODE"
+    PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
+  script:
+  - "./hack/publish.sh $PUBLISH_FLAGS"
 build-container-release:
-  <<: *build-container
+  image:
+    name: "$IMAGE_GOLANG_ALPINE"
+    entrypoint:
+    - ''
+  retry: 2
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
+  variables:
+    PUBLISH_FLAGS: "--sign"
+  before_script:
+  - set -x
+  - 'echo ''https://dl-cdn.alpinelinux.org/alpine/edge/testing'' | tee -a /etc/apk/repositories
+
+    '
+  - apk add --no-cache curl cosign ko git crane jq syft bash file tar gzip
+  - export KO_DOCKER_REPO="$(echo ${KO_DOCKER_REPO} | tr '[:upper:]' '[:lower:]')"
+  - ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
+  - |
+    echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
+    export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
+    export APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
+    export APP_BUILD_VERSION=0.0.0
+    export APP_BUILD_MODE=staging
+    export IMAGE_TAGS="latest"
+    if [[ ! -z "$CI_COMMIT_TAG" ]]; then
+      export APP_BUILD_VERSION="$CI_COMMIT_TAG"
+      export APP_BUILD_MODE=production
+      export IMAGE_TAGS="$APP_BUILD_VERSION"
+    fi
+    export VITE_APP_AppBuildVersion="$APP_BUILD_VERSION"
+    export VITE_APP_AppBuildDate="$APP_BUILD_DATE"
+    export VITE_APP_AppBuildHash="$APP_BUILD_HASH"
+    export VITE_APP_AppBuildMode="$APP_BUILD_MODE"
+    PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
+  script:
+  - "./hack/publish.sh $PUBLISH_FLAGS"
   stage: build
   only:
     refs:
-      - main
-      - tags
-  variables:
-    PUBLISH_FLAGS: "--sign"
+    - main
+    - tags
   needs:
-    - build-frontend-release
-
+  - build-frontend-release
 build-container-test:
-  <<: *build-container
-  stage: codequality
+  image:
+    name: "$IMAGE_GOLANG_ALPINE"
+    entrypoint:
+    - ''
+  retry: 2
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
   variables:
     PUBLISH_FLAGS: "--tarball-test-only --debug"
+  before_script:
+  - set -x
+  - 'echo ''https://dl-cdn.alpinelinux.org/alpine/edge/testing'' | tee -a /etc/apk/repositories
+
+    '
+  - apk add --no-cache curl cosign ko git crane jq syft bash file tar gzip
+  - export KO_DOCKER_REPO="$(echo ${KO_DOCKER_REPO} | tr '[:upper:]' '[:lower:]')"
+  - ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
+  - |
+    echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
+    export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
+    export APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
+    export APP_BUILD_VERSION=0.0.0
+    export APP_BUILD_MODE=staging
+    export IMAGE_TAGS="latest"
+    if [[ ! -z "$CI_COMMIT_TAG" ]]; then
+      export APP_BUILD_VERSION="$CI_COMMIT_TAG"
+      export APP_BUILD_MODE=production
+      export IMAGE_TAGS="$APP_BUILD_VERSION"
+    fi
+    export VITE_APP_AppBuildVersion="$APP_BUILD_VERSION"
+    export VITE_APP_AppBuildDate="$APP_BUILD_DATE"
+    export VITE_APP_AppBuildHash="$APP_BUILD_HASH"
+    export VITE_APP_AppBuildMode="$APP_BUILD_MODE"
+    PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
+  script:
+  - "./hack/publish.sh $PUBLISH_FLAGS"
+  stage: codequality
   only:
     refs:
-      - merge_requests
+    - merge_requests
   needs:
-    - build-frontend-test
-
+  - build-frontend-test
 copy-container-image-to-dockerhub:
   only:
     refs:
-      - main
-      - tags
+    - main
+    - tags
   stage: post-build
-  image: $IMAGE_GOLANG_ALPINE
+  image: "$IMAGE_GOLANG_ALPINE"
   before_script:
-    - apk add --no-cache git cosign
-    - cosign login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
-    - *container-registry-login-dockerhub
-    - *image-set-build-env
+  - apk add --no-cache git cosign
+  - cosign login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
+  - |
+    mkdir -p $(getent passwd $(id -u) | cut -d ':' -f6)/.docker
+    cat << EOF > $(getent passwd $(id -u) | cut -d ':' -f6)/.docker/config.json
+    {
+      "auths": {
+        "https://index.docker.io/v1/": {
+          "auth": "$DOCKERHUB_AUTH"
+        }
+      }
+    }
+    EOF
+  - |
+    echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
+    export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
+    export APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
+    export APP_BUILD_VERSION=0.0.0
+    export APP_BUILD_MODE=staging
+    export IMAGE_TAGS="latest"
+    if [[ ! -z "$CI_COMMIT_TAG" ]]; then
+      export APP_BUILD_VERSION="$CI_COMMIT_TAG"
+      export APP_BUILD_MODE=production
+      export IMAGE_TAGS="$APP_BUILD_VERSION"
+    fi
+    export VITE_APP_AppBuildVersion="$APP_BUILD_VERSION"
+    export VITE_APP_AppBuildDate="$APP_BUILD_DATE"
+    export VITE_APP_AppBuildHash="$APP_BUILD_HASH"
+    export VITE_APP_AppBuildMode="$APP_BUILD_MODE"
+    PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
   script:
-    - |
-      [ -z "${EXTRA_REGISTRIES}" ] && exit 0
-      for TAG in $(echo ${IMAGE_TAGS:-} | tr ',' ' '); do
-        for REG in ${EXTRA_REGISTRIES}; do
-          cosign copy --force "${CI_REGISTRY}/${PROJECT_PATH}:${TAG}" "${REG}/${PROJECT_PATH}:${TAG}"
-        done
+  - |
+    [ -z "${EXTRA_REGISTRIES}" ] && exit 0
+    for TAG in $(echo ${IMAGE_TAGS:-} | tr ',' ' '); do
+      for REG in ${EXTRA_REGISTRIES}; do
+        cosign copy --force "${CI_REGISTRY}/${PROJECT_PATH}:${TAG}" "${REG}/${PROJECT_PATH}:${TAG}"
       done
-
-.build-frontend: &build-frontend
+    done
+".build-frontend":
   retry: 2
-  image: $IMAGE_DENO_ALPINE
+  image: "$IMAGE_DENO_ALPINE"
   before_script:
-    - *image-set-build-env
-    - cd web
+  - |
+    echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
+    export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
+    export APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
+    export APP_BUILD_VERSION=0.0.0
+    export APP_BUILD_MODE=staging
+    export IMAGE_TAGS="latest"
+    if [[ ! -z "$CI_COMMIT_TAG" ]]; then
+      export APP_BUILD_VERSION="$CI_COMMIT_TAG"
+      export APP_BUILD_MODE=production
+      export IMAGE_TAGS="$APP_BUILD_VERSION"
+    fi
+    export VITE_APP_AppBuildVersion="$APP_BUILD_VERSION"
+    export VITE_APP_AppBuildDate="$APP_BUILD_DATE"
+    export VITE_APP_AppBuildHash="$APP_BUILD_HASH"
+    export VITE_APP_AppBuildMode="$APP_BUILD_MODE"
+    PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
+  - cd web
   script:
-    - deno task build
+  - deno task build
   artifacts:
     expire_in: 1 day
     paths:
-      - kodata/web
-      - flattrack*/
-
+    - kodata/web
+    - flattrack*/
 build-frontend-release:
-  <<: *build-frontend
+  retry: 2
+  image: "$IMAGE_DENO_ALPINE"
+  before_script:
+  - |
+    echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
+    export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
+    export APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
+    export APP_BUILD_VERSION=0.0.0
+    export APP_BUILD_MODE=staging
+    export IMAGE_TAGS="latest"
+    if [[ ! -z "$CI_COMMIT_TAG" ]]; then
+      export APP_BUILD_VERSION="$CI_COMMIT_TAG"
+      export APP_BUILD_MODE=production
+      export IMAGE_TAGS="$APP_BUILD_VERSION"
+    fi
+    export VITE_APP_AppBuildVersion="$APP_BUILD_VERSION"
+    export VITE_APP_AppBuildDate="$APP_BUILD_DATE"
+    export VITE_APP_AppBuildHash="$APP_BUILD_HASH"
+    export VITE_APP_AppBuildMode="$APP_BUILD_MODE"
+    PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
+  - cd web
+  script:
+  - deno task build
+  artifacts:
+    expire_in: 1 day
+    paths:
+    - kodata/web
+    - flattrack*/
   stage: build
   only:
     refs:
-      - main
-      - tags
-
+    - main
+    - tags
 build-frontend-test:
-  <<: *build-frontend
+  retry: 2
+  image: "$IMAGE_DENO_ALPINE"
+  before_script:
+  - |
+    echo "Commit made on '${CI_COMMIT_TIMESTAMP}'"
+    export APP_BUILD_HASH="$CI_COMMIT_SHORT_SHA"
+    export APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
+    export APP_BUILD_VERSION=0.0.0
+    export APP_BUILD_MODE=staging
+    export IMAGE_TAGS="latest"
+    if [[ ! -z "$CI_COMMIT_TAG" ]]; then
+      export APP_BUILD_VERSION="$CI_COMMIT_TAG"
+      export APP_BUILD_MODE=production
+      export IMAGE_TAGS="$APP_BUILD_VERSION"
+    fi
+    export VITE_APP_AppBuildVersion="$APP_BUILD_VERSION"
+    export VITE_APP_AppBuildDate="$APP_BUILD_DATE"
+    export VITE_APP_AppBuildHash="$APP_BUILD_HASH"
+    export VITE_APP_AppBuildMode="$APP_BUILD_MODE"
+    PROJECT_PATH=$(echo $CI_PROJECT_PATH | tr '[:upper:]' '[:lower:]')
+  - cd web
+  script:
+  - deno task build
+  artifacts:
+    expire_in: 1 day
+    paths:
+    - kodata/web
+    - flattrack*/
   stage: codequality
   only:
     refs:
-      - merge_requests
-
+    - merge_requests
 test-backend-e2e:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image: "$IMAGE_GOLANG_ALPINE"
   variables:
     POSTGRES_DB: flattrack
     POSTGRES_USER: flattrack
@@ -172,193 +348,187 @@ test-backend-e2e:
     APP_MINIO_ACCESS_KEY: minioadmin
     APP_MINIO_SECRET_KEY: minioadmin
     APP_MINIO_BUCKET: flattrack
-    APP_MINIO_USE_SSL: "false"
-    CGO_ENABLED: "0"
+    APP_MINIO_USE_SSL: 'false'
+    CGO_ENABLED: '0'
   services:
-    - name: $IMAGE_POSTGRES
-      alias: postgres
-    - name: $IMAGE_MINIO
-      alias: minio
-      command:
-        - server
-        - /data
+  - name: "$IMAGE_POSTGRES"
+    alias: postgres
+  - name: "$IMAGE_MINIO"
+    alias: minio
+    command:
+    - server
+    - "/data"
   before_script:
-    - apk add --no-cache git gcc curl
-    - go install github.com/onsi/ginkgo/ginkgo@v1.16.5
-    - go build -o ./bin/flattrack main.go
-    - ./bin/flattrack &
-    - until curl -s http://localhost:8080; do echo "Waiting for API"; sleep 1s; done
+  - apk add --no-cache git gcc curl
+  - go install github.com/onsi/ginkgo/ginkgo@v1.16.5
+  - go build -o ./bin/flattrack main.go
+  - "./bin/flattrack &"
+  - until curl -s http://localhost:8080; do echo "Waiting for API"; sleep 1s; done
   script:
-    - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --progress test/backend/e2e
-    - pkill flattrack || true
-
+  - ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace
+    --progress test/backend/e2e
+  - pkill flattrack || true
 build-backend-smoketest:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image: "$IMAGE_GOLANG_ALPINE"
   before_script:
-    - apk add --no-cache git
+  - apk add --no-cache git
   script:
-    - ./hack/verify-build-smoketest.sh
-
+  - "./hack/verify-build-smoketest.sh"
 spellcheck:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image: "$IMAGE_GOLANG_ALPINE"
   allow_failure: true
   before_script:
-    - apk add --no-cache git
+  - apk add --no-cache git
   script:
-    - ./hack/verify-spellcheck.sh
-
+  - "./hack/verify-spellcheck.sh"
 govet:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image: "$IMAGE_GOLANG_ALPINE"
   before_script:
-    - apk add --no-cache git
+  - apk add --no-cache git
   script:
-    - ./hack/verify-govet.sh
-
+  - "./hack/verify-govet.sh"
 gofmt:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image: "$IMAGE_GOLANG_ALPINE"
   before_script:
-    - apk add --no-cache git
+  - apk add --no-cache git
   script:
-    - ./hack/verify-gofmt.sh
-
+  - "./hack/verify-gofmt.sh"
 goimports:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image: "$IMAGE_GOLANG_ALPINE"
   before_script:
-    - apk add --no-cache git
+  - apk add --no-cache git
   script:
-    - ./hack/verify-goimports.sh
-
+  - "./hack/verify-goimports.sh"
 golangci-lint:
   stage: codequality
   only:
-    - merge_requests
+  - merge_requests
   image:
-    name: $IMAGE_GOLANGCI_LINT
-    entrypoint: [""]
+    name: "$IMAGE_GOLANGCI_LINT"
+    entrypoint:
+    - ''
   script:
-    - ./hack/verify-golangci-lint.sh
-
+  - "./hack/verify-golangci-lint.sh"
 govulncheck:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image: "$IMAGE_GOLANG_ALPINE"
   before_script:
-    - apk add --no-cache git
+  - apk add --no-cache git
   script:
-    - ./hack/verify-govulncheck.sh
-
+  - "./hack/verify-govulncheck.sh"
 lint-frontend:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
-  image: $IMAGE_DENO_ALPINE
+  image: "$IMAGE_DENO_ALPINE"
   allow_failure: true
   before_script:
-    - cd web
+  - cd web
   script:
-    - deno task lint
-
+  - deno task lint
 lint-backend:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image: "$IMAGE_GOLANG_ALPINE"
   allow_failure: true
   before_script:
-    - apk add --no-cache git
+  - apk add --no-cache git
   script:
-    - ./hack/verify-lint-backend.sh
-
+  - "./hack/verify-lint-backend.sh"
 verify-documented-env-vars:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image: "$IMAGE_GOLANG_ALPINE"
   before_script:
-    - apk add --no-cache git
+  - apk add --no-cache git
   script:
-    - ./hack/verify-documented-env-vars.sh
-
+  - "./hack/verify-documented-env-vars.sh"
 check-links:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
   image:
-    name: $IMAGE_LYCHEE
-    entrypoint: [""]
+    name: "$IMAGE_LYCHEE"
+    entrypoint:
+    - ''
   script:
-    - ./hack/check-links.sh
-
+  - "./hack/check-links.sh"
 pages:
-  image: $IMAGE_PYTHON
+  image: "$IMAGE_PYTHON"
   stage: pages
-  script: ./hack/build-docs.sh
+  script: "./hack/build-docs.sh"
   artifacts:
     paths:
-      - public
+    - public
   only:
-    - main
-
+  - main
 pages-smoketest:
   only:
     refs:
-      - merge_requests
-  image: $IMAGE_PYTHON
+    - merge_requests
+  image: "$IMAGE_PYTHON"
   stage: codequality
-  script: ./hack/build-docs.sh
-
+  script: "./hack/build-docs.sh"
 conform:
   only:
     refs:
-      - merge_requests
+    - merge_requests
   stage: codequality
   image:
-    name: $IMAGE_CONFORM
-    entrypoint: [""]
+    name: "$IMAGE_CONFORM"
+    entrypoint:
+    - ''
   before_script:
-    - git fetch origin
+  - git fetch origin
   script:
-    - /conform enforce --commit-ref=refs/remotes/origin/main
-
+  - "/conform enforce --commit-ref=refs/remotes/origin/main"
 push-artifacthub-yml:
   only:
     refs:
-      - main
+    - main
   stage: codequality
   image:
-    name: $IMAGE_ORAS
-    entrypoint: [""]
+    name: "$IMAGE_ORAS"
+    entrypoint:
+    - ''
   before_script:
-    - oras login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
+  - oras login -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}" "${CI_REGISTRY}"
   script:
-    - |
-      oras push \
-        registry.gitlab.com/flattrack/flattrack:artifacthub.io \
-        --config /dev/null:application/vnd.cncf.artifacthub.config.v1+yaml \
-        artifacthub-repo.yml:application/vnd.cncf.artifacthub.repository-metadata.layer.v1.yaml
+  - |
+    oras push \
+      registry.gitlab.com/flattrack/flattrack:artifacthub.io \
+      --config /dev/null:application/vnd.cncf.artifacthub.config.v1+yaml \
+      artifacthub-repo.yml:application/vnd.cncf.artifacthub.repository-metadata.layer.v1.yaml
+sast:
+  stage: test
+include:
+- template: Security/SAST.gitlab-ci.yml
