@@ -350,7 +350,7 @@ push-artifacthub-yml:
   only:
     refs:
       - main
-  stage: codequality
+  stage: build
   image:
     name: $IMAGE_ORAS
     entrypoint: [""]

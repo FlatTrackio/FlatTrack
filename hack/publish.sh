@@ -39,13 +39,16 @@ APP_BUILD_DATE="$(git show -s --format=%cd --date=format:'%Y.%m.%d.%H%M')"
 APP_BUILD_VERSION="${APP_BUILD_VERSION:-0.0.0}"
 APP_BUILD_MODE="${APP_BUILD_MODE:-staging}"
 IMAGE_DESTINATIONS="latest,${APP_BUILD_HASH}"
+IMAGE_VERSION=latest
 if [[ -n "${CI_COMMIT_TAG:-}" ]]; then
     APP_BUILD_VERSION="${CI_COMMIT_TAG:-}"
     APP_BUILD_MODE=production
     IMAGE_DESTINATIONS="$APP_BUILD_VERSION"
+    IMAGE_VERSION="$APP_BUILD_VERSION"
 fi
 _IMAGE_LABELS="org.opencontainers.image.authors='FlatTrack https://flattrack.io'
 org.opencontainers.image.created=$(git show -s --format=%cd --date=format:'%Y-%m-%dT%H:%M:%SZ')
+org.opencontainers.image.version=$IMAGE_VERSION
 org.opencontainers.image.source=https://gitlab.com/flattrack/flattrack
 org.opencontainers.image.title=FlatTrack
 org.opencontainers.image.url=https://flattrack.io
