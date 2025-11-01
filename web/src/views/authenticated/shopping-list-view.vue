@@ -228,7 +228,7 @@
                   <b-button
                     type="is-text"
                     size="medium"
-                    class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover is-paddingless remove-shadow"
+                    class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover is-paddingless remove-shadow max-width-80"
                     @click="ActivateEditTagNameModal(itemTag.tag)
                       "
                   >
@@ -1177,5 +1177,8 @@
     .ListBar {
       background-color: hsla(0, 0%, 100%, 0.73);
     }
+  }
+  .max-width-80 {
+    max-width: 80%;
   }
 </style>
