@@ -17,8 +17,11 @@
   <b-tooltip
     :label="message"
     type="is-white"
-    :position="position ? position : 'is-top'"
+    :position="position ? position : 'is-auto'"
     multilined
+    :triggers="['focus', 'click', 'hover']"
+    @open="$emit('open')"
+    @close="$emit('close')"
   >
     <b-icon
       icon="information-outline"
@@ -29,11 +32,11 @@
 </template>
 
 <script>
-export default {
-  name: 'PasswordTooltipIcon',
-  props: {
-    message: String,
-    position: String
-  }
-}
+  export default {
+    name: "PasswordTooltipIcon",
+    props: {
+      message: String,
+      position: String,
+    },
+  };
 </script>

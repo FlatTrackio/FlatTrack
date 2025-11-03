@@ -230,7 +230,7 @@
                     size="medium"
                     class="title is-5 is-marginless display-is-editable pointer-cursor-on-hover is-paddingless remove-shadow max-width-80"
                     @click="ActivateEditTagNameModal(itemTag.tag)
-                      "
+                          "
                   >
                     {{ itemTag.tag }}
                   </b-button>
@@ -288,9 +288,11 @@
                         <infotooltip
                           v-if="participatingFlatmates.length > 1 || manualSplit > 1"
                           :message="
-                            'Split price plus tag price is $' +
-                              (equalPricePerPerson + itemTag.price).toFixed(2)
-                          "
+                                  'Split price plus tag price is $' +
+                                  (equalPricePerPerson + itemTag.price).toFixed(2)
+                                  "
+                          @open="LoopStop"
+                          @close="LoopStart"
                         />
                       </span>
                     </span>
@@ -420,6 +422,8 @@
                     ' flatmates'
                   : 'Split manually by ' + manualSplit
               "
+              @open="LoopStop"
+              @close="LoopStart"
             />
           </span>
         </p>
