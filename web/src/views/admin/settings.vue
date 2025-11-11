@@ -21,12 +21,8 @@
           back-link-name="Admin home"
           :current-page-name="$route.name"
         />
-        <h1 class="title is-1">
-          Settings
-        </h1>
-        <p class="subtitle is-4">
-          General FlatTrack settings
-        </p>
+        <h1 class="title is-1">Settings</h1>
+        <p class="subtitle is-4">General FlatTrack settings</p>
         <b-loading
           v-model:active="pageLoading"
           :is-full-page="false"
@@ -84,7 +80,27 @@
             </p>
           </b-field>
         </div>
-        <br>
+        <b-field grouped>
+          <b-field label="Shopping List Cleanup" expanded>
+            <b-field label="Keep lists" expanded>
+              <b-select
+                placeholder="Forever"
+                expanded
+                v-model="shoppingListKeepPolicy"
+                size="is-medium"
+              >
+                <option value="Always">Always</option>
+                <option value="ThreeMonths">For three months</option>
+                <option value="SixMonths">For six months</option>
+                <option value="OneYear">For one year</option>
+                <option value="TwoYears">For two years</option>
+                <option value="Last10">The last 10</option>
+                <option value="Last50">The last 50</option>
+                <option value="Last100">The last 100</option>
+              </b-select>
+            </b-field>
+          </b-field>
+        </b-field>
       </section>
     </div>
   </div>
@@ -106,6 +122,7 @@
         pageLoading: true,
         flatName: "",
         flatNotes: "",
+        shoppingListKeepPolicy: "",
       };
     },
     async beforeMount() {
@@ -117,6 +134,10 @@
         })
         .then((resp) => {
           this.flatNotes = resp.data.spec.notes;
+          return settings.GetShoppingListKeepPolicy();
+        })
+        .then((resp) => {
+          this.shoppingListKeepPolicy = resp.data.spec;
           this.pageLoading = false;
         });
     },
@@ -168,6 +189,27 @@
       },
       TimestampToCalendar(timestamp) {
         return common.TimestampToCalendar(timestamp);
+      },
+    },
+    watch: {
+      shoppingListKeepPolicy() {
+        if (this.pageLoading === true || this.shoppingListKeepPolicy === "") {
+          return;
+        }
+        settings
+          .PutShoppingListKeepPolicy(this.shoppingListKeepPolicy)
+          .then((resp) => {
+            common.DisplaySuccessToast(
+              this.$buefy,
+              "Set shopping list keep policy"
+            );
+          })
+          .catch((err) => {
+            common.DisplayFailureToast(
+              this.$buefy,
+              "Failed set the shopping list keep policy" + "<br/>" + err
+            );
+          });
       },
     },
   };

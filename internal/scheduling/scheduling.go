@@ -6,6 +6,8 @@ import (
 	"log"
 	"sync"
 
+	"github.com/go-co-op/gocron/v2"
+
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/scheduling/leaderelection"
 )
@@ -16,14 +18,26 @@ type Manager struct {
 	fns             []func() error
 	endpointEnabled bool
 	secret          string
+	cronScheduler   gocron.Scheduler
 }
 
 func NewManager(db *sql.DB) *Manager {
+	leaderelection := leaderelection.NewLock(db)
+	cronScheduler, err := gocron.NewScheduler(
+		gocron.WithLogger(
+			gocron.NewLogger(gocron.LogLevelError),
+		),
+		gocron.WithDistributedElector(leaderelection),
+	)
+	if err != nil {
+		log.Printf("Error creating scheduler: %v", err)
+	}
 	m := &Manager{
 		db:              db,
-		leaderelection:  leaderelection.NewLock(db),
+		leaderelection:  leaderelection,
 		endpointEnabled: common.GetSchedulerDisableUseEndpoint(),
 		secret:          common.GetSchedulerEndpointSecret(),
+		cronScheduler:   cronScheduler,
 	}
 	if m.endpointEnabled && m.secret == "" {
 		log.Panicln("warning: APP_SCHEDULER_ENDPOINT_SECRET must be set when scheduler is disabled to ensure that only expected authorities call the scheduler endpoint")
@@ -41,6 +55,16 @@ func (m *Manager) GetEndpointSecret() string {
 
 func (m *Manager) RegisterFunc(fns ...func() error) *Manager {
 	m.fns = append(m.fns, fns...)
+	return m
+}
+
+func (m *Manager) RegisterCronFunc(crontab string, fn func() error) *Manager {
+	if _, err := m.cronScheduler.NewJob(
+		gocron.CronJob(crontab, false),
+		gocron.NewTask(fn),
+	); err != nil {
+		log.Printf("Error: creating cron func: %v", err)
+	}
 	return m
 }
 
@@ -72,5 +96,11 @@ func (m *Manager) Run() {
 	if m.endpointEnabled {
 		return
 	}
+	m.cronScheduler.Start()
+	defer func() {
+		if err := m.cronScheduler.Shutdown(); err != nil {
+			log.Println(err)
+		}
+	}()
 	m.leaderelection.Run(m.PerformWork)
 }
