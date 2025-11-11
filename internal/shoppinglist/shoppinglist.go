@@ -89,9 +89,9 @@ func (m *ShoppingListManager) Validate(shoppingList types.ShoppingListSpec) (val
 
 // List ...
 // returns a list of all shopping lists (name, notes, author, etc...)
-func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingLists []types.ShoppingListSpec, err error) {
+func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingLists []types.ShoppingListSpec, amount int, err error) {
 	sqlStatement := `select * from shopping_list where deletionTimestamp = 0 `
-	fields := []interface{}{}
+	fields := []any{}
 
 	if options.SortBy == types.ShoppingListSortByTemplated {
 		sqlStatement = `with popularity as (
@@ -118,7 +118,7 @@ func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingL
 	case types.ShoppingListSortByRecentlyAdded:
 		sqlStatement += `order by creationTimestamp asc `
 	case types.ShoppingListSortByLastAdded:
-		sqlStatement += `order by creationTimestamp asc `
+		sqlStatement += `order by creationTimestamp desc `
 	case types.ShoppingListSortByAlphabeticalDescending:
 		sqlStatement += `order by name asc `
 	case types.ShoppingListSortByAlphabeticalAscending:
@@ -133,10 +133,15 @@ func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingL
 		sqlStatement += fmt.Sprintf(`limit $%v `, len(fields)+1)
 		fields = append(fields, options.Limit)
 	}
+	if options.Page > 0 && options.Limit > 0 {
+		pageNumber := options.Limit * options.Page
+		sqlStatement += fmt.Sprintf(`offset $%v `, len(fields)+1)
+		fields = append(fields, pageNumber)
+	}
 
 	rows, err := m.db.Query(sqlStatement, fields...)
 	if err != nil {
-		return []types.ShoppingListSpec{}, err
+		return []types.ShoppingListSpec{}, amount, err
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
@@ -146,11 +151,11 @@ func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingL
 	for rows.Next() {
 		shoppingList, err := getListObjectFromRows(rows)
 		if err != nil {
-			return []types.ShoppingListSpec{}, err
+			return []types.ShoppingListSpec{}, amount, err
 		}
 		shoppingList.Count, err = m.manager.ShoppingItem().GetListItemCount(shoppingList.ID)
 		if err != nil {
-			return []types.ShoppingListSpec{}, err
+			return []types.ShoppingListSpec{}, amount, err
 		}
 
 		if options.Selector.Completed == "true" && !shoppingList.Completed {
@@ -160,7 +165,7 @@ func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingL
 		}
 		shoppingLists = append(shoppingLists, shoppingList)
 	}
-	return shoppingLists, nil
+	return shoppingLists, amount, nil
 }
 
 // Get ...

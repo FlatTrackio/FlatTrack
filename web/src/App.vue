@@ -127,6 +127,7 @@
     font-family: BlinkMacSystemFont, -apple-system, Segoe UI, Roboto, Oxygen,
       Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, Helvetica, Arial,
       sans-serif !important;
+    overflow-x: hidden;
   }
 
   .darken a.is-disabled {
