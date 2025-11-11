@@ -133,6 +133,24 @@ const (
 	ShoppingListSortByTemplated              = "templated"
 )
 
+type ShoppingListKeepPolicy string
+
+const (
+	ShoppingListKeepPolicyUnknown     = ""
+	ShoppingListKeepPolicyAlways      = "Always"
+	ShoppingListKeepPolicyThreeMonths = "ThreeMonths"
+	ShoppingListKeepPolicySixMonths   = "SixMonths"
+	ShoppingListKeepPolicyOneYear     = "OneYear"
+	ShoppingListKeepPolicyTwoYears    = "TwoYears"
+	ShoppingListKeepPolicyLast10      = "Last10"
+	ShoppingListKeepPolicyLast50      = "Last50"
+	ShoppingListKeepPolicyLast100     = "Last100"
+)
+
+type ShoppingListKeepPolicySpec struct {
+	KeepPolicy ShoppingListKeepPolicy `json:"keepPolicy"`
+}
+
 // ShoppingListOptions ...
 // options for lists
 type ShoppingListOptions struct {
@@ -145,9 +163,11 @@ type ShoppingListOptions struct {
 // ShoppingListSelector ...
 // options for creating and selecting lists
 type ShoppingListSelector struct {
-	Completed                  string `json:"completed"`
-	ModificationTimestampAfter int    `json:"modificationTimestampAfter"`
-	CreationTimestampAfter     int    `json:"creationTimestampAfter"`
+	Completed                   string `json:"completed"`
+	ModificationTimestampAfter  int64  `json:"modificationTimestampAfter"`
+	CreationTimestampAfter      int64  `json:"creationTimestampAfter"`
+	ModificationTimestampBefore int64  `json:"modificationTimestampBefore"`
+	CreationTimestampBefore     int64  `json:"creationTimestampBefore"`
 }
 
 // ShoppingItemSpec ...
@@ -325,3 +345,10 @@ type JWTclaim struct {
 	AuthNonce string `json:"authNonce"`
 	jwt.RegisteredClaims
 }
+
+type CronTabSchedule = string
+
+const (
+	CronTabScheduleOnceDaily           = "0 0 * * *"
+	CronTabScheduleShoppingListCleanup = CronTabScheduleOnceDaily
+)

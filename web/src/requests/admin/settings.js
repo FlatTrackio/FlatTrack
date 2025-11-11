@@ -16,33 +16,56 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import Request from '@/requests/requests'
+import Request from "@/requests/requests";
 
 // PostFlatName
 // changes the FlatName
-function PostFlatName (flatName) {
+function PostFlatName(flatName) {
   return Request({
     url: `/api/admin/settings/flatName`,
-    method: 'POST',
+    method: "POST",
     data: {
-      flatName
-    }
-  })
+      flatName,
+    },
+  });
 }
 
 // PutFlatNotes
 // changes the FlatNotes
-function PutFlatNotes (notes) {
+function PutFlatNotes(notes) {
   return Request({
     url: `/api/admin/settings/flatNotes`,
-    method: 'PUT',
+    method: "PUT",
     data: {
-      notes
-    }
-  })
+      notes,
+    },
+  });
+}
+
+// GetShoppingListKeepPolicy
+// gets the policy for time to keep shopping lists
+function GetShoppingListKeepPolicy() {
+  return Request({
+    url: `/api/admin/settings/shoppingListKeepPolicy`,
+    method: "GET",
+  });
+}
+
+// PutShoppingListKeepPolicy
+// changes the time to keep shopping lists for
+function PutShoppingListKeepPolicy(keepPolicy) {
+  return Request({
+    url: `/api/admin/settings/shoppingListKeepPolicy`,
+    method: "PUT",
+    data: {
+      keepPolicy,
+    },
+  });
 }
 
 export default {
   PostFlatName,
-  PutFlatNotes
-}
+  PutFlatNotes,
+  GetShoppingListKeepPolicy,
+  PutShoppingListKeepPolicy,
+};
