@@ -453,6 +453,7 @@ func (m *ShoppingListManager) DeleteCleanup() (string, func() error) {
 			Selector: types.ShoppingListSelector{
 				CreationTimestampBefore: timestamp.Unix(),
 			},
+			SortBy: types.ShoppingListSortByRecentlyUpdated,
 		})
 		if err != nil {
 			return err
