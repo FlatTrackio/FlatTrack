@@ -46,16 +46,17 @@ func NewManager() *manager {
 		return nil
 	}
 	users := users.NewManager(db)
-	shoppinglist := shoppinglist.NewManager(db)
+	settings := settings.NewManager(db)
+	shoppinglist := shoppinglist.NewManager(db, settings)
 	emails := emails.NewManager()
 	groups := groups.NewManager(db)
 	health := health.NewManager(db)
 	migrations := migrations.NewManager(db)
-	settings := settings.NewManager(db)
 	system := system.NewManager(db)
 	registration := registration.NewManager(users, system, settings)
 	metrics := metrics.NewManager()
-	scheduling := scheduling.NewManager(db)
+	scheduling := scheduling.NewManager(db).
+		RegisterCronFunc(shoppinglist.ShoppingList().DeleteCleanup())
 	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling, maintenanceMode)
 	return &manager{
 		httpserver:      httpserver,

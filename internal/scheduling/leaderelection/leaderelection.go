@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -16,9 +17,10 @@ import (
 )
 
 type Lock struct {
-	id   string
-	name string
-	db   *sql.DB
+	id       string
+	name     string
+	db       *sql.DB
+	isLeader bool
 
 	lease *resourcelock.LeaderElectionRecord
 }
@@ -123,6 +125,13 @@ func (l *Lock) Identity() string {
 	return l.id
 }
 
+func (l *Lock) IsLeader(_ context.Context) error {
+	if !l.isLeader {
+		return fmt.Errorf("%v is not leader", l.id)
+	}
+	return nil
+}
+
 func (l *Lock) Run(fn func() error) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -140,6 +149,7 @@ func (l *Lock) Run(fn func() error) {
 			},
 			OnNewLeader: func(currentID string) {
 				if currentID == l.id {
+					l.isLeader = true
 					return
 				}
 				log.Printf("new/current leader is %s\n", currentID)

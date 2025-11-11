@@ -22,6 +22,8 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+
+	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
 type Manager struct {
@@ -176,6 +178,64 @@ func (m *Manager) SetFlatNotes(value string) (err error) {
 		}
 		return nil
 	}); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetShoppingListKeepPolicy ...
+// returns shopping list delete policy
+func (m *Manager) GetShoppingListKeepPolicy() (output types.ShoppingListKeepPolicy, err error) {
+	value, err := m.get("shoppingListKeepPolicy")
+	if err != nil {
+		return "", err
+	}
+	switch value {
+	case string(types.ShoppingListKeepPolicyThreeMonths):
+		output = types.ShoppingListKeepPolicyThreeMonths
+	case string(types.ShoppingListKeepPolicySixMonths):
+		output = types.ShoppingListKeepPolicySixMonths
+	case string(types.ShoppingListKeepPolicyOneYear):
+		output = types.ShoppingListKeepPolicyOneYear
+	case string(types.ShoppingListKeepPolicyTwoYears):
+		output = types.ShoppingListKeepPolicyTwoYears
+	case string(types.ShoppingListKeepPolicyLast10):
+		output = types.ShoppingListKeepPolicyLast10
+	case string(types.ShoppingListKeepPolicyLast50):
+		output = types.ShoppingListKeepPolicyLast50
+	case string(types.ShoppingListKeepPolicyLast100):
+		output = types.ShoppingListKeepPolicyLast100
+	default:
+		output = types.ShoppingListKeepPolicyAlways
+	}
+	return output, nil
+}
+
+// SetShoppingListKeepPolicy ...
+// sets the shopping list keep policy
+func (m *Manager) SetShoppingListKeepPolicy(input types.ShoppingListKeepPolicy) (err error) {
+	var value types.ShoppingListKeepPolicy
+	switch input {
+	case types.ShoppingListKeepPolicyAlways:
+		value = types.ShoppingListKeepPolicyAlways
+	case types.ShoppingListKeepPolicyThreeMonths:
+		value = types.ShoppingListKeepPolicyThreeMonths
+	case types.ShoppingListKeepPolicySixMonths:
+		value = types.ShoppingListKeepPolicySixMonths
+	case types.ShoppingListKeepPolicyOneYear:
+		value = types.ShoppingListKeepPolicyOneYear
+	case types.ShoppingListKeepPolicyTwoYears:
+		value = types.ShoppingListKeepPolicyTwoYears
+	case types.ShoppingListKeepPolicyLast10:
+		value = types.ShoppingListKeepPolicyLast10
+	case types.ShoppingListKeepPolicyLast50:
+		value = types.ShoppingListKeepPolicyLast50
+	case types.ShoppingListKeepPolicyLast100:
+		value = types.ShoppingListKeepPolicyLast100
+	default:
+		return fmt.Errorf("Error: invalid shopping list keep policy")
+	}
+	if err := m.set("shoppingListKeepPolicy", string(value), func() error { return nil }); err != nil {
 		return err
 	}
 	return nil

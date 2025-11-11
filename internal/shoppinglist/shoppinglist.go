@@ -23,10 +23,12 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/imdario/mergo"
 	"github.com/lib/pq"
 
+	"gitlab.com/flattrack/flattrack/internal/settings"
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
@@ -48,12 +50,14 @@ var (
 )
 
 type Manager struct {
-	db *sql.DB
+	db              *sql.DB
+	settingsManager *settings.Manager
 }
 
-func NewManager(db *sql.DB) *Manager {
+func NewManager(db *sql.DB, settingsManager *settings.Manager) *Manager {
 	return &Manager{
-		db: db,
+		db:              db,
+		settingsManager: settingsManager,
 	}
 }
 
@@ -101,6 +105,14 @@ func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingL
                         join popularity using(id) where deletiontimestamp = 0 `
 	}
 
+	if options.Selector.ModificationTimestampBefore != 0 {
+		sqlStatement += fmt.Sprintf(`and modificationTimestamp < $%v `, len(fields)+1)
+		fields = append(fields, options.Selector.ModificationTimestampBefore)
+	}
+	if options.Selector.CreationTimestampBefore != 0 {
+		sqlStatement += fmt.Sprintf(`and creationTimestamp < $%v `, len(fields)+1)
+		fields = append(fields, options.Selector.CreationTimestampBefore)
+	}
 	if options.Selector.ModificationTimestampAfter != 0 {
 		sqlStatement += fmt.Sprintf(`and modificationTimestamp > $%v `, len(fields)+1)
 		fields = append(fields, options.Selector.ModificationTimestampAfter)
@@ -402,4 +414,60 @@ func (m *ShoppingListManager) GetListCount() (count int, err error) {
 		return 0, err
 	}
 	return count, nil
+}
+
+// DeleteCleanup ...
+// cleans up shopping lists older than policy
+func (m *ShoppingListManager) DeleteCleanup() (string, func() error) {
+	return types.CronTabScheduleShoppingListCleanup, func() error {
+		policy, err := m.manager.settingsManager.GetShoppingListKeepPolicy()
+		if err != nil {
+			return err
+		}
+		timestamp := time.Now()
+		limit := -1
+		switch policy {
+		case types.ShoppingListKeepPolicyThreeMonths:
+			timestamp = timestamp.AddDate(0, -3, 0)
+		case types.ShoppingListKeepPolicySixMonths:
+			timestamp = timestamp.AddDate(0, -6, 0)
+		case types.ShoppingListKeepPolicyOneYear:
+			timestamp = timestamp.AddDate(-1, 0, 0)
+		case types.ShoppingListKeepPolicyTwoYears:
+			timestamp = timestamp.AddDate(-2, 0, 0)
+		case types.ShoppingListKeepPolicyLast10:
+			limit = 10
+		case types.ShoppingListKeepPolicyLast50:
+			limit = 50
+		case types.ShoppingListKeepPolicyLast100:
+			limit = 100
+		default:
+			return nil
+		}
+		lists, err := m.List(types.ShoppingListOptions{
+			Selector: types.ShoppingListSelector{
+				CreationTimestampBefore: timestamp.Unix(),
+			},
+		})
+		if err != nil {
+			return err
+		}
+		if len(lists) == 0 {
+			return nil
+		}
+		if limit != -1 {
+			removeAmount := len(lists) - limit
+			if len(lists) < limit {
+				removeAmount = 0
+			}
+			lists = lists[:removeAmount]
+		}
+		log.Printf("[cleanup] Deleting old lists with policy %v\n", policy)
+		for _, list := range lists {
+			if err := m.Delete(list.ID); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }

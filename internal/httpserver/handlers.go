@@ -902,8 +902,8 @@ func (h *HTTPServer) GetShoppingList(w http.ResponseWriter, r *http.Request) {
 // responds with shopping list by id
 func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 	var context string
-	modificationTimestampAfter, _ := strconv.Atoi(r.FormValue("modificationTimestampAfter"))
-	creationTimestampAfter, _ := strconv.Atoi(r.FormValue("creationTimestampAfter"))
+	modificationTimestampAfter, _ := strconv.ParseInt(r.FormValue("modificationTimestampAfter"), 10, 64)
+	creationTimestampAfter, _ := strconv.ParseInt(r.FormValue("creationTimestampAfter"), 10, 64)
 	limit, _ := strconv.Atoi(r.FormValue("limit"))
 
 	options := types.ShoppingListOptions{
@@ -2239,6 +2239,73 @@ func (h *HTTPServer) PutSettingsFlatNotes(w http.ResponseWriter, r *http.Request
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
+// GetSettingsShoppingListKeepPolicy ...
+// responds with the keepPolicy for shopping lists
+func (h *HTTPServer) GetSettingsShoppingListKeepPolicy(w http.ResponseWriter, r *http.Request) {
+	var context string
+	keepPolicy, err := h.settings.GetShoppingListKeepPolicy()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping keep policy",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "fetched shopping keep policy",
+		},
+		Spec: keepPolicy,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
+// PutSettingsShoppingListKeepPolicy ...
+// update the keep policy for shopping lists
+func (h *HTTPServer) PutSettingsShoppingListKeepPolicy(w http.ResponseWriter, r *http.Request) {
+	var context string
+
+	var spec types.ShoppingListKeepPolicySpec
+	if err := json.NewDecoder(r.Body).Decode(&spec); err != nil {
+		log.Printf("error: failed to unmarshal; %v\n", err)
+		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to read request body",
+			},
+		})
+		return
+	}
+
+	if err := h.settings.SetShoppingListKeepPolicy(spec.KeepPolicy); err != nil {
+		context = err.Error()
+		code := http.StatusInternalServerError
+		if err.Error() == "Unable to set shopping list keep policy as it is invalid" {
+			code = http.StatusBadRequest
+		}
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get shopping keep policy",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, code, JSONresp)
+		return
+	}
+	JSONresp := types.JSONMessageResponse{
+		Metadata: types.JSONResponseMetadata{
+			Response: "set shopping keep policy",
+		},
+		Spec: spec.KeepPolicy,
+	}
+	log.Println(JSONresp.Metadata.Response, context)
+	JSONResponse(r, w, http.StatusOK, JSONresp)
+}
+
 // GetAllGroups ...
 // returns a list of all groups
 func (h *HTTPServer) GetAllGroups(w http.ResponseWriter, r *http.Request) {
@@ -2765,6 +2832,20 @@ func (h *HTTPServer) registerAPIHandlers(router *mux.Router) {
 		{
 			EndpointPath:     "/admin/settings/flatNotes",
 			HandlerFunc:      h.PutSettingsFlatNotes,
+			HTTPMethod:       http.MethodPut,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
+		},
+		{
+			EndpointPath:     "/admin/settings/shoppingListKeepPolicy",
+			HandlerFunc:      h.GetSettingsShoppingListKeepPolicy,
+			HTTPMethod:       http.MethodGet,
+			RequireAuth:      true,
+			RequireAllGroups: []string{"admin"},
+		},
+		{
+			EndpointPath:     "/admin/settings/shoppingListKeepPolicy",
+			HandlerFunc:      h.PutSettingsShoppingListKeepPolicy,
 			HTTPMethod:       http.MethodPut,
 			RequireAuth:      true,
 			RequireAllGroups: []string{"admin"},
