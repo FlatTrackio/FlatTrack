@@ -152,8 +152,14 @@
             "
           />
           <div class="m-3">
-            <p>{{ listsFiltered.length }} shopping list(s)</p>
+            <p>{{ listsFilteredTotal.length }} shopping list(s)</p>
           </div>
+          <b-pagination
+            :total="listsFilteredTotal.length"
+            v-model="page"
+            order="is-centered"
+            :per-page="itemsPerPage"
+          />
         </div>
         <div v-else>
           <div class="card">
@@ -248,13 +254,26 @@
         listSearch: "",
         pageLoading: true,
         sortBy: "recentlyUpdated",
+        totalAmount: 0,
+        page: 1,
+        itemsPerPage: 5,
       };
     },
     computed: {
-      listsFiltered() {
+      listsFilteredTotal() {
         return this.lists.filter((item) => {
           return this.ListDisplayState(item);
         });
+      },
+      listsFiltered() {
+        return this.lists
+          .filter((item) => {
+            return this.ListDisplayState(item);
+          })
+          .slice(
+            (this.page - 1) * this.itemsPerPage,
+            this.page * this.itemsPerPage
+          );
       },
     },
     watch: {
@@ -283,10 +302,18 @@
       },
       GetShoppingLists() {
         shoppinglist
-          .GetShoppingLists(undefined, this.sortBy)
+          .GetShoppingLists(
+            undefined,
+            this.sortBy,
+            undefined,
+            undefined,
+            undefined,
+            undefined
+          )
           .then((resp) => {
             this.lists = resp.data.list || [];
             this.pageLoading = false;
+            this.totalAmount = resp.data.data || 0;
           })
           .catch(() => {
             common.DisplayFailureToast(

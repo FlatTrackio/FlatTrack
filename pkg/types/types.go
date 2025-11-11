@@ -138,6 +138,7 @@ const (
 type ShoppingListOptions struct {
 	SortBy   string               `json:"sortBy"`
 	Limit    int                  `json:"limit"`
+	Page     int                  `json:"page"`
 	Selector ShoppingListSelector `json:"selector"`
 }
 

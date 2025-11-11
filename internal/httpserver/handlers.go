@@ -902,13 +902,63 @@ func (h *HTTPServer) GetShoppingList(w http.ResponseWriter, r *http.Request) {
 // responds with shopping list by id
 func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 	var context string
-	modificationTimestampAfter, _ := strconv.Atoi(r.FormValue("modificationTimestampAfter"))
-	creationTimestampAfter, _ := strconv.Atoi(r.FormValue("creationTimestampAfter"))
-	limit, _ := strconv.Atoi(r.FormValue("limit"))
+	modificationTimestampAfterString := r.FormValue("modificationTimestampAfter")
+	creationTimestampAfterString := r.FormValue("creationTimestampAfter")
+	limitString := r.FormValue("limit")
+	pageString := r.FormValue("page")
+	modificationTimestampAfter, err := strconv.Atoi(modificationTimestampAfterString)
+	if err != nil && modificationTimestampAfterString != "" {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "unable to parse value for limiting request for shopping lists",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	creationTimestampAfter, err := strconv.Atoi(creationTimestampAfterString)
+	if err != nil && creationTimestampAfterString != "" {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "unable to parse value for limiting request for shopping lists",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	limit, err := strconv.Atoi(limitString)
+	if err != nil && pageString != "" {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "unable to parse value for limiting request for shopping lists",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
+	page, err := strconv.Atoi(pageString)
+	if err != nil && pageString != "" {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "unable to parse value for limiting request for shopping lists",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 
 	options := types.ShoppingListOptions{
 		SortBy: r.FormValue("sortBy"),
 		Limit:  limit,
+		Page:   page,
 		Selector: types.ShoppingListSelector{
 			Completed:                  r.FormValue("completed"),
 			ModificationTimestampAfter: modificationTimestampAfter,
@@ -916,7 +966,7 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	shoppingLists, err := h.shoppinglist.ShoppingList().List(options)
+	shoppingLists, amount, err := h.shoppinglist.ShoppingList().List(options)
 	if err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
@@ -933,6 +983,7 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 			Response: "fetched shopping lists",
 		},
 		List: shoppingLists,
+		Data: amount,
 	}
 	log.Println(JSONresp.Metadata.Response, context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
