@@ -3,8 +3,9 @@ package flattrack
 import (
 	"log/slog"
 	"os"
+	"strings"
 
-	"github.com/joho/godotenv"
+	"github.com/spf13/viper"
 
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/database"
@@ -38,6 +39,54 @@ type manager struct {
 	maintenanceMode bool
 }
 
+type FlatTrack struct {
+	DB struct {
+		ConnectionString string `mapstructure:"connection_string"`
+		Database         string `mapstructure:"database"`
+		Username         string `mapstructure:"username"`
+		Host             string `mapstructure:"host"`
+		Port             string `mapstructure:"port"`
+		Password         string `mapstructure:"password"`
+		sslMode          string `mapstructure:"ssl_mode"`
+		migrationsPath   string `mapstructure:"migrationsPath"`
+	} `mapstructure:"db"`
+	URL  string `mapstructure:"url"`
+	SMTP struct {
+		Enabled  string `mapstructure:"enabled"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
+		Host     string `mapstructure:"Host"`
+		Port     string `mapstructure:"port"`
+	} `mapstructure:"smtp"`
+	Port    string `mapstructure:"port"`
+	Metrics struct {
+		Enabled string `mapstructure:"enabled"`
+		Port    string `mapstructure:"port"`
+	} `mapstructure:"metrics"`
+	Health struct {
+		Enabled string `mapstructure:"enabled"`
+		Port    string `mapstructure:"port"`
+	} `mapstructure:"health"`
+	HTTPRealIPHeader string `mapstructure:"http_real_ip_header"`
+	SetupMessage     string `mapstructure:"setup_message"`
+	LoginMessage     string `mapstructure:"login_message"`
+	EmbeddedHTML     string `mapstructure:"embedded_html"`
+	Minio            struct {
+		AccessKey string `mapstructure:"access_key"`
+		SecretKey string `mapstructure:"secret_key"`
+		Bucket    string `mapstructure:"bucket"`
+		Host      string `mapstructure:"host"`
+		UseSSL    bool   `mapstructure:"use_ssl"`
+	} `mapstructure:"minio"`
+	Scheduler struct {
+		EndpointSecret     string `mapstructure:"endpoint_secret"`
+		DisableUseEndpoint string `mapstructure:"disable_use_endpoint"`
+	} `mapstructure:"scheduler"`
+	RegistrationSecret string `mapstructure:"registration_secret"`
+	MaintenanceMode    string `mapstructure:"maintenance_mode"`
+	WebFolder          string `mapstructure:"web_folder"`
+}
+
 func NewManager() *manager {
 	slog.SetDefault(
 		slog.New(slog.NewJSONHandler(
@@ -51,8 +100,30 @@ func NewManager() *manager {
 		slog.String("buildDate", common.GetAppBuildDate()),
 		slog.String("buildMode", common.GetAppBuildMode()),
 	)
-	envFile := common.GetAppEnvFile()
-	_ = godotenv.Load(envFile)
+	viper.SetEnvPrefix("app")
+	viper.SetConfigType("env")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+	if err := viper.BindEnv("port", "PORT"); err != nil {
+		slog.Error("Unable bind config flag", "error", err)
+		return nil
+	}
+	if err := viper.BindEnv("web_folder", "KO_DATA_PATH"); err != nil {
+		slog.Error("Unable bind config flag", "error", err)
+		return nil
+	}
+	viper.SetDefault("port", ":8080")
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			slog.Error("Unable read in config", "error", err)
+			return nil
+		}
+	}
+	flattrack := &FlatTrack{}
+	if err := viper.Unmarshal(flattrack); err != nil {
+		slog.Error("Unable to decode FlatTrack config into struct", "error", err)
+	}
+	slog.Info("config", "flattrack", flattrack, "APP_PORT", viper.GetString("port"), "keys", viper.AllKeys())
 	maintenanceMode := common.GetMaintenanceMode()
 	db, err := database.Open()
 	if err != nil && !maintenanceMode {
