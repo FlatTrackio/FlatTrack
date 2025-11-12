@@ -458,9 +458,6 @@ func (m *ShoppingListManager) DeleteCleanup() (string, func() error) {
 		if err != nil {
 			return err
 		}
-		if len(lists) == 0 {
-			return nil
-		}
 		if limit != -1 {
 			removeAmount := len(lists) - limit
 			if len(lists) < limit {
@@ -468,7 +465,10 @@ func (m *ShoppingListManager) DeleteCleanup() (string, func() error) {
 			}
 			lists = lists[:removeAmount]
 		}
-		log.Printf("[cleanup] Deleting old lists with policy %v\n", policy)
+		if len(lists) == 0 {
+			return nil
+		}
+		log.Printf("[cleanup] Deleting old %v lists with policy %v\n", len(lists), policy)
 		for _, list := range lists {
 			if err := m.Delete(list.ID); err != nil {
 				return err
