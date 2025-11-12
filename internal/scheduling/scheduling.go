@@ -59,7 +59,7 @@ func (m *Manager) RegisterFunc(fns ...func() error) *Manager {
 }
 
 func (m *Manager) RegisterCronFunc(crontab string, fn func() error) *Manager {
-	if !m.endpointEnabled {
+	if m.endpointEnabled {
 		m.fns = append(m.fns, fn)
 		return m
 	}
