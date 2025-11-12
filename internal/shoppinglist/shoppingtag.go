@@ -22,7 +22,7 @@ package shoppinglist
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
@@ -66,7 +66,7 @@ func (m *ShoppingTagManager) Create(newTag types.ShoppingTag) (tag types.Shoppin
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -88,7 +88,7 @@ func (m *ShoppingTagManager) ListTagsInList(listID string) (tags []string, err e
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -111,7 +111,7 @@ func (m *ShoppingTagManager) GetInList(listID string, tag string) (tagInDB strin
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -144,7 +144,7 @@ func (m *ShoppingTagManager) UpdateInList(listID string, tag string, tagUpdate s
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -164,7 +164,7 @@ func (m *ShoppingTagManager) Get(id string) (tag types.ShoppingTag, err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -209,7 +209,7 @@ func (m *ShoppingTagManager) List(options types.ShoppingTagOptions) (tags []type
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -246,7 +246,7 @@ func (m *ShoppingTagManager) Update(id string, tag types.ShoppingTag) (tagUpdate
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -267,7 +267,7 @@ func (m *ShoppingTagManager) Delete(id string) (err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	return nil

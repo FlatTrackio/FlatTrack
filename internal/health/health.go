@@ -3,7 +3,7 @@ package health
 import (
 	"context"
 	"database/sql"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -44,17 +44,17 @@ func (m *Manager) Listen() {
 	router := mux.NewRouter().StrictSlash(true)
 	r := router.HandleFunc("/_healthz", func(w http.ResponseWriter, r *http.Request) {
 		if err := m.Healthy(); err != nil {
-			log.Printf("error app unhealthy: %v\n", err)
+			slog.Error("error app unhealthy", "error", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			if _, err := w.Write([]byte("not healthy")); err != nil {
-				log.Fatal(err)
+				slog.Error("Failed to write response", "error", err)
 				return
 			}
 			return
 		}
 		w.WriteHeader(http.StatusOK)
 		if _, err := w.Write([]byte("healthy")); err != nil {
-			log.Fatal(err)
+			slog.Error("Failed to write response", "error", err)
 			return
 		}
 	})
@@ -65,13 +65,13 @@ func (m *Manager) Listen() {
 		ReadTimeout:       15 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
-	log.Printf("Health listening on %v", port)
+	slog.Info("Health listening on" + port)
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+			slog.Error("Failed to listen on HTTP health port", "error", err)
 		}
 	}()
 
@@ -79,6 +79,6 @@ func (m *Manager) Listen() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server didn't exit gracefully %v", err)
+		slog.Error("Server didn't exit gracefully", "error", err)
 	}
 }

@@ -20,7 +20,7 @@ package metrics
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -60,13 +60,13 @@ func (m *Manager) Listen() {
 	if !m.enabled {
 		return
 	}
-	log.Printf("Metrics listening on %v\n", m.server.Addr)
+	slog.Info("Metrics listening on " + m.server.Addr)
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		if err := m.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+			slog.Error("Failed to close HTTP Server", "error", err)
 		}
 	}()
 
@@ -74,6 +74,6 @@ func (m *Manager) Listen() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := m.server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server didn't exit gracefully %v", err)
+		slog.Error("Server didn't exit gracefully", "error", err)
 	}
 }

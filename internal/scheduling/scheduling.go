@@ -3,7 +3,7 @@ package scheduling
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -34,7 +34,7 @@ func NewManager(db *sql.DB, system *system.Manager) *Manager {
 		gocron.WithDistributedElector(leaderelection),
 	)
 	if err != nil {
-		log.Printf("Error creating scheduler: %v", err)
+		slog.Info("Error creating scheduler", "error", err)
 	}
 	m := &Manager{
 		db:              db,
@@ -45,7 +45,7 @@ func NewManager(db *sql.DB, system *system.Manager) *Manager {
 		cronScheduler:   cronScheduler,
 	}
 	if m.endpointEnabled && m.secret == "" {
-		log.Panicln("warning: APP_SCHEDULER_ENDPOINT_SECRET must be set when scheduler is disabled to ensure that only expected authorities call the scheduler endpoint")
+		slog.Warn("APP_SCHEDULER_ENDPOINT_SECRET must be set when scheduler is disabled to ensure that only expected authorities call the scheduler endpoint")
 	}
 	return m
 }
@@ -72,13 +72,13 @@ func (m *Manager) RegisterCronFunc(crontab string, fn func() error) *Manager {
 		gocron.CronJob(crontab, false),
 		gocron.NewTask(fn),
 	); err != nil {
-		log.Printf("Error: creating cron func: %v", err)
+		slog.Info("Error: creating cron func", "error", err)
 	}
 	return m
 }
 
 func (m *Manager) PerformWork() error {
-	log.Println("[scheduler] Running work")
+	slog.Debug("scheduler", "error", "Work running")
 	now := time.Now()
 	if err := m.system.SetSchedulerLastRun(types.SchedulerLastRun{
 		Time:  now.Unix(),
@@ -102,14 +102,14 @@ func (m *Manager) PerformWork() error {
 	}
 	wg.Wait()
 	if len(eg) > 0 {
-		log.Printf("%+v\n", eg)
+		slog.Debug("%+v\n", "errorCount", eg)
 		if err := m.system.SetSchedulerLastRun(types.SchedulerLastRun{
 			Time:  now.Unix(),
 			State: types.SchedulerRunStateFailure,
 		}); err != nil {
 			return err
 		}
-		log.Println("[scheduler] Work failed")
+		slog.Debug("scheduler", "error", "Work failed")
 		return fmt.Errorf("scheduling errors: %v", eg)
 	}
 	if err := m.system.SetSchedulerLastRun(types.SchedulerLastRun{
@@ -118,7 +118,7 @@ func (m *Manager) PerformWork() error {
 	}); err != nil {
 		return err
 	}
-	log.Println("[scheduler] Work complete")
+	slog.Debug("scheduler", "error", "Work complete")
 	return nil
 
 }
@@ -130,7 +130,7 @@ func (m *Manager) Run() {
 	m.cronScheduler.Start()
 	defer func() {
 		if err := m.cronScheduler.Shutdown(); err != nil {
-			log.Println(err)
+			slog.Error("Failed to shutdown cron scheduler", "error", err)
 		}
 	}()
 	m.leaderelection.Run(m.PerformWork)

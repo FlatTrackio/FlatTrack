@@ -21,7 +21,7 @@ package emails
 import (
 	"bytes"
 	"html/template"
-	"log"
+	"log/slog"
 
 	"gitlab.com/flattrack/flattrack/internal/smtp"
 )
@@ -55,7 +55,7 @@ func (m *Manager) SendTestEmail(recipient string) (err error) {
 	templatedEmailBuffer := new(bytes.Buffer)
 	err = emailReportTemplate.Execute(templatedEmailBuffer, context)
 	if err != nil {
-		log.Println(err)
+		slog.Error("Failed to template email", "error", err)
 		return err
 	}
 	if err != nil {

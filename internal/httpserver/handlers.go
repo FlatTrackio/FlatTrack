@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"path"
 	"runtime"
@@ -83,7 +83,7 @@ func (h *HTTPServer) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	users, err := h.users.List(false, selectors)
 	if err != nil {
-		log.Printf("error getting all users: %v\n", err)
+		slog.Error("Failed to get all users", "error", err)
 		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to get a list of all users",
@@ -116,7 +116,7 @@ func (h *HTTPServer) GetUser(w http.ResponseWriter, r *http.Request) {
 			},
 			Spec: types.UserSpec{},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -127,7 +127,7 @@ func (h *HTTPServer) GetUser(w http.ResponseWriter, r *http.Request) {
 			},
 			Spec: types.UserSpec{},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -137,7 +137,7 @@ func (h *HTTPServer) GetUser(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: user,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -148,7 +148,7 @@ func (h *HTTPServer) PostUser(w http.ResponseWriter, r *http.Request) {
 
 	var user types.UserSpec
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -165,7 +165,7 @@ func (h *HTTPServer) PostUser(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to create user account",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
@@ -176,7 +176,7 @@ func (h *HTTPServer) PostUser(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: userAccount,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
@@ -187,7 +187,7 @@ func (h *HTTPServer) PutUser(w http.ResponseWriter, r *http.Request) {
 
 	var userAccount types.UserSpec
 	if err := json.NewDecoder(r.Body).Decode(&userAccount); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -206,7 +206,7 @@ func (h *HTTPServer) PutUser(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get user account by id: " + userID,
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
@@ -220,7 +220,7 @@ func (h *HTTPServer) PutUser(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to update user account by id: " + userID,
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
@@ -230,7 +230,7 @@ func (h *HTTPServer) PutUser(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: userAccountUpdated,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -241,7 +241,7 @@ func (h *HTTPServer) PatchUser(w http.ResponseWriter, r *http.Request) {
 
 	var userAccount types.UserSpec
 	if err := json.NewDecoder(r.Body).Decode(&userAccount); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -260,7 +260,7 @@ func (h *HTTPServer) PatchUser(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get user account by id: " + userID,
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
@@ -274,7 +274,7 @@ func (h *HTTPServer) PatchUser(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to patch user account by id: " + userID,
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
@@ -284,7 +284,7 @@ func (h *HTTPServer) PatchUser(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: userAccountPatched,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -295,7 +295,7 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 
 	var userAccount types.UserSpec
 	if err := json.NewDecoder(r.Body).Decode(&userAccount); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -314,7 +314,7 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get user account by id: " + userID,
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -327,7 +327,7 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to patch user account by id: " + userID,
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -337,7 +337,7 @@ func (h *HTTPServer) PatchUserDisabled(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: userAccountPatched,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -359,7 +359,7 @@ func (h *HTTPServer) DeleteUser(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get user account by id: " + userID,
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -370,7 +370,7 @@ func (h *HTTPServer) DeleteUser(w http.ResponseWriter, r *http.Request) {
 				Response: "unable to delete user account of invoker",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusForbidden, JSONresp)
 		return
 	}
@@ -382,7 +382,7 @@ func (h *HTTPServer) DeleteUser(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get user account id from token",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -391,7 +391,7 @@ func (h *HTTPServer) DeleteUser(w http.ResponseWriter, r *http.Request) {
 			Response: "deleted user account",
 		},
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -408,7 +408,7 @@ func (h *HTTPServer) GetProfile(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get user account",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -419,7 +419,7 @@ func (h *HTTPServer) GetProfile(w http.ResponseWriter, r *http.Request) {
 			},
 			Spec: types.UserSpec{},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -429,7 +429,7 @@ func (h *HTTPServer) GetProfile(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: user,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -442,7 +442,7 @@ func (h *HTTPServer) PutProfile(w http.ResponseWriter, r *http.Request) {
 
 	var userAccount types.UserSpec
 	if err := json.NewDecoder(r.Body).Decode(&userAccount); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -459,7 +459,7 @@ func (h *HTTPServer) PutProfile(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to update user account",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -469,7 +469,7 @@ func (h *HTTPServer) PutProfile(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: userAccountUpdated,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -482,7 +482,7 @@ func (h *HTTPServer) PatchProfile(w http.ResponseWriter, r *http.Request) {
 
 	var userAccount types.UserSpec
 	if err := json.NewDecoder(r.Body).Decode(&userAccount); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -499,7 +499,7 @@ func (h *HTTPServer) PatchProfile(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to patch user account",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
@@ -525,7 +525,7 @@ func (h *HTTPServer) GetSystemInitialized(w http.ResponseWriter, r *http.Request
 				Response: "failed to get system initialise status",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -539,7 +539,7 @@ func (h *HTTPServer) GetSystemInitialized(w http.ResponseWriter, r *http.Request
 		},
 		Data: initialised,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -548,7 +548,7 @@ func (h *HTTPServer) GetSystemInitialized(w http.ResponseWriter, r *http.Request
 func (h *HTTPServer) UserAuth(w http.ResponseWriter, r *http.Request) {
 	var user types.UserSpec
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -585,7 +585,7 @@ func (h *HTTPServer) UserAuth(w http.ResponseWriter, r *http.Request) {
 	// Check password locally, fall back to remote if incorrect
 	matches, err := h.users.CheckUserPassword(userInDB.Email, user.Password)
 	if err != nil {
-		log.Printf("error checking password: %v\n", err)
+		slog.Error("error checking password", "error", err)
 		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "Failed to check user account password",
@@ -603,7 +603,7 @@ func (h *HTTPServer) UserAuth(w http.ResponseWriter, r *http.Request) {
 	}
 	jwtToken, err := h.users.GenerateJWTauthToken(userInDB.ID, userInDB.AuthNonce, 0)
 	if err != nil {
-		log.Printf("error checking password: %v\n", err)
+		slog.Error("error checking password", "error", err)
 		JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "Successfully authenticated user",
@@ -634,7 +634,7 @@ func (h *HTTPServer) UserAuthValidate(w http.ResponseWriter, r *http.Request) {
 			},
 			Data: false,
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusUnauthorized, JSONresp)
 		return
 	}
@@ -646,7 +646,7 @@ func (h *HTTPServer) UserAuthValidate(w http.ResponseWriter, r *http.Request) {
 			},
 			Data: valid,
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusUnauthorized, JSONresp)
 		return
 	}
@@ -656,7 +656,7 @@ func (h *HTTPServer) UserAuthValidate(w http.ResponseWriter, r *http.Request) {
 		},
 		Data: valid,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -674,7 +674,7 @@ func (h *HTTPServer) UserAuthReset(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to find user account with id: " + jwtUserID,
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -683,7 +683,7 @@ func (h *HTTPServer) UserAuthReset(w http.ResponseWriter, r *http.Request) {
 			Response: "reset all authentication tokens",
 		},
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -705,7 +705,7 @@ func (h *HTTPServer) UserCanIgroup(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get group by name: " + groupName,
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -718,7 +718,7 @@ func (h *HTTPServer) UserCanIgroup(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to check whether user is in group",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -729,7 +729,7 @@ func (h *HTTPServer) UserCanIgroup(w http.ResponseWriter, r *http.Request) {
 		},
 		Data: userIsInGroup,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -745,7 +745,7 @@ func (h *HTTPServer) GetSettingsFlatName(w http.ResponseWriter, r *http.Request)
 				Response: "failed to get flat name setting",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -755,7 +755,7 @@ func (h *HTTPServer) GetSettingsFlatName(w http.ResponseWriter, r *http.Request)
 				Response: "flat name is not set",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -765,7 +765,7 @@ func (h *HTTPServer) GetSettingsFlatName(w http.ResponseWriter, r *http.Request)
 		},
 		Spec: flatName,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -776,7 +776,7 @@ func (h *HTTPServer) SetSettingsFlatName(w http.ResponseWriter, r *http.Request)
 
 	var flatName types.FlatName
 	if err := json.NewDecoder(r.Body).Decode(&flatName); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -792,7 +792,7 @@ func (h *HTTPServer) SetSettingsFlatName(w http.ResponseWriter, r *http.Request)
 				Response: "failed to set flat name setting",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
@@ -802,7 +802,7 @@ func (h *HTTPServer) SetSettingsFlatName(w http.ResponseWriter, r *http.Request)
 		},
 		Spec: true,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -819,7 +819,7 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get system initialised status",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -829,14 +829,14 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 				Response: "system is initialised",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusOK, JSONresp)
 		return
 	}
 
 	var registrationForm types.Registration
 	if err := json.NewDecoder(r.Body).Decode(&registrationForm); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -854,7 +854,7 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to register instance",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -865,7 +865,7 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 		Spec: registered,
 		Data: jwt,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
@@ -884,7 +884,7 @@ func (h *HTTPServer) GetShoppingList(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -894,7 +894,7 @@ func (h *HTTPServer) GetShoppingList(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: shoppingList,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -914,7 +914,7 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 				Response: "unable to parse value for limiting request for shopping lists",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -926,7 +926,7 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 				Response: "unable to parse value for limiting request for shopping lists",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -938,7 +938,7 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 				Response: "unable to parse value for limiting request for shopping lists",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -950,7 +950,7 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 				Response: "unable to parse value for limiting request for shopping lists",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -974,7 +974,7 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get shopping lists",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -984,7 +984,7 @@ func (h *HTTPServer) GetShoppingLists(w http.ResponseWriter, r *http.Request) {
 		},
 		List: shoppingLists,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -997,7 +997,7 @@ func (h *HTTPServer) PostShoppingList(w http.ResponseWriter, r *http.Request) {
 
 	var shoppingList types.ShoppingListSpec
 	if err := json.NewDecoder(r.Body).Decode(&shoppingList); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1021,7 +1021,7 @@ func (h *HTTPServer) PostShoppingList(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to create shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
@@ -1031,7 +1031,7 @@ func (h *HTTPServer) PostShoppingList(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: shoppingListInserted,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
@@ -1044,7 +1044,7 @@ func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 
 	var shoppingList types.ShoppingListSpec
 	if err := json.NewDecoder(r.Body).Decode(&shoppingList); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1064,7 +1064,7 @@ func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1078,7 +1078,7 @@ func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to patch shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1088,7 +1088,7 @@ func (h *HTTPServer) PatchShoppingList(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: shoppingListPatched,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1101,7 +1101,7 @@ func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
 
 	var shoppingList types.ShoppingListSpec
 	if err := json.NewDecoder(r.Body).Decode(&shoppingList); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1121,7 +1121,7 @@ func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1135,7 +1135,7 @@ func (h *HTTPServer) PutShoppingList(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to update shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1164,7 +1164,7 @@ func (h *HTTPServer) DeleteShoppingList(w http.ResponseWriter, r *http.Request) 
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1176,7 +1176,7 @@ func (h *HTTPServer) DeleteShoppingList(w http.ResponseWriter, r *http.Request) 
 				Response: "failed to delete shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1185,7 +1185,7 @@ func (h *HTTPServer) DeleteShoppingList(w http.ResponseWriter, r *http.Request) 
 			Response: "deleted shopping list",
 		},
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1211,7 +1211,7 @@ func (h *HTTPServer) GetShoppingListItems(w http.ResponseWriter, r *http.Request
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1225,7 +1225,7 @@ func (h *HTTPServer) GetShoppingListItems(w http.ResponseWriter, r *http.Request
 				Response: "failed to get shopping list items",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1254,7 +1254,7 @@ func (h *HTTPServer) GetShoppingListItem(w http.ResponseWriter, r *http.Request)
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1267,7 +1267,7 @@ func (h *HTTPServer) GetShoppingListItem(w http.ResponseWriter, r *http.Request)
 				Response: "failed to get shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1277,7 +1277,7 @@ func (h *HTTPServer) GetShoppingListItem(w http.ResponseWriter, r *http.Request)
 				Response: "failed to get shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1287,7 +1287,7 @@ func (h *HTTPServer) GetShoppingListItem(w http.ResponseWriter, r *http.Request)
 		},
 		Spec: shoppingListItem,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1300,7 +1300,7 @@ func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Reque
 
 	var shoppingItem types.ShoppingItemSpec
 	if err := json.NewDecoder(r.Body).Decode(&shoppingItem); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1320,7 +1320,7 @@ func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Reque
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1334,7 +1334,7 @@ func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Reque
 				Response: "failed to add item to shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusBadRequest, JSONresp)
 		return
 	}
@@ -1344,7 +1344,7 @@ func (h *HTTPServer) PostItemToShoppingList(w http.ResponseWriter, r *http.Reque
 		},
 		Spec: shoppingItemInserted,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
@@ -1357,7 +1357,7 @@ func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.R
 
 	var shoppingList types.ShoppingListSpec
 	if err := json.NewDecoder(r.Body).Decode(&shoppingList); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1377,7 +1377,7 @@ func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.R
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1390,7 +1390,7 @@ func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.R
 				Response: "failed to set shopping list as completed",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1400,7 +1400,7 @@ func (h *HTTPServer) PatchShoppingListCompleted(w http.ResponseWriter, r *http.R
 		},
 		Spec: patchedList,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1413,7 +1413,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 
 	var shoppingItem types.ShoppingItemSpec
 	if err := json.NewDecoder(r.Body).Decode(&shoppingItem); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1434,7 +1434,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1444,7 +1444,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1457,7 +1457,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1467,7 +1467,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 				Response: "failed to get shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1481,7 +1481,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 				Response: "failed to patch shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1491,7 +1491,7 @@ func (h *HTTPServer) PatchShoppingListItem(w http.ResponseWriter, r *http.Reques
 		},
 		Spec: patchedItem,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1504,7 +1504,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 
 	var shoppingItem types.ShoppingItemSpec
 	if err := json.NewDecoder(r.Body).Decode(&shoppingItem); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1525,7 +1525,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1535,7 +1535,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1548,7 +1548,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 				Response: "failed to get shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1558,7 +1558,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 				Response: "failed to get shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1572,7 +1572,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 				Response: "failed to update shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1582,7 +1582,7 @@ func (h *HTTPServer) PutShoppingListItem(w http.ResponseWriter, r *http.Request)
 		},
 		Spec: updatedItem,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1595,7 +1595,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 
 	var shoppingItem types.ShoppingItemSpec
 	if err := json.NewDecoder(r.Body).Decode(&shoppingItem); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1616,7 +1616,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1626,7 +1626,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1639,7 +1639,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 				Response: "failed to get shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1649,7 +1649,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 				Response: "failed to get shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1662,7 +1662,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 				Response: "failed to get shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1672,7 +1672,7 @@ func (h *HTTPServer) PatchShoppingListItemObtained(w http.ResponseWriter, r *htt
 		},
 		Spec: patchedItem,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1695,7 +1695,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1705,7 +1705,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1718,7 +1718,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 				Response: "failed to get shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1728,7 +1728,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 				Response: "failed to get shopping list item",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1740,7 +1740,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 				Response: "failed to remove item from shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1749,7 +1749,7 @@ func (h *HTTPServer) DeleteShoppingListItem(w http.ResponseWriter, r *http.Reque
 			Response: "removed item from shopping list",
 		},
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1762,7 +1762,7 @@ func (h *HTTPServer) DeleteShoppingListTagItems(w http.ResponseWriter, r *http.R
 	var item types.ShoppingItemSpec
 
 	if err := json.NewDecoder(r.Body).Decode(&item); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1782,7 +1782,7 @@ func (h *HTTPServer) DeleteShoppingListTagItems(w http.ResponseWriter, r *http.R
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1792,7 +1792,7 @@ func (h *HTTPServer) DeleteShoppingListTagItems(w http.ResponseWriter, r *http.R
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1804,7 +1804,7 @@ func (h *HTTPServer) DeleteShoppingListTagItems(w http.ResponseWriter, r *http.R
 				Response: "failed to remove items from shopping list by tag name",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1813,7 +1813,7 @@ func (h *HTTPServer) DeleteShoppingListTagItems(w http.ResponseWriter, r *http.R
 			Response: "removed items from shopping list by tag name",
 		},
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1832,7 +1832,7 @@ func (h *HTTPServer) GetShoppingListItemTags(w http.ResponseWriter, r *http.Requ
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1842,7 +1842,7 @@ func (h *HTTPServer) GetShoppingListItemTags(w http.ResponseWriter, r *http.Requ
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -1854,7 +1854,7 @@ func (h *HTTPServer) GetShoppingListItemTags(w http.ResponseWriter, r *http.Requ
 				Response: "failed to get tags from shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1864,7 +1864,7 @@ func (h *HTTPServer) GetShoppingListItemTags(w http.ResponseWriter, r *http.Requ
 		},
 		List: tags,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1884,7 +1884,7 @@ func (h *HTTPServer) UpdateShoppingListItemTag(w http.ResponseWriter, r *http.Re
 				Response: "failed to update shopping list tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1894,14 +1894,14 @@ func (h *HTTPServer) UpdateShoppingListItemTag(w http.ResponseWriter, r *http.Re
 				Response: "failed to get shopping list",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
 	var tagUpdate types.ShoppingTag
 	if err := json.NewDecoder(r.Body).Decode(&tagUpdate); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1918,7 +1918,7 @@ func (h *HTTPServer) UpdateShoppingListItemTag(w http.ResponseWriter, r *http.Re
 				Response: "failed to update shopping list tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1928,7 +1928,7 @@ func (h *HTTPServer) UpdateShoppingListItemTag(w http.ResponseWriter, r *http.Re
 		},
 		Spec: tagUpdated,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1948,7 +1948,7 @@ func (h *HTTPServer) GetAllShoppingTags(w http.ResponseWriter, r *http.Request) 
 				Response: "failed to get shopping list tags",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1958,7 +1958,7 @@ func (h *HTTPServer) GetAllShoppingTags(w http.ResponseWriter, r *http.Request) 
 		},
 		List: tags,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -1971,7 +1971,7 @@ func (h *HTTPServer) PostShoppingTag(w http.ResponseWriter, r *http.Request) {
 
 	var tag types.ShoppingTag
 	if err := json.NewDecoder(r.Body).Decode(&tag); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -1989,7 +1989,7 @@ func (h *HTTPServer) PostShoppingTag(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to create shopping tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -1999,7 +1999,7 @@ func (h *HTTPServer) PostShoppingTag(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: tagCreated,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
@@ -2018,7 +2018,7 @@ func (h *HTTPServer) GetShoppingTag(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get shopping tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2028,7 +2028,7 @@ func (h *HTTPServer) GetShoppingTag(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get shopping tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -2038,7 +2038,7 @@ func (h *HTTPServer) GetShoppingTag(w http.ResponseWriter, r *http.Request) {
 		},
 		Spec: tag,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2059,7 +2059,7 @@ func (h *HTTPServer) UpdateShoppingTag(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get shopping tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2069,14 +2069,14 @@ func (h *HTTPServer) UpdateShoppingTag(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get shopping tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
 
 	var tagUpdate types.ShoppingTag
 	if err := json.NewDecoder(r.Body).Decode(&tagUpdate); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -2093,7 +2093,7 @@ func (h *HTTPServer) UpdateShoppingTag(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to update shopping tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2122,7 +2122,7 @@ func (h *HTTPServer) DeleteShoppingTag(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get shopping tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2132,7 +2132,7 @@ func (h *HTTPServer) DeleteShoppingTag(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get shopping tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -2144,7 +2144,7 @@ func (h *HTTPServer) DeleteShoppingTag(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to delete shopping tag",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2153,7 +2153,7 @@ func (h *HTTPServer) DeleteShoppingTag(w http.ResponseWriter, r *http.Request) {
 			Response: "deleted shopping tag",
 		},
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2169,7 +2169,7 @@ func (h *HTTPServer) GetSettingsShoppingListNotes(w http.ResponseWriter, r *http
 				Response: "failed to get shopping notes",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2179,7 +2179,7 @@ func (h *HTTPServer) GetSettingsShoppingListNotes(w http.ResponseWriter, r *http
 		},
 		Spec: notes,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2190,7 +2190,7 @@ func (h *HTTPServer) PutSettingsShoppingList(w http.ResponseWriter, r *http.Requ
 
 	var notes types.ShoppingListNotes
 	if err := json.NewDecoder(r.Body).Decode(&notes); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -2210,7 +2210,7 @@ func (h *HTTPServer) PutSettingsShoppingList(w http.ResponseWriter, r *http.Requ
 				Response: "failed to get shopping notes",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, code, JSONresp)
 		return
 	}
@@ -2220,7 +2220,7 @@ func (h *HTTPServer) PutSettingsShoppingList(w http.ResponseWriter, r *http.Requ
 		},
 		Spec: notes.Notes,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2236,7 +2236,7 @@ func (h *HTTPServer) GetSettingsFlatNotes(w http.ResponseWriter, r *http.Request
 				Response: "failed to get flat notes",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2248,7 +2248,7 @@ func (h *HTTPServer) GetSettingsFlatNotes(w http.ResponseWriter, r *http.Request
 			Notes: notes,
 		},
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2259,7 +2259,7 @@ func (h *HTTPServer) PutSettingsFlatNotes(w http.ResponseWriter, r *http.Request
 
 	var notes types.FlatNotes
 	if err := json.NewDecoder(r.Body).Decode(&notes); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -2275,7 +2275,7 @@ func (h *HTTPServer) PutSettingsFlatNotes(w http.ResponseWriter, r *http.Request
 				Response: "failed to get flat notes",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2285,7 +2285,7 @@ func (h *HTTPServer) PutSettingsFlatNotes(w http.ResponseWriter, r *http.Request
 		},
 		Spec: notes.Notes,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2301,7 +2301,7 @@ func (h *HTTPServer) GetSettingsShoppingListKeepPolicy(w http.ResponseWriter, r 
 				Response: "failed to get shopping keep policy",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2311,7 +2311,7 @@ func (h *HTTPServer) GetSettingsShoppingListKeepPolicy(w http.ResponseWriter, r 
 		},
 		Spec: keepPolicy,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2322,7 +2322,7 @@ func (h *HTTPServer) PutSettingsShoppingListKeepPolicy(w http.ResponseWriter, r 
 
 	var spec types.ShoppingListKeepPolicySpec
 	if err := json.NewDecoder(r.Body).Decode(&spec); err != nil {
-		log.Printf("error: failed to unmarshal; %v\n", err)
+		slog.Error("failed to unmarshal", "error", err)
 		JSONResponse(r, w, http.StatusBadRequest, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "failed to read request body",
@@ -2342,7 +2342,7 @@ func (h *HTTPServer) PutSettingsShoppingListKeepPolicy(w http.ResponseWriter, r 
 				Response: "failed to get shopping keep policy",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, code, JSONresp)
 		return
 	}
@@ -2352,7 +2352,7 @@ func (h *HTTPServer) PutSettingsShoppingListKeepPolicy(w http.ResponseWriter, r 
 		},
 		Spec: spec.KeepPolicy,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2368,7 +2368,7 @@ func (h *HTTPServer) GetAllGroups(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get groups",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2397,7 +2397,7 @@ func (h *HTTPServer) GetGroup(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get group",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -2407,7 +2407,7 @@ func (h *HTTPServer) GetGroup(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get group",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -2437,7 +2437,7 @@ func (h *HTTPServer) GetUserConfirms(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get user creation secrets",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2447,7 +2447,7 @@ func (h *HTTPServer) GetUserConfirms(w http.ResponseWriter, r *http.Request) {
 		},
 		List: creationSecrets,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2467,7 +2467,7 @@ func (h *HTTPServer) GetUserConfirm(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get user creation secret",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -2477,18 +2477,17 @@ func (h *HTTPServer) GetUserConfirm(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get user creation secret",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
-	log.Printf("%+v\n", creationSecret)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "fetched user creation secret",
 		},
 		Spec: creationSecret,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2508,7 +2507,7 @@ func (h *HTTPServer) GetUserConfirmValid(w http.ResponseWriter, r *http.Request)
 				Response: "failed to get user creation secret",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 	}
@@ -2518,7 +2517,7 @@ func (h *HTTPServer) GetUserConfirmValid(w http.ResponseWriter, r *http.Request)
 				Response: "failed to get user creation secret",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusNotFound, JSONresp)
 		return
 
@@ -2560,7 +2559,7 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to confirm user account",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2570,7 +2569,7 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 		},
 		Data: tokenString,
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusCreated, JSONresp)
 }
 
@@ -2592,7 +2591,7 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get postgres version",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2606,7 +2605,7 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 				Response: "failed to get scheduler last run info",
 			},
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2627,7 +2626,7 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 			SchedulerLastRun: schedulerLastRun,
 		},
 	}
-	log.Println(JSONresp.Metadata.Response, context)
+	slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 	JSONResponse(r, w, http.StatusOK, JSONresp)
 }
 
@@ -2635,7 +2634,7 @@ func (h *HTTPServer) PostSchedulerRun(w http.ResponseWriter, r *http.Request) {
 	if !h.scheduling.GetEndpointEnabled() {
 		w.WriteHeader(http.StatusNotFound)
 		if _, err := w.Write([]byte(`Not found`)); err != nil {
-			log.Printf("failed to write response: %v\n", err)
+			slog.Error("failed to write response", "error", err)
 		}
 		return
 	}
@@ -2687,7 +2686,7 @@ func (h *HTTPServer) PostSchedulerRun(w http.ResponseWriter, r *http.Request) {
 // 			log.Printf("%#v\n", err)
 // 			w.WriteHeader(http.StatusInternalServerError)
 // 			if _, err := w.Write([]byte("An error occurred with retrieving the requested object")); err != nil {
-// 				log.Printf("error: failed to write response; %v\n", err)
+// 				slog.Error("failed to write response", "error", err)
 // 			}
 // 			return
 // 		}
@@ -2697,7 +2696,7 @@ func (h *HTTPServer) PostSchedulerRun(w http.ResponseWriter, r *http.Request) {
 // 		w.Header().Set("accept-ranges", "bytes")
 // 		w.WriteHeader(http.StatusOK)
 // 		if _, err := w.Write(object); err != nil {
-// 			log.Printf("error: failed to write response; %v\n", err)
+// 			slog.Error("failed to write response", "error", err)
 // 		}
 // 	}
 // }
@@ -2726,7 +2725,7 @@ func (h *HTTPServer) Healthz(w http.ResponseWriter, r *http.Request) {
 			},
 			Data: false,
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2737,7 +2736,7 @@ func (h *HTTPServer) Healthz(w http.ResponseWriter, r *http.Request) {
 			},
 			Data: false,
 		}
-		log.Println(JSONresp.Metadata.Response, context)
+		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
@@ -2757,7 +2756,7 @@ func (h *HTTPServer) HTTPvalidateJWT(next http.HandlerFunc) http.HandlerFunc {
 		var contextMsg string
 		valid, claims, err := h.users.ValidateJWTauthToken(r)
 		if err != nil {
-			log.Printf("error: %v\n", err)
+			slog.Error("Failed to validate JWT", "error", err)
 			JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
 					Response: "Unauthorized",
@@ -2769,7 +2768,7 @@ func (h *HTTPServer) HTTPvalidateJWT(next http.HandlerFunc) http.HandlerFunc {
 			contextMsg = fmt.Sprintf("with user id '%v'", claims.ID)
 		}
 		if !valid {
-			log.Printf("Unauthorized request with token %v\n", contextMsg)
+			slog.Info("Unauthorized request with token", "context", contextMsg)
 			JSONResponse(r, w, http.StatusUnauthorized, types.JSONMessageResponse{
 				Metadata: types.JSONResponseMetadata{
 					Response: "Unauthorized",
@@ -2806,7 +2805,7 @@ func (h *HTTPServer) HTTPcheckGroupsFromID(next http.HandlerFunc, groupsAllowed 
 			next.ServeHTTP(w, r)
 			return
 		}
-		log.Printf("User '%v' tried to access route that is protected by '%v' group access", jwtUserID, groupsAllowed)
+		slog.Info("User tried to access route that is protected by group access", "uid", jwtUserID, "groupsAllowed", groupsAllowed)
 		JSONResponse(r, w, http.StatusForbidden, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
 				Response: "Forbidden",
@@ -2831,7 +2830,7 @@ func (h *HTTPServer) HTTP404() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		if _, err := w.Write([]byte(`404 not found`)); err != nil {
-			log.Printf("error: failed to write response; %v\n", err)
+			slog.Error("failed to write response", "error", err)
 		}
 	}
 }

@@ -22,7 +22,7 @@ import (
 	"crypto/subtle"
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -161,7 +161,7 @@ func (m *Manager) Create(user types.UserSpec, allowEmptyPassword bool) (userInse
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("Failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -197,7 +197,7 @@ func (m *Manager) List(includePassword bool, selectors types.UserSelector) (user
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("Failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -284,7 +284,7 @@ func (m *Manager) GetByID(id string, includePassword bool) (user types.UserSpec,
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("Failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -317,7 +317,7 @@ func (m *Manager) GetByEmail(email string, includePassword bool) (user types.Use
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("Failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -364,7 +364,7 @@ func (m *Manager) DeleteByID(id string) (err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("Failed to close rows", "error", err)
 		}
 	}()
 	return nil
@@ -482,7 +482,7 @@ func (m *Manager) InvalidateAllAuthTokens(id string) (err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("Failed to close rows", "error", err)
 		}
 	}()
 	return nil
@@ -553,13 +553,13 @@ func (m *Manager) Patch(id string, userAccount types.UserSpec) (userAccountPatch
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("Failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
 		userAccountPatched, err = userObjectFromRowsRestricted(rows)
 		if err != nil {
-			log.Println("error patching user account:", err)
+			slog.Error("Failed to patch user account", "error", err)
 			return types.UserSpec{}, ErrFailedToPatchProfile
 		}
 	}
@@ -608,13 +608,13 @@ func (m *Manager) PatchAsAdmin(id string, userAccount types.UserSpec) (userAccou
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
 		userAccountPatched, err = userObjectFromRows(rows)
 		if err != nil {
-			log.Printf("error getting user object from rows: %v\n", err)
+			slog.Error("Failed to get user object from rows", "error", err)
 			return types.UserSpec{}, ErrFailedToPatchUserAccount
 		}
 	}
@@ -659,13 +659,13 @@ func (m *Manager) Update(id string, userAccount types.UserSpec) (userAccountUpda
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
 		userAccountUpdated, err = userObjectFromRowsRestricted(rows)
 		if err != nil {
-			log.Printf("error getting user object from rows (restricted): %v\n", err)
+			slog.Info("Failed to get user object from rows", "error", err, "restricted", true)
 			return types.UserSpec{}, ErrFailedToUpdateProfile
 		}
 	}
@@ -704,7 +704,7 @@ func (m *Manager) UpdateAsAdmin(id string, userAccount types.UserSpec) (userAcco
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -761,7 +761,7 @@ func (m *userCreationSecretManager) List(secretsSelector types.UserCreationSecre
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -796,7 +796,7 @@ func (m *userCreationSecretManager) Get(id string) (creationSecret types.UserCre
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -823,7 +823,7 @@ func (m *userCreationSecretManager) Create(userID string) (userCreationSecretIns
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -845,7 +845,7 @@ func (m *userCreationSecretManager) Delete(id string) (err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	return nil
@@ -861,7 +861,7 @@ func (m *userCreationSecretManager) DeleteByUserID(userID string) (err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	return nil
@@ -924,7 +924,7 @@ func (m *Manager) UserAccountExists(id string) (exists bool, err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	var userIDFromDB string
@@ -951,7 +951,7 @@ func (m *Manager) GenerateNewAuthNonce(id string) (err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -974,7 +974,7 @@ func (m *Manager) PatchDisabledAsAdmin(id string, disabled bool) (userAccount ty
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {

@@ -3,7 +3,7 @@ package httpserver
 import (
 	"encoding/json"
 	"io"
-	"log"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -22,7 +22,7 @@ func JSONResponse(r *http.Request, w http.ResponseWriter, code int, output types
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	if _, err := w.Write(response); err != nil {
-		log.Printf("error: failed to write response; %v\n", err)
+		slog.Error("failed to write response", "error", err)
 	}
 }
 
@@ -31,10 +31,10 @@ func JSONResponse(r *http.Request, w http.ResponseWriter, code int, output types
 func GetHTTPresponseBodyContents(response *http.Response) (output types.JSONMessageResponse) {
 	responseData, err := io.ReadAll(response.Body)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error("Failed to read body contents", "error", err)
 	}
 	if err := json.Unmarshal(responseData, &output); err != nil {
-		log.Printf("error: failed to unmarshal response body contents; %v", err)
+		slog.Error("Failed to unmarshal response body contents", "error", err)
 	}
 	return output
 }

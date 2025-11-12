@@ -56,7 +56,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"sync"
 	"time"
 
@@ -237,7 +237,7 @@ func (le *LeaderElector) acquire(ctx context.Context) bool {
 	defer cancel()
 	succeeded := false
 	desc := le.config.Lock.Describe()
-	log.Printf("attempting to acquire leader lease %v...", desc)
+	slog.Info("attempting to acquire leader lease", "desc", desc)
 	wait.JitterUntil(func() {
 		succeeded = le.tryAcquireOrRenew(ctx)
 		le.maybeReportTransition()
@@ -245,7 +245,7 @@ func (le *LeaderElector) acquire(ctx context.Context) bool {
 			return
 		}
 		le.config.Lock.RecordEvent("became leader")
-		log.Printf("successfully acquired lease %v", desc)
+		slog.Info("successfully acquired lease", "desc", desc)
 		cancel()
 	}, le.config.RetryPeriod, JitterFactor, true, ctx.Done())
 	return succeeded
@@ -270,7 +270,7 @@ func (le *LeaderElector) renew(ctx context.Context) {
 		if err == nil {
 			return
 		}
-		log.Printf("failed to renew lease %v: %v", desc, err)
+		slog.Error("failed to renew lease", "desc", desc, "err", err)
 		cancel()
 	}, le.config.RetryPeriod, ctx.Done())
 
@@ -293,7 +293,7 @@ func (le *LeaderElector) release() bool {
 		AcquireTime:          now,
 	}
 	if err := le.config.Lock.Update(context.TODO(), leaderElectionRecord); err != nil {
-		log.Printf("Failed to release lock: %v", err)
+		slog.Error("Failed to release lock", "error", err)
 		return false
 	}
 
@@ -317,11 +317,11 @@ func (le *LeaderElector) tryAcquireOrRenew(ctx context.Context) bool {
 	oldLeaderElectionRecord, oldLeaderElectionRawRecord, err := le.config.Lock.Get(ctx)
 	if err != nil {
 		if !errors.IsNotFound(err) {
-			log.Printf("error retrieving resource lock %v: %v", le.config.Lock.Describe(), err)
+			slog.Error("Failed to  retrieve resource lock", "desc", le.config.Lock.Describe(), "error", err)
 			return false
 		}
 		if err = le.config.Lock.Create(ctx, leaderElectionRecord); err != nil {
-			log.Printf("error initially creating leader election record: %v", err)
+			slog.Info("Failed to initially creating leader election record", "error", err)
 			return false
 		}
 
@@ -353,7 +353,7 @@ func (le *LeaderElector) tryAcquireOrRenew(ctx context.Context) bool {
 
 	// update the lock itself
 	if err = le.config.Lock.Update(ctx, leaderElectionRecord); err != nil {
-		log.Printf("Failed to update lock: %v", err)
+		slog.Info("Failed to update lock", "error", err)
 		return false
 	}
 

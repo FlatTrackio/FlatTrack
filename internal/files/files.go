@@ -5,7 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 
 	minio "github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -64,22 +64,22 @@ func (f FileAccess) Get(name string) (objectBytes []byte, objectInfo minio.Objec
 	fileName := fmt.Sprintf("%v-%v", f.Prefix, name)
 	object, err := f.Client.GetObject(context.TODO(), common.GetAppMinioBucket(), fileName, minio.GetObjectOptions{})
 	if err != nil {
-		log.Printf("%#v\n", err)
+		slog.Error("Failed to get object", "error", err)
 		return []byte{}, minio.ObjectInfo{}, err
 	}
 	defer func() {
 		if err := object.Close(); err != nil {
-			log.Printf("error closing object '%v': %v", fileName, err)
+			slog.Error("Failed to close object", "file", fileName, "error", err)
 		}
 	}()
 	objectInfo, err = object.Stat()
 	if err != nil {
-		log.Printf("%#v\n", err)
+		slog.Error("Failed to stat object", "error", err)
 		return []byte{}, minio.ObjectInfo{}, err
 	}
 	objectBytes, err = io.ReadAll(object)
 	if err != nil {
-		log.Printf("%#v\n", err)
+		slog.Error("Failed to read object", "error", err)
 		return []byte{}, minio.ObjectInfo{}, err
 	}
 	return objectBytes, objectInfo, err
@@ -94,7 +94,7 @@ func (f FileAccess) Put(name string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Successfully uploaded '%v' into bucket\n", info.Key)
+	slog.Info("Successfully uploaded file into bucket", "file", info.Key)
 	return nil
 }
 
@@ -106,6 +106,6 @@ func (f FileAccess) Delete(name string) error {
 	if err != nil {
 		return err
 	}
-	log.Printf("Successfully deleted '%v' from bucket\n", fileName)
+	slog.Info("Successfully deleted file into bucket", "file", fileName)
 	return nil
 }

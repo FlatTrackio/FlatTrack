@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -42,7 +42,7 @@ func (l *Lock) Get(ctx context.Context) (ler *resourcelock.LeaderElectionRecord,
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("error: failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -76,7 +76,7 @@ func (l *Lock) Create(ctx context.Context, ler resourcelock.LeaderElectionRecord
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("error: failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -107,14 +107,14 @@ func (l *Lock) Update(ctx context.Context, ler resourcelock.LeaderElectionRecord
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("error: failed to close rows", "error", err)
 		}
 	}()
 	return nil
 }
 
 func (l *Lock) RecordEvent(s string) {
-	log.Println("leader election event:", s)
+	slog.Debug("Leader election event", "event", s)
 }
 
 func (l *Lock) Describe() string {
@@ -145,26 +145,26 @@ func (l *Lock) Run(fn func() error) {
 		Callbacks: leaderelection.LeaderCallbacks{
 			OnStartedLeading: func(ctx context.Context) {},
 			OnStoppedLeading: func() {
-				log.Println("no longer the leader, staying inactive.")
+				slog.Debug("No longer the leader, staying inactive.")
 			},
 			OnNewLeader: func(currentID string) {
 				if currentID == l.id {
 					l.isLeader = true
 					return
 				}
-				log.Printf("new/current leader is %s\n", currentID)
+				slog.Debug("New/current leader", "id", currentID)
 			},
 		},
 	})
 	if err != nil {
-		log.Fatalf("leader election error: %+v\n", err)
+		slog.Error("Leader election error", "error", err)
 	}
 
 	go func() {
 		for {
 			if leaderelector.IsLeader() {
 				if err := fn(); err != nil {
-					log.Println(err)
+					slog.Error("Failed to run work functions", "error", err)
 				}
 			}
 			time.Sleep(10 * time.Second)

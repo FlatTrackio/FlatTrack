@@ -21,7 +21,7 @@ package shoppinglist
 
 import (
 	"database/sql"
-	"log"
+	"log/slog"
 
 	"github.com/imdario/mergo"
 
@@ -70,7 +70,7 @@ func (m *ShoppingItemManager) List(listID string, options types.ShoppingItemOpti
 	// sort by tags
 	var obtained sql.NullString
 	if err := obtained.Scan(options.Selector.Obtained); err != nil {
-		log.Printf("error: scanning obtained; %v\n", err)
+		slog.Error("Failed to scan obtained", "error", err)
 		return []types.ShoppingItemSpec{}, err
 	}
 
@@ -113,12 +113,12 @@ func (m *ShoppingItemManager) List(listID string, options types.ShoppingItemOpti
 	}
 	rows, err := m.db.Query(sqlStatement, sqlQueryValues...)
 	if err != nil {
-		log.Println(err)
+		slog.Error("failed to query database", "error", err)
 		return []types.ShoppingItemSpec{}, err
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -141,7 +141,7 @@ func (m *ShoppingItemManager) Get(listid, itemID string) (item types.ShoppingIte
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("Failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -175,7 +175,7 @@ func (m *ShoppingItemManager) AddItemToList(listID string, item types.ShoppingIt
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -215,7 +215,7 @@ func (m *ShoppingItemManager) Patch(listid string, itemID string, item types.Sho
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -254,7 +254,7 @@ func (m *ShoppingItemManager) Update(listID string, itemID string, item types.Sh
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -283,7 +283,7 @@ func (m *ShoppingItemManager) SetItemObtained(listID string, itemID string, obta
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -325,7 +325,7 @@ func (m *ShoppingItemManager) Delete(id string, listID string, authorLast string
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 
@@ -349,7 +349,7 @@ func (m *ShoppingItemManager) DeleteTagItems(listID string, tagName string, auth
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 
@@ -374,7 +374,7 @@ func (m *ShoppingItemManager) DeleteAll(listID string) (err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	return err
@@ -390,7 +390,7 @@ func (m *ShoppingItemManager) GetListItemCount(listID string) (count int, err er
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
