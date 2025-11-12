@@ -3,7 +3,7 @@ package httpserver
 import (
 	"context"
 	"database/sql"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -106,13 +106,13 @@ func NewHTTPServer(
 }
 
 func (h *HTTPServer) Listen() {
-	log.Println("HTTP listening on", h.server.Addr)
+	slog.Info("HTTP listening on " + h.server.Addr)
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
 		if err := h.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatal(err)
+			slog.Error("Failed to listen on HTTP port", "error", err)
 		}
 	}()
 
@@ -120,6 +120,6 @@ func (h *HTTPServer) Listen() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := h.server.Shutdown(ctx); err != nil {
-		log.Fatalf("Server didn't exit gracefully %v", err)
+		slog.Error("Server didn't exit gracefully", "error", err)
 	}
 }

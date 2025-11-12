@@ -22,7 +22,7 @@ package shoppinglist
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/imdario/mergo"
@@ -157,7 +157,7 @@ func (m *ShoppingListManager) List(options types.ShoppingListOptions) (shoppingL
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -190,7 +190,7 @@ func (m *ShoppingListManager) Get(listID string) (shoppingList types.ShoppingLis
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -235,16 +235,15 @@ func (m *ShoppingListManager) Create(shoppingList types.ShoppingListSpec, option
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
 	shoppingListInserted, err = getListObjectFromRows(rows)
 	if err != nil || shoppingListInserted.ID == "" {
-		log.Printf("error getting list object from rows: %v\n", err)
+		slog.Error("Failed to get list object from rows", "error", err)
 		return types.ShoppingListSpec{}, ErrFailedToCreateShoppingList
 	}
-	log.Printf("%+v\n", shoppingListInserted)
 	if shoppingList.TemplateID == "" {
 		return shoppingListInserted, nil
 	}
@@ -271,7 +270,7 @@ func (m *ShoppingListManager) Create(shoppingList types.ShoppingListSpec, option
 		}
 		_, err := m.manager.ShoppingItem().AddItemToList(shoppingListInserted.ID, newItem)
 		if err != nil {
-			log.Printf("error adding item to list: %v\n", err)
+			slog.Error("Failed to add item to list", "error", err)
 			if err := m.Delete(shoppingListInserted.ID); err != nil {
 				return types.ShoppingListSpec{}, err
 			}
@@ -305,13 +304,13 @@ func (m *ShoppingListManager) Patch(listID string, shoppingList types.ShoppingLi
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
 	shoppingListPatched, err = getListObjectFromRows(rows)
 	if err != nil || shoppingListPatched.ID == "" {
-		log.Printf("error getting shopping list from rows: %v", err)
+		slog.Error("Failed to get shopping list from rows", "error", err)
 		return types.ShoppingListSpec{}, ErrFailedToPatchShoppingList
 	}
 	return shoppingListPatched, nil
@@ -333,13 +332,13 @@ func (m *ShoppingListManager) Update(listID string, shoppingList types.ShoppingL
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
 	shoppingListUpdated, err = getListObjectFromRows(rows)
 	if err != nil || shoppingListUpdated.ID == "" {
-		log.Printf("error getting shopping list from rows: %v", err)
+		slog.Error("Failed to get shopping list from rows", "error", err)
 		return types.ShoppingListSpec{}, ErrFailedToCreateShoppingList
 	}
 	return shoppingListUpdated, nil
@@ -355,7 +354,7 @@ func (m *ShoppingListManager) SetListCompleted(listID string, completed bool, us
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -395,7 +394,7 @@ func (m *ShoppingListManager) Delete(listID string) (err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	return nil
@@ -411,7 +410,7 @@ func (m *ShoppingListManager) GetListCount() (count int, err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -468,7 +467,7 @@ func (m *ShoppingListManager) DeleteCleanup() (string, func() error) {
 		if len(lists) == 0 {
 			return nil
 		}
-		log.Printf("[cleanup] Deleting old %v lists with policy %v\n", len(lists), policy)
+		slog.Debug("Shopping List Cleanup", "message", fmt.Sprintf("Deleting old %v lists with policy %v\n", len(lists), policy))
 		for _, list := range lists {
 			if err := m.Delete(list.ID); err != nil {
 				return err

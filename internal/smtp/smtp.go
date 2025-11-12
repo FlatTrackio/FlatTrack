@@ -20,7 +20,7 @@ package smtp
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/smtp"
 
 	"gitlab.com/flattrack/flattrack/internal/common"
@@ -67,7 +67,7 @@ func (m *Manager) SendEmail(content string, subject string, recipient string) er
 	)
 
 	if err != nil {
-		log.Printf("Error: failed to send email mail %v\n", err)
+		slog.Error("Failed to send email mail", "error", err)
 		return err
 	}
 	return err

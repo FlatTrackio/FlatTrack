@@ -57,8 +57,12 @@
         <b-message type="is-warning" has-icon icon="information-outline">
           <div v-if="!pageLoading">
             <p class="is-size-5">
-              <b>Version</b>: {{ version || "Unknown" }}
-              <span v-if="version !== versionFrontend"
+              <b>Version</b>:
+              <a
+                :href="!(version === '0.0.0' || version === '???' || version === '') ? 'https://gitlab.com/flattrack/flattrack/-/releases/'+version : ''"
+                >{{ version || "Unknown" }}</a
+              >
+              <span v-if="version !== versionFrontend" class="ml-1"
                 >(frontend {{ versionFrontend }})</span
               >
             </p>

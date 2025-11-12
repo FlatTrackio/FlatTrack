@@ -20,7 +20,7 @@ package groups
 
 import (
 	"database/sql"
-	"log"
+	"log/slog"
 
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/pkg/types"
@@ -51,7 +51,7 @@ func (m *Manager) AddUserToGroup(userID string, groupID string) (err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	return nil
@@ -67,7 +67,7 @@ func (m *Manager) RemoveUserFromGroup(userID string, groupID string) (err error)
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	return nil
@@ -100,7 +100,7 @@ func (m *Manager) List() (groups []types.GroupSpec, err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -124,7 +124,7 @@ func (m *Manager) GetByName(name string) (group types.GroupSpec, err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -145,7 +145,7 @@ func (m *Manager) GetByID(id string) (group types.GroupSpec, err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -167,7 +167,7 @@ func (m *Manager) GetGroupsOfUserByID(userID string) (groups []types.GroupSpec, 
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -225,7 +225,7 @@ func (m *Manager) GetDefault() (groups []types.GroupSpec, err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {

@@ -21,7 +21,7 @@ package settings
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
@@ -44,7 +44,7 @@ func (m *Manager) get(key string) (output string, err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Info("error: failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -67,7 +67,7 @@ func (m *Manager) set(key string, value string, validation func() (err error)) (
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Info("error: failed to close rows", "error", err)
 		}
 	}()
 	return nil

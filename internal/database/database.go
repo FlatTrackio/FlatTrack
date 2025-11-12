@@ -21,7 +21,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"log"
+	"log/slog"
 
 	// include Pg
 	_ "github.com/lib/pq"
@@ -43,7 +43,7 @@ type databaseConnection struct {
 
 func panicOnEmptyRequiredDatabaseField(name string, input string) {
 	if input == "" {
-		log.Panicf("error: database connection field '%v' must be not empty", name)
+		slog.Error("Database connection field must be not empty", "field", name)
 	}
 }
 
@@ -101,12 +101,12 @@ func Ping(db *sql.DB) (err error) {
 	var zero int
 	rows, err := db.Query(`SELECT 0`)
 	if err != nil {
-		log.Println("Error querying database", err.Error())
+		slog.Error("Failed to query database", "error", err)
 		return err
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("Failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()
@@ -127,12 +127,12 @@ func Ping(db *sql.DB) (err error) {
 func GetVersion(db *sql.DB) (version string, err error) {
 	rows, err := db.Query(`SELECT current_setting('server_version')`)
 	if err != nil {
-		log.Println("Error querying database", err.Error())
+		slog.Error("Failed to query database", "error", err)
 		return "", err
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("Failed to close rows", "error", err)
 		}
 	}()
 	rows.Next()

@@ -21,7 +21,7 @@ package system
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
+	"log/slog"
 
 	"gitlab.com/flattrack/flattrack/pkg/types"
 )
@@ -45,7 +45,7 @@ func (m *Manager) getValue(name string) (output string, err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	for rows.Next() {
@@ -64,7 +64,7 @@ func (m *Manager) setValue(name, value string) (err error) {
 	}
 	defer func() {
 		if err := rows.Close(); err != nil {
-			log.Printf("error: failed to close rows: %v\n", err)
+			slog.Error("failed to close rows", "error", err)
 		}
 	}()
 	return nil

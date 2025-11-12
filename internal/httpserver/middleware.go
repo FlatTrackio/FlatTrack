@@ -1,7 +1,7 @@
 package httpserver
 
 import (
-	"log"
+	"log/slog"
 	"maps"
 	"net/http"
 )
@@ -37,7 +37,15 @@ func logging(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(recorder, r)
 		scrubbedHeaders := scrubHeaders(r.Header)
-		log.Printf("%v %v %v %v %v %v %#v", recorder.Status, r.Method, r.URL, r.Proto, requestIP, r.RemoteAddr, scrubbedHeaders)
+		slog.Info(
+			"HTTP Request",
+			"status", recorder.Status,
+			"method", r.Method,
+			"url", r.URL,
+			"proto", r.Proto,
+			"requestIP", requestIP,
+			"remoteAddr", r.RemoteAddr,
+			"headers", scrubbedHeaders)
 	})
 }
 

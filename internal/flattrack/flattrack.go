@@ -1,9 +1,11 @@
 package flattrack
 
 import (
-	"log"
+	"log/slog"
+	"os"
 
 	"github.com/joho/godotenv"
+
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/database"
 	"gitlab.com/flattrack/flattrack/internal/emails"
@@ -21,6 +23,7 @@ import (
 )
 
 type manager struct {
+	log          *slog.Logger
 	httpserver   *httpserver.HTTPServer
 	metrics      *metrics.Manager
 	emails       *emails.Manager
@@ -36,13 +39,24 @@ type manager struct {
 }
 
 func NewManager() *manager {
-	log.Printf("launching FlatTrack (%v, %v, %v, %v)\n", common.GetAppBuildVersion(), common.GetAppBuildHash(), common.GetAppBuildDate(), common.GetAppBuildMode())
+	slog.SetDefault(
+		slog.New(slog.NewJSONHandler(
+			os.Stdout,
+			&slog.HandlerOptions{AddSource: true, ReplaceAttr: common.SLogReplaceSource},
+		)),
+	)
+	slog.Info("launching FlatTrack",
+		slog.String("buildVersion", common.GetAppBuildVersion()),
+		slog.String("buildHash", common.GetAppBuildHash()),
+		slog.String("buildDate", common.GetAppBuildDate()),
+		slog.String("buildMode", common.GetAppBuildMode()),
+	)
 	envFile := common.GetAppEnvFile()
 	_ = godotenv.Load(envFile)
 	maintenanceMode := common.GetMaintenanceMode()
 	db, err := database.Open()
 	if err != nil && !maintenanceMode {
-		log.Fatalf("failed to connect to database: %v", err)
+		slog.Error("failed to connect to database", "error", err)
 		return nil
 	}
 	users := users.NewManager(db)
@@ -74,6 +88,7 @@ func NewManager() *manager {
 }
 
 type managerInit struct {
+	log          *slog.Logger
 	httpserver   *httpserver.HTTPServer
 	metrics      *metrics.Manager
 	health       *health.Manager
@@ -85,9 +100,10 @@ type managerInit struct {
 
 func (m *manager) Init() *managerInit {
 	if err := m.migrations.Migrate(); err != nil && !m.maintenanceMode {
-		log.Fatalf("failed to migrate database: %v", err)
+		m.log.Error("failed to migrate database", "error", err)
 	}
 	return &managerInit{
+		log:             m.log,
 		httpserver:      m.httpserver,
 		metrics:         m.metrics,
 		health:          m.health,
@@ -103,7 +119,7 @@ func (mi *managerInit) Run() {
 	if !mi.maintenanceMode {
 		go mi.scheduling.Run()
 	} else {
-		log.Println("Instance in maintenance mode. Will only serve message stating as such.")
+		mi.log.Info("Instance in maintenance mode. Will only serve message stating as such.")
 	}
 	mi.httpserver.Listen()
 }

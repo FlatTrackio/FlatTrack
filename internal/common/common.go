@@ -22,10 +22,12 @@ import (
 	"crypto/sha512"
 	"encoding/hex"
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"net"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -380,4 +382,17 @@ func RandStringRunes(n int) string {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
 	return string(b)
+}
+
+func SLogReplaceSource(groups []string, a slog.Attr) slog.Attr {
+	// Remove time.
+	if a.Key == slog.TimeKey && len(groups) == 0 {
+		return slog.Attr{}
+	}
+	// Remove the directory from the source's filename.
+	if a.Key == slog.SourceKey {
+		source := a.Value.Any().(*slog.Source)
+		source.File = filepath.Base(source.File)
+	}
+	return a
 }
