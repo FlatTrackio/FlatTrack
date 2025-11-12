@@ -59,6 +59,10 @@ func (m *Manager) RegisterFunc(fns ...func() error) *Manager {
 }
 
 func (m *Manager) RegisterCronFunc(crontab string, fn func() error) *Manager {
+	if !m.endpointEnabled {
+		m.fns = append(m.fns, fn)
+		return m
+	}
 	if _, err := m.cronScheduler.NewJob(
 		gocron.CronJob(crontab, false),
 		gocron.NewTask(fn),
