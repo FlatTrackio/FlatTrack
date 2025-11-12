@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"log"
 	"sync"
+	"time"
 
 	"github.com/go-co-op/gocron/v2"
 
 	"gitlab.com/flattrack/flattrack/internal/common"
 	"gitlab.com/flattrack/flattrack/internal/scheduling/leaderelection"
+	"gitlab.com/flattrack/flattrack/internal/system"
+	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
 type Manager struct {
 	db              *sql.DB
+	system          *system.Manager
 	leaderelection  *leaderelection.Lock
 	fns             []func() error
 	endpointEnabled bool
@@ -21,7 +25,7 @@ type Manager struct {
 	cronScheduler   gocron.Scheduler
 }
 
-func NewManager(db *sql.DB) *Manager {
+func NewManager(db *sql.DB, system *system.Manager) *Manager {
 	leaderelection := leaderelection.NewLock(db)
 	cronScheduler, err := gocron.NewScheduler(
 		gocron.WithLogger(
@@ -34,6 +38,7 @@ func NewManager(db *sql.DB) *Manager {
 	}
 	m := &Manager{
 		db:              db,
+		system:          system,
 		leaderelection:  leaderelection,
 		endpointEnabled: common.GetSchedulerDisableUseEndpoint(),
 		secret:          common.GetSchedulerEndpointSecret(),
@@ -73,6 +78,14 @@ func (m *Manager) RegisterCronFunc(crontab string, fn func() error) *Manager {
 }
 
 func (m *Manager) PerformWork() error {
+	log.Println("[scheduler] Running work")
+	now := time.Now()
+	if err := m.system.SetSchedulerLastRun(types.SchedulerLastRun{
+		Time:  now.Unix(),
+		State: types.SchedulerRunStateRunning,
+	}); err != nil {
+		return err
+	}
 	var eg []error
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -90,8 +103,22 @@ func (m *Manager) PerformWork() error {
 	wg.Wait()
 	if len(eg) > 0 {
 		log.Printf("%+v\n", eg)
+		if err := m.system.SetSchedulerLastRun(types.SchedulerLastRun{
+			Time:  now.Unix(),
+			State: types.SchedulerRunStateFailure,
+		}); err != nil {
+			return err
+		}
+		log.Println("[scheduler] Work failed")
 		return fmt.Errorf("scheduling errors: %v", eg)
 	}
+	if err := m.system.SetSchedulerLastRun(types.SchedulerLastRun{
+		Time:  now.Unix(),
+		State: types.SchedulerRunStateComplete,
+	}); err != nil {
+		return err
+	}
+	log.Println("[scheduler] Work complete")
 	return nil
 
 }

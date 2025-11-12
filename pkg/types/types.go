@@ -301,14 +301,15 @@ type Registration struct {
 // SystemVersion ...
 // values for the release of FlatTrack
 type SystemVersion struct {
-	Version         string `json:"version"`
-	CommitHash      string `json:"commitHash"`
-	Mode            string `json:"mode"`
-	Date            string `json:"date"`
-	GolangVersion   string `json:"golangVersion"`
-	PostgresVersion string `json:"postgresVersion"`
-	OSType          string `json:"osType"`
-	OSArch          string `json:"osArch"`
+	Version          string           `json:"version"`
+	CommitHash       string           `json:"commitHash"`
+	Mode             string           `json:"mode"`
+	Date             string           `json:"date"`
+	GolangVersion    string           `json:"golangVersion"`
+	PostgresVersion  string           `json:"postgresVersion"`
+	OSType           string           `json:"osType"`
+	OSArch           string           `json:"osArch"`
+	SchedulerLastRun SchedulerLastRun `json:"schedulerLastRun"`
 }
 
 // JSONResponseMetadata ...
@@ -349,6 +350,22 @@ type JWTclaim struct {
 type CronTabSchedule = string
 
 const (
+	CronTabScheduleEveryMinute         = "* * * * *"
+	CronTabScheduleOnceHourly          = "0 * * * *"
 	CronTabScheduleOnceDaily           = "0 0 * * *"
 	CronTabScheduleShoppingListCleanup = CronTabScheduleOnceDaily
 )
+
+type SchedulerRunState string
+
+const (
+	SchedulerRunStateUnknown  = "Unknown"
+	SchedulerRunStateRunning  = "Running"
+	SchedulerRunStateComplete = "Complete"
+	SchedulerRunStateFailure  = "Failure"
+)
+
+type SchedulerLastRun struct {
+	Time  int64             `json:"time"`
+	State SchedulerRunState `json:"state"`
+}
