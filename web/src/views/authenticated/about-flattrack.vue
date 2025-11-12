@@ -67,8 +67,8 @@
               <a
                 v-if="commitHash !== '???' && typeof commitHash !== 'undefined'"
                 :href="
-                'https://gitlab.com/flattrack/flattrack/-/commit/' + commitHash
-              "
+                     'https://gitlab.com/flattrack/flattrack/-/commit/' + commitHash
+                     "
                 target="_blank"
                 rel="noreferrer"
                 >{{ commitHash }}</a
@@ -77,9 +77,9 @@
               <a
                 v-if="commitHash !== commitHashFrontend"
                 :href="
-                'https://gitlab.com/flattrack/flattrack/-/commit/' +
-                  commitHashFrontend
-              "
+                     'https://gitlab.com/flattrack/flattrack/-/commit/' +
+                     commitHashFrontend
+                     "
                 target="_blank"
                 rel="noreferrer"
                 >{{ commitHashFrontend }}</a
@@ -112,6 +112,33 @@
             <p class="is-size-5">
               <b>Architecture</b>: {{ osArch || "Unknown" }}
             </p>
+            <p class="is-size-5">
+              <b-field>
+                <b>Scheduler Last Run</b>:
+                <b-taglist attached class="ml-1">
+                  <b-tag
+                    v-if="schedulerLastRun.state === 'Complete'"
+                    type="is-success"
+                    >{{ schedulerLastRun.state || "Unknown" }}</b-tag
+                  >
+                  <b-tag
+                    v-else-if="schedulerLastRun.state === 'Failure'"
+                    type="is-danger"
+                    >{{ schedulerLastRun.state || "Unknown" }}</b-tag
+                  >
+                  <b-tag v-else type="is-info"
+                    >{{ schedulerLastRun.state || "Unknown" }}</b-tag
+                  >
+                  <b-tag type="is-dark"
+                    >{{ schedulerLastRun.time || "Unknown" }}</b-tag
+                  >
+                </b-taglist>
+                <infotooltip
+                  v-if="schedulerLastRun.state === 'Failure'"
+                  message="An admin should check the logs to see what the failure is."
+                />
+              </b-field>
+            </p>
           </div>
           <b-skeleton v-else size="is-medium" width="35%" :animated="true" />
         </b-message>
@@ -125,12 +152,14 @@
   import system from "@/requests/authenticated/system";
   import constants from "@/constants/constants";
   import breadcrumb from "@/components/common/breadcrumb.vue";
+  import infotooltip from "@/components/common/info-tooltip.vue";
   import * as vue from "vue";
 
   export default {
     name: "AboutFlattrack",
     components: {
       breadcrumb,
+      infotooltip,
     },
     data() {
       return {
@@ -148,6 +177,10 @@
         commitHashFrontend: constants.appBuildHash,
         modeFrontend: constants.appBuildMode,
         dateFrontend: constants.appBuildDate,
+        schedulerLastRun: {
+          time: 0,
+          state: "Unknown",
+        },
       };
     },
     async beforeMount() {
@@ -168,6 +201,10 @@
           this.postgresVersion = resp.data.data.postgresVersion;
           this.osType = resp.data.data.osType;
           this.osArch = resp.data.data.osArch;
+          this.schedulerLastRun.time = common.TimestampToCalendar(
+            resp.data.data.schedulerLastRun.time
+          );
+          this.schedulerLastRun.state = resp.data.data.schedulerLastRun.state;
         });
       },
     },

@@ -2598,20 +2598,33 @@ func (h *HTTPServer) GetVersion(w http.ResponseWriter, r *http.Request) {
 	}
 	osType := runtime.GOOS
 	osArch := runtime.GOARCH
+	schedulerLastRun, err := h.system.GetSchedulerLastRun()
+	if err != nil {
+		context = err.Error()
+		JSONresp := types.JSONMessageResponse{
+			Metadata: types.JSONResponseMetadata{
+				Response: "failed to get scheduler last run info",
+			},
+		}
+		log.Println(JSONresp.Metadata.Response, context)
+		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
+		return
+	}
 
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "fetched version information",
 		},
 		Data: types.SystemVersion{
-			Version:         version,
-			CommitHash:      commitHash,
-			Mode:            mode,
-			Date:            date,
-			GolangVersion:   golangVersion,
-			PostgresVersion: postgresVersion,
-			OSType:          osType,
-			OSArch:          osArch,
+			Version:          version,
+			CommitHash:       commitHash,
+			Mode:             mode,
+			Date:             date,
+			GolangVersion:    golangVersion,
+			PostgresVersion:  postgresVersion,
+			OSType:           osType,
+			OSArch:           osArch,
+			SchedulerLastRun: schedulerLastRun,
 		},
 	}
 	log.Println(JSONresp.Metadata.Response, context)

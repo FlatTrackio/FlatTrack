@@ -16,7 +16,6 @@
 <template>
   <b-tooltip
     :label="message"
-    type="is-white"
     :position="position ? position : 'is-auto'"
     multilined
     :triggers="['focus', 'click', 'hover']"

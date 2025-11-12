@@ -55,7 +55,7 @@ func NewManager() *manager {
 	system := system.NewManager(db)
 	registration := registration.NewManager(users, system, settings)
 	metrics := metrics.NewManager()
-	scheduling := scheduling.NewManager(db).
+	scheduling := scheduling.NewManager(db, system).
 		RegisterCronFunc(shoppinglist.ShoppingList().DeleteCleanup())
 	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling, maintenanceMode)
 	return &manager{

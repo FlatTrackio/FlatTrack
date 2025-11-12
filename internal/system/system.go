@@ -20,7 +20,10 @@ package system
 
 import (
 	"database/sql"
+	"encoding/json"
 	"log"
+
+	"gitlab.com/flattrack/flattrack/pkg/types"
 )
 
 // Manager for system configuration
@@ -92,4 +95,28 @@ func (m *Manager) GetJWTsecret() (string, error) {
 // GetInstanceUUID returns the instance UUID
 func (m *Manager) GetInstanceUUID() (string, error) {
 	return m.getValue("instanceUUID")
+}
+
+// GetSchedulerLastRun ...
+// returns the date of the last run of the scheduler
+func (m *Manager) GetSchedulerLastRun() (types.SchedulerLastRun, error) {
+	val, err := m.getValue("schedulerLastRun")
+	if err != nil {
+		return types.SchedulerLastRun{}, err
+	}
+	var lastRun types.SchedulerLastRun
+	if err := json.Unmarshal([]byte(val), &lastRun); err != nil {
+		return types.SchedulerLastRun{}, err
+	}
+	return lastRun, nil
+}
+
+// SetSchedulerLastRun ...
+// set if the FlatTrack instance has been initialized
+func (m *Manager) SetSchedulerLastRun(lastRun types.SchedulerLastRun) (err error) {
+	b, err := json.Marshal(lastRun)
+	if err != nil {
+		return err
+	}
+	return m.setValue("schedulerLastRun", string(b))
 }
