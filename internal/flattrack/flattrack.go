@@ -23,7 +23,6 @@ import (
 )
 
 type manager struct {
-	log          *slog.Logger
 	httpserver   *httpserver.HTTPServer
 	metrics      *metrics.Manager
 	emails       *emails.Manager
@@ -88,7 +87,6 @@ func NewManager() *manager {
 }
 
 type managerInit struct {
-	log          *slog.Logger
 	httpserver   *httpserver.HTTPServer
 	metrics      *metrics.Manager
 	health       *health.Manager
@@ -100,10 +98,9 @@ type managerInit struct {
 
 func (m *manager) Init() *managerInit {
 	if err := m.migrations.Migrate(); err != nil && !m.maintenanceMode {
-		m.log.Error("failed to migrate database", "error", err)
+		slog.Error("failed to migrate database", "error", err)
 	}
 	return &managerInit{
-		log:             m.log,
 		httpserver:      m.httpserver,
 		metrics:         m.metrics,
 		health:          m.health,
@@ -119,7 +116,7 @@ func (mi *managerInit) Run() {
 	if !mi.maintenanceMode {
 		go mi.scheduling.Run()
 	} else {
-		mi.log.Info("Instance in maintenance mode. Will only serve message stating as such.")
+		slog.Info("Instance in maintenance mode. Will only serve message stating as such.")
 	}
 	mi.httpserver.Listen()
 }
