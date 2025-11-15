@@ -287,18 +287,6 @@
             secret: this.$route.query.secret,
           })
           .then((resp) => {
-            if (
-              resp.data.data !== "" ||
-              typeof resp.data.data !== "undefined"
-            ) {
-              localStorage.setItem("authToken", resp.data.data);
-            } else {
-              common.DisplayFailureToast(
-                this.$buefy,
-                "Failed to find login token after registration"
-              );
-              return;
-            }
             common.DisplaySuccessToast(this.$buefy, "Welcome to FlatTrack!");
             setTimeout(() => {
               loadingComponent.close();

@@ -226,7 +226,6 @@
               );
               return;
             }
-            localStorage.setItem("authToken", resp.data.data);
             common.DisplaySuccessToast(
               this.$buefy,
               resp.data.metadata.response

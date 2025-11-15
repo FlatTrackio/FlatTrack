@@ -20,7 +20,7 @@ router.beforeEach(async (to, from, next) => {
   if (typeof to.name !== "undefined") {
     document.title = `${to.name} | FlatTrack`;
   }
-  if (to.meta.requiresAuth === true && common.HasAuthToken() === false) {
+  if (to.meta.requiresAuth === true) {
     await routerCommon.requireAuthToken(to, from, next);
   } else if (to.meta.requiresNoAuth === true) {
     await routerCommon.requireNoAuthToken(to, from, next);

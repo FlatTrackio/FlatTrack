@@ -5,37 +5,33 @@ import login from "@/requests/public/login";
 // requireAuthToken
 // given an no auth token redirect to the login page
 async function requireAuthToken(to, from, next) {
-  var authToken = common.GetAuthToken();
-  if (
-    typeof authToken === "undefined" ||
-    authToken === null ||
-    authToken === ""
-  ) {
-    next({ path: "/login", query: { redirect: to.fullPath } });
-    return;
-  }
-  next();
+  login
+    .GetUserAuth()
+    .then((resp) => {
+      if (resp.data.data !== true) {
+        next({ name: "Login", query: { redirect: to.fullPath } });
+      } else {
+        next();
+      }
+    })
+    .catch((err) => {
+      next({ name: "Login", query: { redirect: to.fullPath } });
+    });
 }
 
 // requireNoAuthToken
 // given an auth token, redirect to the home page
 async function requireNoAuthToken(to, from, next) {
-  var authToken = common.GetAuthToken();
-  if (
-    typeof authToken === "undefined" ||
-    authToken === null ||
-    authToken === ""
-  ) {
-    next();
-    return;
-  }
   login.GetUserAuth(false).then(() => {
-    window.location.href = "/";
+    if (resp.data.data !== true) {
+      next();
+    } else {
+      next({ name: "Home" });
+    }
   });
 }
 
 async function requireGroup(to, from, next) {
-  console.log("Checking group");
   cani
     .GetCanIgroup(to.meta.requiresGroup)
     .then((resp) => {
@@ -55,8 +51,8 @@ function isPublicRoute(to) {
 }
 
 export default {
-  requireAuthToken,
-  requireNoAuthToken,
   requireGroup,
   isPublicRoute,
+  requireAuthToken,
+  requireNoAuthToken,
 };
