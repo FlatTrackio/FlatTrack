@@ -194,56 +194,21 @@ export default [
     component: () => import("@/views/public/login.vue"),
     beforeEnter: (to, from, next) => {
       let instanceRegistered;
-      let hasAuthToken;
-      let validAuthToken;
-      let nextRoute;
-
-      function handleRedirections() {
-        if (
-          instanceRegistered &&
-          validAuthToken &&
-          to.query.redirect === null
-        ) {
-          nextRoute = "/";
-        } else if (
-          instanceRegistered &&
-          validAuthToken &&
-          to.query.redirect !== null
-        ) {
-          nextRoute = to.query.redirect;
-        } else if (!instanceRegistered) {
-          nextRoute = "/setup";
-        } else if (!(hasAuthToken || validAuthToken)) {
-          nextRoute = null;
-        }
-
-        if (!(nextRoute === null || nextRoute === "")) {
-          next(nextRoute);
-        } else {
-          next();
-        }
-      }
       registration
         .GetInstanceRegistered()
         .then((resp) => {
           instanceRegistered = resp.data.data === true;
-          // check if the authToken in localStorage isn't empty
-          var authToken = common.GetAuthToken();
-          hasAuthToken = !(
-            typeof authToken === "undefined" ||
-            authToken === null ||
-            authToken === ""
-          );
-          // check if authToken is valid
           return login.GetUserAuth(false);
         })
         .then((resp) => {
-          validAuthToken = resp.data.data === true;
-          handleRedirections();
+          next({ name: "Home" });
         })
         .catch((err) => {
-          validAuthToken = err.response.data.data === true;
-          handleRedirections();
+          if (instanceRegistered !== true) {
+            // TODO fix this route not being served
+            next({ name: "Set up" });
+            return;
+          }
           next();
         });
     },
@@ -260,9 +225,6 @@ export default [
     path: "/setup",
     name: "Set up",
     component: () => import("@/views/public/setup.vue"),
-    meta: {
-      requiresNoAuth: true,
-    },
     beforeEnter: (to, from, next) => {
       healthz
         .GetHealthz()
@@ -271,7 +233,7 @@ export default [
         })
         .then((resp) => {
           if (resp.data.data === true) {
-            next("/");
+            next({ name: "Home" });
             return;
           }
           next();
@@ -281,7 +243,7 @@ export default [
             err.config.url === "/_healthz" &&
             err.response.data.data === false
           ) {
-            next("/unavailable");
+            next({ name: "Unavailable" });
             return;
           }
           next();

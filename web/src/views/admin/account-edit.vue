@@ -274,6 +274,7 @@
   import common from "@/common/common";
   import groups from "@/requests/authenticated/groups";
   import flatmates from "@/requests/authenticated/flatmates";
+  import profile from "@/requests/authenticated/profile";
   import adminFlatmates from "@/requests/admin/flatmates";
   import QrcodeVue from "qrcode.vue";
   import infotooltip from "@/components/common/info-tooltip.vue";
@@ -329,7 +330,9 @@
     async beforeMount() {
       this.GetAvailableGroups();
       this.GetUserAccount();
-      this.myUserID = common.GetUserIDFromJWT();
+      profile.GetProfile().then((resp) => {
+        this.myUserID = resp.data.id
+      })
       if (this.registered !== true) {
         adminFlatmates.GetUserAccountConfirms(this.id).then((resp) => {
           var confirmsList = resp.data.list;

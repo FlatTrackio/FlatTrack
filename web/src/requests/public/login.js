@@ -16,31 +16,53 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import Request from '@/requests/requests'
+import Request from "@/requests/requests";
 
 // GetUserAuth
 // validate JWT
-function GetUserAuth (redirect) {
-  return Request({
-    url: '/api/user/auth',
-    method: 'GET'
-  }, redirect, false)
+function GetUserAuth(redirect) {
+  return Request(
+    {
+      url: "/api/user/auth",
+      method: "GET",
+    },
+    redirect,
+    false
+  );
 }
 
 // PostUserAuth
 // login and return a JWT
-function PostUserAuth (email, password) {
-  return Request({
-    url: '/api/user/auth',
-    method: 'POST',
-    data: {
-      email,
-      password
-    }
-  }, false, true)
+function PostUserAuth(email, password) {
+  return Request(
+    {
+      url: "/api/user/auth",
+      method: "POST",
+      data: {
+        email,
+        password,
+      },
+    },
+    false,
+    true
+  );
+}
+
+// DeleteUserAuth
+// requests the auth cookie be cleared
+function DeleteUserAuth() {
+  return Request(
+    {
+      url: "/api/user/auth",
+      method: "DELETE",
+    },
+    false,
+    true
+  );
 }
 
 export default {
   GetUserAuth,
-  PostUserAuth
-}
+  PostUserAuth,
+  DeleteUserAuth,
+};
