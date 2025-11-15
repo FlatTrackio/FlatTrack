@@ -39,7 +39,7 @@ type manager struct {
 
 func NewManager() *manager {
 	slog.SetDefault(
-		slog.New(slog.NewJSONHandler(
+		slog.New(slog.NewTextHandler(
 			os.Stdout,
 			&slog.HandlerOptions{AddSource: true, ReplaceAttr: common.SLogReplaceAttr()},
 		)),

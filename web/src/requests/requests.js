@@ -11,53 +11,42 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import axios from 'axios'
-import common from '@/common/common'
-import constants from '@/constants/constants'
+import axios from "axios";
+import common from "@/common/common";
+import constants from "@/constants/constants";
 
-function redirectToLogin (redirect) {
+function redirectToLogin(redirect) {
   if (redirect === false) {
-    return
+    return;
   }
-  if (window.location.pathname !== '/login') {
-    window.location.href = '/login'
+  if (window.location.pathname !== "/login") {
+    let u = new URL(window.location.origin);
+    u.pathname = "/login";
+    u.searchParams.set("redirect", window.location.pathname);
+    window.location = u.toString();
   }
 }
 
-function Request (request, redirect = true, publicRoute = false) {
+function Request(request, redirect = true, publicRoute = false) {
   return new Promise((resolve, reject) => {
-    var authToken = common.GetAuthToken()
-    // if there is no token, and the request is a public route
-    if (
-      (typeof authToken === 'undefined' ||
-        authToken === null ||
-        authToken === '') &&
-      redirect !== true
-    ) {
-      redirectToLogin(redirect)
-    }
     request.headers = {
-      Accept: 'application/json'
-    }
-    if (publicRoute !== true) {
-      request.headers.Authorization = `bearer ${authToken}`
-    }
+      Accept: "application/json",
+    };
     if (constants.appWebpackHotUpdate) {
-      request.baseURL = 'http://localhost:8080'
+      request.baseURL = "http://localhost:8080";
     }
     axios(request)
       .then((resp) => resolve(resp))
       .catch((err) => {
         if (err.response.status === 401) {
-          common.DeleteAuthToken()
-          redirectToLogin(redirect)
-        }
-        if (err.response.status === 503) {
+          redirectToLogin(redirect);
+          reject(err);
+        } else if (err.response.status === 503) {
           window.location.href = "/unavailable";
         }
-        reject(err)
-      })
-  })
+        reject(err);
+      });
+  });
 }
 
-export default Request
+export default Request;
