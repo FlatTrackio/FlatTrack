@@ -1,4 +1,5 @@
 ---
+defaultBaseImage: registry.gitlab.com/flattrack/infra/static:latest
 builds:
   - id: flattrack
     dir: .
