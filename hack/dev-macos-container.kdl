@@ -18,7 +18,7 @@ layout {
   }
   pane_template name="backend" {
     command "gow"
-    args "run" "."
+    args "-r" "run" "."
     focus true
   }
   pane_template name="frontend" {
