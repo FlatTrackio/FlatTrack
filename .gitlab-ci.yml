@@ -13,12 +13,12 @@ variables:
   POSTGRES_USER: flattrack
   POSTGRES_PASSWORD: flattrack
   EXTRA_REGISTRIES: docker.io
+  IMAGE_FLATTRACK_BUILD: registry.gitlab.com/flattrack/infra/flattrack-build:v1763355659-408ccd6b@sha256:befa430adddc813935ac29233a9fd284c4cf1c673e4028cc6f37663cb9dd83e9
   IMAGE_DENO_ALPINE: docker.io/denoland/deno:alpine-2.5.4@sha256:9b5cfe963dc3ee97dde39c7b29989709de34b11fc72565ee8fe223a43d08c4a6
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.25.3-alpine3.22@sha256:aee43c3ccbf24fdffb7295693b6e33b21e01baec1b2a55acc351fde345e9ec34
   IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v2.5.0@sha256:0c8e590120a98ada5d0d9423e65dd957067e70c87efd692e83d5a311ddfc3151
   IMAGE_PYTHON: docker.io/python:3.13.2-alpine3.21@sha256:323a717dc4a010fee21e3f1aac738ee10bb485de4e7593ce242b36ee48d6b352
   IMAGE_LYCHEE: docker.io/lycheeverse/lychee:sha-469ccd0-alpine@sha256:41e05e0a9effda7b1fabbf94d26d888327517dc21d320f577fcce10eec7b3eca
-  IMAGE_POSTGRES: docker.io/postgres:17.5-alpine3.22@sha256:6567bca8d7bc8c82c5922425a0baee57be8402df92bae5eacad5f01ae9544daa
+  IMAGE_POSTGRES: docker.io/postgres:18.0-alpine3.22@sha256:48c8ad3a7284b82be4482a52076d47d879fd6fb084a1cbfccbd551f9331b0e40
   IMAGE_MINIO: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
   IMAGE_CONFORM: registry.gitlab.com/bobymcbobs/container-images/conform:v1753521600-daa77a05@sha256:3142518fe8224247f53665b9082220fb557c14b617f9a4530384c3e121958acf
   IMAGE_ORAS: ghcr.io/oras-project/oras:v1.3.0@sha256:6ce045ce069a89934d6666b8b49f9c4c0145201bd6de6dbe2aee267814c55468
@@ -62,8 +62,8 @@ variables:
 
 .build-container: &build-container
   image:
-    name: $IMAGE_GOLANG_ALPINE
-    entrypoint: [""]
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   retry: 2
   id_tokens:
     SIGSTORE_ID_TOKEN:
@@ -72,8 +72,6 @@ variables:
     KO_DOCKER_REPO: "$CI_REGISTRY_IMAGE"
   before_script:
     - set -x
-    - *setup-testing-repo
-    - apk add --no-cache curl cosign ko git crane jq syft bash file tar gzip
     - export KO_DOCKER_REPO="$(echo ${KO_DOCKER_REPO} | tr '[:upper:]' '[:lower:]')"
     - ko login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
     - *image-set-build-env
@@ -109,9 +107,10 @@ copy-container-image-to-dockerhub:
       - main
       - tags
   stage: post-build
-  image: $IMAGE_GOLANG_ALPINE
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   before_script:
-    - apk add --no-cache git cosign
     - cosign login "${CI_REGISTRY}" -u "${CI_REGISTRY_USER}" -p "${CI_REGISTRY_PASSWORD}"
     - *container-registry-login-dockerhub
     - *image-set-build-env
@@ -126,7 +125,9 @@ copy-container-image-to-dockerhub:
 
 .build-frontend: &build-frontend
   retry: 2
-  image: $IMAGE_DENO_ALPINE
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   before_script:
     - *image-set-build-env
     - cd web
@@ -158,7 +159,9 @@ test-backend-e2e:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   variables:
     POSTGRES_DB: flattrack
     POSTGRES_USER: flattrack
@@ -183,7 +186,6 @@ test-backend-e2e:
         - server
         - /data
   before_script:
-    - apk add --no-cache git gcc curl
     - go install github.com/onsi/ginkgo/ginkgo@v1.16.5
     - go build -o ./bin/flattrack main.go
     - ./bin/flattrack &
@@ -197,9 +199,9 @@ build-backend-smoketest:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
-  before_script:
-    - apk add --no-cache git
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   script:
     - ./hack/verify-build-smoketest.sh
 
@@ -208,10 +210,10 @@ spellcheck:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   allow_failure: true
-  before_script:
-    - apk add --no-cache git
   script:
     - ./hack/verify-spellcheck.sh
 
@@ -220,9 +222,9 @@ govet:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
-  before_script:
-    - apk add --no-cache git
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   script:
     - ./hack/verify-govet.sh
 
@@ -231,9 +233,9 @@ gofmt:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
-  before_script:
-    - apk add --no-cache git
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   script:
     - ./hack/verify-gofmt.sh
 
@@ -242,9 +244,9 @@ goimports:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
-  before_script:
-    - apk add --no-cache git
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   script:
     - ./hack/verify-goimports.sh
 
@@ -263,9 +265,9 @@ govulncheck:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
-  before_script:
-    - apk add --no-cache git
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   script:
     - ./hack/verify-govulncheck.sh
 
@@ -274,7 +276,9 @@ lint-frontend:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_DENO_ALPINE
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   allow_failure: true
   before_script:
     - cd web
@@ -286,10 +290,10 @@ lint-backend:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   allow_failure: true
-  before_script:
-    - apk add --no-cache git
   script:
     - ./hack/verify-lint-backend.sh
 
@@ -298,9 +302,9 @@ verify-documented-env-vars:
     refs:
       - merge_requests
   stage: codequality
-  image: $IMAGE_GOLANG_ALPINE
-  before_script:
-    - apk add --no-cache git
+  image:
+    name: $IMAGE_FLATTRACK_BUILD
+    entrypoint: ["/bin/bash", "-c"]
   script:
     - ./hack/verify-documented-env-vars.sh
 
