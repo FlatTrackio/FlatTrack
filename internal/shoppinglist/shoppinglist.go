@@ -450,7 +450,7 @@ func (m *ShoppingListManager) DeleteCleanup() (string, func() error) {
 		}
 		lists, err := m.List(types.ShoppingListOptions{
 			Selector: types.ShoppingListSelector{
-				CreationTimestampBefore: timestamp.Unix(),
+				ModificationTimestampBefore: timestamp.Unix(),
 			},
 			SortBy: types.ShoppingListSortByLastUpdated,
 		})
@@ -467,12 +467,15 @@ func (m *ShoppingListManager) DeleteCleanup() (string, func() error) {
 		if len(lists) == 0 {
 			return nil
 		}
-		slog.Debug("Shopping List Cleanup", "message", fmt.Sprintf("Deleting old %v lists with policy %v\n", len(lists), policy))
+		slog.Info("Shopping List Cleanup", "message", fmt.Sprintf("Deleting old %v lists with policy %v", len(lists), policy))
+		listIDs := []string{}
 		for _, list := range lists {
 			if err := m.Delete(list.ID); err != nil {
 				return err
 			}
+			listIDs = append(listIDs, list.ID)
 		}
+		slog.Info("Shopping List Cleanup", "message", fmt.Sprintf("Deleting old %v lists cleaned up", len(lists)), "lists", listIDs)
 		return nil
 	}
 }
