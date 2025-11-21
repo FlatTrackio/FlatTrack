@@ -44,6 +44,7 @@ func NewManager() *manager {
 			&slog.HandlerOptions{AddSource: true, ReplaceAttr: common.SLogReplaceSource},
 		)),
 	)
+	slog.SetLogLoggerLevel(common.GetLogLevel())
 	slog.Info("launching FlatTrack",
 		slog.String("buildVersion", common.GetAppBuildVersion()),
 		slog.String("buildHash", common.GetAppBuildHash()),
