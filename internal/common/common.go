@@ -284,6 +284,20 @@ func GetAppBuildMode() string {
 	return AppBuildMode
 }
 
+// GetLogLevel ...
+// returns the log level
+func GetLogLevel() slog.Level {
+	logLevelString := GetEnvOrDefault("APP_LOG_LEVEL", "")
+	var level slog.Level
+	if err := level.UnmarshalText([]byte(logLevelString)); err != nil {
+		if logLevelString != "" {
+			slog.Error("Failed to parse log level", "error", err)
+		}
+		return slog.LevelInfo
+	}
+	return level
+}
+
 // SetFirstOrSecond ...
 // given first, return it, else return second
 func SetFirstOrSecond(first string, second string) string {
