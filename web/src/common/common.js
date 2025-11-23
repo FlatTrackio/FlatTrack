@@ -100,16 +100,14 @@ function SignoutDialog(buefy) {
 // TimestampToCalendar
 // converts a unix timestamp to a human readable string
 function TimestampToCalendar(timestamp) {
-  return dayjs(timestamp * 1000)
-    .calendar(null, {
-      sameDay: "[Today] h:mm A",
-      nextDay: "[Tomorrow] h:mm A",
-      nextWeek: "dddd [at] h:mm A",
-      lastDay: "[Yesterday] h:mm A",
-      lastWeek: "dddd [at] h:mm A",
-      sameElse: "DD/MM/YYYY",
-    })
-    .toLowerCase();
+  return dayjs(timestamp * 1000).calendar(null, {
+    sameDay: "[today] h:mm A",
+    nextDay: "[tomorrow] h:mm A",
+    nextWeek: "dddd [at] h:mm A",
+    lastDay: "[yesterday] h:mm A",
+    lastWeek: "dddd [at] h:mm A",
+    sameElse: "DD/MM/YYYY",
+  });
 }
 
 // DeviceIsMobile
