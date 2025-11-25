@@ -79,6 +79,7 @@ func NewHTTPServer(
 		Headers("Accept", "application/json").
 		Subrouter()
 	apiRouter.NotFoundHandler = h.HTTP404()
+	apiRouter.MethodNotAllowedHandler = h.HTTPMethodNotAllowed()
 	h.registerAPIHandlers(apiRouter)
 
 	passthrough := &frontendOptions{
@@ -95,6 +96,8 @@ func NewHTTPServer(
 	router.Use(logging)
 	router.Use(c.Handler)
 	router.Use(gziphandler.GzipHandler)
+	router.NotFoundHandler = h.HTTP404()
+	router.MethodNotAllowedHandler = h.HTTPMethodNotAllowed()
 
 	h.server = &http.Server{
 		Handler:      router,

@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"maps"
 	"net/http"
+	"time"
 )
 
 type statusRecorder struct {
@@ -31,25 +32,26 @@ func scrubHeaders(in http.Header) (o http.Header) {
 func logging(next http.Handler) http.Handler {
 	// log all requests
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
 		requestIP := GetRequestIP(r)
-		recorder := &statusRecorder{
-			ResponseWriter: w,
-		}
+		recorder := &statusRecorder{ResponseWriter: w}
 		next.ServeHTTP(recorder, r)
 		scrubbedHeaders := scrubHeaders(r.Header)
 		slog.Info(
 			"HTTP Request",
 			"status", recorder.Status,
 			"method", r.Method,
-			"url", r.URL,
+			"url", r.URL.String(),
 			"proto", r.Proto,
 			"requestIP", requestIP,
 			"remoteAddr", r.RemoteAddr,
-			"headers", scrubbedHeaders)
+			"headers", scrubbedHeaders,
+			"duration", time.Since(start).String(),
+		)
 	})
 }
 
-// HTTPHeaderBackendAllowTypes heads to check for content type
+// HTTPHeaderBackendAllowTypes headers to check for content type
 type HTTPHeaderBackendAllowTypes string
 
 const (

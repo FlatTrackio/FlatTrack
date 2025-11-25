@@ -2829,7 +2829,18 @@ func (h *HTTPServer) HTTPMaintenanceMode(next http.HandlerFunc) http.HandlerFunc
 func (h *HTTPServer) HTTP404() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		if _, err := w.Write([]byte(`404 not found`)); err != nil {
+		if _, err := w.Write([]byte(`Not found`)); err != nil {
+			slog.Error("failed to write response", "error", err)
+		}
+	}
+}
+
+// HTTP404 ...
+// responds with 404
+func (h *HTTPServer) HTTPMethodNotAllowed() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		if _, err := w.Write([]byte(`Method not allowed`)); err != nil {
 			slog.Error("failed to write response", "error", err)
 		}
 	}
