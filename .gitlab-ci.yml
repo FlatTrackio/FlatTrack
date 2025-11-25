@@ -6,6 +6,9 @@ stages:
   - post-build
   - pages
 
+include:
+  template: Dependency-Scanning.gitlab-ci.yml
+
 variables:
   APP_BUILD_VERSION: 0.0.0
   APP_BUILD_MODE: development
@@ -14,8 +17,8 @@ variables:
   POSTGRES_PASSWORD: flattrack
   EXTRA_REGISTRIES: docker.io
   IMAGE_DENO_ALPINE: docker.io/denoland/deno:alpine-2.5.4@sha256:9b5cfe963dc3ee97dde39c7b29989709de34b11fc72565ee8fe223a43d08c4a6
-  IMAGE_GOLANG_ALPINE: docker.io/golang:1.25.3-alpine3.22@sha256:aee43c3ccbf24fdffb7295693b6e33b21e01baec1b2a55acc351fde345e9ec34
-  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v2.5.0@sha256:0c8e590120a98ada5d0d9423e65dd957067e70c87efd692e83d5a311ddfc3151
+  IMAGE_GOLANG_ALPINE: docker.io/golang:1.25.4-alpine3.22@sha256:d3f0cf7723f3429e3f9ed846243970b20a2de7bae6a5b66fc5914e228d831bbb
+  IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v2.6.2-alpine@sha256:a3abd55b17a74e36703f3d27e8183958b8bee15a1b1ffb25529192e114e0edbe
   IMAGE_PYTHON: docker.io/python:3.13.2-alpine3.21@sha256:323a717dc4a010fee21e3f1aac738ee10bb485de4e7593ce242b36ee48d6b352
   IMAGE_LYCHEE: docker.io/lycheeverse/lychee:sha-469ccd0-alpine@sha256:41e05e0a9effda7b1fabbf94d26d888327517dc21d320f577fcce10eec7b3eca
   IMAGE_POSTGRES: docker.io/postgres:17.5-alpine3.22@sha256:6567bca8d7bc8c82c5922425a0baee57be8402df92bae5eacad5f01ae9544daa
