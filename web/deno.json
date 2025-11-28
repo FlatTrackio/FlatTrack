@@ -1,9 +1,6 @@
 {
-  "tasks": {
-    "dev": "deno run -A --node-modules-dir npm:vite",
-    "build": "deno run -A --node-modules-dir npm:vite build --outDir ../kodata/web --emptyOutDir",
-    "preview": "deno run -A --node-modules-dir npm:vite preview",
-    "lint": "deno run -A --node-modules-dir npm:eslint --ext .js,.ts,.mts,.vue src",
-    "serve": "deno run --allow-net --allow-read https://deno.land/std@0.157.0/http/file_server.ts dist/"
-  }
+    "tasks": {
+        "build": "deno run -A --node-modules-dir npm:vite build --outDir ../kodata/web --emptyOutDir",
+        "lint": "deno run -A --node-modules-dir npm:eslint --ext .js,.ts,.mts,.vue src"
+    }
 }
