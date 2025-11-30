@@ -260,6 +260,11 @@ func GetMaintenanceMode() bool {
 	return GetEnvOrDefault("APP_MAINTENANCE_MODE", "") == "true"
 }
 
+// GetLogTimezone to format the timezone of the log
+func GetLogTimezone() string {
+	return GetEnvOrDefault("APP_LOG_TIMEZONE", "")
+}
+
 // GetAppBuildVersion ...
 // return the version of the current FlatTrack instance
 func GetAppBuildVersion() string {
@@ -398,15 +403,30 @@ func RandStringRunes(n int) string {
 	return string(b)
 }
 
-func SLogReplaceSource(groups []string, a slog.Attr) slog.Attr {
-	// Remove time.
-	if a.Key == slog.TimeKey && len(groups) == 0 {
-		return slog.Attr{}
+func SLogReplaceAttr() func([]string, slog.Attr) slog.Attr {
+	tz := GetLogTimezone()
+	return func(groups []string, a slog.Attr) slog.Attr {
+		if a.Key == slog.TimeKey {
+			t := a.Value.Time()
+			if tz != "" {
+				loc, err := time.LoadLocation(tz)
+				if err == nil {
+					t = t.In(loc)
+				} else {
+					t = t.UTC()
+				}
+			} else {
+				t = t.UTC()
+			}
+			return slog.Attr{
+				Key:   a.Key,
+				Value: slog.StringValue(t.Format(time.RFC3339)),
+			}
+		}
+		if a.Key == slog.SourceKey {
+			source := a.Value.Any().(*slog.Source)
+			source.File = filepath.Base(source.File)
+		}
+		return a
 	}
-	// Remove the directory from the source's filename.
-	if a.Key == slog.SourceKey {
-		source := a.Value.Any().(*slog.Source)
-		source.File = filepath.Base(source.File)
-	}
-	return a
 }
