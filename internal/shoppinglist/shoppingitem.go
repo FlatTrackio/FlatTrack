@@ -399,3 +399,24 @@ func (m *ShoppingItemManager) GetListItemCount(listID string) (count int, err er
 	}
 	return count, nil
 }
+
+// UntemplateItemsFromDeletedLists ...
+// removed templateid from shopping items where the list has been deleted
+func (m *ShoppingItemManager) UntemplateItemsFromDeletedLists() error {
+	sqlStatement := `update shopping_item
+                           set templateid = ''
+                         where not exists (select * from shopping_list where shopping_list.id = shopping_item.templateid)
+                         and templateid <> ''`
+	res, err := m.db.Exec(sqlStatement)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n > 0 {
+		slog.Info("Untemplate shopping list items", "count", n)
+	}
+	return nil
+}

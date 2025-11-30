@@ -16,6 +16,7 @@ import (
 )
 
 type Manager struct {
+	mu              sync.Mutex
 	db              *sql.DB
 	system          *system.Manager
 	leaderelection  *leaderelection.Lock
@@ -59,14 +60,15 @@ func (m *Manager) GetEndpointSecret() string {
 }
 
 func (m *Manager) RegisterFunc(fns ...func() error) *Manager {
+	m.mu.Lock()
 	m.fns = append(m.fns, fns...)
+	m.mu.Unlock()
 	return m
 }
 
 func (m *Manager) RegisterCronFunc(crontab string, fn func() error) *Manager {
 	if m.endpointEnabled {
-		m.fns = append(m.fns, fn)
-		return m
+		return m.RegisterFunc(fn)
 	}
 	if _, err := m.cronScheduler.NewJob(
 		gocron.CronJob(crontab, false),
