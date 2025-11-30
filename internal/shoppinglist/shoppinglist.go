@@ -479,3 +479,24 @@ func (m *ShoppingListManager) DeleteCleanup() (string, func() error) {
 		return nil
 	}
 }
+
+// UntemplateListsFromDeletedLists ...
+// removed templateid from shopping items where the list has been deleted
+func (m *ShoppingListManager) UntemplateListsFromDeletedLists() error {
+	sqlStatement := `update shopping_list a
+                           set templateid = ''
+                         where not exists (select * from shopping_list b where b.id = a.templateid)
+                         and templateid <> ''`
+	res, err := m.db.Exec(sqlStatement)
+	if err != nil {
+		return err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if n > 0 {
+		slog.Info("Untemplate shopping lists", "count", n)
+	}
+	return nil
+}
