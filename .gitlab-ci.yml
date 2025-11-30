@@ -21,7 +21,7 @@ variables:
   IMAGE_GOLANGCI_LINT: docker.io/golangci/golangci-lint:v2.6.2-alpine@sha256:a3abd55b17a74e36703f3d27e8183958b8bee15a1b1ffb25529192e114e0edbe
   IMAGE_PYTHON: docker.io/python:3.13.2-alpine3.21@sha256:323a717dc4a010fee21e3f1aac738ee10bb485de4e7593ce242b36ee48d6b352
   IMAGE_LYCHEE: docker.io/lycheeverse/lychee:sha-469ccd0-alpine@sha256:41e05e0a9effda7b1fabbf94d26d888327517dc21d320f577fcce10eec7b3eca
-  IMAGE_POSTGRES: docker.io/postgres:17.5-alpine3.22@sha256:6567bca8d7bc8c82c5922425a0baee57be8402df92bae5eacad5f01ae9544daa
+  IMAGE_POSTGRES: docker.io/postgres:18.0-alpine3.22@sha256:48c8ad3a7284b82be4482a52076d47d879fd6fb084a1cbfccbd551f9331b0e40
   IMAGE_MINIO: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
   IMAGE_CONFORM: registry.gitlab.com/bobymcbobs/container-images/conform:v1753521600-daa77a05@sha256:3142518fe8224247f53665b9082220fb557c14b617f9a4530384c3e121958acf
   IMAGE_ORAS: ghcr.io/oras-project/oras:v1.3.0@sha256:6ce045ce069a89934d6666b8b49f9c4c0145201bd6de6dbe2aee267814c55468
