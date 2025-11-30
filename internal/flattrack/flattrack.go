@@ -41,7 +41,7 @@ func NewManager() *manager {
 	slog.SetDefault(
 		slog.New(slog.NewJSONHandler(
 			os.Stdout,
-			&slog.HandlerOptions{AddSource: true, ReplaceAttr: common.SLogReplaceSource},
+			&slog.HandlerOptions{AddSource: true, ReplaceAttr: common.SLogReplaceAttr()},
 		)),
 	)
 	slog.SetLogLoggerLevel(common.GetLogLevel())

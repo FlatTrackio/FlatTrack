@@ -41,6 +41,7 @@ FlatTrack is solely configured to run with environment variables (or a `.env` fi
 | `APP_SCHEDULER_DISABLE_USE_ENDPOINT` | Disable scheduler and instead use endpoint `/api/system/scheduler`                                                            | `false`               |
 | `APP_SCHEDULER_ENDPOINT_SECRET`      | Set a secret for scheduler endpoint which must match header `X-FlatTrack-Scheduler-Secret` (required when scheduler disabled) |                       |
 | `APP_LOG_LEVEL`                      | Sets the log level, between `INFO`, `DEBUG`, `WARN` and `ERROR`                                                               | `INFO`                |
+| `APP_LOG_TIMEZONE`                   | Sets the timezone for the logs. Defaults to UTC                                                                               |                       |
 
 \*this port runs on all available interfaces - this may be better configured on a single host as `127.0.0.1:...` for security
 
