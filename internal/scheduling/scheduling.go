@@ -41,7 +41,7 @@ func NewManager(db *sql.DB, system *system.Manager) *Manager {
 		db:              db,
 		system:          system,
 		leaderelection:  leaderelection,
-		endpointEnabled: common.GetSchedulerDisableUseEndpoint(),
+		endpointEnabled: common.GetSchedulerUseEndpoint(),
 		secret:          common.GetSchedulerEndpointSecret(),
 		cronScheduler:   cronScheduler,
 	}
@@ -81,6 +81,8 @@ func (m *Manager) RegisterCronFunc(crontab string, fn func() error) *Manager {
 
 func (m *Manager) PerformWork() error {
 	slog.Debug("scheduler", "error", "Work running")
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	now := time.Now()
 	if err := m.system.SetSchedulerLastRun(types.SchedulerLastRun{
 		Time:  now.Unix(),
@@ -126,9 +128,6 @@ func (m *Manager) PerformWork() error {
 }
 
 func (m *Manager) Run() {
-	if m.endpointEnabled {
-		return
-	}
 	m.cronScheduler.Start()
 	defer func() {
 		if err := m.cronScheduler.Shutdown(); err != nil {

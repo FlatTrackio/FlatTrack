@@ -240,9 +240,10 @@ func GetAppMinioUseSSL() (output string) {
 	return GetEnvOrDefault("APP_MINIO_USE_SSL", "")
 }
 
-// GetSchedulerDisableUseEndpoint return whether to disable the scheduler and to use and endpoint instead
-func GetSchedulerDisableUseEndpoint() bool {
-	return GetEnvOrDefault("APP_SCHEDULER_DISABLE_USE_ENDPOINT", "false") == "true"
+// GetSchedulerUseEndpoint ...
+// return whether enable the scheduler endpoint
+func GetSchedulerUseEndpoint() bool {
+	return GetEnvOrDefault("APP_SCHEDULER_USE_ENDPOINT", "false") == "true"
 }
 
 // GetSchedulerEndpointSecret the shared secret to require for posting to scheduler endpoint
