@@ -2647,7 +2647,6 @@ func (h *HTTPServer) PostSchedulerRun(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	// NOTE make this async?
 	if err := h.scheduling.PerformWork(); err != nil {
 		JSONResponse(r, w, http.StatusInternalServerError, types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
