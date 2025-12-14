@@ -799,7 +799,7 @@
         if (this.authorLastNames !== "") {
           return;
         }
-        flatmates.GetFlatmate(this.author).then((resp) => {
+        flatmates.GetFlatmate(this.authorLast).then((resp) => {
           this.authorLastNames = resp.data.spec.names;
         });
       },

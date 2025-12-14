@@ -404,7 +404,16 @@ func (m *Manager) DeactivateByID(id string) (err error) {
 	if err := m.UserCreationSecrets().DeleteByUserID(id); err != nil {
 		return err
 	}
-	sqlStatement := `update users set names = '(Deleted User)', email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
+	sqlStatement := `
+        update users
+        set
+          names = '(Deleted User)',
+          email = '',
+          birthday = 0,
+          phoneNumber = '',
+          password = '',
+          deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int
+        where id = $1`
 	rows, err := m.db.Query(sqlStatement, id)
 	if err != nil {
 		return err
@@ -1081,6 +1090,7 @@ func (m *Manager) RemoveUnreferencedDeletedUsers() error {
 		}
 	}
 
+	removed := 0
 	for _, user := range users {
 		if c := slices.Contains(referencedUserIDs, user.ID); c {
 			continue
@@ -1088,7 +1098,10 @@ func (m *Manager) RemoveUnreferencedDeletedUsers() error {
 		if err := m.DeleteByID(user.ID); err != nil {
 			return err
 		}
+		removed++
 	}
-	slog.Info("Removed unreferenced users", "count", len(users))
+	if removed > 0 {
+		slog.Info("Removed unreferenced users", "count", removed)
+	}
 	return nil
 }
