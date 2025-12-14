@@ -375,7 +375,7 @@ func (h *HTTPServer) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.users.DeleteByID(userInDB.ID); err != nil {
+	if err := h.users.DeactivateByID(userInDB.ID); err != nil {
 		context = err.Error()
 		JSONresp := types.JSONMessageResponse{
 			Metadata: types.JSONResponseMetadata{
