@@ -62,6 +62,13 @@ IMAGE_LABELS="$(printf "$_IMAGE_LABELS" | tr '\n' ',')"
 
 echo "Commit made on '${APP_BUILD_DATE:-}'"
 
+if [ -n "$(which deno)" ]; then
+    (
+        cd web
+        deno task build
+    )
+fi
+
 export KO_DOCKER_REPO \
     APP_BUILD_HASH \
     APP_BUILD_DATE \
@@ -81,12 +88,15 @@ IMAGE="$(ko publish \
 if [ "${SIGN:-}" = true ]; then
     syft . --output spdx-json=tmp/sbom/flattrack.spdx.json
 
+    echo "Signing image"
     cosign sign --recursive -y "$IMAGE"
     # ko generates an SBOM for the container manifests
+    echo "Attesting SBOM to image by digest"
     cosign attest -y --recursive --predicate "$LOCAL_SBOM_PATH/flattrack-index.spdx.json" "$IMAGE"
 
     DIGESTS="$(crane manifest "$IMAGE" | jq -r '.manifests[].digest')"
     for DIGEST in $DIGESTS; do
+        echo "Attesting SBOM to image by architecture digest $DIGEST"
         cosign attest -y --recursive --predicate "$LOCAL_SBOM_PATH/flattrack.spdx.json" "$KO_DOCKER_REPO@$DIGEST"
     done
 fi
