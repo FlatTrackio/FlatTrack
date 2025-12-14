@@ -72,7 +72,8 @@ func NewManager() *manager {
 	scheduling := scheduling.NewManager(db, system).
 		RegisterCronFunc(shoppinglist.ShoppingList().DeleteCleanup()).
 		RegisterFunc(shoppinglist.ShoppingList().UntemplateListsFromDeletedLists).
-		RegisterFunc(shoppinglist.ShoppingItem().UntemplateItemsFromDeletedLists)
+		RegisterFunc(shoppinglist.ShoppingItem().UntemplateItemsFromDeletedLists).
+		RegisterFunc(users.RemoveUnreferencedDeletedUsers)
 	httpserver := httpserver.NewHTTPServer(db, users, shoppinglist, emails, groups, health, migrations, registration, settings, system, scheduling, maintenanceMode)
 	return &manager{
 		httpserver:      httpserver,

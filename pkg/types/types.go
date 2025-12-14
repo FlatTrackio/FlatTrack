@@ -94,10 +94,17 @@ type UserList struct {
 // UserSelector ...
 // fields for filtering user account lists
 type UserSelector struct {
-	ID      string `json:"id,omitempty"`
-	Group   string `json:"group,omitempty"`
-	NotID   string `json:"notId,omitempty"`
-	NotSelf string `json:"notSelf,omitempty"`
+	ID                          string `json:"id,omitempty"`
+	Group                       string `json:"group,omitempty"`
+	NotID                       string `json:"notId,omitempty"`
+	NotSelf                     string `json:"notSelf,omitempty"`
+	CreationTimestampAfter      int64  `json:"creationTimestampAfter"`
+	CreationTimestampBefore     int64  `json:"creationTimestampBefore"`
+	ModificationTimestampAfter  int64  `json:"modificationTimestampAfter"`
+	ModificationTimestampBefore int64  `json:"modificationTimestampBefore"`
+	DeletionTimestampAfter      int64  `json:"deletionTimestampAfter"`
+	DeletionTimestampBefore     int64  `json:"deletionTimestampBefore"`
+	Deleted                     bool   `json:"deleted"`
 }
 
 // ShoppingListSpec ...
