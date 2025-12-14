@@ -80,7 +80,7 @@ func (m *Manager) RegisterCronFunc(crontab string, fn func() error) *Manager {
 }
 
 func (m *Manager) PerformWork() error {
-	slog.Debug("scheduler", "error", "Work running")
+	slog.Debug("scheduler", "msg", "Work running")
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	now := time.Now()
@@ -113,7 +113,7 @@ func (m *Manager) PerformWork() error {
 		}); err != nil {
 			return err
 		}
-		slog.Debug("scheduler", "error", "Work failed")
+		slog.Debug("scheduler", "msg", "Work failed")
 		return fmt.Errorf("scheduling errors: %v", eg)
 	}
 	if err := m.system.SetSchedulerLastRun(types.SchedulerLastRun{
@@ -122,7 +122,7 @@ func (m *Manager) PerformWork() error {
 	}); err != nil {
 		return err
 	}
-	slog.Debug("scheduler", "error", "Work complete")
+	slog.Debug("scheduler", "msg", "Work complete")
 	return nil
 
 }

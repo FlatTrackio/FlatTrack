@@ -24,6 +24,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"slices"
 	"strings"
 	"time"
 
@@ -190,8 +191,40 @@ func (m *Manager) Create(user types.UserSpec, allowEmptyPassword bool) (userInse
 // List ...
 // return all users in the database
 func (m *Manager) List(includePassword bool, selectors types.UserSelector) (users []types.UserSpec, err error) {
-	sqlStatement := `select * from users where deletionTimestamp = 0 order by names`
-	rows, err := m.db.Query(sqlStatement)
+	sqlStatement := `select * from users  `
+	if selectors.Deleted {
+		sqlStatement += ` where deletionTimestamp <> 0 `
+	} else {
+		sqlStatement += ` where deletionTimestamp = 0 `
+	}
+	fields := []any{}
+
+	if selectors.ModificationTimestampBefore != 0 {
+		sqlStatement += fmt.Sprintf(`and modificationTimestamp < $%v `, len(fields)+1)
+		fields = append(fields, selectors.ModificationTimestampBefore)
+	}
+	if selectors.CreationTimestampBefore != 0 {
+		sqlStatement += fmt.Sprintf(`and creationTimestamp < $%v `, len(fields)+1)
+		fields = append(fields, selectors.CreationTimestampBefore)
+	}
+	if selectors.DeletionTimestampBefore != 0 {
+		sqlStatement += fmt.Sprintf(`and deletionTimestamp < $%v `, len(fields)+1)
+		fields = append(fields, selectors.DeletionTimestampBefore)
+	}
+	if selectors.ModificationTimestampAfter != 0 {
+		sqlStatement += fmt.Sprintf(`and modificationTimestamp > $%v `, len(fields)+1)
+		fields = append(fields, selectors.ModificationTimestampAfter)
+	}
+	if selectors.CreationTimestampAfter != 0 {
+		sqlStatement += fmt.Sprintf(`and creationTimestamp > $%v `, len(fields)+1)
+		fields = append(fields, selectors.CreationTimestampAfter)
+	}
+	if selectors.DeletionTimestampAfter != 0 {
+		sqlStatement += fmt.Sprintf(`and deletionTimestamp > $%v `, len(fields)+1)
+		fields = append(fields, selectors.DeletionTimestampAfter)
+	}
+	sqlStatement += ` order by names `
+	rows, err := m.db.Query(sqlStatement, fields...)
 	if err != nil {
 		return []types.UserSpec{}, err
 	}
@@ -343,21 +376,35 @@ func (m *Manager) GetByEmail(email string, includePassword bool) (user types.Use
 // DeleteByID ...
 // given an id, remove the user account from all the groups and then delete a user account
 func (m *Manager) DeleteByID(id string) (err error) {
+	sqlStatement := `delete from users where id = $1`
+	rows, err := m.db.Query(sqlStatement, id)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			slog.Error("Failed to close rows", "error", err)
+		}
+	}()
+	return nil
+}
+
+// DeactivateByID ...
+// given an id, remove the user account from all the groups and then deactivate a user account
+func (m *Manager) DeactivateByID(id string) (err error) {
 	userGroups, err := m.groups.GetGroupsOfUserByID(id)
 	if err != nil {
 		return err
 	}
 	for _, groupItem := range userGroups {
-		err = m.groups.RemoveUserFromGroup(id, groupItem.ID)
-		if err != nil {
+		if err := m.groups.RemoveUserFromGroup(id, groupItem.ID); err != nil {
 			return err
 		}
 	}
-	err = m.UserCreationSecrets().DeleteByUserID(id)
-	if err != nil {
+	if err := m.UserCreationSecrets().DeleteByUserID(id); err != nil {
 		return err
 	}
-	sqlStatement := `update users set email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
+	sqlStatement := `update users set names = '(Deleted User)', email = '', password = '', deletionTimestamp = date_part('epoch',CURRENT_TIMESTAMP)::int where id = $1`
 	rows, err := m.db.Query(sqlStatement, id)
 	if err != nil {
 		return err
@@ -429,10 +476,12 @@ func GetAuthTokenFromHeader(r *http.Request) (string, error) {
 func (m *Manager) ValidateJWTauthToken(r *http.Request) (valid bool, tokenClaims *types.JWTclaim, err error) {
 	secret, err := m.system.GetJWTsecret()
 	if err != nil {
+		slog.Error("Unable to get JWT secret", "error", err)
 		return false, &types.JWTclaim{}, ErrFailedToFindSystemAuthSecret
 	}
 	tokenHeaderJWT, err := GetAuthTokenFromHeader(r)
 	if err != nil {
+		slog.Error("Unable to get auth token from header", "error", err)
 		return false, &types.JWTclaim{}, err
 	}
 	claims := &types.JWTclaim{}
@@ -446,6 +495,7 @@ func (m *Manager) ValidateJWTauthToken(r *http.Request) (valid bool, tokenClaims
 		return []byte(secret), nil
 	})
 	if err != nil {
+		slog.Error("Unable to parse JWT", "error", err)
 		return false, &types.JWTclaim{}, err
 	}
 
@@ -458,6 +508,9 @@ func (m *Manager) ValidateJWTauthToken(r *http.Request) (valid bool, tokenClaims
 	}
 	user, err := m.GetByID(reqClaims.ID, true)
 	if err != nil || user.ID == "" || user.DeletionTimestamp != 0 {
+		if err != nil {
+			slog.Error("Unable to get user by ID", "error", err)
+		}
 		return false, &types.JWTclaim{}, ErrFailedToFindAuthTokenAccountID
 	}
 
@@ -984,4 +1037,58 @@ func (m *Manager) PatchDisabledAsAdmin(id string, disabled bool) (userAccount ty
 		}
 	}
 	return userAccount, nil
+}
+
+// RemoveUnreferencedDeletedUsers ...
+// deletes users that aren't referenced in any tables
+func (m *Manager) RemoveUnreferencedDeletedUsers() error {
+	users, err := m.List(false, types.UserSelector{Deleted: true})
+	if err != nil {
+		return err
+	}
+	if len(users) == 0 {
+		return nil
+	}
+
+	sqlStatement := `
+      select author, authorlast from shopping_list
+      union select author, authorlast from shopping_item
+      union select author, authorlast from shopping_list_tag`
+	rows, err := m.db.Query(sqlStatement)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := rows.Close(); err != nil {
+			slog.Error("failed to close rows", "error", err)
+		}
+	}()
+	referencedUserIDs := []string{}
+	for rows.Next() {
+		var author, authorlast string
+		if err := rows.Scan(&author, &authorlast); err != nil {
+			return err
+		}
+		err = rows.Err()
+		if err != nil {
+			return err
+		}
+		for _, id := range []string{author, authorlast} {
+			if c := slices.Contains(referencedUserIDs, id); c {
+				continue
+			}
+			referencedUserIDs = append(referencedUserIDs, id)
+		}
+	}
+
+	for _, user := range users {
+		if c := slices.Contains(referencedUserIDs, user.ID); c {
+			continue
+		}
+		if err := m.DeleteByID(user.ID); err != nil {
+			return err
+		}
+	}
+	slog.Info("Removed unreferenced users", "count", len(users))
+	return nil
 }
