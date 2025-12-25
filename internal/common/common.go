@@ -204,6 +204,12 @@ func GetAppLoginMessage() (output string) {
 	return GetEnvOrDefault("APP_LOGIN_MESSAGE", "")
 }
 
+// GetAppMaintenanceModeMessage ...
+// return a message to display when in maintenance mode
+func GetAppMaintenanceModeMessage() (output string) {
+	return GetEnvOrDefault("APP_MAINTENANCE_MODE_MESSAGE", "")
+}
+
 // GetAppEmbeddedHTML ...
 // return HTML to inject into index.html
 func GetAppEmbeddedHTML() (output string) {

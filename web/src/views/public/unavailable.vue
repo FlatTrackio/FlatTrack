@@ -18,17 +18,16 @@
     <headerDisplay />
     <div class="container">
       <section class="section">
-        <h1 class="title is-1">
-          Unavailable
-        </h1>
-        <b-message
-          has-icon
-          type="is-warning"
-        >
-          <p class="subtitle is-4">
+        <h1 class="title is-1">Unavailable</h1>
+        <b-message has-icon type="is-warning">
+          <p
+            v-if="typeof message !== 'undefined' && message !== ''"
+            class="subtitle is-4"
+          >
+            {{ message }}
+          </p>
+          <p v-else class="subtitle is-4">
             This FlatTrack instance is unavailable or not healthy.
-            <br>
-            <br>
           </p>
         </b-message>
         <b-button
@@ -46,11 +45,17 @@
 </template>
 
 <script>
-  import headerDisplay from "@/components/common/header-display.vue"
+  import headerDisplay from "@/components/common/header-display.vue";
+  import common from "@/common/common";
   export default {
     name: "UnavailablePage",
     components: {
-      headerDisplay
+      headerDisplay,
+    },
+    data() {
+      return {
+        message: common.GetMaintenanceModeMessage() || undefined,
+      };
     },
     methods: {
       Reload() {
