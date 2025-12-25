@@ -28,6 +28,8 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"gitlab.com/flattrack/flattrack/internal/common"
@@ -39,8 +41,19 @@ type Manager struct {
 	server *http.Server
 }
 
-func NewManager() *Manager {
+func NewManager(maintenanceMode bool) *Manager {
 	router := mux.NewRouter().StrictSlash(true)
+
+	maintenanceGauge := promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "flattrack_maintenance_mode",
+		Help: "When instance in maintenance mode",
+	})
+	if maintenanceMode {
+		maintenanceGauge.Add(1)
+	} else {
+		maintenanceGauge.Add(0)
+	}
+
 	r := router.Handle("/metrics", promhttp.Handler())
 	return &Manager{
 		enabled: common.GetAppMetricsEnabled(),

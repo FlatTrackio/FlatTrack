@@ -68,7 +68,7 @@ func NewManager() *manager {
 	migrations := migrations.NewManager(db)
 	system := system.NewManager(db)
 	registration := registration.NewManager(users, system, settings)
-	metrics := metrics.NewManager()
+	metrics := metrics.NewManager(maintenanceMode)
 	scheduling := scheduling.NewManager(db, system).
 		RegisterCronFunc(shoppinglist.ShoppingList().DeleteCleanup()).
 		RegisterFunc(shoppinglist.ShoppingList().UntemplateListsFromDeletedLists).
