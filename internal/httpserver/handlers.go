@@ -613,15 +613,7 @@ func (h *HTTPServer) UserAuth(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "token",
-		Path:     "/",
-		Value:    jwt,
-		MaxAge:   60 * 60 * 24 * 7,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	})
+	SetTokenCookie(w, jwt)
 	JSONResponse(r, w, http.StatusOK, types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "Successfully authenticated user",
@@ -633,15 +625,7 @@ func (h *HTTPServer) UserAuth(w http.ResponseWriter, r *http.Request) {
 // UserAuth ...
 // authenticate a user
 func (h *HTTPServer) UserAuthLogOut(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     "token",
-		Path:     "/",
-		Value:    "",
-		Expires:  time.Unix(0, 0),
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	})
+	ClearTokenCookie(w)
 	JSONResponse(r, w, http.StatusOK, types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "Successfully logged out user",
@@ -663,15 +647,7 @@ func (h *HTTPServer) UserAuthValidate(w http.ResponseWriter, r *http.Request) {
 			},
 			Data: false,
 		}
-		http.SetCookie(w, &http.Cookie{
-			Name:     "token",
-			Path:     "/",
-			Value:    "",
-			Expires:  time.Unix(0, 0),
-			HttpOnly: true,
-			Secure:   true,
-			SameSite: http.SameSiteStrictMode,
-		})
+		ClearTokenCookie(w)
 		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusUnauthorized, JSONresp)
 		return
@@ -896,15 +872,7 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "token",
-		Path:     "/",
-		Value:    jwt,
-		MaxAge:   60 * 60 * 24 * 7,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	})
+	SetTokenCookie(w, jwt)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "registered",
@@ -2610,15 +2578,7 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     "token",
-		Path:     "/",
-		Value:    jwt,
-		MaxAge:   60 * 60 * 24 * 7,
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
-	})
+	SetTokenCookie(w, jwt)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "confirmed user account",
