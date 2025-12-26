@@ -19,10 +19,13 @@ func (r *statusRecorder) WriteHeader(status int) {
 
 // scrubHeaders to remove sensitive data logged
 func scrubHeaders(in http.Header) (o http.Header) {
+	headers := []string{"Authorization", "Cookie"}
 	o = http.Header{}
 	maps.Copy(o, in)
-	if az := o.Get("Authorization"); az != "" {
-		o.Set("Authorization", "bearer [REDACTED]")
+	for _, h := range headers {
+		if az := o.Get(h); az != "" {
+			o.Set(h, "[REDACTED]")
+		}
 	}
 	return o
 }
