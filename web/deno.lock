@@ -7,8 +7,8 @@
     "npm:@mdi/font@^7.4.47": "7.4.47",
     "npm:@mdi/js@7.4.47": "7.4.47",
     "npm:@mdi/js@^7.4.47": "7.4.47",
-    "npm:@vitejs/plugin-vue@^5.0.4": "5.2.4_vite@5.4.21__sass@1.94.2__sass-embedded@1.93.2_vue@3.2.26_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2",
-    "npm:@vitejs/plugin-vue@^6.0.1": "6.0.1_vite@5.4.21__sass@1.94.2__sass-embedded@1.93.2_vue@3.2.26_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2",
+    "npm:@vitejs/plugin-vue@^5.0.4": "5.2.4_vite@5.4.21__sass@1.93.2__sass-embedded@1.93.2_vue@3.2.26_sass@1.93.2_sass-embedded@1.93.2",
+    "npm:@vitejs/plugin-vue@^6.0.1": "6.0.1_vite@5.4.21__sass@1.93.2__sass-embedded@1.93.2_vue@3.2.26_sass@1.93.2_sass-embedded@1.93.2",
     "npm:@vue/eslint-config-standard@^9.0.1": "9.0.1_eslint@9.38.0_eslint-plugin-vue@10.5.1__eslint@9.38.0__vue-eslint-parser@10.2.0___eslint@9.38.0__@stylistic+eslint-plugin@4.4.1___eslint@9.38.0___typescript@5.9.3__typescript@5.9.3_@stylistic+eslint-plugin@4.4.1__eslint@9.38.0__typescript@5.9.3_typescript@5.9.3",
     "npm:@vue/eslint-config-typescript@^14.6.0": "14.6.0_eslint@9.38.0_eslint-plugin-vue@10.5.1__eslint@9.38.0__vue-eslint-parser@10.2.0___eslint@9.38.0__@stylistic+eslint-plugin@4.4.1___eslint@9.38.0___typescript@5.9.3__typescript@5.9.3_typescript@5.9.3_vue-eslint-parser@10.2.0__eslint@9.38.0",
     "npm:autoprefixer@^10.4.21": "10.4.21_postcss@8.5.6",
@@ -27,23 +27,23 @@
     "npm:node-emoji@^2.2.0": "2.2.0",
     "npm:qrcode.vue@1.7.0": "1.7.0_vue@3.2.26",
     "npm:qrcode.vue@^3.6.0": "3.6.0_vue@3.2.26",
-    "npm:register-service-worker@^1.7.2": "1.7.2",
     "npm:sass-embedded@1.93.2": "1.93.2",
     "npm:sass-loader@16.0.5": "16.0.5_sass@1.93.2_sass-embedded@1.93.2",
-    "npm:sass-loader@16.0.6": "16.0.6_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2",
+    "npm:sass-loader@16.0.6": "16.0.6_sass@1.93.2_sass-embedded@1.93.2",
     "npm:sass@1.93.2": "1.93.2",
     "npm:sass@1.94.2": "1.94.2",
     "npm:typescript@~5.9.3": "5.9.3",
-    "npm:vite-plugin-pwa@1.1.0": "1.1.0_vite@5.4.21__sass@1.94.2__sass-embedded@1.93.2__sass@1.93.2_workbox-build@7.4.0__ajv@8.17.1__@babel+core@7.28.5__rollup@2.79.2_workbox-window@7.4.0_sass@1.93.2_sass-embedded@1.93.2",
-    "npm:vite-plugin-pwa@^1.2.0": "1.2.0_vite@5.4.21__sass@1.94.2__sass-embedded@1.93.2_workbox-build@7.4.0__ajv@8.17.1__@babel+core@7.28.5__rollup@2.79.2_workbox-window@7.4.0_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2",
-    "npm:vite@*": "5.4.21_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2",
-    "npm:vite@^5.2.10": "5.4.21_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2",
-    "npm:vite@^7.2.4": "7.2.4_sass@1.94.2_sass-embedded@1.93.2_picomatch@4.0.3_sass@1.93.2",
+    "npm:vite-plugin-pwa@1.1.0": "1.1.0_vite@5.4.21__sass@1.93.2__sass-embedded@1.93.2_workbox-build@7.4.0__ajv@8.17.1__@babel+core@7.28.5__rollup@2.79.2_workbox-window@7.4.0_sass@1.93.2_sass-embedded@1.93.2",
+    "npm:vite-plugin-pwa@^1.2.0": "1.2.0_vite@5.4.21__sass@1.93.2__sass-embedded@1.93.2_workbox-build@7.4.0__ajv@8.17.1__@babel+core@7.28.5__rollup@2.79.2_workbox-window@7.4.0_sass@1.93.2_sass-embedded@1.93.2",
+    "npm:vite@*": "7.2.4_sass@1.93.2_sass-embedded@1.93.2_picomatch@4.0.3",
+    "npm:vite@^5.2.10": "5.4.21_sass@1.93.2_sass-embedded@1.93.2",
+    "npm:vite@^7.2.4": "7.2.4_sass@1.93.2_sass-embedded@1.93.2_picomatch@4.0.3",
     "npm:vue-material-design-icons@^5.3.1": "5.3.1",
     "npm:vue-router@^4.6.3": "4.6.3_vue@3.2.26",
     "npm:vue-template-compiler@^2.7.16": "2.7.16",
     "npm:vue@3.2.26": "3.2.26",
-    "npm:vue@^3.5.25": "3.5.25_typescript@5.9.3"
+    "npm:vue@^3.5.25": "3.5.25_typescript@5.9.3",
+    "npm:workbox-window@^7.4.0": "7.4.0"
   },
   "jsr": {
     "@std/internal@1.0.12": {
@@ -1829,18 +1829,18 @@
       "os": ["win32"],
       "cpu": ["x64"]
     },
-    "@vitejs/plugin-vue@5.2.4_vite@5.4.21__sass@1.94.2__sass-embedded@1.93.2_vue@3.2.26_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2": {
+    "@vitejs/plugin-vue@5.2.4_vite@5.4.21__sass@1.93.2__sass-embedded@1.93.2_vue@3.2.26_sass@1.93.2_sass-embedded@1.93.2": {
       "integrity": "sha512-7Yx/SXSOcQq5HiiV3orevHUFn+pmMB4cgbEkDYgnkUWb0WfeQ/wa2yFv6D5ICiCQOVpjA7vYDXrC7AGO8yjDHA==",
       "dependencies": [
-        "vite@5.4.21_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2",
+        "vite@5.4.21_sass@1.93.2_sass-embedded@1.93.2",
         "vue@3.2.26"
       ]
     },
-    "@vitejs/plugin-vue@6.0.1_vite@5.4.21__sass@1.94.2__sass-embedded@1.93.2_vue@3.2.26_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2": {
+    "@vitejs/plugin-vue@6.0.1_vite@5.4.21__sass@1.93.2__sass-embedded@1.93.2_vue@3.2.26_sass@1.93.2_sass-embedded@1.93.2": {
       "integrity": "sha512-+MaE752hU0wfPFJEUAIxqw18+20euHHdxVtMvbFcOEpjEyfqXH/5DCoTHiVJ0J29EhTJdoTkjEv5YBKU9dnoTw==",
       "dependencies": [
         "@rolldown/pluginutils",
-        "vite@5.4.21_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2",
+        "vite@5.4.21_sass@1.93.2_sass-embedded@1.93.2",
         "vue@3.2.26"
       ]
     },
@@ -3669,9 +3669,6 @@
         "unicode-match-property-value-ecmascript"
       ]
     },
-    "register-service-worker@1.7.2": {
-      "integrity": "sha512-CiD3ZSanZqcMPRhtfct5K9f7i3OLCcBBWsJjLh1gW9RO/nS94sVzY59iS+fgYBOBqaBpf4EzfqUF3j9IG+xo8A=="
-    },
     "regjsgen@0.8.0": {
       "integrity": "sha512-RvwtGe3d7LvWiDQXeQw8p5asZUmfU1G/l6WbUXeHta7Y2PEIvBTwH6E2EfmYUK8pxcxEdEmaomqyp0vZZ7C+3Q=="
     },
@@ -3922,7 +3919,7 @@
         "sass-embedded"
       ]
     },
-    "sass-loader@16.0.6_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2": {
+    "sass-loader@16.0.6_sass@1.93.2_sass-embedded@1.93.2": {
       "integrity": "sha512-sglGzId5gmlfxNs4gK2U3h7HlVRfx278YK6Ono5lwzuvi1jxig80YiuHkaDBVsYIKFhx8wN7XSCI0M2IDS/3qA==",
       "dependencies": [
         "neo-async",
@@ -4421,29 +4418,29 @@
     "varint@6.0.0": {
       "integrity": "sha512-cXEIW6cfr15lFv563k4GuVuW/fiwjknytD37jIOLSdSWuOI6WnO/oKwmP2FQTU2l01LP8/M5TSAJpzUaGe3uWg=="
     },
-    "vite-plugin-pwa@1.1.0_vite@5.4.21__sass@1.94.2__sass-embedded@1.93.2__sass@1.93.2_workbox-build@7.4.0__ajv@8.17.1__@babel+core@7.28.5__rollup@2.79.2_workbox-window@7.4.0_sass@1.93.2_sass-embedded@1.93.2": {
+    "vite-plugin-pwa@1.1.0_vite@5.4.21__sass@1.93.2__sass-embedded@1.93.2_workbox-build@7.4.0__ajv@8.17.1__@babel+core@7.28.5__rollup@2.79.2_workbox-window@7.4.0_sass@1.93.2_sass-embedded@1.93.2": {
       "integrity": "sha512-VsSpdubPzXhHWVINcSx6uHRMpOHVHQcHsef1QgkOlEoaIDAlssFEW88LBq1a59BuokAhsh2kUDJbaX1bZv4Bjw==",
       "dependencies": [
         "debug",
         "pretty-bytes@6.1.1",
         "tinyglobby",
-        "vite@5.4.21_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2",
+        "vite@5.4.21_sass@1.93.2_sass-embedded@1.93.2",
         "workbox-build",
         "workbox-window"
       ]
     },
-    "vite-plugin-pwa@1.2.0_vite@5.4.21__sass@1.94.2__sass-embedded@1.93.2_workbox-build@7.4.0__ajv@8.17.1__@babel+core@7.28.5__rollup@2.79.2_workbox-window@7.4.0_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2": {
+    "vite-plugin-pwa@1.2.0_vite@5.4.21__sass@1.93.2__sass-embedded@1.93.2_workbox-build@7.4.0__ajv@8.17.1__@babel+core@7.28.5__rollup@2.79.2_workbox-window@7.4.0_sass@1.93.2_sass-embedded@1.93.2": {
       "integrity": "sha512-a2xld+SJshT9Lgcv8Ji4+srFJL4k/1bVbd1x06JIkvecpQkwkvCncD1+gSzcdm3s+owWLpMJerG3aN5jupJEVw==",
       "dependencies": [
         "debug",
         "pretty-bytes@6.1.1",
         "tinyglobby",
-        "vite@5.4.21_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2",
+        "vite@5.4.21_sass@1.93.2_sass-embedded@1.93.2",
         "workbox-build",
         "workbox-window"
       ]
     },
-    "vite@5.4.21_sass@1.94.2_sass-embedded@1.93.2_sass@1.93.2": {
+    "vite@5.4.21_sass@1.93.2_sass-embedded@1.93.2": {
       "integrity": "sha512-o5a9xKjbtuhY6Bi5S3+HvbRERmouabWbyUcpXXUA1u+GNUKoROi9byOJ8M0nHbHYHkYICiMlqxkg1KkYmm25Sw==",
       "dependencies": [
         "esbuild@0.21.5",
@@ -4461,7 +4458,7 @@
       ],
       "bin": true
     },
-    "vite@7.2.4_sass@1.94.2_sass-embedded@1.93.2_picomatch@4.0.3_sass@1.93.2": {
+    "vite@7.2.4_sass@1.93.2_sass-embedded@1.93.2_picomatch@4.0.3": {
       "integrity": "sha512-NL8jTlbo0Tn4dUEXEsUg8KeyG/Lkmc4Fnzb8JXN/Ykm9G4HNImjtABMJgkQoVjOBN/j2WAwDTRytdqJbZsah7w==",
       "dependencies": [
         "esbuild@0.25.12",
@@ -4789,7 +4786,6 @@
         "npm:eslint@^9.38.0",
         "npm:node-emoji@^2.2.0",
         "npm:qrcode.vue@^3.6.0",
-        "npm:register-service-worker@^1.7.2",
         "npm:sass-loader@16.0.6",
         "npm:sass@1.94.2",
         "npm:typescript@~5.9.3",
@@ -4798,7 +4794,8 @@
         "npm:vue-material-design-icons@^5.3.1",
         "npm:vue-router@^4.6.3",
         "npm:vue-template-compiler@^2.7.16",
-        "npm:vue@^3.5.25"
+        "npm:vue@^3.5.25",
+        "npm:workbox-window@^7.4.0"
       ]
     }
   }

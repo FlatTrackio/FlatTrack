@@ -11,12 +11,40 @@
 // You should have received a copy of the Affero GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import { createApp } from "vue";
+import { createApp, getCurrentInstance } from "vue";
+import { ToastProgrammatic as Toast } from "buefy";
 import App from "./App.vue";
 import router from "./router";
 import Buefy from "buefy";
-import "./registerServiceWorker";
 import "buefy/dist/css/buefy.css";
+import { registerSW } from "virtual:pwa-register";
+
+const intervalMS = 10 * 60 * 1000;
+
+const updateSW = registerSW({
+  onNeedRefresh() {
+    new Toast(app).open({
+      message: "FlatTrack update available. Please refresh",
+      type: "is-info",
+      position: "is-bottom",
+    });
+  },
+  onRegisteredSW(swUrl, r) {
+    r &&
+      setInterval(async () => {
+        if (r.installing || !navigator) return;
+        if ("connection" in navigator && !navigator.onLine) return;
+        const resp = await fetch(swUrl, {
+          cache: "no-store",
+          headers: {
+            cache: "no-store",
+            "cache-control": "no-cache",
+          },
+        });
+        if (resp?.status === 200) await r.update();
+      }, intervalMS);
+  },
+});
 
 const app = createApp(App);
 app.use(Buefy, {
