@@ -26,9 +26,10 @@ const (
 // FrontendOptions ...
 // options to send to the frontend index.html for templating
 type frontendOptions struct {
-	SetupMessage string
-	LoginMessage string
-	EmbeddedHTML template.HTML
+	EmbeddedHTML           template.HTML
+	LoginMessage           string
+	MaintenanceModeMessage string
+	SetupMessage           string
 }
 
 // FrontendHandler ...

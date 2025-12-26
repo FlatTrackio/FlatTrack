@@ -83,8 +83,9 @@ func NewHTTPServer(
 	h.registerAPIHandlers(apiRouter)
 
 	passthrough := &frontendOptions{
-		SetupMessage: common.GetAppSetupMessage(),
-		LoginMessage: common.GetAppLoginMessage(),
+		LoginMessage:           common.GetAppLoginMessage(),
+		MaintenanceModeMessage: common.GetAppMaintenanceModeMessage(),
+		SetupMessage:           common.GetAppSetupMessage(),
 	}
 	router.PathPrefix("/").Handler(frontendHandler(common.GetAppWebFolder(), passthrough)).Methods(http.MethodGet)
 	c := cors.New(cors.Options{

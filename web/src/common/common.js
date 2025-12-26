@@ -198,6 +198,16 @@ function GetLoginMessage() {
     document.head.querySelector("[name~=loginmessage][content]")?.content || ""
   );
 }
+
+// GetMaintenanceModeMessage
+// returns a message to display on login
+function GetMaintenanceModeMessage() {
+  return (
+    document.head.querySelector("[name~=maintenancemodemessage][content]")
+      ?.content || ""
+  );
+}
+
 function CopyHrefToClipboard() {
   navigator.clipboard.writeText(window.location.href);
 }
@@ -222,5 +232,6 @@ export default {
   GetUserIDFromJWT,
   GetSetupMessage,
   GetLoginMessage,
+  GetMaintenanceModeMessage,
   CopyHrefToClipboard,
 };

@@ -10,6 +10,11 @@
     <meta name="setupmessage" content="{{ .SetupMessage }}" />
     {{- end }} {{- if .LoginMessage }}
     <meta name="loginmessage" content="{{ .LoginMessage }}" />
+    {{- end }} {{- if .MaintenanceModeMessage }}
+    <meta
+      name="maintenancemodemessage"
+      content="{{ .MaintenanceModeMessage }}"
+    />
     {{- end }}
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/favicon.ico" />
