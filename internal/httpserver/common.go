@@ -49,3 +49,31 @@ func GetRequestIP(r *http.Request) (requestIP string) {
 	}
 	return headerValue
 }
+
+// SetTokenCookie ...
+// sets the auth token in the token cookie
+func SetTokenCookie(w http.ResponseWriter, token string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Path:     "/",
+		Value:    token,
+		MaxAge:   60 * 60 * 24 * 7,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+}
+
+// ClearTokenCookie ...
+// clears the token cookie
+func ClearTokenCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Path:     "/",
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+}
