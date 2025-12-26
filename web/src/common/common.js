@@ -19,37 +19,9 @@
 import dayjs from "dayjs";
 import dayjsCalendar from "dayjs/plugin/calendar";
 import confetti from "canvas-confetti";
+import login from "@/requests/public/login";
 
 dayjs.extend(dayjsCalendar);
-
-// GetAuthToken
-// returns the JWT from localStorage
-function GetAuthToken() {
-  return localStorage.getItem("authToken");
-}
-
-// SetAuthToken
-// returns the JWT from localStorage
-function SetAuthToken(token) {
-  return localStorage.setItem("authToken", token);
-}
-
-// HasAuthToken
-// returns whether an auth token is found
-function HasAuthToken() {
-  const authToken = GetAuthToken();
-  return !(
-    typeof authToken === "undefined" ||
-    authToken === null ||
-    authToken === ""
-  );
-}
-
-// DeleteAuthToken
-// removes the JWT from localStorage
-function DeleteAuthToken() {
-  return localStorage.removeItem("authToken");
-}
 
 // DisplaySuccessToast
 // shows a toast at the top of the screen with a message and a green background for 8 seconds
@@ -89,9 +61,10 @@ function SignoutDialog(buefy) {
         container: null,
       });
       setTimeout(() => {
-        DeleteAuthToken();
-        window.location.href = "/login";
-        loadingComponent.close();
+        login.DeleteUserAuth().then((resp) => {
+          window.location.href = "/login";
+          loadingComponent.close();
+        });
       }, 1 * 1000);
     },
   });
@@ -168,21 +141,6 @@ function Hooray() {
   });
 }
 
-// GetUserIDFromJWT
-// retrieves the UserID from the JWT
-function GetUserIDFromJWT() {
-  const jwt = localStorage.getItem("authToken");
-  const jwtSplit = jwt.split(".");
-  if (jwtSplit.length !== 3) {
-    return null;
-  }
-  const claimsPayloadBase64 = jwtSplit[1];
-  const claimsPayloadString = atob(claimsPayloadBase64);
-  const claimsPayload = JSON.parse(claimsPayloadString);
-  const userID = claimsPayload["id"];
-  return userID;
-}
-
 // GetSetupMessage
 // returns a message to display on setup
 function GetSetupMessage() {
@@ -213,10 +171,6 @@ function CopyHrefToClipboard() {
 }
 
 export default {
-  GetAuthToken,
-  SetAuthToken,
-  HasAuthToken,
-  DeleteAuthToken,
   DisplaySuccessToast,
   DisplayFailureToast,
   SignoutDialog,
@@ -229,7 +183,6 @@ export default {
   GetEnableAnimations,
   WriteEnableAnimations,
   Hooray,
-  GetUserIDFromJWT,
   GetSetupMessage,
   GetLoginMessage,
   GetMaintenanceModeMessage,

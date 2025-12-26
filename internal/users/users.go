@@ -21,6 +21,7 @@ package users
 import (
 	"crypto/subtle"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -469,6 +470,12 @@ func (m *Manager) GenerateJWTauthToken(id string, authNonce string, expiresIn ti
 // GetAuthTokenFromHeader ...
 // given a request, retrieve the authoriation value
 func GetAuthTokenFromHeader(r *http.Request) (string, error) {
+	c, err := r.Cookie("token")
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
+		return "", err
+	} else if err == nil {
+		return c.Value, nil
+	}
 	tokenHeader := r.Header.Get("Authorization")
 	if tokenHeader == "" {
 		return "", ErrAuthorizationHeaderNotFound

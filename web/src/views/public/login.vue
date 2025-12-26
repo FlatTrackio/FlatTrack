@@ -116,19 +116,16 @@
     data() {
       return {
         redirect: this.$route.query.redirect || undefined,
-        authToken: this.$route.query.authToken || undefined,
         message: common.GetLoginMessage() || undefined,
         email: "",
         password: "",
       };
     },
     mounted() {
-      if (typeof this.$route.query.authToken !== "undefined") {
-        common.SetAuthToken(this.$route.query.authToken);
-        this.$router.push({ name: "Home" });
-        return;
-      }
       this.checkForLoginToken();
+      if (localStorage.getItem('authToken') !== null) {
+          localStorage.removeItem('authToken')
+      }
     },
     methods: {
       postLogin() {
@@ -139,7 +136,6 @@
         login
           .PostUserAuth(this.email, this.password)
           .then((resp) => {
-            common.SetAuthToken(resp.data.data);
             setTimeout(() => {
               loadingComponent.close();
               if (typeof this.redirect !== "undefined" && this.redirect) {
@@ -158,14 +154,6 @@
           });
       },
       checkForLoginToken() {
-        var authToken = common.GetAuthToken();
-        if (
-          !(
-            typeof authToken === "undefined" ||
-            authToken === null ||
-            authToken === ""
-          )
-        ) {
           login.GetUserAuth(false).then((res) => {
             // verify token via request or something
             const loadingComponent = this.$buefy.loading.open({
@@ -188,7 +176,6 @@
               }
             }, 1 * 1000);
           });
-        }
       },
     },
   };
