@@ -25,6 +25,7 @@ import (
 	"log/slog"
 	"math/rand"
 	"net"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -97,8 +98,16 @@ func GetDBsslMode() (output string) {
 
 // GetInstanceURL ...
 // return URL of the instance
-func GetInstanceURL() (output string) {
-	return GetEnvOrDefault("APP_URL", "")
+func GetInstanceURL() (*url.URL, error) {
+	uString := GetEnvOrDefault("APP_URL", "")
+	if uString == "" {
+		return nil, nil
+	}
+	u, err := url.Parse(uString)
+	if err != nil {
+		return nil, err
+	}
+	return u, nil
 }
 
 // GetSMTPEnabled ...
@@ -431,8 +440,10 @@ func SLogReplaceAttr() func([]string, slog.Attr) slog.Attr {
 			}
 		}
 		if a.Key == slog.SourceKey {
-			source := a.Value.Any().(*slog.Source)
-			source.File = filepath.Base(source.File)
+			source, ok := a.Value.Any().(*slog.Source)
+			if ok {
+				source.File = filepath.Base(source.File)
+			}
 		}
 		return a
 	}

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -42,6 +43,7 @@ type HTTPServer struct {
 	system          *system.Manager
 	scheduling      *scheduling.Manager
 	maintenanceMode bool
+	instanceURL     *url.URL
 }
 
 func NewHTTPServer(
@@ -58,6 +60,7 @@ func NewHTTPServer(
 	scheduling *scheduling.Manager,
 	maintenanceMode bool,
 ) (h *HTTPServer) {
+	var err error
 	h = &HTTPServer{}
 	h.db = db
 	h.users = users
@@ -71,6 +74,10 @@ func NewHTTPServer(
 	h.system = system
 	h.scheduling = scheduling
 	h.maintenanceMode = maintenanceMode
+	h.instanceURL, err = common.GetInstanceURL()
+	if err != nil {
+		slog.Info("Failed to get instance URL")
+	}
 
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/_healthz", h.Healthz)
