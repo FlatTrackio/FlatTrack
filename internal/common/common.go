@@ -110,6 +110,12 @@ func GetInstanceURL() (*url.URL, error) {
 	return u, nil
 }
 
+// GetDBsslMode ...
+// return the database sslmode to use
+func GetInstanceURLNoRedirectDomains() (output []string) {
+	return strings.Split(GetEnvOrDefault("APP_URL_NO_REDIRECT_DOMAINS", ""), ",")
+}
+
 // GetSMTPEnabled ...
 // return if the instance should send emails
 func GetSMTPEnabled() (output string) {

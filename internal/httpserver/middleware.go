@@ -4,7 +4,10 @@ import (
 	"log/slog"
 	"maps"
 	"net/http"
+	"slices"
 	"time"
+
+	"gitlab.com/flattrack/flattrack/internal/common"
 )
 
 type statusRecorder struct {
@@ -65,8 +68,9 @@ const (
 )
 
 func (h *HTTPServer) RewriteToDomain(next http.Handler) http.Handler {
+	noRedirectDomains := common.GetInstanceURLNoRedirectDomains()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if h.instanceURL != nil && r.Host != h.instanceURL.Host {
+		if h.instanceURL != nil && r.Host != h.instanceURL.Host && !slices.Contains(noRedirectDomains, r.Host) {
 			sourceHost := r.Host
 			r.URL.Host = h.instanceURL.Host
 			slog.Info("Redirecting domain", "source", sourceHost, "destination", h.instanceURL.Host, "url", r.URL.String())
