@@ -102,6 +102,7 @@ func NewHTTPServer(
 		AllowCredentials: true,
 	})
 	router.Use(logging)
+	router.Use(h.RewriteToDomain)
 	router.Use(c.Handler)
 	router.Use(gziphandler.GzipHandler)
 	router.NotFoundHandler = h.HTTP404()
