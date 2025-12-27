@@ -612,7 +612,7 @@ func (h *HTTPServer) UserAuth(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	SetTokenCookie(w, jwt)
+	h.SetTokenCookie(w, jwt)
 	JSONResponse(r, w, http.StatusOK, types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "Successfully authenticated user",
@@ -624,7 +624,7 @@ func (h *HTTPServer) UserAuth(w http.ResponseWriter, r *http.Request) {
 // UserAuth ...
 // authenticate a user
 func (h *HTTPServer) UserAuthLogOut(w http.ResponseWriter, r *http.Request) {
-	ClearTokenCookie(w)
+	h.ClearTokenCookie(w)
 	JSONResponse(r, w, http.StatusOK, types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "Successfully logged out user",
@@ -646,7 +646,7 @@ func (h *HTTPServer) UserAuthValidate(w http.ResponseWriter, r *http.Request) {
 			},
 			Data: false,
 		}
-		ClearTokenCookie(w)
+		h.ClearTokenCookie(w)
 		slog.Info("request log", "response", JSONresp.Metadata.Response, "context", context)
 		JSONResponse(r, w, http.StatusUnauthorized, JSONresp)
 		return
@@ -871,7 +871,7 @@ func (h *HTTPServer) PostAdminRegister(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
-	SetTokenCookie(w, jwt)
+	h.SetTokenCookie(w, jwt)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "registered",
@@ -2577,7 +2577,7 @@ func (h *HTTPServer) PostUserConfirm(w http.ResponseWriter, r *http.Request) {
 		JSONResponse(r, w, http.StatusInternalServerError, JSONresp)
 		return
 	}
-	SetTokenCookie(w, jwt)
+	h.SetTokenCookie(w, jwt)
 	JSONresp := types.JSONMessageResponse{
 		Metadata: types.JSONResponseMetadata{
 			Response: "confirmed user account",

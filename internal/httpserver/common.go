@@ -52,28 +52,30 @@ func GetRequestIP(r *http.Request) (requestIP string) {
 
 // SetTokenCookie ...
 // sets the auth token in the token cookie
-func SetTokenCookie(w http.ResponseWriter, token string) {
+func (h *HTTPServer) SetTokenCookie(w http.ResponseWriter, token string) {
+	secure := h.instanceURL == nil || h.instanceURL != nil && h.instanceURL.Scheme != "http"
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Path:     "/",
 		Value:    token,
 		MaxAge:   60 * 60 * 24 * 7,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   secure,
 		SameSite: http.SameSiteStrictMode,
 	})
 }
 
 // ClearTokenCookie ...
 // clears the token cookie
-func ClearTokenCookie(w http.ResponseWriter) {
+func (h *HTTPServer) ClearTokenCookie(w http.ResponseWriter) {
+	secure := h.instanceURL == nil || h.instanceURL != nil && h.instanceURL.Scheme != "http"
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Path:     "/",
 		Value:    "",
 		Expires:  time.Unix(0, 0),
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   secure,
 		SameSite: http.SameSiteStrictMode,
 	})
 }
