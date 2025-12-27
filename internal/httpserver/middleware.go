@@ -63,3 +63,16 @@ const (
 	// HTTPHeaderBackendAllowTypesAccept use the Accept http header
 	HTTPHeaderBackendAllowTypesAccept HTTPHeaderBackendAllowTypes = "Accept"
 )
+
+func (h *HTTPServer) RewriteToDomain(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if h.instanceURL != nil && r.Host != h.instanceURL.Host {
+			sourceHost := r.Host
+			r.URL.Host = h.instanceURL.Host
+			slog.Info("Redirecting domain", "source", sourceHost, "destination", h.instanceURL.Host, "url", r.URL.String())
+			http.Redirect(w, r, r.URL.String(), http.StatusTemporaryRedirect)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
