@@ -365,3 +365,20 @@ push-artifacthub-yml:
         registry.gitlab.com/flattrack/flattrack:artifacthub.io \
         --config /dev/null:application/vnd.cncf.artifacthub.config.v1+yaml \
         artifacthub-repo.yml:application/vnd.cncf.artifacthub.repository-metadata.layer.v1.yaml
+
+make-release:
+  stage: build
+  rules:
+    - if: $CI_COMMIT_TAG
+  image: $IMAGE_RELEASE_CLI
+  before_script:
+    - *setup-testing-repo
+    - *setup-community-repo
+    - apk add --no-cache git git-cliff bash kustomize
+  script:
+    - echo "Release $CI_COMMIT_TAG"
+    - git cliff --latest > ./changelog.md
+  release:
+    tag_name: "$CI_COMMIT_TAG"
+    description: "./changelog.md"
+    ref: "$CI_COMMIT_SHA"
