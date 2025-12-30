@@ -25,6 +25,7 @@ variables:
   IMAGE_MINIO: quay.io/minio/minio:RELEASE.2024-12-18T13-15-44Z
   IMAGE_CONFORM: registry.gitlab.com/bobymcbobs/container-images/conform:v1753521600-daa77a05@sha256:3142518fe8224247f53665b9082220fb557c14b617f9a4530384c3e121958acf
   IMAGE_ORAS: ghcr.io/oras-project/oras:v1.3.0@sha256:6ce045ce069a89934d6666b8b49f9c4c0145201bd6de6dbe2aee267814c55468
+  IMAGE_RELEASE_CLI: registry.gitlab.com/gitlab-org/cli:v1.80.4@sha256:212c2ea8bb59382b7b6e6527a3ae4873ce5792d415f34dac97b2efa6adcaf6f9
   COSIGN_YES: "true"
 
 .container-registry-login-dockerhub: &container-registry-login-dockerhub |
