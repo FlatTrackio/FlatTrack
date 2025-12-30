@@ -80,7 +80,8 @@ func NewHTTPServer(
 	}
 
 	router := mux.NewRouter().StrictSlash(true)
-	router.HandleFunc("/_healthz", h.Healthz)
+	router.HandleFunc("/_healthz", h.Healthz).
+		Headers("Accept", "application/json")
 	apiRouter := router.
 		PathPrefix("/api").
 		Headers("Accept", "application/json").

@@ -70,9 +70,13 @@ const (
 func (h *HTTPServer) RewriteToDomain(next http.Handler) http.Handler {
 	noRedirectDomains := common.GetInstanceURLNoRedirectDomains()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if h.instanceURL != nil && r.Host != h.instanceURL.Host && !slices.Contains(noRedirectDomains, r.Host) {
+		if h.instanceURL != nil &&
+			r.Host != h.instanceURL.Host &&
+			!slices.Contains(noRedirectDomains, r.Host) &&
+			r.URL.Path != "/_healthz" {
 			sourceHost := r.Host
 			r.URL.Host = h.instanceURL.Host
+			r.URL.Scheme = h.instanceURL.Scheme
 			slog.Info("Redirecting domain", "source", sourceHost, "destination", h.instanceURL.Host, "url", r.URL.String())
 			http.Redirect(w, r, r.URL.String(), http.StatusTemporaryRedirect)
 			return
