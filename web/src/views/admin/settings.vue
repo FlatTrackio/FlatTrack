@@ -138,6 +138,7 @@
         })
         .then((resp) => {
           this.shoppingListKeepPolicy = resp.data.spec;
+        }).then(() => {
           this.pageLoading = false;
         });
     },
