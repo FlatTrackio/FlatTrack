@@ -28,7 +28,9 @@
           <!--   /> -->
           <h1 class="title is-5" style="color: #fff">
             FlatTrack
-            <span style="font-weight: normal"> {{ flatName }} </span>
+            <span v-if="!loading" style="font-weight: normal">
+              {{ flatName }}
+            </span>
           </h1>
         </b-navbar-item>
       </template>
@@ -67,6 +69,7 @@
       return {
         flatName: "My Flat",
         ratherSmallerScreen: false,
+        loading: true,
       };
     },
     async beforeMount() {
@@ -82,6 +85,8 @@
       GetFlatInfo() {
         flatInfo.GetFlatName().then((resp) => {
           this.flatName = resp.data.spec;
+        }).then(() => {
+            this.loading = false
         });
       },
     },
